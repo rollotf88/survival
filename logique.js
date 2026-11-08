@@ -239,13 +239,21 @@ function boire(i){
 function vivants(){ return G.m.filter(function(x){ return x.al; }); }
 function changerMoral(d){ G.moral = Math.max(0, Math.min(100, G.moral + d)); }
 var FEMININS = ["Maman", "Emma", "Nora", "Inès"];
+// « Papa est mort de soif », « Emma a été tuée par un coureur (Supermarché) »
+function accorder(nom, texte){ return FEMININS.indexOf(nom) >= 0 ? texte.replace(/^mort/, "morte").replace(/^tué/, "tuée") : texte; }
+function phraseMort(nom, cause){
+  if(!cause) return nom + " est " + accorder(nom, "mort") + ".";
+  if(/^mort/.test(cause)) return nom + " est " + accorder(nom, cause) + ".";
+  if(/^tué/.test(cause)) return nom + " a été " + accorder(nom, cause) + ".";
+  return nom + " est " + accorder(nom, "mort") + " : " + cause + ".";
+}
 function blesser(x, d, n, cause){
   if(!x || !x.al) return;
   x.hp -= d;
   if(x.hp <= 0){
     x.hp = 0; x.al = false; changerMoral(-25);
     // Annonce mise en avant dans les textes (classe « mort », avec le nom pour afficher son portrait)
-    n.push(["mort", x.nom + " est mort" + (FEMININS.indexOf(x.nom) >= 0 ? "e" : "") + (cause ? " : " + cause : "") + ".", x.nom]);
+    n.push(["mort", phraseMort(x.nom, cause), x.nom]);
     G.dd.push({ n:x.nom, c:cause || "cause inconnue", j:G.day, ic:x.icone });
     rendreAuStock([x]); // son équipement reste à la famille
   }
