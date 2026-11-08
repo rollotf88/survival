@@ -23,6 +23,7 @@ Jeu de survie 2D (cartoon, post-apocalyptique) jouable dans le navigateur, desti
 - Pour mettre à jour : republier `publication-en-ligne.html` sur cette même adresse (`url`) avec les fichiers `style.css`, `data.js`, `icones.js`, `logique.js`, `ui.js`, `guide.js`, `piece.js` (et les images / sons s'ils ont changé). La sauvegarde et le record des joueurs sont gardés sur leur appareil
 
 ## Version installable (site)
+- Adresse publique (installable sur téléphone) : https://unique-moxie-1ab990.netlify.app — dépôt GitHub privé rollotf88/survival, en ligne depuis le 2026-11-08. À chaque mise à jour, publier aux deux endroits (claude.ai et Netlify)
 - Dossier `site/` : copie propre du jeu à héberger (index.html, scripts, style, manifest.json, sw.js, images sans les sources, sons). Le refaire après chaque changement (et augmenter `VERSION` dans sw.js)
 - `python preparer-site.py` refait `site/` et met une nouvelle `VERSION` dans site/sw.js (date + heure)
 - Hébergement (option B choisie par Fabien le 2026-11-08) : dépôt git dans ce dossier → GitHub (compte de Fabien, dépôt privé) → Netlify relié au dépôt, publie le dossier `site` (`netlify.toml`). Mise à jour : `python preparer-site.py`, commit, `git push` ; Netlify republie tout seul. Fabien se connecte lui-même à GitHub dans la fenêtre qui s'ouvre au premier push ; Claude ne reçoit jamais de mot de passe
