@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SURVIVAL – Le dernier refuge</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4a3221">
+<link rel="apple-touch-icon" href="images/icone-apple.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+<div id="app"></div><div id="modal"><div class="sheet" id="sheet"></div></div>
+<script src="data.js"></script>
+<script src="icones.js"></script>
+<script src="logique.js"></script>
+<script src="ui.js"></script>
+<script src="guide.js"></script>
+<script src="piece.js"></script>
+<script>
+// Installation sur téléphone (seulement quand le jeu est sur un site, pas en double-clic)
+if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulation d’équilibrage</title>
+<style>
+:root{--bg:#f3f6f1;--ink:#1d282c;--line:#b9c5c0}
+@media (prefers-color-scheme:dark){:root{--bg:#141b1e;--ink:#e8eee9;--line:#364449}}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,sans-serif;margin:0;padding:16px;line-height:1.4}
+table{border-collapse:collapse;margin:8px 0 16px;width:100%;max-width:720px}
+td,th{border:1px solid var(--line);padding:4px 8px;text-align:left}
+button{font:inherit;padding:8px 14px;margin:4px 4px 4px 0}
+</style>
+</head>
+<body>
+<h1>Simulation d’équilibrage</h1>
+<p>Des robots jouent des centaines de parties avec les vraies règles. Le robot « Malin » joue bien, le « Naïf » joue au hasard.
+Une bonne partie doit dépendre des choix : Malin doit tenir nettement plus longtemps que Naïf, et personne ne doit tenir indéfiniment.</p>
+<button id="go">Lancer 500 parties par robot</button>
+<div id="out"></div>
+<script src="data.js"></script>
+<script src="logique.js"></script>
+<script src="sim.js"></script>
+<script>
+function tableau(r){
+  var causes = Object.keys(r.causes).sort(function(a, b){ return r.causes[b] - r.causes[a]; })
+    .map(function(c){ return "<tr><td>" + c + "</td><td>" + r.causes[c] + "</td></tr>"; }).join("");
+  return "<h2>Robot " + r.bot + "</h2><table>"
+    + "<tr><th>Jours tenus</th><th>min</th><th>10 %</th><th>médiane</th><th>90 %</th><th>max</th><th>moyenne</th></tr>"
+    + "<tr><td></td><td>" + r.min + "</td><td>" + r.p10 + "</td><td>" + r.mediane + "</td><td>" + r.p90 + "</td><td>" + r.max + "</td><td>" + r.moyenne + "</td></tr>"
+    + "<tr><th>⭐ Score (jours-personnes)</th><td></td><td>" + r.scoreP10 + "</td><td>" + r.joursPersonnes + "</td><td>" + r.scoreP90 + "</td><td>" + r.scoreMax + "</td><td></td></tr></table>"
+    + "<p>Familles encore en vie au jour 200 : " + r.encoreEnVie + " / " + r.parties + " · Première mort (médiane) : jour " + r.jourPremiereMort + " · Tous les lieux vidés (médiane) : " + (r.jourToutVide === "jamais" ? "jamais" : "jour " + r.jourToutVide) + "</p>"
+    + "<table><tr><th>Cause de mort</th><th>Nombre</th></tr>" + causes + "</table>";
+}
+document.getElementById("go").onclick = function(){
+  var out = document.getElementById("out"); out.textContent = "Calcul…";
+  setTimeout(function(){ out.innerHTML = tableau(simuler(MALIN, 500, 200)) + tableau(simuler(NAIF, 500, 200)); }, 30);
+};
+</script>
+</body>
+</html>

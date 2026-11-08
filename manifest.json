@@ -1,0 +1,16 @@
+{
+  "name": "SURVIVAL – Le dernier refuge",
+  "short_name": "Survival",
+  "description": "Jeu de survie : garde ta famille en vie le plus longtemps possible.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#4a3221",
+  "theme_color": "#4a3221",
+  "icons": [
+    { "src": "images/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "images/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

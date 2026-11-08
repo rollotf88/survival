@@ -1,0 +1,15 @@
+Sons utilisés dans SURVIVAL (tous en licence CC0 : libres, aucune mention obligatoire)
+
+- pas1-3, butin, atelier, construire, coup, goupille, porte, depart, soin, troc, piece, nuit (.ogg)
+  « 50 RPG sound effects » par Kenney (www.kenney.nl) — CC0
+  https://opengameart.org/content/50-rpg-sound-effects
+
+- clic, casse (.wav)
+  « 51 UI sound effects » par Kenney (www.kenney.nl) — CC0
+  https://opengameart.org/content/51-ui-sound-effects-buttons-switches-and-clicks
+
+- zombie1-3 (.wav)
+  « Zombies Sound Pack » par artisticdude — CC0
+  https://opengameart.org/content/zombies-sound-pack
+
+- Le coup de feu n'est pas un fichier : il est fabriqué par le jeu (bruit synthétisé).

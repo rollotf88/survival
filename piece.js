@@ -1,0 +1,116 @@
+/* =====================================================================
+   piece.js : la pièce peinte devient cliquable (porte, canapé, table...).
+   Les zones sont données en pixels de l'image refuge-fond.webp
+   (1024 × 1050) et recalées sur l'écran à chaque affichage : l'image est
+   affichée en « cover », calée en haut et centrée. Les zones ne sont
+   visibles que dans la partie de la pièce qu'on voit entre le chapitre
+   et les cartes, donc elles ne gênent jamais les boutons.
+   ===================================================================== */
+var IMAGE_PIECE = { l:1024, h:1050 };
+// Partie utile de l'image (de la cheminée à la porte, du haut du mur au bas de la table) : on la fait tenir dans l'espace libre
+var CADRE_PIECE = { x0:150, x1:1024, y0:150, y1:690 };
+// [action, x0, y0, x1, y1, icône, étiquette, hauteur de l'étiquette dans la zone (0 = haut, 1 = bas)]
+// dans l'ordre d'empilement (la dernière est au-dessus). Hauteurs différentes à droite pour que
+// Guide, Stock et Partir ne se chevauchent pas.
+var ZONES_PIECE = [
+  ["pPortraits", 328, 210, 692, 338, function(){ return ic("papa", "👪"); }, "Famille", .5],
+  ["pCanape",    318, 392, 730, 575, function(){ return ic("lune", "🌙"); }, "Dormir", .45],
+  ["pCheminee",  155, 355, 320, 530, function(){ return ic("ref_barr", "🧱"); }, "Refuge", .5],
+  ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
+  ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
+  ["pTable",     365, 570, 660, 678, function(){ return ic("marteau", "🛠️"); }, "Atelier", .55]
+];
+
+function placerPiece(){
+  var cont = $("piece");
+  if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
+  var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
+  var corps = document.body.style;
+  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; return; }
+  var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
+  if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; return; } // pas assez de place
+  var vw = window.innerWidth, F = CADRE_PIECE;
+  // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
+  var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
+  var dx = (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
+  // L'image est collée en haut de l'espace libre (le plafond remplit le haut), tant que la partie utile reste visible
+  var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
+  corps.backgroundSize = (IMAGE_PIECE.l * s) + "px auto";
+  corps.backgroundPosition = dx + "px " + dy + "px";
+  // Fondu sur le bas de l'image pour qu'elle se mêle au plancher (au lieu de s'arrêter net)
+  var f = $("fondu"); if(!f){ f = document.createElement("div"); f.id = "fondu"; document.body.appendChild(f); }
+  f.style.display = "block"; f.style.top = (dy + IMAGE_PIECE.h * s - 88) + "px";
+  cont.classList.toggle("compact", s < 0.32);
+  cont.style.display = "block"; cont.style.top = haut + "px"; cont.style.height = (fin - haut) + "px";
+  cont.innerHTML = ZONES_PIECE.map(function(z){
+    var x = dx + z[1] * s, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
+    var cy = y + h / 2;
+    if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
+    var invite = z[0] === "pCanape" && !G.m.some(peutSortir); // plus personne ne peut sortir : on invite à dormir
+    return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
+  }).join("");
+  ajusterEtiquettes(cont, vw);
+  // Étiquettes visibles 3 secondes au début de chaque journée, puis elles s'effacent (image plus propre)
+  if(dernierJourEtiquettes !== G.day){
+    dernierJourEtiquettes = G.day; cont.classList.add("montrer");
+    clearTimeout(minuteurEtiquettes); minuteurEtiquettes = setTimeout(function(){ var c = $("piece"); if(c) c.classList.remove("montrer"); }, 3000);
+  }
+}
+var dernierJourEtiquettes = null, minuteurEtiquettes = null;
+// Les étiquettes restent dans l'écran et ne se chevauchent pas (on décale vers le bas celle qui gêne)
+function ajusterEtiquettes(cont, vw){
+  var et = Array.prototype.slice.call(cont.querySelectorAll(".etiq"));
+  et.forEach(function(e){
+    var r = e.getBoundingClientRect(), d = 0;
+    if(r.left < 4) d = 4 - r.left; else if(r.right > vw - 4) d = vw - 4 - r.right;
+    if(d) e.style.marginLeft = d + "px";
+  });
+  var boites = et.map(function(e){ return { e:e, r:e.getBoundingClientRect() }; }).sort(function(a, b){ return a.r.top - b.r.top; });
+  for(var i = 1; i < boites.length; i++) for(var j = 0; j < i; j++){
+    var a = boites[j].r, b = boites[i].r;
+    if(a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom){
+      var dy = a.bottom - b.top + 2, actuel = parseFloat(boites[i].e.style.marginTop) || 0;
+      boites[i].e.style.marginTop = (actuel + dy) + "px";
+      boites[i].r = boites[i].e.getBoundingClientRect(); b = boites[i].r;
+    }
+  }
+}
+window.addEventListener("resize", function(){ if(G && G.ph === "game") placerPiece(); });
+
+// « Qui part ? » quand on touche la porte sans avoir choisi de membres
+function openQuiPart(){
+  var h = '<h2>' + ic("loupe", "🔍") + ' Qui part fouiller ?</h2><p class="sub">Choisis 1 ou 2 membres, puis le lieu.</p>';
+  G.m.forEach(function(x, i){
+    if(!x.al) return;
+    var ok = peutSortir(x), on = G.sel.indexOf(i) >= 0;
+    // Ligne : à gauche le membre (toucher = choisir), à droite ses 3 cases d'équipement (toucher = équiper)
+    h += '<div class="qprow' + (on ? " choisi" : "") + '"><button class="qpqui" data-act="qpsel" data-id="' + i + '"' + (ok ? "" : " disabled") + '><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + (on ? "✔ " : "") + x.nom + '</b><small>⚡ ' + x.en + (ok ? "" : " · trop fatigué") + '</small></span></button>'
+      + '<div class="qpeq">' + EMPLACEMENTS.map(function(e){
+          var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
+          return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + '" data-act="slot" data-retour="quipart" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : "vide") + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
+        }).join("") + '</div></div>';
+  });
+  h += offrePub("quipart") + '<div class="row"><button class="btn" data-act="fouille"' + (G.sel.length ? "" : " disabled") + '>🗺️ Choisir le lieu</button><button class="btn alt" data-act="close">Annuler</button></div>';
+  show(h);
+}
+
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "pPorte"){ if(G.sel.length) openLoc(); else openQuiPart(); }
+  else if(a === "qpsel"){ var i = +id, p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); render(); openQuiPart(); }
+  else if(a === "pCanape") openDormir();
+});
+// Confirmation avant de dormir (le canapé) ; propose la pub si elle peut éviter de finir la journée trop tôt
+function openDormir(){
+  show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2><p>La journée se termine : chacun mange, boit et se repose. Des zombies peuvent attaquer pendant la nuit.</p><div class="row"><button class="btn" data-act="endday">Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "pTable") openRef("fabriquer");
+  else if(a === "pCheminee") openRef("construire");
+  else if(a === "pSac") openStock();
+  else if(a === "pEtagere"){ guideOnglet = "regles"; guideFiche = null; openGuide(); }
+  else if(a === "pPortraits"){ guideOnglet = "famille"; guideFiche = null; openGuide(); }
+});

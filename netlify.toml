@@ -1,0 +1,3 @@
+# Netlify publie le dossier « site » (refait par preparer-site.py)
+[build]
+  publish = "site"
