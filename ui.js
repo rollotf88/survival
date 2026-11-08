@@ -439,10 +439,11 @@ function over(){
   if(G.seed){
     var cle = "survival_jour_" + G.seed, meilleur = 0;
     try{ meilleur = +localStorage.getItem(cle) || 0; if(G.score > meilleur){ localStorage.setItem(cle, G.score); } }catch(e){}
-    jour = '<p class="sub">📅 Partie du ' + dateGraine(G.seed) + ' · ton meilleur score du jour : <b>' + Math.max(meilleur, G.score) + '</b>' + (G.score > meilleur && meilleur ? " (amélioré !)" : "") + '</p><button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>' + (typeof openEnvoiScore === "function" ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement du jour</button>' : '');
-    dernierEnvoi = { seed:G.seed, score:G.score, jours:d };
+    jour = '<p class="sub">📅 Partie du ' + dateGraine(G.seed) + ' · ton meilleur score du jour : <b>' + Math.max(meilleur, G.score) + '</b>' + (G.score > meilleur && meilleur ? " (amélioré !)" : "") + '</p><button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>';
   }
   var lv = G.ref.barr + G.ref.eau + G.ref.pot;
+  // Classement général en ligne (classement.js), pour toutes les parties
+  if(typeof openEnvoiScore === "function"){ dernierEnvoi = { score:G.score, jours:d }; jour += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement</button>'; }
   show('<h2>Votre famille n’est plus</h2><p>Elle a tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b>.</p><p class="score">⭐ Score : <b>' + G.score + '</b>' + (nouveau ? ' · 🏆 Nouveau record !' : '') + '</p><p class="sub">Un point par jour et par membre en vie.</p>' + jour + '<ul>' + G.dd.map(function(z){ return '<li>💀 ' + z.n + ' : ' + z.c + ' (jour ' + z.j + ')</li>'; }).join("") + '<li>🔨 Améliorations du refuge : ' + lv + '</li><li>🏆 Record : ' + RECORD + ' points</li></ul><button class="btn" style="width:100%" data-act="again">Nouvelle famille</button>');
 }
 

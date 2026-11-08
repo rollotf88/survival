@@ -83,7 +83,7 @@ function openMenu(){
   var h = '<h2>☰ Menu</h2>';
   h += '<button class="loc" data-act="close"><b>▶️ Reprendre la partie</b></button>';
   h += '<button class="loc" data-act="guide"><b>📖 Guide du survivant</b><small>Règles, objets, lieux, zombies, famille</small></button>';
-  if(typeof openClassement === "function") h += '<button class="loc" data-act="classement"><b>🏆 Classement du jour</b><small>Les meilleurs scores de la Partie du jour</small></button>';
+  if(typeof openClassement === "function") h += '<button class="loc" data-act="classement"><b>🏆 Classement</b><small>Les meilleurs scores de tous les joueurs</small></button>';
   h += '<button class="loc" data-act="menuson"><b>' + (sonEstActif() ? "🔊 Son : activé" : "🔇 Son : coupé") + '</b><small>Toucher pour ' + (sonEstActif() ? "couper" : "remettre") + ' le son</small></button>';
   h += '<button class="loc" data-act="revoirastuces"><b>💡 Revoir les astuces</b><small>Les bulles d’aide de la première partie réapparaîtront</small></button>';
   h += '<p class="sub">' + (G.seed ? "📅 Partie du " + dateGraine(G.seed) : "🎲 Partie libre") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p>';
