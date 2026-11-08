@@ -16,6 +16,7 @@ Jeu de survie 2D (cartoon, post-apocalyptique) jouable dans le navigateur, desti
 - `simulation.html`, `sim.js` : simulation d'équilibrage (robots qui jouent des centaines de parties)
 - `controle-affichage.js` : outil de vérification (pas chargé par le jeu ni publié). `controleAffichage()` liste les chevauchements, textes coupés, débordements de l'écran affiché
 - `.claude/launch.json` : petit serveur local (python) utilisé pour tester dans le navigateur intégré
+- `sons/musique-emptycity.ogg` : musique d'ambiance (CC0, « EmptyCity » par yd), réglage « 🎵 Musique » du menu, démarre au premier toucher
 - `images/`, `sons/` : assets à venir (gratuits uniquement, vérifier les licences : CC0 ou CC BY)
 
 ## Version en ligne (test sur téléphone)

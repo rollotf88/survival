@@ -12,4 +12,8 @@ Sons utilisés dans SURVIVAL (tous en licence CC0 : libres, aucune mention oblig
   « Zombies Sound Pack » par artisticdude — CC0
   https://opengameart.org/content/zombies-sound-pack
 
+- musique-emptycity.ogg (musique d'ambiance)
+  « EmptyCity: Background Music » par yd — CC0
+  https://opengameart.org/content/emptycity-background-music
+
 - Le coup de feu n'est pas un fichier : il est fabriqué par le jeu (bruit synthétisé).

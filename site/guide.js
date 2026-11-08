@@ -88,6 +88,7 @@ function openMenu(){
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
   h += t("revoirastuces", "💡 Astuces", "Les revoir");
   h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
+  if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
   h += '</div>';
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';
@@ -154,6 +155,7 @@ document.addEventListener("click", function(e){
   else if(a === "gfiche"){ guideFiche = id; guideOnglet = "objets"; openGuide(); }
   else if(a === "gretour"){ guideFiche = null; openGuide(); }
   else if(a === "menuson"){ basculerSon(); openMenu(); }
+  else if(a === "menumusique"){ basculerMusique(); openMenu(); }
   else if(a === "revoirastuces"){ astucesVues = {}; try{ localStorage.removeItem("survival_astuces"); }catch(err){} hide(); render(); }
   else if(a === "menunouvelle"){ confirmerNouvelle = true; openMenu(); }
   else if(a === "menunouvelleok"){ confirmerNouvelle = false; nouvelleFamille(); }

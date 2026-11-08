@@ -723,6 +723,21 @@ function son(nom, delai){
   if(/\.ogg$/.test(f) && !lectureOgg) return;
   try{ var a = new Audio(f); a.volume = SONS[nom][1]; var p = a.play(); if(p && p.catch) p.catch(function(){}); }catch(e){}
 }
+/* ---------- Musique d'ambiance (« EmptyCity » par yd, CC0) ----------
+   Réglage séparé des bruitages. Elle démarre au premier toucher (les navigateurs
+   interdisent le son avant) et se met en pause quand le jeu passe en arrière-plan. */
+var musique = null;
+function musiqueActive(){ try{ return localStorage.getItem("survival_musique") !== "non"; }catch(e){ return true; } }
+function lancerMusique(){
+  if(!musiqueActive() || !lectureOgg || document.hidden) return;
+  if(!musique){ musique = new Audio("sons/musique-emptycity.ogg"); musique.loop = true; musique.volume = 0.22; }
+  if(musique.paused){ var p = musique.play(); if(p && p.catch) p.catch(function(){}); }
+}
+function arreterMusique(){ if(musique && !musique.paused) musique.pause(); }
+function basculerMusique(){ var on = !musiqueActive(); try{ localStorage.setItem("survival_musique", on ? "oui" : "non"); }catch(e){} if(on) lancerMusique(); else arreterMusique(); }
+document.addEventListener("pointerdown", lancerMusique);
+document.addEventListener("visibilitychange", function(){ if(document.hidden) arreterMusique(); else if(musique) lancerMusique(); });
+
 // Glas : une note grave qui s'éteint lentement (quand un membre meurt), synthétisée
 function sonGlas(){
   if(!sonActif) return;

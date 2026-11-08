@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261108-2053";
+var VERSION = "survival-20261108-2322";
 var FICHIERS = [
   "./",
   "index.html",
@@ -26,6 +26,7 @@ var FICHIERS = [
   "images/icone-192.png",
   "images/icone-512.png",
   "images/icone-apple.png",
+  "sons/musique-emptycity.ogg",
   "sons/.gitkeep",
   "sons/atelier.ogg",
   "sons/butin.ogg",

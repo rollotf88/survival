@@ -26,6 +26,7 @@ var FICHIERS = [
   "images/icone-192.png",
   "images/icone-512.png",
   "images/icone-apple.png",
+  "sons/musique-emptycity.ogg",
   "sons/.gitkeep",
   "sons/atelier.ogg",
   "sons/butin.ogg",
