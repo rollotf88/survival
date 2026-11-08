@@ -384,6 +384,42 @@ var ICONES_SVG = {
     '<path d="M20 42 V46 M28 42 V46" stroke="' + COUL.jaune + '" stroke-width="2.4"/>',
 
   /* ---------- Lieux ---------- */
+  lieuEcole:
+    '<path d="M4 22 L24 8 L44 22Z" fill="' + COUL.rouge + '"/>' +
+    '<rect x="8" y="21" width="32" height="22" fill="#e8d9b5"/>' +
+    '<rect x="20" y="30" width="8" height="13" fill="' + COUL.bois + '"/>' +
+    fenetre(11, 25, 6, 6) + fenetre(31, 25, 6, 6) +
+    '<circle cx="24" cy="18" r="3.5" fill="' + COUL.blanc + '" stroke-width="1.6"/><path d="M24 16 V18 H25.5" stroke-width="1.2"/>' +
+    '<path d="M24 8 V2 L31 4 L24 6" fill="' + COUL.jaune + '" stroke-width="1.6"/>',
+  lieuCaserne:
+    '<rect x="5" y="14" width="38" height="29" fill="' + COUL.rouge + '"/>' +
+    '<rect x="9" y="24" width="13" height="19" fill="' + COUL.metal + '"/><rect x="26" y="24" width="13" height="19" fill="' + COUL.metal + '"/>' +
+    '<path d="M9 29 H22 M9 34 H22 M9 39 H22 M26 29 H39 M26 34 H39 M26 39 H39" stroke-width="1.4"/>' +
+    '<rect x="15" y="16" width="18" height="5" fill="' + COUL.blanc + '" stroke-width="1.6"/>' +
+    '<path d="M24 4 Q29 9 26 13 Q24 11 23 13 Q19 9 24 4Z" fill="' + COUL.jaune + '" stroke-width="1.6"/>',
+  lieuPeniche:
+    '<path d="M2 36 Q12 32 24 36 Q36 40 46 36 V46 H2Z" fill="' + COUL.eau + '"/>' +
+    '<path d="M4 30 H44 L40 38 H8Z" fill="' + COUL.olive + '"/>' +
+    '<rect x="22" y="20" width="16" height="10" fill="#e8d9b5"/>' + fenetre(25, 23, 4, 4) + fenetre(31, 23, 4, 4) +
+    '<rect x="13" y="24" width="4" height="6" fill="' + COUL.gris + '"/>' +
+    '<path d="M15 21 Q12 14 16 10 Q19 6 16 2" stroke="' + COUL.metalFonce + '" stroke-width="2.4"/>',
+  lieuCamping:
+    '<path d="M2 43 H46"/>' +
+    '<path d="M6 42 L20 16 L34 42Z" fill="' + COUL.olive + '"/><path d="M20 16 L16 42 H24Z" fill="' + COUL.oliveFonce + '"/>' +
+    '<path d="M36 42 L41 22 L46 42Z" fill="#3f6b36"/><path d="M41 42 V46" stroke="' + COUL.boisFonce + '" stroke-width="2.4"/>' +
+    '<path d="M28 8 Q31 5 34 8 Q37 5 40 8" stroke-width="1.6"/>',
+  lieuClinique:
+    '<rect x="6" y="16" width="36" height="27" fill="' + COUL.blanc + '"/>' +
+    '<rect x="20" y="31" width="8" height="12" fill="' + COUL.eauClair + '" stroke-width="1.8"/>' +
+    '<ellipse cx="24" cy="23" rx="4" ry="3.5" fill="' + COUL.brun + '" stroke-width="1.4"/>' +
+    '<circle cx="18.5" cy="18" r="2" fill="' + COUL.brun + '" stroke-width="1.2"/><circle cx="22" cy="15.5" r="2" fill="' + COUL.brun + '" stroke-width="1.2"/><circle cx="26" cy="15.5" r="2" fill="' + COUL.brun + '" stroke-width="1.2"/><circle cx="29.5" cy="18" r="2" fill="' + COUL.brun + '" stroke-width="1.2"/>' +
+    '<path d="M4 16 H44"/>',
+  lieuBunker:
+    '<path d="M2 40 Q24 30 46 40 V46 H2Z" fill="' + COUL.olive + '"/>' +
+    '<path d="M10 40 Q10 20 24 20 Q38 20 38 40Z" fill="' + COUL.metalFonce + '"/>' +
+    '<circle cx="24" cy="32" r="7" fill="' + COUL.metal + '"/><circle cx="24" cy="32" r="2.5" fill="' + COUL.gris + '"/>' +
+    '<path d="M24 25 V39 M17 32 H31" stroke-width="1.4"/>' +
+    '<path d="M14 24 L18 27 M34 24 L30 27" stroke="' + COUL.jaune + '" stroke-width="2.4"/>',
   lieuEtang:
     '<path d="M3 34 Q6 22 24 22 Q44 22 45 34 Q42 44 24 44 Q5 44 3 34Z" fill="' + COUL.eau + '"/>' +
     '<path d="M12 34 Q18 31 24 34 M28 38 Q33 35 38 38" stroke="' + COUL.eauClair + '" stroke-width="2"/>' +

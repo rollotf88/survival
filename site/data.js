@@ -13,7 +13,8 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 function ic(k, emoji){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue", "Supermarché":"lieuSuper", "Hôpital":"lieuHopital",
   "Quincaillerie":"lieuQuinc", "Station-service":"lieuStation", "Garage auto":"lieuGarage", "Commissariat":"lieuPolice",
-  "Zone industrielle":"lieuIndus", "Étang":"lieuEtang", "Centre commercial":"lieuCentre", "Village voisin":"lieuVillage", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase" };
+  "Zone industrielle":"lieuIndus", "Étang":"lieuEtang", "Centre commercial":"lieuCentre", "Village voisin":"lieuVillage", "École Jules-Ferry":"lieuEcole", "Caserne des pompiers":"lieuCaserne", "Péniche du canal":"lieuPeniche",
+  "Camping des Pins":"lieuCamping", "Clinique vétérinaire":"lieuClinique", "Bunker du survivaliste":"lieuBunker", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase" };
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Portraits peints (images faites avec ChatGPT par Fabien, découpées dans images/)
@@ -99,6 +100,20 @@ var BAL = {
     eauPour: 3,              // 1 ration d’eau par nuit pour 3 poules (arrondi au-dessus)
     attaque: 0.03,           // +3 % de risque d'attaque de nuit par poule
     viande: 2                // une poule qui meurt de soif donne 2 rations
+  },
+  // Lieux secrets : découverts avec le temps (2 jours plus tôt avec une radio)
+  avanceRadio: 2,
+  // Pillards : à partir du jour 8, ils vident peu à peu les lieux qu'on n'a pas encore fouillés
+  pillards: {
+    jour: 8,                 // premier jour possible
+    chance: 0.3,             // chance par nuit
+    part: [0.3, 0.6],        // part des objets restants qu'ils emportent
+    minimum: 3               // ils ne vont que dans les lieux où il reste au moins 3 objets
+  },
+  // Missions urgentes (une à la fois, avec un délai)
+  missions: {
+    jour: 6,                 // première mission possible
+    chance: 0.2              // chance chaque nuit qu'une mission arrive (s'il n'y en a pas déjà une)
   },
   // Combat au tour par tour (en expédition)
   combat: {
@@ -301,7 +316,50 @@ var LIEUX = [
   { nom:"Entrepôt logistique", icone:"📦", verrou:true, danger:0.60, distance:4, voiture:true,
     butin:{ bouteille:20, conserve:15, riz:3, planche:12, clous:6, ruban:4, pile:4, barre:6 } },
   { nom:"Base militaire", icone:"🪖", sombre:true, verrou:true, danger:0.85, distance:5, voiture:true,
-    butin:{ ration:10, bouteille:8, trousse:4, antibio:2, fusil:1, pistolet:1, boiteBalles:4, boiteCart:3, jerrican:2, randonnee:1, barrefer:1, canette:2 } }
+    butin:{ ration:10, bouteille:8, trousse:4, antibio:2, fusil:1, pistolet:1, boiteBalles:4, boiteCart:3, jerrican:2, randonnee:1, barrefer:1, canette:2 } },
+  // Lieux secrets : invisibles au début, découverts vers le jour indiqué (secret)
+  { nom:"École Jules-Ferry", icone:"🏫", danger:0.35, distance:1, secret:10,
+    indice:"Une flèche dessinée à la craie mène vers l’école : la cantine n’a peut-être pas été pillée.",
+    butin:{ biscuits:3, barre:4, bouteille:4, conserve:3, chiffon:4, ruban:2, bandage:2, alcool:1, cartes:1 } },
+  { nom:"Caserne des pompiers", icone:"🚒", verrou:true, danger:0.5, distance:2, secret:15,
+    indice:"📻 Un message tourne en boucle : « Caserne nord… il reste du matériel… ». Puis plus rien.",
+    butin:{ hache:1, trousse:3, bandage:3, bouteille:6, randonnee:1, ruban:2, ferraille:3, alcool:2, pile:2 } },
+  { nom:"Péniche du canal", icone:"⛴️", danger:0.4, distance:2, secret:20,
+    indice:"De la fumée au-dessus du canal : une péniche est amarrée, apparemment abandonnée.",
+    butin:{ conserve:6, riz:1, bouteille:6, canne:1, couverture:1, chiffon:3, jerrican:1, poisson:3 } },
+  { nom:"Camping des Pins", icone:"🏕️", danger:0.55, distance:3, secret:26,
+    indice:"Une carte routière tombée d’une voiture : le camping des Pins est entouré au feutre rouge.",
+    butin:{ conserves:2, bouteille:8, pates:4, sacados:1, briquet:1, couverture:2, canette:2, planche:6, collet:1 } },
+  { nom:"Clinique vétérinaire", icone:"🐾", sombre:true, danger:0.6, distance:2, secret:32,
+    indice:"Rex (ou un chien du quartier) revient avec un collier marqué « Clinique vétérinaire des Acacias ».",
+    butin:{ antibio:3, bandage:4, trousse:2, alcool:3, chiffon:3, barre:3, ferraille:2 } },
+  { nom:"Bunker du survivaliste", icone:"🛢️", sombre:true, verrou:true, danger:0.8, distance:4, voiture:true, secret:40,
+    indice:"Sur un survivant mort, un carnet : « Mon bunker, route de la carrière. Réserves pour un an. »",
+    butin:{ ration:12, bidon:3, trousse:3, boiteBalles:3, boiteCart:2, fusil:1, barrefer:1, canette:3, pile:4 } }
+];
+// Nombre de lieux avant l'ajout de l'étang (pour reprendre les anciennes sauvegardes)
+var LIEUX_AVANT_ETANG = 13;
+
+/* ---------- Missions urgentes ----------
+   Arrivent la nuit (une à la fois), avec un délai en jours.
+   livrer : objets à donner depuis le stock (bouton « Livrer ») ;
+   aller : il faut revenir vivant d'un lieu donné avant la fin du délai. */
+var MISSIONS = [
+  { id:"medicament", titre:"La fièvre de Lucie", icone:"💊", delai:3,
+    texte:"Chez les voisins, la petite Lucie brûle de fièvre. Son père supplie : un antibiotique ou une trousse de soins, vite.",
+    livrer:[{ antibio:1 }, { trousse:1 }],
+    recompense:{ planche:6, clous:2 }, moral:10, merci:"Lucie va mieux. Son père vous apporte des planches et des clous de son atelier.",
+    echec:"Les volets des voisins sont restés fermés ce matin. Personne n’ose en parler.", moralEchec:-10 },
+  { id:"convoi", titre:"Le convoi", icone:"🚚", delai:3,
+    texte:"Un convoi de survivants passera bientôt. Ils réparent leurs camions et échangent 10 planches contre une trousse, 2 canettes et un jerrican.",
+    livrer:[{ planche:10 }],
+    recompense:{ trousse:1, canette:2, jerrican:1 }, moral:5, merci:"Le convoi repart en klaxonnant. Marché conclu !",
+    echec:"Le convoi est passé sans s’arrêter.", moralEchec:0 },
+  { id:"detresse", titre:"Appel de détresse", icone:"📻", delai:2,
+    texte:"📻 Une voix à la radio : quelqu’un est coincé à LIEU, blessé. Il faut y aller (et revenir vivant) avant la fin du délai.",
+    aller:true,
+    recompense:{ conserve:4, bouteille:4, bandage:2 }, moral:10, merci:"Vous ramenez le survivant. Il partage ses réserves avant de partir rejoindre sa famille.",
+    echec:"La radio ne grésille plus. Trop tard.", moralEchec:-8 }
 ];
 
 /* ---------- Améliorations du refuge (coût en planches) ---------- */
@@ -507,5 +565,6 @@ var ASTUCES = {
   score:      "⭐ Ton score : 1 point par jour et par membre en vie. Garde toute la famille en vie le plus longtemps possible !",
   atelier:    "🛠️ Le refuge : construis des défenses, fabrique (soins, armes, bâche pour l’eau de pluie…), répare et démonte. Et plus tard, répare la voiture.",
   peche:      "🎣 L’étang : équipe une canne à pêche (case outil) pour pêcher. Ne le vide pas : sous 4 poissons, ils ne se reproduisent plus.",
+  mission:    "🎯 Une mission ! Elle a un délai : touche le bouton 🎯 en bas de l’écran pour la voir et livrer ce qu’il faut. Réussir rapporte des objets et du moral.",
   serrure:    "🗝️ Appuie quand le curseur rouge passe dans la zone verte. Chaque raté casse une épingle."
 };

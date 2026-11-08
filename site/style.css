@@ -323,3 +323,13 @@ body.fond .chapcourt{color:#fff6e6;text-shadow:0 1px 2px #000}
 .histoire p.fait{color:var(--mut);text-decoration:none;font-size:13px}
 p.histoire{line-height:1.45}
 .loc.offrepub{border-style:dashed}
+/* Bouton de mission : prêt à livrer */
+.btn.pret{box-shadow:0 0 0 3px var(--acc)}
+/* Classement en ligne */
+.champ{width:100%;box-sizing:border-box;font:inherit;padding:10px 12px;border:2px solid var(--bois, var(--line));border-radius:12px;background:var(--card, #fff);color:var(--ink);margin:4px 0 8px}
+ol.classement{list-style:none;padding:0;margin:8px 0}
+ol.classement li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid var(--line)}
+ol.classement li.moi{background:color-mix(in srgb, var(--acc) 25%, transparent);border-radius:8px;font-weight:800}
+ol.classement .rang{width:2em;text-align:center}
+ol.classement b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol.classement .pts{color:var(--mut);font-size:13px;white-space:nowrap}

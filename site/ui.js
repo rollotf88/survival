@@ -62,6 +62,7 @@ function rGame(){
     astuce("famille"); astuce("equipement");
     if(G.day >= 2) astuce("score");
     if(!G.m.some(peutSortir)) astuce("dormir");
+    if(mission()) astuce("mission");
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
@@ -84,7 +85,7 @@ function rGame(){
     + (chien() ? '<button class="chip chipchien" data-act="chien" title="' + chien().nom + ', le chien">' + ic("chien", "🐕") + (chien().faim ? ' ⚠️' : '') + '</button>' : '')
     + '</div></div>'
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
-    + '<div class="row">' + (marcheOuvert() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
+    + '<div class="row">' + (mission() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
     + '<div class="row acts"><button class="btn' + (G.sel.length ? "" : " attente") + '" data-act="fouille">' + ic("loupe", "🔍") + ' Fouiller</button><button class="btn alt" data-act="stock">' + ic("caisse", "📦") + ' Stock</button><button class="btn alt" data-act="refuge">' + ic("marteau", "🛠️") + ' Refuge</button><button class="btn' + (G.m.some(peutSortir) ? " alt" : "") + '" data-act="endday">' + ic("lune", "🌙") + ' Dormir</button></div>';
 }
 
@@ -108,7 +109,7 @@ function openLoc(){
     var dg = radio ? (d < 0.3 ? "📻 Danger faible" : d < 0.5 ? "📻 Danger moyen" : "📻 Danger élevé") : "Danger inconnu";
     var peut = equipePeutAller(team, i, auto);
     var pourquoi = !reste ? "" : auto && !voitureReparee() ? " · 🚗 voiture nécessaire (en panne)" : auto && !voitureOk(i) ? " · ⛽ pas assez d’essence" : !peut ? " · 😴 trop fatigués" : "";
-    h += '<button class="loc"' + (reste && peut ? "" : " disabled") + ' data-act="loc" data-id="' + i + '"><b>' + iconeLieu(L) + ' ' + L.nom + '</b> <span class="pill">' + (L.peche ? "🐟 " + G.lieux[i].poissons + (G.lieux[i].butin.length ? " · " + G.lieux[i].butin.length + " obj." : "") : reste ? reste + " objet" + (reste > 1 ? "s" : "") : "Vidé") + '</span><small>' + DISTANCES[L.distance] + ' · ⚡ −' + coutEnergie(i, auto) + (auto ? " · ⛽ −" + litres(i) + " L" : "") + pourquoi + '</small><small>' + (cd.join(" · ") || "Accès libre") + ' · ' + dg + '</small></button>';
+    h += '<button class="loc"' + (reste && peut ? "" : " disabled") + ' data-act="loc" data-id="' + i + '"><b>' + iconeLieu(L) + ' ' + L.nom + (G.mission && G.mission.lieu === i ? " 🎯" : "") + '</b> <span class="pill">' + (L.peche ? "🐟 " + G.lieux[i].poissons + (G.lieux[i].butin.length ? " · " + G.lieux[i].butin.length + " obj." : "") : reste ? reste + " objet" + (reste > 1 ? "s" : "") : "Vidé") + '</span><small>' + DISTANCES[L.distance] + ' · ⚡ −' + coutEnergie(i, auto) + (auto ? " · ⛽ −" + litres(i) + " L" : "") + pourquoi + '</small><small>' + (cd.join(" · ") || "Accès libre") + ' · ' + dg + '</small></button>';
   });
   show(h + BTN_FERMER("Annuler"));
 }
@@ -214,6 +215,21 @@ function openMembre(i){
   }).join("") + '</div>';
   h += '<button class="loc" data-act="soins" data-id="' + i + '"><b>＋ Soigner, boire, manger</b><small>Soins, rations d’eau et de nourriture, canette</small></button>';
   h += '<button class="loc' + (on ? " choisi" : "") + '" data-act="msel" data-id="' + i + '"' + (peutSortir(x) || on ? "" : " disabled") + '><b>' + (on ? "✔ Choisi pour partir (toucher pour retirer)" : "🔍 Choisir pour partir fouiller") + '</b><small>' + (peutSortir(x) || on ? "⚡ " + x.en + " · " + (G.sel.length) + " / " + BAL.membresParExpedition + " choisi(s)" : "Trop fatigué pour sortir aujourd’hui") + '</small></button>' + offrePub();
+  show(h + BTN_FERMER());
+}
+
+/* ---------- Mission en cours ---------- */
+function openMission(){
+  var M = mission(); if(!M){ hide(); return; }
+  var j = joursMission(), h = '<h2>' + M.icone + ' ' + M.titre + '</h2><p>' + texteMission() + '</p>';
+  h += '<p class="sub">⏳ ' + (j > 1 ? "Encore " + j + " jours" : "Dernier jour !") + '</p>';
+  var rec = []; for(var k in M.recompense) rec.push(icone(k) + " " + nommer(k, M.recompense[k]));
+  if(M.moral) rec.push("moral +" + M.moral);
+  h += '<p class="sub">🎁 Récompense : ' + rec.join(", ") + '</p>';
+  if(M.livrer){
+    var kl = livraisonPossible();
+    h += '<button class="loc" data-act="livrer"' + (kl >= 0 ? "" : " disabled") + '><b>📦 Livrer ' + M.livrer.map(function(l){ return Object.keys(l).map(function(id){ return icone(id) + " " + nommer(id, l[id]); }).join(" + "); }).join(" ou ") + '</b><small>' + (kl >= 0 ? "Vous avez ce qu’il faut." : "Il vous manque des objets : allez fouiller !") + '</small></button>';
+  } else h += '<p class="sub">🗺️ Envoie une équipe à ' + iconeLieu(LIEUX[G.mission.lieu]) + ' ' + LIEUX[G.mission.lieu].nom + ' : la mission réussit si quelqu’un en revient vivant.</p>';
   show(h + BTN_FERMER());
 }
 
@@ -423,7 +439,8 @@ function over(){
   if(G.seed){
     var cle = "survival_jour_" + G.seed, meilleur = 0;
     try{ meilleur = +localStorage.getItem(cle) || 0; if(G.score > meilleur){ localStorage.setItem(cle, G.score); } }catch(e){}
-    jour = '<p class="sub">📅 Partie du ' + dateGraine(G.seed) + ' · ton meilleur score du jour : <b>' + Math.max(meilleur, G.score) + '</b>' + (G.score > meilleur && meilleur ? " (amélioré !)" : "") + '</p><button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>';
+    jour = '<p class="sub">📅 Partie du ' + dateGraine(G.seed) + ' · ton meilleur score du jour : <b>' + Math.max(meilleur, G.score) + '</b>' + (G.score > meilleur && meilleur ? " (amélioré !)" : "") + '</p><button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>' + (typeof openEnvoiScore === "function" ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement du jour</button>' : '');
+    dernierEnvoi = { seed:G.seed, score:G.score, jours:d };
   }
   var lv = G.ref.barr + G.ref.eau + G.ref.pot;
   show('<h2>Votre famille n’est plus</h2><p>Elle a tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b>.</p><p class="score">⭐ Score : <b>' + G.score + '</b>' + (nouveau ? ' · 🏆 Nouveau record !' : '') + '</p><p class="sub">Un point par jour et par membre en vie.</p>' + jour + '<ul>' + G.dd.map(function(z){ return '<li>💀 ' + z.n + ' : ' + z.c + ' (jour ' + z.j + ')</li>'; }).join("") + '<li>🔨 Améliorations du refuge : ' + lv + '</li><li>🏆 Record : ' + RECORD + ' points</li></ul><button class="btn" style="width:100%" data-act="again">Nouvelle famille</button>');
@@ -558,6 +575,8 @@ document.addEventListener("click", function(e){
   else if(a === "son"){ basculerSon(); return; }
   else if(a === "stock"){ openStock(); return; }
   else if(a === "chapitre"){ openChapitre(); return; }
+  else if(a === "mission"){ openMission(); return; }
+  else if(a === "livrer"){ var lm = livrerMission(); render(); if(lm) show('<h2>🎯 Mission réussie</h2><p>' + lm + '</p>' + BTN_FERMER()); return; }
   else if(a === "chien"){ confirmerChien = false; openChien(); return; }
   else if(a === "mangerchien"){ confirmerChien = true; openChien(); return; }
   else if(a === "mangerchienok"){ confirmerChien = false; var mc = mangerChien(); render(); show('<h2>Un soir de famine</h2><p>' + (mc || "Ce n’est plus possible.") + '</p>' + BTN_FERMER("Continuer")); return; }

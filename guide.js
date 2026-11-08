@@ -28,6 +28,10 @@ function reglesGuide(){
       "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chacun attrape " + B.peche.prises[0] + " à " + B.peche.prises[1] + " poissons (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
       "Les poissons se reproduisent lentement (+1 toutes les " + B.peche.nuitsParNaissance + " nuits), mais seulement s’il en reste au moins " + B.peche.seuil + " : vide l’étang et il ne donnera plus rien. " +
       "Les poules pondent souvent un œuf la nuit (+1 ration), boivent 1 ration d’eau pour " + B.poules.eauPour + " poules, et chaque poule ajoute +" + Math.round(B.poules.attaque * 100) + " % de risque d’attaque. Sans eau, l’une d’elles meurt."],
+    ["Le monde bouge", "🏴",
+      "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. " +
+      "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. " +
+      "Des missions arrivent aussi, avec un délai : livrer un objet ou aller secourir quelqu’un. Le bouton 🎯 en bas de l’écran les montre."],
     ["La nuit", ic("lune", "🌙"),
       "Des zombies peuvent attaquer, de plus en plus fort avec les jours. Ta défense = armes en main + barricade (+" + B.defenseBarricade + " par niveau) + piège + Rex. " +
       "Une attaque perdue blesse quelqu’un, fait perdre de la nourriture et détruit un niveau de barricade. Sans couverture ni briquet, la nuit est glaciale."],
@@ -79,6 +83,7 @@ function openMenu(){
   var h = '<h2>☰ Menu</h2>';
   h += '<button class="loc" data-act="close"><b>▶️ Reprendre la partie</b></button>';
   h += '<button class="loc" data-act="guide"><b>📖 Guide du survivant</b><small>Règles, objets, lieux, zombies, famille</small></button>';
+  if(typeof openClassement === "function") h += '<button class="loc" data-act="classement"><b>🏆 Classement du jour</b><small>Les meilleurs scores de la Partie du jour</small></button>';
   h += '<button class="loc" data-act="menuson"><b>' + (sonEstActif() ? "🔊 Son : activé" : "🔇 Son : coupé") + '</b><small>Toucher pour ' + (sonEstActif() ? "couper" : "remettre") + ' le son</small></button>';
   h += '<button class="loc" data-act="revoirastuces"><b>💡 Revoir les astuces</b><small>Les bulles d’aide de la première partie réapparaîtront</small></button>';
   h += '<p class="sub">' + (G.seed ? "📅 Partie du " + dateGraine(G.seed) : "🎲 Partie libre") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p>';
@@ -102,7 +107,7 @@ function openGuide(){
   } else if(guideOnglet === "lieux"){
     h += LIEUX.map(function(L){
       var tags = [DISTANCES[L.distance], "danger " + niveauDanger(L.danger)];
-      if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.jour) tags.push("à partir du jour " + L.jour);
+      if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.secret) tags.push("secret : découvert vers le jour " + L.secret); if(L.jour) tags.push("à partir du jour " + L.jour);
       return '<div class="gsec"><b>' + iconeLieu(L) + ' ' + L.nom + '</b><p class="sub">' + tags.join(" · ") + '</p><div class="gmini">' + Object.keys(L.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>';
     }).join("");
   } else if(guideOnglet === "zombies"){

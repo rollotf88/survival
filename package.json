@@ -1,0 +1,9 @@
+{
+  "name": "survival",
+  "private": true,
+  "description": "Serveur du classement (fonction Netlify). Le jeu lui-même n'a besoin de rien.",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

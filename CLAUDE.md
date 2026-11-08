@@ -115,6 +115,14 @@ Histoire, pub, installation (2026-11-08, retours de Fabien) :
 - Pub « Second souffle » : plus de bouton fixe. Proposée comme sur un jeu mobile (`offrePub`, `pubUtile` dans ui.js) seulement quand plus personne ne peut sortir : dans « Qui part ? », la fiche d'un membre et la confirmation du canapé (`openDormir`). Toujours 2 par jour. Le bonus pub de l'écran de départ reste. Idée de Fabien pour plus tard : une boutique
 - Installation sur téléphone préparée : `manifest.json`, `sw.js` (copie hors connexion, réseau d'abord ; changer `VERSION` à chaque mise à jour), icônes `images/icone-192.png`, `icone-512.png`, `icone-apple.png` (la cheminée de la pièce peinte). Ne marche que si le jeu est hébergé sur un vrai site en https (GitHub Pages, Netlify… compte de Fabien nécessaire), pas sur le lien claude.ai ni en double-clic
 
+Fin de partie et classement (2026-11-08, choix de Fabien : « 2 et 3 ») :
+- Lieux secrets (fin de `LIEUX`, champ `secret` = jour de découverte, `indice`) : École (10), Caserne des pompiers (15), Péniche du canal (20), Camping des Pins (26), Clinique vétérinaire (32), Bunker du survivaliste (40, voiture). `G.decouverts`, `lieuOuvert` les cache avant ; découverts 2 jours plus tôt avec une radio (`BAL.avanceRadio`)
+- Pillards (`BAL.pillards`, à partir du jour 8, 30 % par nuit) : vident 30 à 60 % d'un lieu ouvert qui a encore au moins 3 objets
+- Missions (`MISSIONS`, `G.mission = {id, fin, lieu}`, `BAL.missions`) : Lucie (livrer antibiotique ou trousse), Convoi (10 planches), Appel de détresse (revenir vivant d'un lieu, marqué 🎯 dans la liste). Bouton 🎯 en bas de l'écran (`openMission`, contour ambre quand on peut livrer). Tout se passe la nuit dans `nuitMonde` (logique.js)
+- `migrerPartie` ajoute les nouveaux lieux de fin de liste aux anciennes sauvegardes (`LIEUX_AVANT_ETANG` = 13). `leLieu(nom)` met l'article
+- Simulation : Malin 319 points (médiane, 10 % ≤ 249, 90 % ≤ 372, max 453), 88 jours ; lieux tous vidés vers le jour 65 (au lieu de 12) ; 334 sans pillards, 288 sans missions ; Naïf 33 ; personne au jour 200
+- Classement en ligne de la Partie du jour : `classement.js` (envoi à la fin de partie avec un pseudo, bouton 🏆 dans le menu) + serveur `netlify/functions/classement.mjs` (Netlify Blobs, `package.json`), adresse `/api/classement`. Garde le meilleur score par appareil (identifiant au hasard `survival_id`), refuse un score > 4 × jours ou un jour hors des 7 derniers. Pas de vraie vérification anti-triche (il faudrait rejouer la partie côté serveur). Depuis claude.ai ou en double-clic, il appelle le site Netlify (CORS), sinon message clair
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

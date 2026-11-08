@@ -66,6 +66,7 @@ var MALIN = {
       var ouvrir = pourEmplacement("outil").some(function(o){ return OBJETS[o.id].ouvre; });
       var score = function(i){
         var L = LIEUX[i], s = Math.min(resteLieu(i) - (L.peche ? BAL.peche.seuil : 0), 10) / (1 + 2 * dangerLieu(i)) / coutEnergie(i, LIEUX[i].voiture);
+        if(G.mission && G.mission.lieu === i) s *= 3; // mission de secours
         if(L.sombre && !lampe) s *= 0.5; if(L.verrou && !(ouvrir && dispo.length > (L.sombre ? 1 : 0))) s *= 0.5;
         return s;
       };
@@ -90,6 +91,8 @@ var MALIN = {
       var donneVital = OBJETS[o.donne.id].cat === "eau" || OBJETS[o.donne.id].cat === "nour";
       if(utile && !donneVital) echanger(k);
     });
+    // Mission à livrer : on livre si ça ne vide pas nos soins
+    if(MALIN.missions !== false && livraisonPossible() >= 0 && (mission().id !== "medicament" || soinsDispo() > 2)) livrerMission();
     VOITURE.pieces.forEach(function(p){ installerPiece(p); });
     while(voitureReparee() && G.voiture.essence <= VOITURE.reservoir - VOITURE.litresJerrican && fairePlein());
     var essais = 0;

@@ -66,7 +66,7 @@ function demarrer(){
   G.ph = "game"; G.day = 1; G.score = 0; G.sel = []; G.ads = 0; G.dd = []; G.ref = { barr:0, eau:0, pot:0 };
   G.uid = 0; G.stock = { n:{}, o:[] }; G.reste = { eau:0, nour:0 };
   G.voiture = { installees:{}, essence:0 };
-  G.stats = { lieux:{}, fabriques:0, eloignes:0 }; G.charrette = JSON.parse(JSON.stringify(MARCHE.stock)); G.chap = 0; G.annonces = [];
+  G.stats = { lieux:{}, fabriques:0, eloignes:0 }; G.decouverts = {}; G.mission = null; G.charrette = JSON.parse(JSON.stringify(MARCHE.stock)); G.chap = 0; G.annonces = [];
   for(var k in pack) ajouter(k, pack[k], 1);
   var moral = 0; for(var k in pack) moral += (OBJETS[k].moral || 0) * pack[k];
   G.moral = Math.min(100, BAL.moralDepart + BAL.moralParObjet * moral);
@@ -86,12 +86,19 @@ function demarrer(){
 // Anciennes sauvegardes (avant l'étang) : on insère l'étang à sa place dans la liste des lieux
 function migrerPartie(g){
   var ie = LIEUX.findIndex(function(L){ return L.peche; });
-  if(g.lieux && g.lieux.length === LIEUX.length - 1){
+  if(g.lieux && g.lieux.length === LIEUX_AVANT_ETANG){
     var b = []; for(var id in LIEUX[ie].butin) for(var k = 0; k < LIEUX[ie].butin[id]; k++) b.push(id);
     g.lieux.splice(ie, 0, { butin:melanger(b, graine(hacher("etang"))), poissons:BAL.peche.poissons });
     var st = {}; for(var c in g.stats.lieux) st[+c >= ie ? +c + 1 : c] = true; g.stats.lieux = st;
     if(g.exp && g.exp.lieu >= ie) g.exp.lieu++;
   }
+  // Lieux ajoutés à la fin de la liste (lieux secrets) : on les crée
+  while(g.lieux && g.lieux.length < LIEUX.length){
+    var L = LIEUX[g.lieux.length], b2 = [];
+    for(var id2 in L.butin) for(var k2 = 0; k2 < L.butin[id2]; k2++) b2.push(id2);
+    g.lieux.push(L.peche ? { butin:melanger(b2, graine(hacher(L.nom))), poissons:BAL.peche.poissons } : { butin:melanger(b2, graine(hacher(L.nom))) });
+  }
+  if(!g.decouverts) g.decouverts = {};
   return g;
 }
 function melanger(t, rng){ rng = rng || hasard; for(var i = t.length - 1; i > 0; i--){ var j = Math.floor(rng() * (i + 1)), x = t[i]; t[i] = t[j]; t[j] = x; } return t; }
@@ -252,7 +259,9 @@ function userArme(x, n){
 function dangerLieu(i){ return LIEUX[i].danger + Math.min(BAL.dangerMaxAjoute, G.day * BAL.dangerParJour) + (G.hordeJour === G.day ? 0.2 : 0); }
 // Ce qui reste à prendre dans un lieu (à l'étang : les objets + les poissons)
 function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0); }
-function lieuOuvert(i){ return !LIEUX[i].jour || G.day >= LIEUX[i].jour; }
+function lieuOuvert(i){ return (!LIEUX[i].jour || G.day >= LIEUX[i].jour) && (!LIEUX[i].secret || !!(G.decouverts && G.decouverts[i])); }
+// Jour où un lieu secret est découvert (plus tôt avec une radio)
+function jourDecouverte(i){ return LIEUX[i].secret - (possede(function(o){ return o.radio; }) ? BAL.avanceRadio : 0); }
 
 /* ---------- Énergie ---------- */
 // En voiture, le trajet ne fatigue pas : on ne paie que la fouille
@@ -418,6 +427,7 @@ function finExpedition(){
   team.forEach(function(x){ x.en = Math.max(0, x.en - cout); });
   G.exp = null; G.combat = null;
   if(survivants.length){ G.stats.lieux[i] = true; if(LIEUX[i].voiture) G.stats.eloignes++; }
+  if(survivants.length && G.mission && G.mission.lieu === i){ var mr = reussirMission(); if(mr) n.push(["g2", mr]); }
   return { lieu:i, notes:n, pris:grouper(pris), laisses:grouper(laisses), vide:resteLieu(i) === 0 };
 }
 
@@ -602,6 +612,7 @@ function finJour(){
   G.reste.eau += pe; G.reste.nour += pn;
   if(pe) n.push(["g2", ic("ref_eau", "🪣") + " Le récupérateur a recueilli " + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]);
   if(pn) n.push(["g2", ic("ref_pot", "🥕") + " Le potager a donné " + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]);
+  nuitMonde(n);
   var moral = 0;
   G.stock.o.concat(equipes()).forEach(function(o){ moral += OBJETS[o.id].moral || 0; });
   changerMoral(-BAL.moralPerteNuit + BAL.moralBonusObjet * moral);
@@ -640,6 +651,67 @@ function verifierChapitre(){
   G.annonces.push({ num:G.chap + 1, titre:c.titre, texte:c.texte, recompense:rec.length ? nommerListe(rec) : "", moral:c.moral });
   G.chap++; G.cibleTenir = 0;
   verifierChapitre(); // plusieurs chapitres d'un coup si besoin
+}
+
+/* ---------- Le monde bouge la nuit : pillards, découvertes, missions ---------- */
+function nuitMonde(n){
+  var P = BAL.pillards, jour = G.day + 1; // le jour qui commence
+  // Pillards : ils emportent une partie d'un lieu ouvert qu'il reste à fouiller
+  if(jour >= P.jour && alea("pillards") < P.chance){
+    var cibles = LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && G.lieux[i].butin.length >= P.minimum; });
+    if(cibles.length){
+      var c = cibles[Math.floor(alea("pillards-lieu") * cibles.length)], l = G.lieux[c];
+      var nb = Math.max(1, Math.round(l.butin.length * (P.part[0] + alea("pillards-part") * (P.part[1] - P.part[0]))));
+      l.butin.splice(0, nb);
+      n.push(["b2", "🏴 Des pillards ont fouillé " + leLieu(LIEUX[c].nom) + " cette nuit : il n’y reste plus que " + l.butin.length + " objet" + (l.butin.length > 1 ? "s" : "") + "."]);
+    }
+  }
+  // Lieux secrets découverts
+  LIEUX.forEach(function(L, i){
+    if(L.secret && !G.decouverts[i] && jour >= jourDecouverte(i)){
+      G.decouverts[i] = jour;
+      n.push(["g2", "🗺️ Nouveau lieu découvert : " + iconeLieu(L) + " " + L.nom + ". " + L.indice]);
+    }
+  });
+  // Mission : fin du délai, ou nouvelle mission
+  var M = mission();
+  if(M && jour > G.mission.fin){
+    changerMoral(M.moralEchec || 0);
+    n.push(["b2", M.icone + " Mission ratée : " + M.titre + ". " + M.echec + (M.moralEchec ? " Moral " + M.moralEchec + "." : "")]);
+    G.mission = null;
+  } else if(!M && jour >= BAL.missions.jour && alea("mission") < BAL.missions.chance){
+    var m = MISSIONS[Math.floor(alea("mission-quoi") * MISSIONS.length)], lieu = null;
+    if(m.aller){
+      var possibles = LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && !LIEUX[i].voiture && resteLieu(i) > 0; });
+      if(!possibles.length) return;
+      lieu = possibles[Math.floor(alea("mission-lieu") * possibles.length)];
+    }
+    G.mission = { id:m.id, fin:jour + m.delai - 1, lieu:lieu };
+    n.push(["g2", m.icone + " Nouvelle mission : " + m.titre + " (" + m.delai + " jours). " + texteMission()]);
+  }
+}
+// « le Garage auto », « l’Hôpital », « la Zone industrielle »
+var FEMININS_LIEUX = ["Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire"];
+function leLieu(nom){ return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
+function mission(){ return G.mission ? MISSIONS.filter(function(m){ return m.id === G.mission.id; })[0] : null; }
+function texteMission(){ var M = mission(); return M ? M.texte.replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }
+function joursMission(){ return G.mission ? G.mission.fin - G.day + 1 : 0; }
+// Quelle livraison est possible maintenant (index dans M.livrer), ou -1
+function livraisonPossible(){
+  var M = mission(); if(!M || !M.livrer) return -1;
+  for(var k = 0; k < M.livrer.length; k++){ var ok = true; for(var id in M.livrer[k]) if(compter(id) < M.livrer[k][id]) ok = false; if(ok) return k; }
+  return -1;
+}
+function livrerMission(){
+  var k = livraisonPossible(); if(k < 0) return null;
+  var M = mission(); for(var id in M.livrer[k]) retirer(id, M.livrer[k][id]);
+  return reussirMission();
+}
+function reussirMission(){
+  var M = mission(); if(!M) return null;
+  var rec = []; for(var k in M.recompense){ ajouter(k, M.recompense[k], 1); rec.push({ id:k, n:M.recompense[k] }); }
+  changerMoral(M.moral || 0); G.mission = null; G.stats.missions = (G.stats.missions || 0) + 1;
+  return M.icone + " Mission réussie : " + M.titre + ". " + M.merci + " (+" + nommerListe(rec) + (M.moral ? ", moral +" + M.moral : "") + ")";
 }
 
 /* ---------- Le chien ---------- */

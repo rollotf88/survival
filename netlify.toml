@@ -1,3 +1,8 @@
 # Netlify publie le dossier « site » (refait par preparer-site.py)
+# et le serveur du classement (netlify/functions)
 [build]
   publish = "site"
+  command = ""
+
+[functions]
+  directory = "netlify/functions"
