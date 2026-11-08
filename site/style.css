@@ -333,3 +333,33 @@ ol.classement li.moi{background:color-mix(in srgb, var(--acc) 25%, transparent);
 ol.classement .rang{width:2em;text-align:center}
 ol.classement b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 ol.classement .pts{color:var(--mut);font-size:13px;white-space:nowrap}
+/* ---------- Morts mises en avant ---------- */
+.deuil{display:flex;align-items:center;gap:10px;margin:6px 0 10px;padding:8px 10px;border:2px solid var(--bad);border-radius:12px;background:color-mix(in srgb, var(--bad) 14%, var(--card))}
+.deuil .em{font-size:44px;line-height:1;flex:0 0 auto}
+.deuil b{display:block;color:var(--bad);font-size:16px}
+.deuil small{color:var(--mut)}
+/* ---------- Écran de game over ---------- */
+#gameover{position:fixed;inset:0;z-index:4;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;
+  background:radial-gradient(circle at 50% 35%, #3a1d14 0%, #120a07 75%);color:#f1e4cc;overflow:auto;animation:goApparait .8s ease-out}
+@keyframes goApparait{from{opacity:0}to{opacity:1}}
+.go-boite{width:100%;max-width:440px;text-align:center;margin:auto}
+.go-titre{font-size:clamp(44px, 14vw, 72px);color:#e2483a;text-shadow:0 3px 0 #000, 0 0 24px rgba(226,72,58,.5);margin:0;letter-spacing:.06em}
+.go-sous{margin:2px 0 10px;color:#cdb79a}
+.go-morts{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:8px 0 12px}
+.go-mort{width:92px;display:flex;flex-direction:column;align-items:center}
+.go-mort .em{font-size:56px;line-height:1}
+.go-mort b{margin-top:4px}
+.go-mort small{color:#cdb79a;font-size:11px;line-height:1.25}
+.go-jours{font-size:18px;margin:4px 0}
+.go-score{font-family:"Bangers","Impact",sans-serif;font-size:48px;color:#f0b429;margin:0;text-shadow:0 2px 0 #000}
+#gameover .btn.alt{background:#2d221a;color:#f1e4cc}
+#gameover .sub{color:#cdb79a}
+/* Game over en paysage (téléphone couché) : deux colonnes pour éviter de faire défiler */
+@media (max-height:500px) and (orientation:landscape){
+  .go-boite{max-width:760px;display:flex;align-items:center;gap:20px}
+  .go-gauche,.go-droite{flex:1 1 0;min-width:0}
+  .go-titre{font-size:44px}
+  .go-mort{width:76px}.go-mort .em{font-size:40px}
+  .go-score{font-size:36px}
+  .go-jours{font-size:16px}
+}

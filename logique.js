@@ -238,13 +238,15 @@ function boire(i){
 /* ---------- Santé, moral ---------- */
 function vivants(){ return G.m.filter(function(x){ return x.al; }); }
 function changerMoral(d){ G.moral = Math.max(0, Math.min(100, G.moral + d)); }
+var FEMININS = ["Maman", "Emma", "Nora", "Inès"];
 function blesser(x, d, n, cause){
   if(!x || !x.al) return;
   x.hp -= d;
   if(x.hp <= 0){
     x.hp = 0; x.al = false; changerMoral(-25);
-    n.push(["b2", "💀 " + x.nom + " est mort" + (cause ? " : " + cause : "") + "."]);
-    G.dd.push({ n:x.nom, c:cause || "cause inconnue", j:G.day });
+    // Annonce mise en avant dans les textes (classe « mort », avec le nom pour afficher son portrait)
+    n.push(["mort", x.nom + " est mort" + (FEMININS.indexOf(x.nom) >= 0 ? "e" : "") + (cause ? " : " + cause : "") + ".", x.nom]);
+    G.dd.push({ n:x.nom, c:cause || "cause inconnue", j:G.day, ic:x.icone });
     rendreAuStock([x]); // son équipement reste à la famille
   }
 }
@@ -499,7 +501,7 @@ function jouerTour(choix){
     if(r.tir) bruit(J);
   });
   attaqueZombies(protege, J);
-  C.journal = J; C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "b2" && l[1].indexOf("💀") >= 0 || l[1].indexOf("💥") >= 0; }));
+  C.journal = J; C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[0] === "b2" && l[1].indexOf("💀") >= 0 || l[1].indexOf("💥") >= 0; }));
   verifierFin(J);
   return J;
 }
@@ -523,7 +525,7 @@ function fuir(){
   } else {
     J.push(["b2", "🏃 La fuite échoue, les zombies vous rattrapent !"]);
     attaqueZombies({}, J);
-    C.resume = C.resume.concat(J.filter(function(l){ return l[1].indexOf("💀") >= 0; }));
+    C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[1].indexOf("💀") >= 0; }));
     if(!equipeCombat().length) verifierFin(J); else C.tour++;
   }
   C.journal = J;

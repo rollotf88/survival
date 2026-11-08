@@ -123,6 +123,10 @@ Fin de partie et classement (2026-11-08, choix de Fabien : « 2 et 3 ») :
 - Simulation : Malin 319 points (médiane, 10 % ≤ 249, 90 % ≤ 372, max 453), 88 jours ; lieux tous vidés vers le jour 65 (au lieu de 12) ; 334 sans pillards, 288 sans missions ; Naïf 33 ; personne au jour 200
 - Classement en ligne GÉNÉRAL (choix de Fabien : seulement général, pas du jour) : `classement.js` (bouton « 🏆 Envoyer au classement » à la fin de toute partie, avec un pseudo ; « 🏆 Classement » dans le menu, sa place affichée même hors des 50 premiers) + serveur `netlify/functions/classement.mjs` (Netlify Blobs, clé `general`, 1000 joueurs gardés, `package.json`), adresse `/api/classement`. Garde le meilleur score par appareil (identifiant au hasard `survival_id`), refuse un score > 4 × jours. Pas de vraie protection anti-triche (et les parties libres dépendent un peu de la chance). Depuis claude.ai ou en double-clic, il appelle le site Netlify (CORS), sinon message clair
 
+Morts et game over (2026-11-08, demande de Fabien) :
+- Une mort est une note de classe `"mort"` (`blesser` dans logique.js, avec le nom en 3e case) : `puces()` l'affiche en premier, en carte rouge (`.deuil`) avec le portrait gris, « Repose en paix », et joue un glas synthétisé (`sonGlas`, pas de fichier). Accord féminin via `FEMININS`
+- Écran de game over plein écran (`ecranGameOver`, `#gameover`, sous les fenêtres pour que le classement s'ouvre par-dessus) : « GAME OVER », les disparus en gris avec cause et jour, jours tenus, score en grand, record, boutons classement / copier / nouvelle famille. En paysage bas : deux colonnes (pas de défilement)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

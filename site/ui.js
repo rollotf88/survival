@@ -27,7 +27,13 @@ document.addEventListener("click", function(e){
 
 function niveau(v){ return v < 35 ? "lo" : v < 70 ? "mid" : ""; }
 function barre(l, v){ v = Math.max(0, Math.min(100, v)); return '<div class="b"><span>' + l + '</span><div class="bar"><i class="' + niveau(v) + '" style="width:' + v + '%"></i></div></div>'; }
-function puces(n){ return '<ul>' + n.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>'; }
+function puces(n){
+  var morts = n.filter(function(a){ return a[0] === "mort"; }), autres = n.filter(function(a){ return a[0] !== "mort"; });
+  if(morts.length) setTimeout(function(){ son("glas"); }, 150);
+  return morts.map(function(a){
+    return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
+  }).join("") + (autres.length ? '<ul>' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
+}
 function show(h){ $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 function hide(){ $("modal").style.display = "none"; }
 var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
@@ -444,7 +450,18 @@ function over(){
   var lv = G.ref.barr + G.ref.eau + G.ref.pot;
   // Classement général en ligne (classement.js), pour toutes les parties
   if(typeof openEnvoiScore === "function"){ dernierEnvoi = { score:G.score, jours:d }; jour += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement</button>'; }
-  show('<h2>Votre famille n’est plus</h2><p>Elle a tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b>.</p><p class="score">⭐ Score : <b>' + G.score + '</b>' + (nouveau ? ' · 🏆 Nouveau record !' : '') + '</p><p class="sub">Un point par jour et par membre en vie.</p>' + jour + '<ul>' + G.dd.map(function(z){ return '<li>💀 ' + z.n + ' : ' + z.c + ' (jour ' + z.j + ')</li>'; }).join("") + '<li>🔨 Améliorations du refuge : ' + lv + '</li><li>🏆 Record : ' + RECORD + ' points</li></ul><button class="btn" style="width:100%" data-act="again">Nouvelle famille</button>');
+  ecranGameOver(d, nouveau, jour, lv);
+}
+// Écran de fin plein écran : les disparus en gris, le score en grand
+function ecranGameOver(d, nouveau, jour, lv){
+  hide(); son("glas");
+  var e = $("gameover"); if(!e){ e = document.createElement("div"); e.id = "gameover"; document.body.appendChild(e); }
+  e.innerHTML = '<div class="go-boite"><div class="go-gauche"><h1 class="go-titre">GAME OVER</h1><p class="go-sous">Votre famille n’est plus.</p>'
+    + '<div class="go-morts">' + G.dd.map(function(z){ return '<div class="go-mort"><span class="em">' + iconeMembre({ nom:z.n, al:false, hp:0, en:0, faim:0, soif:0, icone:z.ic || "💀" }) + '</span><b>' + z.n + '</b><small>' + z.c + '<br>jour ' + z.j + '</small></div>'; }).join("") + '</div></div>'
+    + '<div class="go-droite"><p class="go-jours">Vous avez tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b></p>'
+    + '<p class="go-score">⭐ ' + G.score + '</p><p class="go-sous">' + (nouveau ? "🏆 Nouveau record !" : "Record : " + RECORD + " points") + ' · 🔨 refuge niveau ' + lv + '</p>'
+    + jour + '<button class="btn" style="width:100%" data-act="again">Nouvelle famille</button></div></div>';
+  e.style.display = "flex";
 }
 
 // Texte à coller dans un message pour comparer avec ses amis (en attendant un vrai classement en ligne)
@@ -610,7 +627,7 @@ document.addEventListener("click", function(e){
   else if(a === "salvage"){ msgAtelier = demonter(i) || ""; render(); openRef(); return; }
   else if(a === "morning"){ var ev = evenementDuMatin(); if(ev) openEvent(ev); else fermer(); return; }
   else if(a === "ev"){ var rs = G.ev.choix[i][1](); G.ev = null; G.evIdx = null; render(); show('<h2>Résultat</h2><p>' + rs + '</p>' + BTN_FERMER("Continuer")); finiSiMorts(); return; }
-  else if(a === "again"){ nouvelleFamille(); return; }
+  else if(a === "again"){ var go = $("gameover"); if(go) go.style.display = "none"; nouvelleFamille(); return; }
   else if(a === "continuer"){ reprendre(enCours); enCours = null; return; }
   else if(a === "nouvelle"){ enCours = null; nouvelleFamille(); return; }
   else if(a === "partage"){ copierResultat(b); return; }
@@ -696,11 +713,26 @@ function sonEstActif(){ try{ return localStorage.getItem("survival_son") !== "no
 var sonActif = sonEstActif();
 var lectureOgg = !!new Audio().canPlayType('audio/ogg; codecs="vorbis"'); // certains iPhone ne lisent pas l'OGG
 function son(nom, delai){
+  if(nom === "glas"){ sonGlas(); return; }
   if(!sonActif || !SONS[nom]) return;
   if(delai){ setTimeout(function(){ son(nom); }, delai); return; }
   var f = SONS[nom][0]; if(Array.isArray(f)) f = f[Math.floor(Math.random() * f.length)];
   if(/\.ogg$/.test(f) && !lectureOgg) return;
   try{ var a = new Audio(f); a.volume = SONS[nom][1]; var p = a.play(); if(p && p.catch) p.catch(function(){}); }catch(e){}
+}
+// Glas : une note grave qui s'éteint lentement (quand un membre meurt), synthétisée
+function sonGlas(){
+  if(!sonActif) return;
+  try{
+    ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    var c = ctxAudio, t = c.currentTime;
+    [110, 220, 331].forEach(function(f, k){
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25 / (k + 1), t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.5);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + 2.6);
+    });
+  }catch(e){}
 }
 // Coup de feu synthétisé : un souffle de bruit qui s'éteint vite + un « boum » grave
 var ctxAudio = null;
