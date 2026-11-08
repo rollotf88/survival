@@ -18,7 +18,7 @@ function jourValide(j){
 
 export default async (req) => {
   if(req.method === "OPTIONS") return new Response("", { headers: ENTETES });
-  const store = getStore("classement");
+  const store = getStore({ name: "classement", consistency: "strong" }); // lecture immédiate de ce qui vient d’être écrit
   if(req.method === "GET"){
     const params = new URL(req.url).searchParams, jour = +params.get("jour"), moi = params.get("id") || "";
     if(!/^\d{8}$/.test(String(jour))) return reponse({ erreur: "jour invalide" }, 400);
