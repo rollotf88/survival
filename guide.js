@@ -80,14 +80,17 @@ var guideOnglet = "regles", guideFiche = null, confirmerNouvelle = false;
 var ONGLETS_GUIDE = [["regles","📜","Règles"],["objets","🎒","Objets"],["lieux","🗺️","Lieux"],["zombies","🧟","Zombies"],["famille","👪","Famille"]];
 
 function openMenu(){
-  var h = '<h2>☰ Menu</h2>';
-  h += '<button class="loc" data-act="close"><b>▶️ Reprendre la partie</b></button>';
-  h += '<button class="loc" data-act="guide"><b>📖 Guide du survivant</b><small>Règles, objets, lieux, zombies, famille</small></button>';
-  if(typeof openClassement === "function") h += '<button class="loc" data-act="classement"><b>🏆 Classement</b><small>Les meilleurs scores de tous les joueurs</small></button>';
-  h += '<button class="loc" data-act="menuson"><b>' + (sonEstActif() ? "🔊 Son : activé" : "🔇 Son : coupé") + '</b><small>Toucher pour ' + (sonEstActif() ? "couper" : "remettre") + ' le son</small></button>';
-  h += '<button class="loc" data-act="revoirastuces"><b>💡 Revoir les astuces</b><small>Les bulles d’aide de la première partie réapparaîtront</small></button>';
-  h += '<p class="sub">' + (G.seed ? "📅 Partie du " + dateGraine(G.seed) : "🎲 Partie libre") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p>';
-  if(!confirmerNouvelle) h += '<button class="loc" data-act="menunouvelle"><b>🆕 Nouvelle famille</b><small>Abandonner la partie en cours</small></button>';
+  // Grille compacte : tout tient sans faire défiler, même sur un petit téléphone ou couché
+  var t = function(act, titre, sous){ return '<button class="mt" data-act="' + act + '"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</button>'; };
+  var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "📅 Partie du " + dateGraine(G.seed) : "🎲 Partie libre") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
+  h += t("guide", "📖 Guide", "Règles, objets, lieux");
+  if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
+  if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
+  h += t("revoirastuces", "💡 Astuces", "Les revoir");
+  h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
+  if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
+  h += '</div>';
+  if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';
   else h += '<p class="msg">Vraiment ? La partie en cours sera perdue.</p><div class="row"><button class="btn" data-act="menunouvelleok">Oui, recommencer</button><button class="btn alt" data-act="menu">Non</button></div>';
   show(h);
 }

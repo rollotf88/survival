@@ -386,7 +386,7 @@ function tentativeGoupille(reussi){
   if(reussi){
     S.faites++;
     if(S.faites >= BAL.crochetage.goupilles){
-      S.fin = "ouvert";
+      S.fin = "ouvert"; G.stats.crochetages = (G.stats.crochetages || 0) + 1;
       G.exp.notes.push(["g2", "🗝️ " + x.nom + " crochète la serrure en silence" + (S.cassees ? " (" + nommer("epingle", S.cassees) + " cassée" + (S.cassees > 1 ? "s" : "") + ")" : "") + "."]);
       return "Clic ! La porte s’ouvre.";
     }
@@ -417,7 +417,7 @@ function finExpedition(){
   if(LIEUX[i].peche) survivants.forEach(function(x){
     var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return;
     var k = Math.min(lieu.poissons, Math.max(1, Math.round(R(BAL.peche.prises[0], BAL.peche.prises[1]) * mult)));
-    lieu.poissons -= k; peches += k;
+    lieu.poissons -= k; peches += k; G.stats.poissons = (G.stats.poissons || 0) + k;
     for(var p = 0; p < k; p++) trouves.unshift("poisson");
     n.push(["g2", "🎣 " + x.nom + " pêche " + (k ? nommer("poisson", k) : "rien") + "."]);
     c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); }
@@ -565,6 +565,7 @@ function finJour(){
   // Le chien mange après la famille ; sans manger trop longtemps, il s'en va
   var c = chien();
   if(c){
+    G.stats.nuitsChien = (G.stats.nuitsChien || 0) + 1;
     if(prendreRations("nour", BAL.chien.rations)) c.faim = 0;
     else {
       c.faim++;

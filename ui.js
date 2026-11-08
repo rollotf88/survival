@@ -29,7 +29,7 @@ function niveau(v){ return v < 35 ? "lo" : v < 70 ? "mid" : ""; }
 function barre(l, v){ v = Math.max(0, Math.min(100, v)); return '<div class="b"><span>' + l + '</span><div class="bar"><i class="' + niveau(v) + '" style="width:' + v + '%"></i></div></div>'; }
 function puces(n){
   var morts = n.filter(function(a){ return a[0] === "mort"; }), autres = n.filter(function(a){ return a[0] !== "mort"; });
-  if(morts.length) setTimeout(function(){ son("glas"); }, 150);
+  if(morts.length) setTimeout(function(){ son("glas"); if(typeof vibrer === "function") vibrer([200, 100, 400]); }, 150);
   return morts.map(function(a){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<ul>' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
@@ -455,6 +455,7 @@ function over(){
 // Écran de fin plein écran : les disparus en gris, le score en grand
 function ecranGameOver(d, nouveau, jour, lv){
   hide(); son("glas");
+  if(typeof verifierSucces === "function"){ verifierSucces(); vibrer([300, 150, 300, 150, 600]); }
   var e = $("gameover"); if(!e){ e = document.createElement("div"); e.id = "gameover"; document.body.appendChild(e); }
   e.innerHTML = '<div class="go-boite"><div class="go-gauche"><h1 class="go-titre">GAME OVER</h1><p class="go-sous">Votre famille n’est plus.</p>'
     + '<div class="go-morts">' + G.dd.map(function(z){ return '<div class="go-mort"><span class="em">' + iconeMembre({ nom:z.n, al:false, hp:0, en:0, faim:0, soif:0, icone:z.ic || "💀" }) + '</span><b>' + z.n + '</b><small>' + accorder(z.n, z.c) + '<br>jour ' + z.j + '</small></div>'; }).join("") + '</div></div>'
@@ -506,7 +507,7 @@ setInterval(tick, 250);
 function render(){
   document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil"); // fond peint du refuge
   if(typeof placerPiece === "function") setTimeout(placerPiece, 0); // zones cliquables de la pièce (piece.js)
-  if(G.ph === "accueil") return; if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); } }
+  if(G.ph === "accueil") return; if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); if(typeof verifierSucces === "function") verifierSucces(); } }
 // Ferme la fenêtre, ou montre d'abord un chapitre terminé
 function fermer(){
   var A = G.annonces && G.annonces.shift();
@@ -601,7 +602,9 @@ document.addEventListener("click", function(e){
   else if(a === "marche"){ openMarche(); return; }
   else if(a === "troc"){ msgMarche = echanger(i) || ""; render(); openMarche(); return; }
   else if(a === "refuge"){ openRef(); return; }
-  else if(a === "endday"){ var n = finJour(); render(); openNuit(n); finiSiMorts(); return; }
+  else if(a === "endday"){ var n = finJour(); render(); openNuit(n);
+    if(typeof vibrer === "function" && n.some(function(x){ return x[0] === "b2" && x[1].indexOf("🧟 Attaque de nuit (") === 0; })) vibrer([150, 80, 150]); // attaque perdue
+    finiSiMorts(); return; }
   else if(a === "close"){ fermer(); return; }
   else if(a === "astuceok" || a === "astucesoff"){
     fermerAstuce(a === "astucesoff");
@@ -761,7 +764,7 @@ document.addEventListener("click", function(e){
     else if(a === "loc"){ son("pas"); if(G.combat) son("zombie", 350); else if(G.exp && G.exp.serrure) son("porte", 250); else if(feuille.indexOf("Vous trouvez") >= 0) son("butin", 300); }
     else if(a === "ctour" || a === "cauto" || a === "cfuir"){
       if(J.indexOf("🔫") >= 0) sonTir(); else if(J.indexOf("⚔️") >= 0) son("coup");
-      if(/frappe .* \(−/.test(J)) son("zombie", 220);
+      if(/frappe .* \(−/.test(J)){ son("zombie", 220); if(typeof vibrer === "function") vibrer(70); } // un zombie touche un membre
     }
     else if(a === "cfin" || a === "forcer" || a === "suiteporte"){ if(a === "forcer") son("construire"); if(feuille.indexOf("Vous trouvez") >= 0) son("butin", a === "forcer" ? 250 : 0); else if(G.combat) son("zombie", 200); }
     else if(a === "goupille"){ if(/^Clic/.test(msgSerrure)) son(G.exp && G.exp.serrure && G.exp.serrure.fin === "ouvert" ? "porte" : "goupille"); else son("casse"); }

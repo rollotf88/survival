@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261108-2047";
+var VERSION = "survival-20261108-2053";
 var FICHIERS = [
   "./",
   "index.html",
@@ -15,6 +15,7 @@ var FICHIERS = [
   "ui.js",
   "guide.js",
   "classement.js",
+  "succes.js",
   "piece.js",
   "manifest.json",
   "images/refuge-fond.webp",

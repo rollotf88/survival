@@ -127,6 +127,11 @@ Morts et game over (2026-11-08, demande de Fabien) :
 - Une mort est une note de classe `"mort"` (`blesser` dans logique.js, avec le nom en 3e case) : `puces()` l'affiche en premier, en carte rouge (`.deuil`) avec le portrait gris penché et vitre brisée (`.fissure` dans `portraitMembre`), phrase naturelle (`phraseMort` : « Papa est mort de soif », « Emma a été tuée par… »), « Repose en paix », et joue un glas synthétisé (`sonGlas`, pas de fichier). Accord féminin via `FEMININS`
 - Écran de game over plein écran (`ecranGameOver`, `#gameover`, sous les fenêtres pour que le classement s'ouvre par-dessus) : « GAME OVER », les disparus en gris avec cause et jour, jours tenus, score en grand, record, boutons classement / copier / nouvelle famille. En paysage bas : deux colonnes (pas de défilement)
 
+Succès et vibrations (2026-11-08) :
+- `succes.js` (chargé après classement.js) : 18 succès (`SUCCES`, test sur G), gardés dans localStorage `survival_succes` d'une partie à l'autre, vérifiés à chaque `render` et au game over. Bandeau en haut (`#bandeauSucces`, file d'attente). Menu → « 🏅 Succès x / 18 ». Nouvelles stats : `G.stats.poissons`, `crochetages`, `nuitsChien`
+- Vibrations (`vibrer`, réglage `survival_vibre`, Android seulement : l'iPhone ne fait pas vibrer une page web) : coup reçu en combat, attaque de nuit perdue, mort, game over, succès
+- Menu ☰ en grille compacte (2 colonnes, 3 couché) pour tenir sans défiler ; le contrôleur vérifie aussi que le menu ne défile pas
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

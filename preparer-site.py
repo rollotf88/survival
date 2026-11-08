@@ -6,7 +6,7 @@ import os, shutil, re, time
 
 ici = os.path.dirname(os.path.abspath(__file__))
 os.chdir(ici)
-FICHIERS = ["index.html", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "classement.js", "piece.js", "manifest.json", "sw.js"]
+FICHIERS = ["index.html", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "classement.js", "succes.js", "piece.js", "manifest.json", "sw.js"]
 
 if os.path.isdir("site"): shutil.rmtree("site")
 os.makedirs("site/images"); os.makedirs("site/sons")

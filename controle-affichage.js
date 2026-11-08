@@ -33,7 +33,7 @@ function controleAffichage(){
   var etiq = q("#piece .etiq");
   if(etiq.length){ var montrees = etiq.map(function(e){ return e; }); for(var i = 0; i < montrees.length; i++) for(var j = 0; j < i; j++) if(chevauche(rect(montrees[i]), rect(montrees[j]))) pb.push("Étiquettes de la pièce : " + nom(montrees[i]) + " chevauche " + nom(montrees[j])); }
   // 5) textes coupés dans les boutons et pastilles
-  q("#app .btn, #app .chip, .mc b, #sheet .btn, #sheet .loc b").filter(vis).forEach(function(e){ if(e.scrollWidth > e.clientWidth + 2) pb.push("Texte coupé : " + nom(e)); });
+  q("#app .btn, #app .chip, .mc b, #sheet .btn, #sheet .loc b, #sheet .mt b").filter(vis).forEach(function(e){ if(e.scrollWidth > e.clientWidth + 2) pb.push("Texte coupé : " + nom(e)); });
   // 6) zone centrale qui déborde
   var st = document.querySelector(".stage"); if(st && st.scrollHeight > st.clientHeight + 1) pb.push("La zone centrale déborde de " + (st.scrollHeight - st.clientHeight) + " px");
   // 7) les boutons du bas ont la même largeur
@@ -41,6 +41,8 @@ function controleAffichage(){
   if(larg.length > 1 && Math.max.apply(null, larg) - Math.min.apply(null, larg) > 2) pb.push("Boutons du bas de tailles différentes : " + larg.join(", "));
   // 8) fenêtre ouverte qui dépasse de l'écran
   var sh = document.querySelector("#modal"); if(sh && sh.style.display === "flex"){ var r = rect(document.getElementById("sheet")); if(r.top < 0) pb.push("La fenêtre dépasse en haut de l'écran"); }
+  // 9) le menu tient sans faire défiler
+  if(sh && sh.style.display === "flex" && document.querySelector("#sheet .menugrille")){ var f = document.getElementById("sheet"); if(f.scrollHeight > f.clientHeight + 1) pb.push("Le menu défile (" + f.scrollHeight + " / " + f.clientHeight + " px)"); }
   return pb;
 }
 

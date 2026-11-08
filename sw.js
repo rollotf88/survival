@@ -15,6 +15,7 @@ var FICHIERS = [
   "ui.js",
   "guide.js",
   "classement.js",
+  "succes.js",
   "piece.js",
   "manifest.json",
   "images/refuge-fond.webp",
