@@ -1,0 +1,10 @@
+// Configuration Cloudflare (Worker) : le jeu est dans « site » (refait par preparer-site.py),
+// le classement est dans worker/index.js. La boîte des scores (KV « CLASSEMENT ») est créée
+// toute seule par Cloudflare à la première mise en ligne.
+{
+  "name": "survival-refuge",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./site", "binding": "ASSETS" },
+  "kv_namespaces": [ { "binding": "CLASSEMENT" } ]
+}

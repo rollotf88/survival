@@ -1,5 +1,5 @@
-// Classement général (serveur Cloudflare Pages, gratuit) : le meilleur score de chaque joueur, toutes parties.
-// Adresse : /api/classement (ce fichier est dans functions/api/, Cloudflare en fait une adresse tout seul)
+// Worker Cloudflare (gratuit) : sert le jeu (dossier « site ») et le classement général.
+// Classement : le meilleur score de chaque joueur, toutes parties. Adresse : /api/classement
 // GET  /api/classement?id=...  -> les 50 meilleurs + la place du joueur
 // POST /api/classement {id, pseudo, score, jours} -> enregistre (garde le meilleur score par appareil)
 // Les scores sont rangés dans un « KV » Cloudflare relié au projet sous le nom CLASSEMENT.
@@ -11,9 +11,9 @@ const CLE = "general", GARDES = 1000;
 
 async function lireListe(env){ return (await env.CLASSEMENT.get(CLE, { type: "json" })) || []; }
 
-export async function onRequestOptions(){ return new Response("", { headers: ENTETES }); }
+async function onRequestOptions(){ return new Response("", { headers: ENTETES }); }
 
-export async function onRequestGet({ request, env }){
+async function onRequestGet({ request, env }){
   if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
   const moi = new URL(request.url).searchParams.get("id") || "";
   const liste = await lireListe(env);
@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }){
   });
 }
 
-export async function onRequestPost({ request, env }){
+async function onRequestPost({ request, env }){
   if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const score = Math.floor(+d.score), jours = Math.floor(+d.jours);
@@ -45,3 +45,17 @@ export async function onRequestPost({ request, env }){
   const rang = garde.findIndex((e) => e.id === id) + 1;
   return reponse({ ok: true, rang, total: garde.length, record, meilleur: ancien ? ancien.score : score });
 }
+
+// Point d'entrée : /api/classement -> le classement ; tout le reste -> les fichiers du jeu
+export default {
+  async fetch(request, env){
+    const url = new URL(request.url);
+    if(url.pathname === "/api/classement"){
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "GET") return onRequestGet({ request, env });
+      if(request.method === "POST") return onRequestPost({ request, env });
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    return env.ASSETS.fetch(request);
+  }
+};
