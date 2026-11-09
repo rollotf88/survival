@@ -173,6 +173,12 @@ Retours de Fabien du 2026-11-09 (après-midi) :
 - Bordure du bouton du bas lié à la pièce affinée (1,5 px)
 - Étagères et refuge en cases (2026-11-09, retour de Fabien « trop chargé ») : `caseObjet(id, opt)` et `etageres(cases, mini)` (ui.js) rangent les cases par 5 sur des planches en bois (`.etageres`, `.rangee`, en CSS). Stock et Refuge les utilisent. Refuge (`openRef`) : chaque onglet = une étagère de cases (constructions avec niveau « 1/3 », recettes avec coche verte si faisable et grisées sinon, armes abîmées, objets démontables) + fiche sous la grille (`selRef`) avec ingrédients et bouton d'action ; le grand bilan devient une ligne courte (`resumeRefuge` : défense, eau et nourriture par nuit, planches) avec « Bilan détaillé » à la demande. Tient sans défiler en 360×640
 
+Écrans plus « jeu » (2026-11-09, « oui pour tout ») :
+- Choix du lieu (`openLoc`) : cartes illustrées 2 par ligne (3 sur grand écran) : image du lieu, ce qu'il reste, énergie, danger (avec radio), conditions en petites icônes colorées (lumière, serrure, canne, voiture), raison si impossible ; lieux possibles d'abord, vidés à la fin
+- Fiche du membre et « Qui part ? » : cases d'équipement avec le cadre en bois `case.webp` (dorée `case-sel.webp` quand un objet attend au stock)
+- Combat : le zombie touché tremble (`.z.coup`), le membre blessé clignote en rouge (`.cm.blesse`) grâce à `dernierPV` ; portraits plus grands sur écrans hauts
+- Bruitages fabriqués en code (`SONS_SYNTH`, `jouerSynth` dans ui.js) : feu (allumer la cheminée), poules (poulailler), moulinet (poisson ferré), bois (toucher une case du stock ou du refuge)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

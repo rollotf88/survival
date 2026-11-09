@@ -195,7 +195,7 @@ document.addEventListener("click", function(e){
   var a = b.getAttribute("data-act");
   if(a === "pTable") openRef("fabriquer");
   else if(a === "pCheminee") openFeu();
-  else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("construire"); render(); openFeu(); }
+  else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("feu"); render(); openFeu(); }
   else if(a === "pSac") openStock();
   else if(a === "pReparer") openRef("reparer");
   else if(a === "pDemonter") openRef("demonter");
@@ -207,7 +207,7 @@ document.addEventListener("click", function(e){
   else if(a === "oCartes") openObjetPiece("cartes");
   else if(a === "oPhoto") openObjetPiece("photo");
   else if(a === "pRecup") openElement("eau");
-  else if(a === "pPoules") openPoules();
+  else if(a === "pPoules"){ if(typeof son === "function") son("poule"); openPoules(); }
   else if(a === "buildel"){ var be = b.getAttribute("data-id"); var ok = ameliorer(be); render(); openElement(be, ok ? "✅ " + REFUGE[be].nom + " amélioré : niveau " + G.ref[be] + " !" : ""); if(ok && typeof son === "function") son("construire"); }
   else if(a === "piecePrec") allerPiece(pieceIdx - 1);
   else if(a === "pieceSuiv") allerPiece(pieceIdx + 1);
@@ -297,7 +297,7 @@ function finLancer(ok, msg){
   lancerPeche(ok); msgPeche = msg; setTimeout(sauver, 0);
   var b = $("bouchon"); if(b) b.className = "bouchon " + (ok ? "prise" : "rate");
   var m = $("msgpeche"); if(m) m.textContent = msg;
-  if(ok && typeof son === "function") son("butin");
+  if(ok && typeof son === "function") son("moulinet");
   setTimeout(function(){ if($("modal").style.display === "flex" && G.exp && G.exp.peche) openPeche(); }, 950);
 }
 document.addEventListener("click", function(e){

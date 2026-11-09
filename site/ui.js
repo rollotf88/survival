@@ -137,16 +137,34 @@ function openLoc(){
   h += '<p class="sub">Équipe : ' + team.map(function(x){ return iconeMembre(x) + " " + x.nom + " ⚡" + x.en; }).join(", ") + ' · ⚔️ force ' + forceEquipe(team) + ' · 🎒 ' + placesEquipe(team) + ' places pour le butin</p>';
   var radio = possede(function(o){ return o.radio; });
   if(voitureReparee()) h += '<button class="loc toggle' + (enVoiture ? " on" : "") + '" data-act="envoiture"><b>🚗 ' + (enVoiture ? "En voiture" : "À pied") + '</b> <span class="pill">⛽ ' + G.voiture.essence + ' L</span><small>' + (enVoiture ? "Le trajet ne fatigue pas, +" + VOITURE.coffre + " places dans le coffre, mais ça consomme de l’essence et le moteur fait du bruit. Touche pour y aller à pied." : "Touche pour prendre la voiture.") + '</small></button>';
+  // Une carte illustrée par lieu, 2 par ligne : image, ce qu'il reste, danger, énergie, et les conditions en petites icônes
+  var cartes = [];
   LIEUX.forEach(function(L, i){
     if(!lieuOuvert(i)) return;
     var auto = enVoiture || L.voiture;
-    var reste = resteLieu(i), d = dangerLieu(i);
-    var cd = []; if(L.peche) cd.push(porte(function(o){ return o.peche; }) ? "🎣 canne prête" : "⚠️ pas de canne à pêche"); if(L.sombre) cd.push("sombre : " + lumiere); if(L.verrou) cd.push("verrouillé : " + ouvre);
-    var dg = radio ? (d < 0.3 ? "📻 Danger faible" : d < 0.5 ? "📻 Danger moyen" : "📻 Danger élevé") : "Danger inconnu";
-    var peut = equipePeutAller(team, i, auto);
-    var pourquoi = !reste ? "" : auto && !voitureReparee() ? " · 🚗 voiture nécessaire (en panne)" : auto && !voitureOk(i) ? " · ⛽ pas assez d’essence" : !peut ? " · 😴 trop fatigués" : "";
-    h += '<button class="loc"' + (reste && peut ? "" : " disabled") + ' data-act="loc" data-id="' + i + '"><b>' + vignetteLieu(L) + ' ' + L.nom + (G.mission && G.mission.lieu === i ? " 🎯" : "") + '</b> <span class="pill">' + (L.peche ? "🐟 " + G.lieux[i].poissons + (G.lieux[i].butin.length ? " · " + G.lieux[i].butin.length + " obj." : "") : reste ? reste + " objet" + (reste > 1 ? "s" : "") : "Vidé") + '</span><small>' + DISTANCES[L.distance] + ' · ⚡ −' + coutEnergie(i, auto) + (auto ? " · ⛽ −" + litres(i) + " L" : "") + pourquoi + '</small><small>' + (cd.join(" · ") || "Accès libre") + ' · ' + dg + '</small></button>';
+    var reste = resteLieu(i), d = dangerLieu(i), peut = equipePeutAller(team, i, auto), ok = reste && peut;
+    var icones = [];
+    if(L.sombre) icones.push(porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? ["🔦", "ok", "Sombre : lampe prête"] : ["🔦", "ko", "Sombre : lampe sans pile"]) : porte(function(o){ return o.lumiere === 1; }) ? ["🔥", "moy", "Sombre : lueur faible"] : ["🌑", "ko", "Sombre : pas de lumière"]);
+    if(L.verrou) icones.push(porte(function(o){ return o.ouvre; }) ? ["🔓", "ok", "Verrouillé : de quoi ouvrir"] : ["🔒", "ko", "Verrouillé : porte à forcer"]);
+    if(L.peche) icones.push(porte(function(o){ return o.peche; }) ? ["🎣", "ok", "Canne à pêche prête"] : ["🎣", "ko", "Pas de canne à pêche"]);
+    if(auto) icones.push(["🚗", voitureOk(i) ? "ok" : "ko", "En voiture : ⛽ −" + litres(i) + " L"]);
+    var dg = radio ? (d < 0.3 ? ["faible", "ok"] : d < 0.5 ? ["moyen", "moy"] : ["élevé", "ko"]) : ["?", ""];
+    var pourquoi = !reste ? "Vidé" : auto && !voitureReparee() ? "Voiture en panne" : auto && !voitureOk(i) ? "Pas assez d’essence" : !peut ? "Trop fatigués" : "";
+    var im = imageLieu(L);
+    cartes.push({ ok:!!ok, vide:!reste, html:'<button class="carte-lieu' + (ok ? "" : " off") + (G.mission && G.mission.lieu === i ? " mission" : "") + '" data-act="loc" data-id="' + i + '"' + (ok ? "" : " disabled") + ' aria-label="' + L.nom + (pourquoi ? " : " + pourquoi : "") + '">'
+      + '<span class="cl-img">' + (im ? '<img src="' + im + '" alt="">' : '<span class="cl-ico">' + iconeLieu(L) + '</span>')
+      + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : reste ? reste + " obj." : "Vidé") + '</span>'
+      + (G.mission && G.mission.lieu === i ? '<span class="cl-mission">🎯</span>' : '')
+      + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
+      + '<span class="cl-nom">' + L.nom + '</span>'
+      + '<span class="cl-infos"><span>⚡−' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger">' + (radio ? "📻 " : "⚠️ ") + dg[0] + '</span></span>'
+      + (icones.length ? '<span class="cl-conds">' + icones.map(function(c){ return '<span class="' + c[1] + '" title="' + c[2] + '">' + c[0] + '</span>'; }).join("") + '</span>' : '')
+      + '</button>' });
   });
+  // Les lieux possibles d'abord, puis ceux impossibles pour l'instant, puis les lieux vidés
+  cartes.sort(function(a, b){ return (a.ok ? 0 : a.vide ? 2 : 1) - (b.ok ? 0 : b.vide ? 2 : 1); });
+  h += '<div class="lieux">' + cartes.map(function(c){ return c.html; }).join("") + '</div>';
+  if(!radio) h += '<p class="sub">⚠️ Sans radio, le danger des lieux est inconnu.</p>';
   show(h + BTN_FERMER("Annuler"));
 }
 // Enchaîne les étapes d'une expédition : porte -> combat -> résultat
@@ -197,19 +215,21 @@ function appuyerGoupille(){
 /* ---------- Combat ---------- */
 var retourEquip = null; // fenêtre à rouvrir après avoir équipé (« quipart »)
 var choixCombat = {}, cibleCombat = 0;
+var dernierPV = null; // PV au tour précédent : sert à animer qui vient d'être touché
 function openCombat(){
   astuce("combat");
   var C = G.combat, L = LIEUX[G.exp.lieu], fini = !!C.fin;
+  if(dernierPV && dernierPV.c !== C) dernierPV = null; // nouveau combat
   var debout = zombiesDebout();
   if(!C.zombies[cibleCombat] || C.zombies[cibleCombat].pv <= 0) cibleCombat = debout.length ? C.zombies.indexOf(debout[0]) : 0;
   var h = '<h2>🧟 Combat : ' + iconeLieu(L) + ' ' + L.nom + '</h2><p class="sub">Tour ' + Math.min(C.tour, 99) + (fini ? "" : " · touche un zombie pour le viser") + '</p>';
   h += '<div class="zs">' + C.zombies.map(function(z, k){
-    return '<button class="z' + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + '><span class="em">' + iconeZombie(z) + '</span><b>' + z.nom + '</b>' + barre("❤️", Math.round(z.pv / z.pvMax * 100)) + '<small>' + z.pv + ' / ' + z.pvMax + ' PV · frappe ' + z.degats[0] + '-' + z.degats[1] + '</small></button>';
+    return '<button class="z' + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (dernierPV && dernierPV.z[k] > z.pv ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + '><span class="em">' + iconeZombie(z) + '</span><b>' + z.nom + '</b>' + barre("❤️", Math.round(z.pv / z.pvMax * 100)) + '<small>' + z.pv + ' / ' + z.pvMax + ' PV · frappe ' + z.degats[0] + '-' + z.degats[1] + '</small></button>';
   }).join("") + '</div>';
   if(!fini){
     h += equipeCombat().map(function(x){
       var j = G.m.indexOf(x), c = (choixCombat[j] || "frapper"), a = x.eq.arme, d = a ? OBJETS[a.id].degats : BAL.combat.poings;
-      return '<div class="cm"><div class="cmt"><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + x.nom + '</b>' + barre("❤️", x.hp) + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + (OBJETS[a.id].munition ? " · " + icone(OBJETS[a.id].munition) + " " + compter(OBJETS[a.id].munition) : "") : "✊ À mains nues") + ' · dégâts ' + d[0] + '-' + d[1] + (fatigue(x) ? " · 🥱" : "") + '</small></span></div>'
+      return '<div class="cm' + (dernierPV && dernierPV.m[j] > x.hp ? " blesse" : "") + '"><div class="cmt"><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + x.nom + '</b>' + barre("❤️", x.hp) + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + (OBJETS[a.id].munition ? " · " + icone(OBJETS[a.id].munition) + " " + compter(OBJETS[a.id].munition) : "") : "✊ À mains nues") + ' · dégâts ' + d[0] + '-' + d[1] + (fatigue(x) ? " · 🥱" : "") + '</small></span></div>'
         + '<div class="cmb"><button class="mini' + (c === "frapper" ? " on" : "") + '" data-act="cact" data-id="' + j + ':frapper">⚔️ Frapper</button><button class="mini' + (c === "proteger" ? " on" : "") + '" data-act="cact" data-id="' + j + ':proteger">🛡️ Protéger</button></div></div>';
     }).join("");
   }
@@ -217,6 +237,7 @@ function openCombat(){
   h += fini ? '<button class="btn" style="width:100%" data-act="cfin">Continuer</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 Fuir ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h);
+  dernierPV = { c:C, z:C.zombies.map(function(z){ return z.pv; }), m:G.m.map(function(x){ return x.hp; }) };
 }
 
 function openResultat(r){
@@ -829,7 +850,7 @@ document.addEventListener("click", function(e){
   else if(a === "son"){ basculerSon(); return; }
   else if(a === "stock"){ selStock = null; openStock(); return; }
   else if(a === "invf"){ filtreStock = id; openStock(); return; }
-  else if(a === "invsel"){ selStock = selStock === id ? null : id; openStock(); return; }
+  else if(a === "invsel"){ son("bois"); selStock = selStock === id ? null : id; openStock(); return; }
   else if(a === "invequip"){ var qe = id.split(":"); if(equiper(+qe[0], qe[1], +qe[2])) msgStock = "✅ " + G.m[+qe[0]].nom + " porte maintenant " + nommer(G.m[+qe[0]].eq[qe[1]].id, 1) + "."; selStock = null; render(); openStock(); return; }
   else if(a === "chapitre"){ openChapitre(); return; }
   else if(a === "mission"){ openMission(); return; }
@@ -859,7 +880,7 @@ document.addEventListener("click", function(e){
   else if(a === "adr"){ if(id === "cap") G.cb++; else G.tl += 20; hide(); render(); return; }
   else if(a === "build"){ if(ameliorer(id)) msgAtelier = "✅ " + REFUGE[id].nom + " : niveau " + G.ref[id] + " !"; render(); openRef(); return; }
   else if(a === "onglet"){ pieceChoisie = null; openRef(id); return; }
-  else if(a === "refsel"){ selRef = selRef === id ? null : id; openRef(); return; }
+  else if(a === "refsel"){ son("bois"); selRef = selRef === id ? null : id; openRef(); return; }
   else if(a === "bilanref"){ bilanOuvert = !bilanOuvert; openRef(); return; }
   else if(a === "piece"){ pieceChoisie = pieceChoisie === id ? null : id; openRef(); return; }
   else if(a === "pslot"){ if(pieceChoisie) poserPiece(pieceChoisie, id); return; }
@@ -958,6 +979,7 @@ var sonActif = sonEstActif();
 var lectureOgg = !!new Audio().canPlayType('audio/ogg; codecs="vorbis"'); // certains iPhone ne lisent pas l'OGG
 function son(nom, delai){
   if(nom === "glas"){ sonGlas(); return; }
+  if(SONS_SYNTH[nom]){ if(sonActif){ if(delai) setTimeout(function(){ jouerSynth(nom); }, delai); else jouerSynth(nom); } return; }
   if(!sonActif || !SONS[nom]) return;
   if(delai){ setTimeout(function(){ son(nom); }, delai); return; }
   var f = SONS[nom][0]; if(Array.isArray(f)) f = f[Math.floor(Math.random() * f.length)];
@@ -979,6 +1001,31 @@ function basculerMusique(){ var on = !musiqueActive(); try{ localStorage.setItem
 document.addEventListener("pointerdown", lancerMusique);
 document.addEventListener("visibilitychange", function(){ if(document.hidden) arreterMusique(); else if(musique) lancerMusique(); });
 
+/* Petits bruitages fabriqués par le navigateur (pas de fichier) : feu qui crépite, poules, moulinet, bois */
+var SONS_SYNTH = { feu:1, poule:1, moulinet:1, bois:1 };
+function jouerSynth(nom){
+  try{
+    ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
+    var c = ctxAudio, t = c.currentTime;
+    var bruit = function(debut, duree, vol, freq){ // petit souffle de bruit filtré
+      var n = Math.floor(c.sampleRate * duree), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+      for(var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+      var s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = buf; f.type = "bandpass"; f.frequency.value = freq; g.gain.value = vol;
+      s.connect(f); f.connect(g); g.connect(c.destination); s.start(t + debut);
+    };
+    var note = function(debut, duree, f0, f1, vol, type){
+      var o = c.createOscillator(), g = c.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(f0, t + debut); o.frequency.exponentialRampToValueAtTime(f1, t + debut + duree);
+      g.gain.setValueAtTime(0.0001, t + debut); g.gain.exponentialRampToValueAtTime(vol, t + debut + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + debut + duree);
+      o.connect(g); g.connect(c.destination); o.start(t + debut); o.stop(t + debut + duree + 0.02);
+    };
+    if(nom === "feu"){ bruit(0, 0.5, 0.25, 900); for(var k = 0; k < 9; k++) bruit(0.05 + Math.random() * 0.9, 0.04, 0.5, 2000 + Math.random() * 2500); }
+    else if(nom === "poule"){ note(0, 0.09, 900, 1300, 0.12, "triangle"); note(0.13, 0.09, 950, 1400, 0.12, "triangle"); note(0.3, 0.22, 1100, 700, 0.14, "triangle"); }
+    else if(nom === "moulinet"){ for(var m = 0; m < 10; m++) bruit(m * 0.035, 0.02, 0.35, 3500); note(0.38, 0.12, 500, 900, 0.1, "square"); }
+    else if(nom === "bois"){ note(0, 0.08, 220, 140, 0.18, "triangle"); bruit(0, 0.05, 0.15, 600); }
+  }catch(e){}
+}
 // Glas : une note grave qui s'éteint lentement (quand un membre meurt), synthétisée
 function sonGlas(){
   if(!sonActif) return;

@@ -601,3 +601,43 @@ body.fond{touch-action:pan-y}
 .resume{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:2px 0 6px;font-weight:800;font-size:14px}
 .resume span{display:inline-flex;align-items:center;gap:3px}
 .resume .lien{margin-left:auto;font-size:12px}
+/* ---------- Choix du lieu : cartes illustrées ---------- */
+.lieux{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 8px}
+.carte-lieu{display:flex;flex-direction:column;align-items:stretch;text-align:left;padding:0;border:2px solid var(--bois);border-radius:12px;background:var(--bg);overflow:hidden;cursor:pointer;box-shadow:0 2px 0 var(--line);color:var(--ink);font:inherit}
+.carte-lieu:active{transform:translateY(1px)}
+.carte-lieu.off{opacity:.55;filter:grayscale(.7)}
+.carte-lieu.mission{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.cl-img{position:relative;display:block;aspect-ratio:16/8;background:var(--line);overflow:hidden}
+.cl-img img{width:100%;height:100%;object-fit:cover;display:block}
+.cl-ico{display:grid;place-items:center;height:100%;font-size:34px}
+.cl-reste{position:absolute;right:4px;top:4px;background:rgba(29,20,14,.78);color:#fff6e6;font-size:11px;font-weight:800;border-radius:8px;padding:1px 6px}
+.cl-mission{position:absolute;left:4px;top:4px;font-size:16px}
+.cl-pourquoi{position:absolute;left:0;right:0;bottom:0;background:rgba(178,59,38,.85);color:#fff;font-size:10.5px;font-weight:800;text-align:center;padding:1px 2px}
+.cl-nom{display:block;font-weight:800;font-size:13px;line-height:1.15;padding:4px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-infos{display:flex;justify-content:space-between;gap:4px;padding:1px 6px 0;font-size:11px;font-weight:700;color:var(--mut)}
+.cl-infos .dg.ok{color:var(--ok)}.cl-infos .dg.moy{color:var(--acc)}.cl-infos .dg.ko{color:var(--bad)}
+.cl-conds{display:flex;gap:3px;padding:2px 6px 5px;font-size:13px}
+.cl-conds span{border-radius:6px;padding:0 3px;line-height:1.3}
+.cl-conds .ok{background:color-mix(in srgb,var(--ok) 22%,transparent)}.cl-conds .moy{background:color-mix(in srgb,var(--acc) 25%,transparent)}.cl-conds .ko{background:color-mix(in srgb,var(--bad) 22%,transparent)}
+.carte-lieu > :last-child{padding-bottom:5px}
+@media (min-width:560px){.lieux{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* ---------- Fiche du membre et « Qui part ? » : cases d'équipement en cadre de bois ---------- */
+.qpeq .slot,.slots.grands .slot{border:0;border-radius:14%;background:url("images/case.webp") center/100% 100% no-repeat;box-shadow:0 2px 3px rgba(20,10,4,.3)}
+.qpeq .slot.dispo,.slots.grands .slot.dispo{border:0;background-image:url("images/case-sel.webp");box-shadow:0 0 8px 1px rgba(240,190,80,.5)}
+.qpeq .slot .vide,.slots.grands .slot .vide{opacity:.35}
+.qpeq .slot{width:40px;height:40px;flex:0 0 40px;font-size:20px}
+.qpeq .slot .ico,.slots.grands .slot .ico{width:56%;height:56%}
+.slots.grands{display:grid;grid-template-columns:repeat(3,minmax(0,86px));justify-content:center;gap:12px;margin:4px 0 10px}
+.slots.grands .slot{aspect-ratio:1/1;height:auto;padding:0 0 10%;justify-content:center;font-size:30px;position:relative}
+.slots.grands .slot small{position:absolute;left:0;right:0;bottom:-15px;font-size:10px;font-weight:800;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slots.grands{margin-bottom:22px}
+.jauge .bar{height:10px}
+/* ---------- Combat : qui vient d'être touché ---------- */
+.z.coup{animation:secousse .45s ease-out}
+.z.coup .em{animation:flashBlanc .45s ease-out}
+.cm.blesse{animation:flashRouge .6s ease-out}
+@keyframes secousse{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px) rotate(-2deg)}40%{transform:translateX(5px) rotate(2deg)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+@keyframes flashBlanc{0%{filter:brightness(2.2)}100%{filter:none}}
+@keyframes flashRouge{0%{background:color-mix(in srgb,var(--bad) 45%,var(--card))}100%{background:var(--card)}}
+@media (prefers-reduced-motion:reduce){.z.coup,.z.coup .em,.cm.blesse{animation:none}}
+@media (min-height:700px){.z .em{font-size:54px}}
