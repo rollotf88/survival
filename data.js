@@ -21,7 +21,11 @@ var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue",
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Illustrations peintes des lieux (Gemini, grilles de 4 découpées) : images/lieux/<nom>.webp
-var IMAGES_LIEUX = { "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital" };
+var IMAGES_LIEUX = { "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital",
+  "Quincaillerie":"quinc", "Station-service":"station", "Étang":"etang", "Garage auto":"garage",
+  "Commissariat":"police", "Zone industrielle":"indus", "Centre commercial":"centre", "Village voisin":"village",
+  "Entrepôt logistique":"entrepot", "Base militaire":"base", "École Jules-Ferry":"ecole", "Caserne des pompiers":"caserne",
+  "Péniche du canal":"peniche", "Camping des Pins":"camping", "Clinique vétérinaire":"clinique", "Bunker du survivaliste":"bunker" };
 function imageLieu(L){ return typeof ICONES_SVG !== "undefined" && IMAGES_LIEUX[L.nom] ? "images/lieux/" + IMAGES_LIEUX[L.nom] + ".webp" : null; }
 // Petite vignette pour la liste des lieux (sinon l'icône dessinée)
 function vignetteLieu(L){ var i = imageLieu(L); return i ? '<img class="vign" src="' + i + '" alt="">' : iconeLieu(L); }
