@@ -10,7 +10,10 @@ function icone(id){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[id] ?
 // Pareil pour les membres de la famille (les recrues gardent leur emoji) et les zombies
 var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma", "Sam":"sam", "Nora":"nora", "Inès":"ines", "Yanis":"yanis" };
 // Icône dessinée k si elle existe, sinon l'emoji donné
-function ic(k, emoji){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
+function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
+// Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
+var PORTRAITS_PNJ = { rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp" };
+function portraitPNJ(k){ return '<span class="portrait pnj"><img src="' + PORTRAITS_PNJ[k] + '" alt=""></span>'; }
 var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue", "Supermarché":"lieuSuper", "Hôpital":"lieuHopital",
   "Quincaillerie":"lieuQuinc", "Station-service":"lieuStation", "Garage auto":"lieuGarage", "Commissariat":"lieuPolice",
   "Zone industrielle":"lieuIndus", "Étang":"lieuEtang", "Centre commercial":"lieuCentre", "Village voisin":"lieuVillage", "École Jules-Ferry":"lieuEcole", "Caserne des pompiers":"lieuCaserne", "Péniche du canal":"lieuPeniche",
@@ -27,7 +30,7 @@ function iconeMembre(x){
   if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x);
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
-function iconeZombie(z){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
+function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
 /* ---------- Équilibrage : les chiffres faciles à modifier ---------- */
 var BAL = {

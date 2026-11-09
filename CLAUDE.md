@@ -150,6 +150,8 @@ Portraits peints des recrues (2026-11-09) : `images/portrait-sam|nora|ines|yanis
 
 Logo (2026-11-09, fait par Fabien avec Gemini) : emblème rond (maison barricadée, lanterne, mains de zombies), sans texte. `images/logo.webp` (détouré rond) sur l'écran d'histoire (à gauche du titre) et l'accueil « Partie en cours » ; le titre « SURVIVAL – Le dernier refuge » est écrit en police Bangers par-dessus (le nom du jeu reste celui-là, choix de Fabien). Icônes de l'appli refaites avec le logo sur fond bois `#4a3221` : icone-192/512/apple + `icone-maskable.png` (manifest) ; favicon dans index.html. Source : images/sources/ (pas publiée)
 
+Portraits des zombies et de Marco (2026-11-09, Gemini, grille 2 × 2) : `images/portrait-rodeur|coureur|costaud|marco.webp`, `PORTRAITS_PNJ` + `portraitPNJ` (data.js) ; `iconeZombie` et `ic("marco")` les utilisent (combat, guide, marché). Peau du Costaud teintée en gris-vert par Claude (il sortait trop humain). Le contrôleur d'affichage teste aussi le combat. Prochaines images prévues : Rex couché et planches pour la fenêtre du salon (à poser par-dessus refuge-fond)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

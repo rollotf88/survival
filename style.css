@@ -503,3 +503,8 @@ body.maison .mode{border-radius:16px;padding:1px 8px;font-weight:800;font-size:1
 @media (max-height:640px){.tetejeu .logo{width:68px;height:68px}}
 @media (orientation:landscape) and (max-height:500px){.tetejeu .logo{width:56px;height:56px}.accueil .logo.grand{width:110px}}
 body.fond .accueil{justify-content:flex-start;padding-top:3vh}
+/* Portraits peints des zombies (combat) et de Marco */
+.z .em{font-size:44px;margin-bottom:2px}
+.z.mort .portrait img{filter:grayscale(1) brightness(.8)}
+@media (max-height:640px){.z .em{font-size:34px}}
+@media (orientation:landscape) and (max-height:500px){.z .em{font-size:28px}}
