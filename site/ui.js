@@ -846,7 +846,8 @@ function openInfo(id){
     h = '<h2>' + ic("bouclier", "🛡️") + ' Défense de nuit : ' + defenseNuit() + '</h2><p>' + (p.length ? p.join("<br>") : "Rien pour l’instant : construis la barricade et garde des armes au refuge.") + '</p>'
       + '<p class="msg">🧟 Cette nuit : environ <b>' + ch + ' %</b> de risque d’attaque, d’une force de <b>' + f + ' à ' + (f + 2) + '</b>. Si votre défense est plus faible, ils blessent quelqu’un, volent de la nourriture et abîment la barricade.</p>';
   } else if(id === "moral"){
-    h = '<h2>😀 Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt. <b>À ' + BAL.moralHaut + ' ou plus, l’équipe trouve 1 objet de plus en fouille.</b></p>'
+    var visage = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟"); // le même visage que la pastille du haut
+    h = '<h2>' + visage + ' Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt. <b>À ' + BAL.moralHaut + ' ou plus, l’équipe trouve 1 objet de plus en fouille.</b></p>'
       + '<p>' + (G.moral < BAL.moralBas ? '<span class="moins">⚠️ Sous ' + BAL.moralBas + ', l’équipe fouille moins bien.</span>' : 'Sous ' + BAL.moralBas + ', l’équipe fouillerait moins bien.') + '</p>'
       + '<p class="sub">Pour le remonter : les objets de confort (peluche, photo, cartes…) au refuge, les bons choix le matin, les chapitres réussis, un chien' + (vivants().some(function(x){ return x.trait === "optimiste"; }) ? ", et votre optimiste" : "") + '.</p>';
   }
