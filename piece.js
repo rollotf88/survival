@@ -31,6 +31,11 @@ var DECOR_PIECE = [
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
 var PIECES = [
   { id:"salon", nom:"Salon", img:"images/refuge-fond.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"chambre", nom:"Chambre", img:"images/piece-chambre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 }, decor:[], zones:[
+    ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
+    ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],
+    ["pPorte",      900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85]
+  ]},
   { id:"reserve", nom:"Réserve", img:"images/piece-reserve.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:770 }, decor:[], zones:[
     ["stock",       160, 260, 835, 765, function(){ return ic("caisse", "📦"); }, "Stock", .5],
     ["pConstruire", 790, 395, 1010, 810, function(){ return ic("ref_barr", "🧱"); }, "Construire", .3]

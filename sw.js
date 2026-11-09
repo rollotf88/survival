@@ -23,6 +23,7 @@ var FICHIERS = [
   "images/piece-garage.webp",
   "images/piece-garage-ok.webp",
   "images/piece-reserve.webp",
+  "images/piece-chambre.webp",
   "images/piece-cour.webp",
   "images/piece-cour-pot.webp",
   "images/piece-cour-eau.webp",
