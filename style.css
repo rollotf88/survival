@@ -650,3 +650,13 @@ body.fond{touch-action:pan-y}
 #locuteur .loc-portrait .loc-rex{object-fit:contain;background:var(--bg)}
 #locuteur .loc-nom{margin-bottom:22px;background:var(--bois);color:#fff6e6;font-weight:800;font-size:13px;border-radius:10px;padding:2px 10px;box-shadow:0 2px 0 rgba(20,10,4,.35);white-space:nowrap}
 .sheet.parle{padding-top:26px}
+/* ---------- Ce qu'il faut : petites cases en bois avec compteur ---------- */
+.ings2{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 8px}
+.ing2{display:flex;flex-direction:column;align-items:center;width:58px}
+.ing2-case{display:grid;place-items:center;width:46px;height:46px;background:url("images/case.webp") center/100% 100% no-repeat;border-radius:14%;font-size:22px;box-shadow:0 2px 3px rgba(20,10,4,.3)}
+.ing2-case .ico{width:58%;height:58%}
+.ing2 b{margin-top:2px;font-size:13px;line-height:1;padding:1px 6px;border-radius:8px}
+.ing2.ok b{background:var(--ok);color:#fff}
+.ing2.ko b{background:var(--bad);color:#fff}
+.ing2 small{font-size:10px;font-weight:700;color:var(--mut);text-align:center;line-height:1.1;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ing2.outil .ing2-case{background-image:url("images/case-sel.webp")}

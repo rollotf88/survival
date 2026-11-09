@@ -80,7 +80,7 @@ function famillePick(k){
   if(o.emplacement === "outil" || o.emplacement === "sac") return "outil";
   return "moral";
 }
-var NOM_COURT = { bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
+var NOM_COURT = { clous:"Clous", ruban:"Adhésif", chiffon:"Chiffon", ferraille:"Ferraille", alcool:"Alcool", epingle:"Épingles", jerrican:"Jerrican", bouteille:"Eau", conserve:"Conserve", batterie:"Batterie", courroie:"Courroie", bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
   lampe:"Lampe", peluche:"Peluche", photo:"Photo", cartes:"Cartes", outils:"Outils", sacados:"Sac à dos", riz:"Riz", fusil:"Fusil",
   boiteCart:"Cartouches", pdb:"Pied-de-biche", canette:"Canette", sacoche:"Sacoche" };
 // « Ce qu'il te manque » : une case par besoin, cochée dès qu'un objet du sac y répond
@@ -490,16 +490,17 @@ function ongletVoiture(){
 var ongletRef = "construire", msgAtelier = "";
 // Pastilles « ce qu'il faut » : nom en clair, quantité, et combien on en a
 function ingredients(ing, besoin){
+  // Petites cases en bois : l'objet, et « tu en as / il en faut » en vert ou en rouge
   var t = [];
   for(var k in ing){
     var a = compter(k), ok = a >= ing[k];
-    t.push('<span class="ing ' + (ok ? "ok" : "ko") + '">' + icone(k) + ' ' + nommer(k, ing[k]).replace(/^(un|une) /, "1 ") + ' <em>' + (ok ? "✔" : "✖") + ' tu en as ' + a + '</em></span>');
+    t.push('<span class="ing2 ' + (ok ? "ok" : "ko") + '" title="' + OBJETS[k].nom + '"><span class="ing2-case">' + icone(k) + '</span><b>' + a + '/' + ing[k] + '</b><small>' + (NOM_COURT[k] || OBJETS[k].nom) + '</small></span>');
   }
   if(besoin){
     var p = possede(function(o){ return o === OBJETS[besoin]; });
-    t.push('<span class="ing ' + (p ? "ok" : "ko") + '">' + icone(besoin) + ' ' + OBJETS[besoin].nom + ' <em>' + (p ? "✔ tu l’as (elle n’est pas consommée)" : "✖ il en faut une au refuge") + '</em></span>');
+    t.push('<span class="ing2 outil ' + (p ? "ok" : "ko") + '" title="' + OBJETS[besoin].nom + ' (pas consommé)"><span class="ing2-case">' + icone(besoin) + '</span><b>' + (p ? "✔" : "✖") + '</b><small>' + (NOM_COURT[besoin] || OBJETS[besoin].nom) + ' (outil)</small></span>');
   }
-  return '<div class="ings">' + t.join("") + '</div>';
+  return '<div class="ings2">' + t.join("") + '</div>';
 }
 // Phrase d'état sous une recette : prêt, ou ce qui manque exactement
 function etatTravail(ing, besoin, texteOk){
@@ -593,7 +594,7 @@ function openRef(onglet){
   }
   if(ongletRef !== "voiture") h += fiche || '<p class="sub">Touche une case pour voir le détail.</p>';
   show(h + BTN_FERMER());
-  if(fiche){ var fi = document.querySelector("#sheet .invfiche, #sheet .ings"); if(fi) fi.scrollIntoView({ block:"nearest" }); }
+  if(fiche){ var fi = document.querySelector("#sheet .invfiche, #sheet .ings2"); if(fi) fi.scrollIntoView({ block:"nearest" }); }
 }
 
 /* ---------- Nuit, événements, mort ---------- */
