@@ -18,7 +18,9 @@ var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue",
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Portraits peints (images faites avec ChatGPT par Fabien, découpées dans images/)
-var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-maman.webp", "Léo":"images/portrait-leo.webp", "Emma":"images/portrait-emma.webp" };
+var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-maman.webp", "Léo":"images/portrait-leo.webp", "Emma":"images/portrait-emma.webp",
+  // Recrues (Leonardo.ai, 2026-11-09)
+  "Sam":"images/portrait-sam.webp", "Nora":"images/portrait-nora.webp", "Inès":"images/portrait-ines.webp", "Yanis":"images/portrait-yanis.webp" };
 // x.r = rôle d'origine (Papa, Maman, Léo, Emma ou le nom d'une recrue) : il garde le bon portrait même renommé
 function iconeMembre(x){
   var r = x.r || x.nom;
@@ -490,11 +492,11 @@ var EVENEMENTS = [
   // ----- Nouveaux événements -----
   // si : condition pour que l'événement puisse arriver ; prep : prépare (ex. choisit un membre)
   // texte peut être une fonction (pour citer un nom). Le premier choix est le choix « prudent ».
-  { titre:"🧑 Une survivante seule", si:function(){ return vivants().length < FAMILLE.length; },
+  { titre:"🚪 On frappe à la porte", si:function(){ return vivants().length < FAMILLE.length; },
     prep:function(){ var r = RECRUES[aleaR("recrue", 0, RECRUES.length - 1)]; G.evCible = r.nom; G.evIcone = r.icone; },
-    texte:function(){ return ic(ICONE_MEMBRE[G.evCible], G.evIcone) + " " + G.evCible + " frappe à la porte. Elle a perdu les siens et demande à rester avec vous. Une bouche de plus à nourrir… mais aussi une paire de bras."; }, choix:[
+    texte:function(){ var f = FEMININS.indexOf(G.evCible) >= 0; return '<span class="evportrait">' + iconeMembre({ nom:G.evCible, icone:G.evIcone, al:true, hp:100, en:100, faim:100, soif:100 }) + '</span>' + G.evCible + " frappe à la porte. " + (f ? "Elle" : "Il") + " a perdu les siens et demande à rester avec vous. Une bouche de plus à nourrir… mais aussi une paire de bras."; }, choix:[
     ["L’accueillir dans la famille", function(){ recruter(G.evCible, G.evIcone); changerMoral(10); return G.evCible + " pose son sac. La famille s’agrandit ! Moral +10."; }],
-    ["Lui donner 2 rations et la laisser partir", function(){ if(rations("nour") < 2) return "Vous n’avez rien à lui donner. Elle repart dans la nuit."; prendreRations("nour", 2); changerMoral(3); return "Elle vous remercie et s’en va. Moral +3."; }],
+    ["Lui donner 2 rations, puis refermer", function(){ var e = FEMININS.indexOf(G.evCible) >= 0 ? "Elle" : "Il"; if(rations("nour") < 2) return "Vous n’avez rien à lui donner. " + e + " repart dans la nuit."; prendreRations("nour", 2); changerMoral(3); return e + " vous remercie et s’en va. Moral +3."; }],
     ["Refuser", function(){ changerMoral(-6); return "Vous fermez la porte. Moral −6."; }]
   ]},
   { titre:"🌧️ L’orage", texte:"Une pluie violente s’abat sur le quartier toute la nuit.", choix:[

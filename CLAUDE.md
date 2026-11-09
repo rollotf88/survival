@@ -146,6 +146,8 @@ Famille personnalisée, histoire, partie classée (2026-11-09, demandes de Fabie
 
 Écran du sac retravaillé (2026-11-09) : nom court sous chaque objet (`NOM_COURT`), liseré de couleur et ordre par famille (`famillePick`, `ORDRE_FAMILLES` : eau, manger, soins, défense, lumière, outils, moral), ligne « ce qu'il faut emporter » (`BESOINS_SAC` : eau, manger, soins, défense, lumière, chaleur, ✅ / ❌), 10 dernières secondes : classe `urgence` (barre qui clignote, compteur rouge), coups à la porte et vibrations. Bouton « 🚪 Partir ! ». Fond : `images/entree-fond.webp` (l'entrée de la maison la nuit, porte barricadée, zombies à la fenêtre ; faite par Fabien avec Leonardo.ai en référence de style sur refuge-fond.webp), classe `maison` sur l'histoire, la famille et le sac ; sur téléphone debout l'image est agrandie à 110 % et calée à droite pour montrer la porte et la fenêtre au-dessus du panneau. Sac à dos dessiné (`images/sac-dos.webp`, Leonardo.ai, fond beige détouré) à gauche des cases, il « saute » à chaque objet ajouté (`sautSac`)
 
+Portraits peints des recrues (2026-11-09) : `images/portrait-sam|nora|ines|yanis.webp` (Leonardo.ai, grille 2 × 2 découpée et cadrée comme la famille), ajoutés à `PORTRAITS`. L'événement « 🚪 On frappe à la porte » montre le portrait et accorde il / elle (Sam et Yanis sont des hommes). Prochaines images : avec Gemini (plus de crédits Leonardo)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT
