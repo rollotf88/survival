@@ -66,6 +66,7 @@ async function toutControler(){
   openNuit([["g2", "🧟 Attaque de nuit repoussée (force 4 contre votre défense 5)."], ["", "🐕 Rex a mangé sa ration."], ["g2", "🥕 Le potager a donné 1 ration de nourriture."], ["b2", "🥶 Nuit glaciale : on dort mal."]]); await att(100); res.nuit = controleAffichage(); hide();
   G.sel = [0]; openLoc(); await att(100); res.lieux = controleAffichage(); hide(); G.sel = [];
   openResultat({ lieu:2, notes:[["g2", "🔦 Papa éclaire les lieux avec la lampe torche."]], pris:[{ id:"conserve", n:2 }, { id:"bandage", n:1 }], laisses:[], vide:false }); await att(100); res.resultat = controleAffichage(); hide();
+  if(typeof openElement === "function"){ openElement("pot"); await att(80); res.potager = controleAffichage(); ajouter("poule", 2); openPoules(); await att(80); res.poulailler = controleAffichage(); hide(); }
   openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();

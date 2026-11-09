@@ -49,9 +49,9 @@ var PIECES = [
   // La cour change selon ce qui est construit : potager (légumes ou bacs vides), récupérateur (tonneau ou non), poules
   { id:"cour", nom:"Cour", img:function(){ var pot = G.ref && G.ref.pot >= 1, eau = G.ref && G.ref.eau >= 1; return "images/piece-cour" + (pot && eau ? "" : pot ? "-pot" : eau ? "-eau" : "-rien") + ".webp"; },
     l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[ ["images/poules.webp", 600, 637, 810, 800, function(){ return compter("poule") > 0; }] ], zones:[
-    ["pConstruire",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
-    ["pConstruire", 430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
-    ["stock",       790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
+    ["pPotager",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
+    ["pRecup",   430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
+    ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
   ]}
 ];
 var pieceIdx = 0;
@@ -170,6 +170,10 @@ document.addEventListener("click", function(e){
   else if(a === "pDemonter") openRef("demonter");
   else if(a === "pConstruire") openRef("construire");
   else if(a === "pVoiture") openRef("voiture");
+  else if(a === "pPotager") openElement("pot");
+  else if(a === "pRecup") openElement("eau");
+  else if(a === "pPoules") openPoules();
+  else if(a === "buildel"){ var be = b.getAttribute("data-id"); var ok = ameliorer(be); render(); openElement(be, ok ? "✅ " + REFUGE[be].nom + " amélioré : niveau " + G.ref[be] + " !" : ""); if(ok && typeof son === "function") son("construire"); }
   else if(a === "piecePrec") allerPiece(pieceIdx - 1);
   else if(a === "pieceSuiv") allerPiece(pieceIdx + 1);
   else if(a === "pieceVa") allerPiece(+b.getAttribute("data-id"));
@@ -193,3 +197,33 @@ document.addEventListener("pointerup", function(e){
   }
 });
 document.addEventListener("pointercancel", function(){ departGlisse = null; });
+
+/* ---------- Fenêtres des éléments de la cour (potager, récupérateur, poulailler) ---------- */
+// Un élément du refuge : où il en est, ce qu'il rapporte, et le bouton pour l'améliorer
+function openElement(k, message){
+  var r = REFUGE[k], l = G.ref[k], c = coutAmelioration(k), mx = l >= r.max, pl = compter("planche");
+  var quoi = k === "eau" ? "ration d’eau" : k === "pot" ? "ration de nourriture" : "";
+  var h = '<div class="rt"><span class="em" style="font-size:52px">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><h2>' + r.nom + '</h2><p class="sub">Niveau ' + l + ' / ' + r.max + '</p></span></div>';
+  if(message) h += '<p class="g2 msg">' + message + '</p>';
+  if(k === "barr") h += '<p>' + (l ? "La barricade ajoute <b>+" + l * BAL.defenseBarricade + " de défense</b> la nuit." : "Pas encore de barricade : la porte ne tiendra pas longtemps.") + ' Une attaque perdue en détruit un niveau.</p>';
+  else h += '<p>' + (l ? "Rapporte <b>" + l * r.parJour + " " + quoi + (l * r.parJour > 1 ? "s" : "") + "</b> chaque nuit." : k === "pot" ? "Les bacs sont vides : il faut des planches pour les préparer et semer." : "Pas encore de tonneau sous la gouttière : l’eau de pluie est perdue.") + '</p>';
+  if(mx) h += '<p class="etat ok">⭐ Niveau maximum atteint</p>';
+  else {
+    h += '<p class="sub">' + (l ? "Niveau suivant : " : "Construire : ") + (k === "barr" ? "+" + BAL.defenseBarricade + " de défense" : "+" + r.parJour + " " + quoi + " par nuit") + ' · coût ' + ic("planche", "🪵") + ' ' + c + ' planches (tu en as ' + pl + ')</p>';
+    h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="buildel" data-id="' + k + '"' + (pl < c ? " disabled" : "") + '>' + (pl < c ? "❌ Il manque " + nommer("planche", c - pl) : "🔨 " + (l ? "Améliorer" : "Construire") + " (" + c + " planches)") + '</button>';
+  }
+  show(h + BTN_FERMER());
+}
+// Le poulailler : combien de poules, ce qu'elles donnent, ce qu'elles coûtent
+function openPoules(){
+  var n = compter("poule"), P = BAL.poules;
+  var h = '<div class="rt"><span class="em" style="font-size:52px">' + ic("poule", "🐔") + '</span><span class="eqt"><h2>Le poulailler</h2><p class="sub">' + (n ? n + " poule" + (n > 1 ? "s" : "") : "Vide") + '</p></span></div>';
+  if(!n) h += '<p>Pas encore de poule. On en trouve au <b>Village voisin</b>, chez <b>Marco</b> le brocanteur, et parfois une poule égarée arrive le matin.</p>';
+  else {
+    var eau = Math.ceil(n / P.eauPour), oeufs = Math.round(n * P.oeuf * 10) / 10;
+    h += '<ul><li>🥚 Environ <b>' + String(oeufs).replace(".", ",") + ' œuf' + (oeufs > 1 ? "s" : "") + '</b> par nuit (1 ration de nourriture chacun, ' + Math.round(P.oeuf * 100) + ' % de chances par poule).</li>'
+      + '<li>' + ic("bouteille", "💧") + ' Elles boivent <b>' + eau + ' ration' + (eau > 1 ? "s" : "") + ' d’eau</b> par nuit, après la famille. Sans eau, l’une d’elles meurt.</li>'
+      + '<li>🧟 Leurs caquètements attirent les zombies : <b>+' + Math.round(n * P.attaque * 100) + ' %</b> de risque d’attaque la nuit.</li></ul>';
+  }
+  show(h + BTN_FERMER());
+}
