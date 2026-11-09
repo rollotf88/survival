@@ -388,8 +388,8 @@ ol.classement .pts{color:var(--mut);font-size:13px;white-space:nowrap}
 @media (orientation:landscape) and (max-height:500px){ .menugrille{grid-template-columns:repeat(3,minmax(0,1fr))} }
 
 /* ---------- Carte choisie pour partir : bien visible sur la pièce peinte ---------- */
-body.fond .mc.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc),0 0 14px 2px rgba(232,163,61,.85);background:color-mix(in srgb,var(--acc) 22%,var(--card))}
-.mc .coche{position:absolute;top:-7px;left:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--accink);border:2px solid var(--ink);font-weight:800;font-size:12px;line-height:1;z-index:1}
+body.fond .mc.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 0 6px rgba(232,163,61,.6);background:color-mix(in srgb,var(--acc) 14%,var(--card))}
+.mc .coche{position:absolute;top:-6px;left:-5px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--accink);border:2px solid var(--ink);font-weight:800;font-size:10px;line-height:1;z-index:1}
 /* Équipement porté, en petit sous les jauges (téléphone : les cases ne s'affichent pas) */
 .mc .porte{display:none}
 @media (max-width:559px){
