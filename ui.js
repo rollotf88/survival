@@ -573,19 +573,40 @@ function familleRetenue(){
 }
 function texteTrait(t){ var T = TRAITS[t]; return '<span class="plus">+ ' + T.plus + '</span><span class="moins">− ' + T.moins + '</span>'; }
 function rFamille(){
-  var F = G.famille || (G.famille = familleRetenue());
-  var options = function(choisi){ return Object.keys(TRAITS).map(function(t){ return '<option value="' + t + '"' + (t === choisi ? " selected" : "") + '>' + TRAITS[t].icone + ' ' + TRAITS[t].nom + '</option>'; }).join(""); };
-  $("app").innerHTML = '<div class="panneau famille"><div class="row"><h1>Ta famille</h1>'
-    + '<label class="pseudo"><span>Ton pseudo</span><input id="pseudodep" class="champ" maxlength="16" autocomplete="off" value="' + echapper(lirePseudo()) + '" placeholder="Pour le classement"></label></div>'
+  var F = G.famille || (G.famille = familleRetenue()), ps = lirePseudo();
+  $("app").innerHTML = '<div class="panneau famille"><div class="famtete"><h1>Ta famille</h1>'
+    + '<button class="pseudobtn' + (ps ? "" : " vide") + '" data-act="saisie" data-id="p"><small>Ton pseudo</small><b>' + (ps ? "👤 " + echapper(ps) : "👤 Choisir") + ' <span class="crayon">✏️</span></b></button></div>'
     + '<div class="fam">' + FAMILLE.map(function(m, k){
+        var T = TRAITS[F[k].trait];
         return '<div class="fm"><span class="em">' + iconeMembre({ nom:m.nom, r:m.nom, icone:m.icone, al:true, hp:100, en:100, faim:100, soif:100 }) + '</span><div class="fmc">'
-          + '<div class="fml"><input class="champ" data-nomk="' + k + '" maxlength="10" autocomplete="off" value="' + echapper(F[k].nom) + '" aria-label="Prénom (' + m.nom + ')">'
-          + '<select class="champ" data-traitk="' + k + '" aria-label="Trait de ' + echapper(F[k].nom) + '">' + options(F[k].trait) + '</select></div>'
-          + '<small id="trait' + k + '">' + texteTrait(F[k].trait) + '</small></div></div>';
+          + '<button class="fmnom" data-act="saisie" data-id="' + k + '" aria-label="Changer le prénom de ' + echapper(F[k].nom) + '">' + echapper(F[k].nom) + ' <span class="crayon">✏️</span></button>'
+          + '<div class="fmtrait"><button class="fleche" data-act="trait" data-id="' + k + ':-1" aria-label="Trait précédent">◀</button>'
+          + '<span class="tnom">' + T.icone + ' ' + T.nom + '</span>'
+          + '<button class="fleche" data-act="trait" data-id="' + k + ':1" aria-label="Trait suivant">▶</button></div>'
+          + '<small>' + texteTrait(F[k].trait) + '</small></div></div>';
       }).join("") + '</div>'
     + '<div class="tabs modes"><button class="tab' + (G.seed ? " on" : "") + '" data-act="modefam" data-id="classee">🏆 Partie classée<small>La même pour tous aujourd’hui</small></button>'
     + '<button class="tab' + (G.seed ? "" : " on") + '" data-act="modefam" data-id="libre">🎲 Partie libre<small>Au hasard, sans classement</small></button></div>'
     + '<p class="msg" id="msgfam"></p><button class="btn" style="width:100%" data-act="famok">Préparer le sac ⏱</button></div>';
+}
+// Fenêtre pour taper un prénom (k = 0 à 3) ou le pseudo (k = "p")
+function openSaisie(k){
+  var p = k === "p", v = p ? lirePseudo() : G.famille[+k].nom;
+  show('<h2>✏️ ' + (p ? "Ton pseudo" : "Prénom de " + FAMILLE[+k].nom) + '</h2><p class="sub">' + (p ? "Il s’affichera dans le classement (pas ton vrai nom). 16 lettres au plus." : "10 lettres au plus.") + '</p>'
+    + '<input id="saisie" class="champ grand" maxlength="' + (p ? 16 : 10) + '" autocomplete="off" value="' + echapper(v) + '">'
+    + '<p class="msg" id="msgsaisie"></p><div class="row"><button class="btn" data-act="saisieok" data-id="' + k + '">OK</button><button class="btn alt" data-act="close">Annuler</button></div>');
+  setTimeout(function(){ var c = $("saisie"); if(c){ c.focus(); c.select(); } }, 50);
+}
+function validerSaisie(k){
+  var v = ($("saisie").value || "").replace(/[<>&"]/g, "").trim();
+  if(k === "p"){ try{ localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){} hide(); render(); return; }
+  k = +k; v = v.slice(0, 10) || FAMILLE[k].nom;
+  if(G.famille.some(function(f, j){ return j !== k && f.nom.toLowerCase() === v.toLowerCase(); })){ $("msgsaisie").textContent = "Un autre membre s’appelle déjà « " + v + " »."; return; }
+  G.famille[k].nom = v; hide(); render();
+}
+function changerTrait(k, sens){
+  var ids = Object.keys(TRAITS), i = ids.indexOf(G.famille[k].trait);
+  G.famille[k].trait = ids[(i + sens + ids.length) % ids.length];
 }
 // Nettoie les prénoms ; refuse deux prénoms identiques
 function validerFamille(){
@@ -599,15 +620,7 @@ function validerFamille(){
   try{ localStorage.setItem("survival_famille", JSON.stringify(F)); }catch(e){}
   return true;
 }
-document.addEventListener("input", function(e){
-  var t = e.target;
-  if(t.id === "pseudodep"){ try{ localStorage.setItem("survival_pseudo", t.value.trim().slice(0, 16)); }catch(er){} }
-  else if(t.hasAttribute && t.hasAttribute("data-nomk") && G.famille) G.famille[+t.getAttribute("data-nomk")].nom = t.value;
-});
-document.addEventListener("change", function(e){
-  var t = e.target;
-  if(t.hasAttribute && t.hasAttribute("data-traitk") && G.famille){ var k = +t.getAttribute("data-traitk"); G.famille[k].trait = t.value; var s = $("trait" + k); if(s) s.innerHTML = texteTrait(t.value); }
-});
+document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "saisie"){ var b = document.querySelector("[data-act=saisieok]"); if(b) b.click(); } });
 
 /* ---------- Pastilles du haut : ce qu'elles veulent dire ---------- */
 function openInfo(id){
@@ -650,6 +663,9 @@ document.addEventListener("click", function(e){
   else if(a === "modefam"){ var fam = G.famille; modeJour = id === "classee"; try{ localStorage.setItem("survival_mode", modeJour ? "jour" : "libre"); }catch(e){} nouvellePartie(modeJour ? graineDuJour() : null); G.famille = fam; G.ph = "famille"; }
   else if(a === "famok"){ if(!validerFamille()) return; G.ph = "pick"; if(G.seed) G.info = "🏆 Partie classée : même maison, mêmes lieux et mêmes nuits pour tous les joueurs aujourd’hui. Ton score ira au classement."; }
   else if(a === "info"){ openInfo(id); return; }
+  else if(a === "saisie"){ openSaisie(id); return; }
+  else if(a === "saisieok"){ validerSaisie(id); return; }
+  else if(a === "trait"){ var qt = id.split(":"); changerTrait(+qt[0], +qt[1]); }
   else if(a === "house"){ if(G.seed) return; if(i !== G.h){ G.h = i; G.pack = {}; G.info = "Tu as changé de maison : le sac est vidé."; } }
   else if(a === "start") demarrer();
   else if(a === "sel" && modeMini()){ openMembre(i); return; }

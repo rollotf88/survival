@@ -134,14 +134,14 @@ Succès et vibrations (2026-11-08) :
 - Menu ☰ en grille compacte (2 colonnes, 3 couché) pour tenir sans défiler ; le contrôleur vérifie aussi que le menu ne défile pas
 
 Famille personnalisée, histoire, partie classée (2026-11-09, demandes de Fabien) :
-- Nouvelle partie : écran d'histoire (`rIntro`, G.ph "intro") → écran « Ta famille » (`rFamille`, G.ph "famille") : pseudo (`survival_pseudo`), prénom de chaque membre (10 lettres max, prénoms différents, `validerFamille`), trait au choix, mode → sac. Noms et traits retenus (`survival_famille`)
+- Nouvelle partie : écran d'histoire (`rIntro`, G.ph "intro") → écran « Ta famille » (`rFamille`, G.ph "famille") façon jeu mobile, sans champs ni menus déroulants (retour de Fabien : « on dirait un site web ») : pseudo et prénoms se changent en touchant le nom (fenêtre `openSaisie`, 10 lettres max, prénoms différents), trait avec les flèches ◀ ▶ (`changerTrait`), mode → sac. Noms et traits retenus (`survival_famille`)
 - Chaque membre a `x.r` (rôle d'origine : Papa, Maman, Léo, Emma, ou nom de la recrue : sert au portrait, aux accords et aux événements via `parRole`) et `x.trait`. `perso(t)` remplace les rôles par les prénoms dans les récits. `migrerPartie` complète les anciennes sauvegardes
 - `TRAITS` (data.js, chiffres dans `BAL.traits`) : Costaud, Soigneur, Fouineur, Doigts de fée, Endurant, Tireur, Optimiste ; chacun a un atout et un défaut. Défauts par défaut : Papa costaud, Maman soigneur, Léo fouineur, Emma doigts de fée. Recrues : trait au hasard. Simulation (trait de Léo changé) : 267 à 309 points selon le trait ; famille par défaut Malin 309 (médiane), Naïf 30
 - « Partie du jour » renommée « Partie classée » (graine du jour). Seule la partie classée va au classement : envoi automatique à la fin si un pseudo est connu (`envoyerScoreAuto`). Partie libre = non classée. Le mode se choisit sur l'écran de la famille (plus sur l'écran du sac)
 - Pastilles du haut cliquables (`openInfo`) : eau / nourriture (rations de la nuit avec `besoinNuit`, réserve en nuits), soins, défense (détail + risque d'attaque de la nuit), moral
 - Rations : « Boire / Manger » n'est proposé que si la jauge est ≤ 70 (sinon gaspillage) ; la ration de la nuit ne gaspille jamais
 - Cartes : contour + coche ✔ quand un membre est choisi pour partir (la bordure « bois » cachait l'ancien contour) ; sur téléphone, l'équipement porté s'affiche en petit sous les jauges (`.porte`)
-- Badge « Powered by Netlify » : imposé par l'offre gratuite de Netlify (pas masquable, ne pas le cacher en CSS). Solutions : héberger le jeu ailleurs sans badge (Cloudflare Pages) en gardant le classement sur Netlify, ou laisser une marge en bas
+- Badge « Powered by Netlify » : imposé par l'offre gratuite de Netlify (pas masquable, ne pas le cacher en CSS). Fabien a choisi de le laisser tel quel (2026-11-09) : ne plus le proposer
 
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
