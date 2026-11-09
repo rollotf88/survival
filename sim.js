@@ -37,6 +37,14 @@ function partir(bot, i){
   if(r.combat) r = avantFouille();
   // Mini-jeu de pêche : le robot réussit un lancer sur deux à trois
   if(r.peche){ while(G.exp.peche.faits < G.exp.peche.lancers) lancerPeche(Math.random() < BAL.peche.chanceRobot); finExpedition(); }
+  // Rencontre en chemin : le robot prend le premier choix possible (le prudent), ou le meilleur s'il est « audacieux »
+  var gr = 0;
+  while(G.rencontre && gr++ < 6){
+    if(!G.rencontre.noeud && G.rencontre.texte){ finirRencontre(); break; }
+    var cs = choixRencontre().filter(function(o){ return o.ok; });
+    if(!cs.length){ finirRencontre(); break; }
+    choisirRencontre((bot.audace && cs.length > 1 ? cs[1] : cs[0]).k);
+  }
 }
 function lieuxPossibles(){ return LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && (G.lieux[i].butin.length || LIEUX[i].peche && G.lieux[i].poissons > BAL.peche.seuil && pourEmplacement("outil").concat(equipes()).some(function(o){ return OBJETS[o.id].peche; }) || LIEUX[i].bois && MALIN.foret !== false && G.lieux[i].arbres > 0 && aHache() && compter("planche") < 6); }); }
 function aHache(){ return pourEmplacement("arme").concat(equipes()).some(function(o){ return OBJETS[o.id].coupe; }); }

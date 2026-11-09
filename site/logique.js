@@ -567,8 +567,63 @@ function finExpedition(){
   G.exp = null; G.combat = null;
   if(survivants.length){ G.stats.lieux[i] = true; if(LIEUX[i].voiture) G.stats.eloignes++; }
   if(survivants.length && G.mission && G.mission.lieu === i){ var mr = reussirMission(); if(mr) n.push(["g2", mr]); }
-  return { lieu:i, notes:n, pris:grouper(pris), laisses:grouper(laisses), vide:resteLieu(i) === 0 };
+  var res = { lieu:i, notes:n, pris:grouper(pris), laisses:grouper(laisses), vide:resteLieu(i) === 0 };
+  if(survivants.length) lancerRencontre(E.equipe, res);
+  return res;
 }
+/* ---------- Rencontres en chemin ---------- */
+function lancerRencontre(equipe, res){
+  var B = BAL.rencontres; G.rencontresFaites = G.rencontresFaites || [];
+  if(G.rencontre || G.day < B.jour || G.jourRencontre === G.day || hasard() >= B.chance) return;
+  var ok = RENCONTRES.filter(function(r){ return G.day >= (r.jour || 1) && (!r.cond || r.cond()) && G.rencontresFaites.indexOf(r.id) < 0; });
+  if(!ok.length) return;
+  var r = ok[R(0, ok.length - 1)];
+  G.rencontre = { id:r.id, noeud:"debut", equipe:equipe.slice(), apres:res, texte:null, lignes:[] };
+  G.jourRencontre = G.day; G.rencontresFaites.push(r.id); res.rencontre = true;
+}
+function rencontreCourante(){ return G.rencontre ? RENCONTRES.find(function(r){ return r.id === G.rencontre.id; }) : null; }
+function equipeRencontre(){ return (G.rencontre.equipe || []).map(function(j){ return G.m[j]; }).filter(function(x){ return x && x.al; }); }
+// Chance d'un choix (avec le bonus du trait si un membre de l'équipe l'a)
+function chanceChoix(c){ return Math.min(0.95, c.chance + (c.trait && equipeRencontre().some(function(x){ return x.trait === c.trait; }) ? BAL.rencontres.bonusTrait : 0)); }
+function appliquerEffets(e, L){
+  if(!e) return;
+  var eq = equipeRencontre(), cible = eq.length ? eq[R(0, eq.length - 1)] : vivants()[0], recu = [];
+  if(e.nour){ var pn = prendreRations("nour", e.nour); if(pn) L.push(["b2", "🥫 −" + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]); }
+  if(e.eau){ var pe = prendreRations("eau", e.eau); if(pe) L.push(["b2", "💧 −" + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]); }
+  var moins = function(id, q){ return icone(id) + " −" + q + " " + (q > 1 ? OBJETS[id].pl : OBJETS[id].nom).toLowerCase() + "."; };
+  for(var s = 0; s < (e.soins || 0); s++){ var k = retirerSoin(); if(k) L.push(["b2", moins(k, 1)]); }
+  if(e.perdre) for(var p in e.perdre){ var q = Math.min(compter(p), e.perdre[p]); if(!q) continue; if(OBJETS[p].empile) retirer(p, q); else consommer(p, q); L.push(["b2", moins(p, q)]); }
+  if(e.perdreConfort){ var kc = ["photo", "cartes", "peluche", "radio"].filter(function(k){ return compter(k) > 0; })[0]; if(kc){ consommer(kc, 1); L.push(["b2", moins(kc, 1)]); } }
+  if(e.objets) for(var o in e.objets){ ajouter(o, e.objets[o]); recu.push(nommer(o, e.objets[o])); }
+  if(recu.length) L.push(["g2", "🎁 Vous rapportez " + liste(recu) + "."]);
+  if(e.chien && !chien()){ G.chien = { nom:"Rex", faim:0 }; L.push(["g2", ic("chien", "🐕") + " Rex fait désormais partie de la famille."]); }
+  if(e.recruter && recruter(e.recruter[0], e.recruter[1])) L.push(["g2", "🧑 " + e.recruter[0] + " rejoint la famille."]);
+  if(e.decouvrir){
+    var ls = LIEUX.map(function(L2, i){ return i; }).filter(function(i){ return LIEUX[i].secret && !(G.decouverts && G.decouverts[i]); });
+    if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; L.push(["g2", "📍 Nouveau lieu découvert : " + LIEUX[ls[0]].nom + "."]); }
+  }
+  if(e.energie){ eq.forEach(function(x){ x.en = Math.max(0, x.en - e.energie); }); L.push(["b2", "⚡ −" + e.energie + " d’énergie pour l’équipe."]); }
+  if(e.folie) eq.forEach(function(x){ x.folie = Math.min(100, (x.folie || 0) + e.folie); });
+  if(e.moral){ changerMoral(e.moral); L.push([e.moral > 0 ? "g2" : "b2", (e.moral > 0 ? "😊 Moral +" : "😟 Moral ") + e.moral + "."]); }
+  if(e.pv && cible){ L.push(["b2", "🩸 " + cible.nom + " est blessé" + (FEMININS.indexOf(roleDe(cible)) >= 0 ? "e" : "") + " (−" + e.pv + " PV)."]); blesser(cible, e.pv, L, e.cause || "tué en chemin"); }
+}
+// Les choix proposés au nœud en cours (avec la raison s'ils sont impossibles)
+function choixRencontre(){
+  var R0 = rencontreCourante(); if(!R0 || !G.rencontre.noeud) return [];
+  return R0.noeuds[G.rencontre.noeud].choix.map(function(c, k){ return { c:c, k:k, ok:!c.cond || c.cond() }; });
+}
+function choisirRencontre(k){
+  var ch = choixRencontre()[k]; if(!ch || !ch.ok) return null;
+  var c = ch.c, res = c, L = [];
+  if(c.chance !== undefined) res = hasard() < chanceChoix(c) ? c.reussite : c.echec;
+  appliquerEffets(res.effets || c.effets, L);
+  G.rencontre.texte = res.texte || c.texte; G.rencontre.lignes = L;
+  G.rencontre.reussi = c.chance === undefined ? null : res === c.reussite;
+  G.rencontre.noeud = c.suite || null;
+  return G.rencontre;
+}
+// Fin de la rencontre : on rend le résultat de la fouille (pour l'afficher)
+function finirRencontre(){ var r = G.rencontre && G.rencontre.apres; if(r) r.notes = r.notes.concat((G.rencontre.lignes || []).filter(function(l){ return l[0] === "mort"; })); G.rencontre = null; return r; }
 
 /* ---------- Combat au tour par tour ----------
    Au début de chaque tour, chaque zombie annonce ce qu'il va faire (son « intention » : qui il va mordre,

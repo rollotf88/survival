@@ -847,3 +847,10 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 .sacr-m .cmp .portrait{width:44px;height:44px}
 .sacr-m small{font-size:10.5px;color:var(--mut)}
 .jauge.folie small{color:var(--bad)}
+/* ---------- Rencontres en chemin ---------- */
+.rencontre .r-lieu{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:800}
+.rencontre h2{margin-top:2px}
+.r-texte{font-style:italic;border-left:4px solid var(--bois);padding:4px 0 4px 10px;margin:6px 0 10px;background:color-mix(in srgb,var(--bois) 10%,transparent);border-radius:0 8px 8px 0}
+.r-res{margin:4px 0 6px;font-weight:600}
+.r-res.ok{color:var(--ok)}.r-res.ko{color:var(--bad)}
+.r-choix small{color:var(--mut)}

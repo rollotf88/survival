@@ -221,10 +221,16 @@ Le dernier recours et la folie (2026-11-09, idée de Fabien, contenu sensible) :
 - Simulation : sacrifier n'est jamais rentable (Malin 303 avec, 317 sans) : ça retarde la fin de quelques jours puis la folie emporte la famille, comme voulu
 - Classement d'âge : rester suggéré (aucune image), réglage pour couper ; à revoir avant les stores
 
+Rencontres en chemin (2026-11-09, idée de Fabien « livre dont vous êtes le héros ») :
+- `RENCONTRES` (data.js) : 10 rencontres (fillette Chloé, soldat blessé, barrage de pillards, prêcheur en 2 étapes, Mme Roux, boîte du marchand, voix à la radio (si radio), enfant mordu, camp des survivants (recrue Yanis), chien piégé (si pas de chien)). Nœuds → texte + choix ; un choix a des effets directs ou une `chance` (+20 % si un membre de l'équipe a le `trait` indiqué) avec `reussite` / `echec`, une `cond` (bouton grisé avec la raison `sans`), une `suite`. Effets : objets, perdre, nour, eau, soins, moral, pv (+cause, peut tuer), energie, folie, recruter, chien, decouvrir (lieu secret), perdreConfort. Le premier choix est le prudent
+- Déclenchement : `lancerRencontre` à la fin de `finExpedition` (`BAL.rencontres` : à partir du jour 3, 10 % par fouille, au plus une par jour, chacune une fois par partie, `G.rencontresFaites`) ; `G.rencontre` = {id, noeud, equipe, apres (résultat de la fouille), texte, lignes} (sauvegardé, repris par `reprendre`). `openRencontre` (ui.js) : « En chemin… », titre, texte, choix avec 🎲 chances et bonus de trait ; portrait via `parle` (s'il manque, le médaillon disparaît tout seul) ; « Continuer » → `finirRencontre` → résultat de la fouille
+- Portraits manquants à demander à Gemini : fillette, precheur, mere, chefcamp (images/portrait-<nom>.webp)
+- Simulation : neutre (Malin 317 prudent, 318 audacieux, 321 sans rencontres ; ~7 rencontres par partie) ; Naïf 29
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
 2. Dernier recours et folie — FAIT (voir plus haut)
-3. Rencontres de PNJ au hasard avec dialogues à choix (façon livre dont vous êtes le héros) : ressources, ou la mort d'un membre selon les réponses
+3. Rencontres en chemin — FAIT (voir plus haut)
 4. Parrainage : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
 5. Panneau d'administration (nombre de joueurs, supprimer, gérer les codes), protégé : mot de passe choisi par Fabien et rangé comme secret Cloudflare (Claude ne le voit jamais)
 6. Plus tard : guerres de clans (après 100 jours, bastion de 5 joueurs max avec pièces différentes, lobby, chef qui peut exclure, attaques sur 24 h, guerre de quelques jours, butin limité, mines et barricades, avatar du clan)

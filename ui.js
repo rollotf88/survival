@@ -52,7 +52,7 @@ function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.
 var PNJ = { marchand:"Le marchand", roux:"Mme Roux", blesse:"Survivant blessé", pillard:"Chef des pillards", marco:"Marco" };
 function parle(nom, portrait){
   var sh = $("sheet"); if(!sh) return;
-  var img = portrait.charAt(0) === "<" ? portrait : '<img src="images/portrait-' + portrait + '.webp" alt="">';
+  var img = portrait.charAt(0) === "<" ? portrait : '<img src="images/portrait-' + portrait + '.webp" alt="" onerror="var l=document.getElementById(\'locuteur\'); if(l) l.remove(); var s=document.getElementById(\'sheet\'); if(s) s.classList.remove(\'parle\');">';
   var l = document.createElement("div"); l.id = "locuteur"; l.setAttribute("aria-hidden", "true");
   l.innerHTML = '<span class="loc-portrait">' + img + '</span><span class="loc-nom">' + nom + '</span>';
   $("modal").appendChild(l); sh.classList.add("parle");
@@ -215,6 +215,7 @@ function apresEtape(r){
   if(r.serrure){ jeuSerrure = false; msgSerrure = ""; openSerrure(); }
   else if(r.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
   else if(r.peche){ openPeche(); }
+  else if(G.rencontre){ openRencontre(); }
   else { openResultat(r); finiSiMorts(); }
 }
 
@@ -324,6 +325,22 @@ function openCombat(){
   var jn = $("journal"); if(jn) jn.scrollTop = jn.scrollHeight;
 }
 
+/* ---------- Rencontre en chemin : dialogue à choix ---------- */
+function openRencontre(){
+  var R0 = rencontreCourante(); if(!R0){ G.rencontre = null; hide(); return; }
+  var Rc = G.rencontre, N = Rc.noeud ? R0.noeuds[Rc.noeud] : null;
+  var h = '<div class="rencontre"><p class="r-lieu">En chemin…</p><h2>' + R0.titre + '</h2>';
+  if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? "🎲 Réussi ! " : Rc.reussi === false ? "🎲 Raté… " : "") + perso(Rc.texte) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
+  if(N){
+    h += '<p class="r-texte">' + perso(N.texte) + '</p>';
+    h += choixRencontre().map(function(o){
+      var c = o.c, info = c.chance !== undefined ? "🎲 " + Math.round(chanceChoix(c) * 100) + " % de chances" + (c.trait ? " (" + TRAITS[c.trait].icone + " " + TRAITS[c.trait].nom + " : +" + Math.round(BAL.rencontres.bonusTrait * 100) + " %)" : "") : "";
+      return '<button class="loc r-choix" data-act="rchoix" data-id="' + o.k + '"' + (o.ok ? "" : " disabled") + '><b>' + c.t + '</b>' + (info || !o.ok ? '<small>' + (o.ok ? info : "❌ " + c.sans) + '</small>' : '') + '</button>';
+    }).join("");
+  } else h += '<button class="btn" style="width:100%" data-act="rfin">Continuer</button>';
+  show(h + '</div>');
+  if(R0.portrait !== "" && Rc.noeud) parle(R0.nom, R0.portrait);
+}
 function openResultat(r){
   var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
   if(r.pris.length){
@@ -979,6 +996,8 @@ document.addEventListener("click", function(e){
   else if(a === "soins"){ openSoins(i); return; }
   else if(a === "heal"){ soigner(i); hide(); }
   else if(a === "boire"){ boire(i); hide(); }
+  else if(a === "rchoix"){ choisirRencontre(i); render(); openRencontre(); return; }
+  else if(a === "rfin"){ var rf = finirRencontre(); render(); if(rf){ openResultat(rf); finiSiMorts(); } else hide(); return; }
   else if(a === "cuire"){ var mc = cuisiner(i); if(mc) msgAtelier = mc; openRef("cuisine"); render(); return; }
   else if(a === "plat"){ var qp = id.split(":"); var xp = G.m[+qp[0]]; mangerPlat(xp, qp[1]); openSoins(+qp[0]); render(); return; }
   else if(a === "ration"){ var qr = id.split(":"); prendreRation(+qr[0], qr[1]); openSoins(+qr[0]); render(); return; }
@@ -1091,6 +1110,7 @@ function reprendre(g){
   else if(G.exp && G.exp.serrure && !G.combat && G.exp.serrure.fin){ msgSerrure = ""; openSerrure(); }
   else if(G.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
   else if(G.exp){ if(G.exp.peche && G.exp.peche.faits < G.exp.peche.lancers) openPeche(); else apresEtape(G.exp.peche ? finExpedition() : avantFouille()); }
+  else if(G.rencontre) openRencontre();
   else if(G.ev) openEvent(G.ev);
   else fermer(); // montre les chapitres terminés en attente, sinon rien
 }

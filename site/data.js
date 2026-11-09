@@ -119,6 +119,8 @@ var BAL = {
     viande: 6,               // en cas de famine, le manger donne 6 rations...
     moral: -25               // ...mais le moral s'effondre
   },    // mais la nuit suivante, ce membre récupère 20 de moins
+  // Rencontres en chemin : une chance à chaque fouille, au plus une par jour
+  rencontres: { jour:3, chance:0.1, bonusTrait:0.2 },
   // Dernier recours (contenu sensible, désactivable dans le menu) : quand la famille meurt de faim
   sacrifice: {
     faimMax: 10,             // proposé seulement si quelqu'un est à 10 de faim ou moins, sans plus rien à manger
@@ -461,6 +463,94 @@ var LIEUX = [
 // La forêt (ajoutée à la fin pour ne pas décaler les sauvegardes) : du bois avec une hache, mais des zombies entre les arbres
 LIEUX.push({ nom:"Forêt", icone:"🌲", danger:0.40, distance:2, jour:5, bois:true,
   butin:{ bouteille:1, couverture:1, alcool:1, chiffon:1 } });
+/* ---------- Rencontres en chemin (façon « livre dont vous êtes le héros ») ----------
+   Pendant une fouille, au hasard (au plus une par jour, chacune une fois par partie). Chaque rencontre a des
+   « nœuds » : un texte et des choix. Un choix peut avoir une chance de réussite (bonus si un membre de l'équipe a
+   le trait indiqué), une condition (cond) et des effets :
+   objets {id:n} reçus · perdre {id:n} · nour / eau (rations perdues) · soins (objets de soin utilisés) · moral ·
+   pv (blessure d'un membre de l'équipe, cause) · energie (toute l'équipe) · folie · recruter [nom, icône] · decouvrir (un lieu secret).
+   suite : nœud suivant. Le PREMIER choix est le choix prudent (le robot de simulation le prend). */
+var RENCONTRES = [
+  { id:"fillette", titre:"👧 Une petite fille en pleurs", nom:"Chloé", portrait:"fillette", jour:3, noeuds:{
+    debut:{ texte:"Assise sur un muret, une petite fille serre une peluche. « Mon papa est entré dans l’immeuble pour chercher à manger… il n’est jamais ressorti. »", choix:[
+      { t:"Lui donner à manger et lui indiquer un abri", effets:{ nour:2, moral:8 }, texte:"Elle dévore la boîte de conserve, puis file vers l’église où d’autres survivants se cachent. Elle se retourne pour vous faire un signe." },
+      { t:"Entrer dans l’immeuble chercher son père", chance:0.5, trait:"fouineur",
+        reussite:{ texte:"Au deuxième étage, un homme est coincé derrière une porte bloquée. Vous le libérez. En pleurant, il vous donne ce qu’il avait trouvé.", effets:{ objets:{ trousse:1, conserves:1 }, moral:15 } },
+        echec:{ texte:"L’immeuble grouille de zombies. Vous ressortez de justesse… sans le père.", effets:{ pv:20, cause:"tué dans un immeuble infesté", moral:-5 } } },
+      { t:"Passer votre chemin", effets:{ moral:-10 }, texte:"Ses sanglots vous suivent longtemps dans la rue." }
+    ] } } },
+  { id:"soldat", titre:"🪖 Le soldat blessé", nom:"Le soldat", portrait:"blesse", jour:6, noeuds:{
+    debut:{ texte:"Adossé à une voiture, un soldat se tient la jambe. Son pistolet est posé à côté de lui. « Doucement… J’ai pas de mauvaises intentions. J’ai juste besoin de soins. »", choix:[
+      { t:"Le soigner (1 objet de soin)", cond:function(){ return soinsDispo() > 0; }, sans:"Aucun objet de soin", effets:{ soins:1, objets:{ boiteBalles:1 }, decouvrir:true, moral:5 },
+        texte:"Il serre les dents pendant le pansement. « Merci. Tenez, des munitions… et un conseil : j’ai repéré un endroit que personne n’a encore fouillé. »" },
+      { t:"Lui prendre ses armes", chance:0.6, trait:"costaud",
+        reussite:{ texte:"Il est trop faible pour résister. Vous repartez avec son pistolet… et ce regard que vous n’oublierez pas.", effets:{ objets:{ pistolet:1 }, moral:-15 } },
+        echec:{ texte:"Il a encore la force de tirer. La balle vous frôle… pas tout à fait.", effets:{ pv:30, cause:"tué par un soldat aux abois", moral:-10 } } },
+      { t:"Le laisser là", effets:{ moral:-5 }, texte:"Vous vous éloignez. Derrière vous, il ne dit plus rien." }
+    ] } } },
+  { id:"barrage", titre:"🏴 Le barrage des pillards", nom:"Chef des pillards", portrait:"pillard", jour:8, noeuds:{
+    debut:{ texte:"Une barricade de voitures bloque la rue. Trois hommes armés vous mettent en joue. « Ici, on paie le passage. À manger, ou ce que vous portez. »", choix:[
+      { t:"Payer avec de la nourriture (3 rations)", cond:function(){ return rations("nour") >= 3; }, sans:"Pas assez de nourriture", effets:{ nour:3 }, texte:"Ils rient en fouillant vos sacs, puis vous laissent passer." },
+      { t:"Bluffer : « On est une vingtaine juste derrière »", chance:0.45, trait:"optimiste",
+        reussite:{ texte:"Ils hésitent, se regardent… et décampent en abandonnant une partie de leur butin.", effets:{ objets:{ conserve:2, ruban:1, canette:1 }, moral:10 } },
+        echec:{ texte:"« Mauvaise réponse. » Les coups pleuvent avant que vous puissiez fuir.", effets:{ pv:25, cause:"tué par des pillards", energie:15 } } },
+      { t:"Faire un long détour", effets:{ energie:20 }, texte:"Le détour vous épuise, mais personne n’est blessé." }
+    ] } } },
+  { id:"precheur", titre:"📿 Le prêcheur de la fin", nom:"Le prêcheur", portrait:"precheur", jour:10, noeuds:{
+    debut:{ texte:"Debout sur un banc, un homme en soutane déchirée harangue une rue vide. « Le jugement est venu ! Approchez, mes enfants… »", choix:[
+      { t:"L’éviter discrètement", effets:{}, texte:"Vous passez de l’autre côté de la rue. Il continue de prêcher pour personne." },
+      { t:"L’écouter un moment", suite:"ecoute", effets:{}, texte:"Sa voix est étrangement douce. Il parle d’espoir, de familles réunies…" }
+    ] },
+    ecoute:{ texte:"« Il me reste quelques provisions bénies. Je les partage… contre un petit souvenir de votre vie d’avant. »", choix:[
+      { t:"Le remercier et partir", effets:{ moral:6 }, texte:"Ses paroles vous ont fait du bien, sans que vous sachiez vraiment pourquoi." },
+      { t:"Lui donner un objet de confort", cond:function(){ return ["peluche", "photo", "cartes", "radio"].some(function(k){ return compter(k) > 0; }); }, sans:"Aucun objet de confort", effets:{ perdreConfort:true, objets:{ bidon:1, ration:1 }, moral:-5 },
+        texte:"Il serre l’objet contre son cœur et vous tend un bidon d’eau et une ration militaire." }
+    ] } } },
+  { id:"roux", titre:"👵 Mme Roux à sa fenêtre", nom:"Mme Roux", portrait:"roux", jour:5, noeuds:{
+    debut:{ texte:"Au premier étage, une vieille dame vous fait signe. « Mon petit-fils a de la fièvre depuis trois jours. Vous n’auriez pas un médicament ? »", choix:[
+      { t:"Lui expliquer que vous n’avez rien", effets:{ moral:-3 }, texte:"Elle hoche la tête tristement et referme la fenêtre." },
+      { t:"Lui donner un antibiotique", cond:function(){ return compter("antibio") > 0; }, sans:"Pas d’antibiotique", effets:{ perdre:{ antibio:1 }, objets:{ farine:2, herbes:2, couverture:1 }, moral:12 },
+        texte:"Elle descend un panier au bout d’une corde : de la farine, des herbes de son jardin et une couverture tricotée main." },
+      { t:"Lui donner un objet de soin", cond:function(){ return soinsDispo() > 0; }, sans:"Aucun objet de soin", effets:{ soins:1, objets:{ herbes:2 }, moral:8 },
+        texte:"« Que Dieu vous garde. » Elle vous jette quelques herbes séchées." }
+    ] } } },
+  { id:"boite", titre:"🎁 La boîte du marchand", nom:"Le marchand", portrait:"marchand", jour:4, noeuds:{
+    debut:{ texte:"Un homme au chapeau cabossé pousse un caddie. « Boîte mystère ! Trois rations de nourriture, et elle est à vous. Parfois c’est Noël… parfois non. »", choix:[
+      { t:"Refuser poliment", effets:{}, texte:"« Tant pis pour vous ! » Il s’éloigne en sifflotant." },
+      { t:"Acheter la boîte (3 rations)", cond:function(){ return rations("nour") >= 3; }, sans:"Pas assez de nourriture", chance:0.55,
+        reussite:{ texte:"C’est Noël : une trousse de secours, deux canettes et une boîte de cartouches !", effets:{ nour:3, objets:{ trousse:1, canette:2, boiteCart:1 } } },
+        echec:{ texte:"Des cailloux emballés dans du papier journal. Le marchand a déjà disparu.", effets:{ nour:3, moral:-5 } } }
+    ] } } },
+  { id:"radio", titre:"📻 Une voix à la radio", nom:"Voix inconnue", portrait:"radio", jour:7, cond:function(){ return possede(function(o){ return o.radio; }); }, noeuds:{
+    debut:{ texte:"Votre radio grésille : « …à tous les survivants… caisse de ravitaillement larguée près du château d’eau… je répète… »", choix:[
+      { t:"Ne pas prendre le risque", effets:{}, texte:"Le message tourne en boucle, puis s’éteint." },
+      { t:"Aller jusqu’au château d’eau (−15 ⚡)", chance:0.65,
+        reussite:{ texte:"La caisse est bien là, intacte : rations militaires, eau et munitions !", effets:{ energie:15, objets:{ ration:2, bidon:1, boiteBalles:1 }, moral:8 } },
+        echec:{ texte:"C’était un piège : la caisse est vide et des zombies attendaient autour.", effets:{ energie:15, pv:20, cause:"tué dans un guet-apens" } } }
+    ] } } },
+  { id:"mordu", titre:"🩸 L’enfant mordu", nom:"Une mère", portrait:"mere", jour:12, noeuds:{
+    debut:{ texte:"Une femme berce un garçon fiévreux. Une morsure suinte sur son bras. « Aidez-le, je vous en supplie… ce n’est peut-être qu’un chien… »", choix:[
+      { t:"Vous éloigner prudemment", effets:{ moral:-5 }, texte:"Ses supplications vous poursuivent jusqu’au coin de la rue." },
+      { t:"Le soigner (1 objet de soin)", cond:function(){ return soinsDispo() > 0; }, sans:"Aucun objet de soin", chance:0.6,
+        reussite:{ texte:"C’était bien un chien. La fièvre tombe pendant que vous le soignez. La mère vous donne tout ce qu’elle a.", effets:{ soins:1, objets:{ bidon:1, conserves:1 }, moral:15 } },
+        echec:{ texte:"Ses yeux se voilent pendant le pansement. Il se jette sur vous.", effets:{ soins:1, pv:25, cause:"mordu par un enfant qui s’est transformé", moral:-15 } } },
+      { t:"Abréger ses souffrances", effets:{ moral:-20, folie:10 }, texte:"La mère hurle. Vous ne dormirez pas bien cette nuit." }
+    ] } } },
+  { id:"camp", titre:"⛺ Le camp des survivants", nom:"Chef du camp", portrait:"chefcamp", jour:15, noeuds:{
+    debut:{ texte:"Derrière une palissade, une dizaine de survivants vous observent. Leur chef s’avance. « On commerce avec ceux qui ne cherchent pas d’ennuis. »", choix:[
+      { t:"Échanger 3 planches contre de l’eau", cond:function(){ return compter("planche") >= 3; }, sans:"Pas assez de planches", effets:{ perdre:{ planche:3 }, objets:{ bidon:1 } }, texte:"Marché conclu. « Revenez quand vous voulez. »" },
+      { t:"Demander si quelqu’un veut vous rejoindre", cond:function(){ return vivants().length < FAMILLE.length; }, sans:"La famille est au complet", effets:{ recruter:["Yanis", "🧑"], moral:10 },
+        texte:"Un jeune homme s’avance. « Ici, on est trop nombreux. Je viens avec vous. »" },
+      { t:"Repartir", effets:{}, texte:"Vous les saluez de loin et reprenez la route." }
+    ] } } },
+  { id:"chien", titre:"🐕 Le chien piégé", nom:"Un chien", portrait:"", jour:4, cond:function(){ return !chien(); }, noeuds:{
+    debut:{ texte:"Des gémissements sous une voiture : un chien, la patte coincée dans un collet rouillé.", choix:[
+      { t:"Le libérer", chance:0.75,
+        reussite:{ texte:"Il vous lèche la main, puis vous suit jusqu’au refuge en boitant. Il s’appelle peut-être Rex…", effets:{ chien:true, moral:10 } },
+        echec:{ texte:"Affolé, il vous mord avant de s’enfuir.", effets:{ pv:10, cause:"mordu par un chien affolé" } } },
+      { t:"Le laisser", effets:{ moral:-6 }, texte:"Ses gémissements résonnent longtemps." }
+    ] } } }
+];
 // Ingrédients de cuisine ajoutés au butin des lieux (2026-11-09)
 var INGREDIENTS_LIEUX = {
   "Maison voisine":{ epices:1, huile:1 }, "Rue des pavillons":{ epices:2, huile:1, herbes:1 }, "Supermarché":{ epices:3, huile:3, farine:2 },
