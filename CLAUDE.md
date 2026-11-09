@@ -14,7 +14,7 @@ Jeu de survie 2D (cartoon, post-apocalyptique) jouable dans le navigateur, desti
 - `ancien/jeu.js` : ancienne version en un seul fichier (référence)
 - `publication-en-ligne.html` : page utilisée pour publier le jeu en lien privé sur claude.ai (sans en-tête HTML, la plateforme l'ajoute). Ne pas l'ouvrir en double-clic : c'est `index.html` qui sert à jouer en local
 - `simulation.html`, `sim.js` : simulation d'équilibrage (robots qui jouent des centaines de parties)
-- `admin.html` : panneau d'administration (copié dans site/, pas relié au jeu) : https://survival-refuge.rollotf88.workers.dev/admin.html
+- `admin.html` : panneau d'administration (copié dans site/, pas relié au jeu) : https://survival-refuge.rollotf88.workers.dev/admin (admin.html redirige)
 - `controle-affichage.js` : outil de vérification (pas chargé par le jeu ni publié). `controleAffichage()` liste les chevauchements, textes coupés, débordements de l'écran affiché
 - `.claude/launch.json` : petit serveur local (python) utilisé pour tester dans le navigateur intégré
 - `sons/musique-emptycity.ogg` : musique d'ambiance (CC0, « EmptyCity » par yd), réglage « 🎵 Musique » du menu, démarre au premier toucher
