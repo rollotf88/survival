@@ -133,14 +133,19 @@ document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.targ
    ===================================================================== */
 function statsCumul(){ try{ return JSON.parse(localStorage.getItem("survival_stats")) || {}; }catch(e){ return {}; } }
 function partieEnJeu(){ return typeof G !== "undefined" && G && G.ph === "game" && G.stats && !G.cumule; }
+// La partie à compter : celle qu'on joue, ou celle qui attend dans la sauvegarde (écran d'accueil « Partie en cours »)
+function partieCourante(){
+  if(partieEnJeu()) return G;
+  return typeof enCours !== "undefined" && enCours && enCours.stats && enCours.m ? enCours : null;
+}
 // Totaux du joueur : parties terminées + partie en cours
 var STATS_CUMUL = ["poissons", "bois", "fabriques", "crochetages", "missions", "eloignes"]; // compteurs de G.stats ajoutés tels quels
 function statsJoueur(){
-  var c = statsCumul(), g = partieEnJeu();
-  var r = { zombies:(c.zombies || 0) + (g ? G.stats.zombies || 0 : 0), morts:(c.morts || 0) + (g ? G.dd.length : 0),
-           parties:(c.parties || 0) + (g ? 1 : 0), jours:(c.jours || 0) + (g ? G.day - 1 : 0), meilleur:Math.max(c.meilleur || 0, g ? G.score : 0),
-           plusLongue:Math.max(c.plusLongue || 0, g ? G.day - 1 : 0) };
-  STATS_CUMUL.forEach(function(k){ r[k] = (c[k] || 0) + (g ? G.stats[k] || 0 : 0); });
+  var c = statsCumul(), P = partieCourante(), g = !!P;
+  var r = { zombies:(c.zombies || 0) + (g ? P.stats.zombies || 0 : 0), morts:(c.morts || 0) + (g ? (P.dd || []).length : 0),
+           parties:(c.parties || 0) + (g ? 1 : 0), jours:(c.jours || 0) + (g ? P.day - 1 : 0), meilleur:Math.max(c.meilleur || 0, g ? P.score : 0),
+           plusLongue:Math.max(c.plusLongue || 0, g ? P.day - 1 : 0) };
+  STATS_CUMUL.forEach(function(k){ r[k] = (c[k] || 0) + (g ? P.stats[k] || 0 : 0); });
   return r;
 }
 // Fin de partie : on ajoute ses chiffres aux totaux (une seule fois)
@@ -155,15 +160,17 @@ function cumulerPartie(){
   try{ localStorage.setItem("survival_stats", JSON.stringify(c)); }catch(e){}
 }
 function adresseMonde(){ return adresseClassement().replace("/api/classement", "/api/monde"); }
+// Renvoie une promesse (résolue même en cas d'échec) pour pouvoir relire les chiffres juste après
 function envoyerMonde(force, fin){
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve(); // tests sur l'ordinateur : on n'écrit pas dans les vrais chiffres
   var t = Date.now(), dernier = 0;
   try{ dernier = +localStorage.getItem("survival_monde_t") || 0; }catch(e){}
-  if(!force && t - dernier < 10 * 60000) return;
+  if(!force && t - dernier < 10 * 60000) return Promise.resolve();
   try{ localStorage.setItem("survival_monde_t", t); }catch(e){}
-  var s = statsJoueur(), v = partieEnJeu() ? vivants().length : 0;
-  var corps = { id:idAppareil(), pseudo:lirePseudo(), vivants:v, jour:v ? G.day : 0, zombies:s.zombies, morts:s.morts, parties:s.parties };
+  var s = statsJoueur(), P = partieCourante(), v = P && !fin ? P.m.filter(function(x){ return x.al; }).length : 0;
+  var corps = { id:idAppareil(), pseudo:lirePseudo(), vivants:v, jour:v ? P.day : 0, zombies:s.zombies, morts:s.morts, parties:s.parties };
   if(fin) corps.fin = fin;
-  try{ fetch(adresseMonde(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).catch(function(){}); }catch(e){}
+  try{ return fetch(adresseMonde(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).catch(function(){}); }catch(e){ return Promise.resolve(); }
 }
 
 /* ---------- Panneau « En ce moment » de l'accueil ---------- */
@@ -181,9 +188,10 @@ function remplirMonde(){
   var moi = statsJoueur();
   var poser = function(d){
     if(!document.getElementById("monde")) return;
-    var vals = d ? { "m-surv":d.survivants, "m-morts":d.morts, "m-zomb":d.zombies } : { "m-surv":partieEnJeu() ? vivants().length : 0, "m-morts":moi.morts, "m-zomb":moi.zombies };
+    var P = partieCourante();
+    var vals = d ? { "m-surv":d.survivants, "m-morts":d.morts, "m-zomb":d.zombies } : { "m-surv":P ? P.m.filter(function(x){ return x.al; }).length : 0, "m-morts":moi.morts, "m-zomb":moi.zombies };
     el.querySelectorAll("[data-n]").forEach(function(b){ compterJusque(b, vals[b.getAttribute("data-n")] || 0); });
-    document.getElementById("m-etat").textContent = d ? (d.familles + " famille" + (d.familles > 1 ? "s" : "") + " tiennent bon") : "tes chiffres (hors ligne)";
+    document.getElementById("m-etat").textContent = d ? (d.familles ? d.familles + " famille" + (d.familles > 1 ? "s tiennent" : " tient") + " bon" : "aucune famille en vie") : "tes chiffres (hors ligne)";
     if(!d) el.classList.add("horsligne");
     // Le fil : des nouvelles du monde qui défilent
     var fil = [];
@@ -215,6 +223,7 @@ function compterJusque(b, n){
 function poserMonde(){
   var pl = document.querySelector(".monde-place"); if(!pl) return;
   pl.outerHTML = panneauMonde(pl.getAttribute("data-compact") === "1");
-  remplirMonde();
+  var dejaEnvoye = false; try{ dejaEnvoye = !!localStorage.getItem("survival_monde_t"); }catch(e){}
+  envoyerMonde(!dejaEnvoye).then(remplirMonde, remplirMonde);
 }
 poserMonde(); // l'accueil a pu s'afficher avant le chargement de ce fichier
