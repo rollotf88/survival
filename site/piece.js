@@ -18,7 +18,7 @@ var ZONES_PIECE = [
   ["pCheminee",  155, 355, 320, 530, function(){ return ic("ref_barr", "🧱"); }, "Refuge", .5],
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
-  ["pTable",     365, 570, 660, 678, function(){ return ic("marteau", "🛠️"); }, "Atelier", .55],
+  ["chapitre",   365, 570, 660, 678, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
   ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .5, function(){ return !!chien(); }]
 ];
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
