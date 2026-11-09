@@ -14,6 +14,7 @@ Jeu de survie 2D (cartoon, post-apocalyptique) jouable dans le navigateur, desti
 - `ancien/jeu.js` : ancienne version en un seul fichier (référence)
 - `publication-en-ligne.html` : page utilisée pour publier le jeu en lien privé sur claude.ai (sans en-tête HTML, la plateforme l'ajoute). Ne pas l'ouvrir en double-clic : c'est `index.html` qui sert à jouer en local
 - `simulation.html`, `sim.js` : simulation d'équilibrage (robots qui jouent des centaines de parties)
+- `admin.html` : panneau d'administration (copié dans site/, pas relié au jeu) : https://survival-refuge.rollotf88.workers.dev/admin.html
 - `controle-affichage.js` : outil de vérification (pas chargé par le jeu ni publié). `controleAffichage()` liste les chevauchements, textes coupés, débordements de l'écran affiché
 - `.claude/launch.json` : petit serveur local (python) utilisé pour tester dans le navigateur intégré
 - `sons/musique-emptycity.ogg` : musique d'ambiance (CC0, « EmptyCity » par yd), réglage « 🎵 Musique » du menu, démarre au premier toucher
@@ -234,12 +235,16 @@ Parrainage (2026-11-09, idée de Fabien) :
 - Aucune écriture depuis localhost (tests de Claude). Protection simple : un code par appareil (effacer les données du navigateur permet de recommencer)
 - Menu ☰ en 4 colonnes en paysage bas ; « 🕯️ Contenus / Durs : activés »
 
+Panneau d'administration (2026-11-09) :
+- `admin.html` (page à part, noindex) → `/api/admin` (worker/index.js, POST). Mot de passe = secret Cloudflare `ADMIN_MDP` (10 caractères au moins), créé par Fabien dans le tableau de bord Cloudflare (Workers → survival-refuge → Paramètres → Variables et secrets → Ajouter → type Secret). Claude ne le voit jamais. Envoyé dans l'en-tête Authorization (HTTPS), comparé par empreinte SHA-256 ; 5 mauvais essais = adresse bloquée 15 min (clé KV `admin_echecs_<ip>`) ; pas d'en-tête CORS sur ces routes ; mot de passe gardé dans l'onglet (sessionStorage) jusqu'à la déconnexion
+- Onglets : Résumé (joueurs, actifs 24 h / 7 j, familles et survivants en vie, parties, morts, zombies, classement, codes, parrainages, dernières familles tombées), Joueurs (500 derniers vus, supprimer = retiré du monde et du classement), Classement (retirer un score), Codes (créer, activer / désactiver, supprimer les codes spéciaux comme « 18-25 »)
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
 2. Dernier recours et folie — FAIT (voir plus haut)
 3. Rencontres en chemin — FAIT (voir plus haut)
 4. Parrainage — FAIT (voir plus haut). Idée d'origine : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
-5. Panneau d'administration (nombre de joueurs, supprimer, gérer les codes), protégé : mot de passe choisi par Fabien et rangé comme secret Cloudflare (Claude ne le voit jamais)
+5. Panneau d'administration — FAIT (voir plus haut)
 6. Plus tard : guerres de clans (après 100 jours, bastion de 5 joueurs max avec pièces différentes, lobby, chef qui peut exclure, attaques sur 24 h, guerre de quelques jours, butin limité, mines et barricades, avatar du clan)
 7. Accueil : présenter toutes les fonctionnalités du jeu pour donner envie
 

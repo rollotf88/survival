@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Survival – Administration</title>
+<!--
+  Panneau d'administration de SURVIVAL (réservé à Fabien).
+  Le mot de passe n'est écrit nulle part ici : c'est le secret Cloudflare ADMIN_MDP. Il est gardé dans
+  l'onglet le temps de la visite (sessionStorage), puis oublié quand on ferme l'onglet ou qu'on se déconnecte.
+-->
+<style>
+:root{--bg:#f3e6cf;--card:#fff8ec;--ink:#2a1d14;--mut:#6e5a48;--bois:#7a5232;--acc:#c9771f;--ok:#3f7d2a;--bad:#b23b26;--line:#d9c3a0}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1712;--card:#2a211a;--ink:#f3e6cf;--mut:#bfa98c;--bois:#a87a4f;--acc:#e8953a;--ok:#7fc463;--bad:#ff7a5c;--line:#4a3a2c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:16px}
+h1{margin:0 0 4px;font-size:24px}
+.sub{color:var(--mut);margin:0 0 12px;font-size:13px}
+.carte{background:var(--card);border:2px solid var(--bois);border-radius:14px;padding:14px;margin-bottom:12px}
+input{font:inherit;padding:10px 12px;border:2px solid var(--bois);border-radius:10px;background:var(--bg);color:var(--ink);width:100%}
+button{font:inherit;font-weight:700;padding:9px 14px;border:2px solid var(--ink);border-radius:10px;background:var(--acc);color:#2a1d14;cursor:pointer}
+button.alt{background:var(--card);color:var(--ink);border-color:var(--bois)}
+button.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.msg{min-height:1.4em;color:var(--bad);font-weight:600;margin:8px 0 0}
+.msg.ok{color:var(--ok)}
+.onglets{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.onglets button{background:var(--card);color:var(--ink);border-color:var(--bois)}
+.onglets button.on{background:var(--acc);color:#2a1d14;border-color:var(--ink)}
+.tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.tuile{background:var(--card);border:2px solid var(--bois);border-radius:12px;padding:10px;text-align:center}
+.tuile b{display:block;font-size:28px;line-height:1.1}
+.tuile small{color:var(--mut);font-size:12px;font-weight:600}
+.tableau{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.pastille{display:inline-block;padding:1px 8px;border-radius:9px;font-size:12px;font-weight:700}
+.pastille.on{background:color-mix(in srgb,var(--ok) 25%,transparent);color:var(--ok)}
+.pastille.off{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.cache{display:none}
+@media (max-width:560px){main{padding:12px}.tuile b{font-size:22px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>🛠️ Survival – Administration</h1>
+  <p class="sub">Réservé à l’auteur du jeu.</p>
+
+  <section id="connexion" class="carte">
+    <form id="formConnexion" class="row" autocomplete="off">
+      <label for="mdp" style="width:100%;font-weight:700">Mot de passe</label>
+      <input id="mdp" type="password" autocomplete="current-password" required style="flex:1;min-width:200px">
+      <button type="submit">Entrer</button>
+    </form>
+    <p class="msg" id="msgConnexion"></p>
+  </section>
+
+  <section id="tableau" class="cache">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <div class="onglets" id="onglets">
+        <button data-o="resume" class="on">📊 Résumé</button>
+        <button data-o="joueurs">👥 Joueurs</button>
+        <button data-o="classement">🏆 Classement</button>
+        <button data-o="codes">🎟️ Codes</button>
+      </div>
+      <button class="alt" id="deconnexion">Se déconnecter</button>
+    </div>
+    <p class="msg" id="msg"></p>
+    <div id="contenu"></div>
+  </section>
+</main>
+<script>
+(function(){
+  var mdp = sessionStorage.getItem("survival_admin") || "", onglet = "resume";
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(t){ return String(t == null ? "" : t).replace(/[&<>"']/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); };
+  var quand = function(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "il y a " + m + " min" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; };
+  function appel(action, extra){
+    var corps = Object.assign({ action:action }, extra || {});
+    return fetch("/api/admin", { method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + mdp }, body:JSON.stringify(corps) })
+      .then(function(r){ return r.json().then(function(d){ d._statut = r.status; return d; }); });
+  }
+  function message(t, ok){ var m = $("msg"); m.textContent = t || ""; m.className = "msg" + (ok ? " ok" : ""); }
+  function deconnecter(raison){ mdp = ""; sessionStorage.removeItem("survival_admin"); $("tableau").className = "cache"; $("connexion").className = "carte"; $("msgConnexion").textContent = raison || ""; }
+  $("formConnexion").addEventListener("submit", function(e){
+    e.preventDefault(); mdp = $("mdp").value; $("mdp").value = ""; $("msgConnexion").textContent = "Vérification…";
+    appel("resume").then(function(d){
+      if(d.erreur){ deconnecter(d.erreur); return; }
+      sessionStorage.setItem("survival_admin", mdp); $("connexion").className = "cache"; $("tableau").className = ""; afficher(d);
+    }).catch(function(){ deconnecter("Impossible de joindre le serveur."); });
+  });
+  $("deconnexion").addEventListener("click", function(){ deconnecter("Déconnecté."); });
+  $("onglets").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    onglet = b.getAttribute("data-o"); Array.prototype.forEach.call(this.children, function(x){ x.className = x === b ? "on" : ""; }); charger();
+  });
+  function charger(){
+    message("");
+    appel(onglet === "codes" ? "resume" : onglet).then(function(d){ // les codes spéciaux sont dans le résumé if(d._statut === 401 || d._statut === 429){ deconnecter(d.erreur); return; } if(d.erreur){ message(d.erreur); return; } afficher(d); })
+      .catch(function(){ message("Impossible de joindre le serveur."); });
+  }
+  function tuile(v, t){ return '<div class="tuile"><b>' + esc(v) + '</b><small>' + esc(t) + '</small></div>'; }
+  function afficher(d){
+    var h = "";
+    if(onglet === "resume"){
+      h = '<div class="tuiles">' + tuile(d.joueurs, "joueurs (appareils)") + tuile(d.actifs24h, "actifs ces 24 h") + tuile(d.actifs7j, "actifs ces 7 jours")
+        + tuile(d.enPartie, "familles en vie") + tuile(d.survivants, "survivants en vie") + tuile(d.parties, "parties jouées")
+        + tuile(d.morts, "morts") + tuile(d.zombies, "zombies abattus") + tuile(d.classement, "au classement")
+        + tuile(d.codes, "codes de parrainage") + tuile(d.parrainages, "parrainages réussis") + '</div>';
+      if(d.tombes && d.tombes.length) h += '<div class="carte" style="margin-top:12px"><b>💀 Dernières familles tombées</b><div class="tableau"><table><tr><th>Pseudo</th><th>Jour</th><th>Score</th><th>Quand</th></tr>'
+        + d.tombes.map(function(t){ return '<tr><td>' + esc(t.n || "—") + '</td><td class="num">' + t.j + '</td><td class="num">' + t.s + '</td><td>' + quand(t.t) + '</td></tr>'; }).join("") + '</table></div></div>';
+    } else if(onglet === "joueurs"){
+      h = '<p class="sub">Les ' + d.joueurs.length + ' derniers joueurs vus (le plus récent en premier). Supprimer retire le joueur des chiffres du monde et du classement.</p><div class="carte tableau"><table><tr><th>Pseudo</th><th>Vu</th><th>En vie</th><th>Jour</th><th>Parties</th><th>Morts</th><th>Zombies</th><th>Record</th><th>Code</th><th></th></tr>'
+        + d.joueurs.map(function(j){ return '<tr><td>' + esc(j.pseudo || "(sans pseudo)") + '</td><td>' + quand(j.vu) + '</td><td class="num">' + j.vivants + '</td><td class="num">' + (j.jour || "—") + '</td><td class="num">' + j.parties + '</td><td class="num">' + j.morts + '</td><td class="num">' + j.zombies + '</td><td class="num">' + (j.score == null ? "—" : j.score) + '</td><td>' + esc(j.code || "—") + (j.filleuls ? " (" + j.filleuls + ")" : "") + '</td><td><button class="danger" data-suppr="' + esc(j.id) + '" data-nom="' + esc(j.pseudo) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
+    } else if(onglet === "classement"){
+      h = '<div class="carte tableau"><table><tr><th>#</th><th>Pseudo</th><th>Score</th><th>Jours</th><th></th></tr>'
+        + d.scores.map(function(s, k){ return '<tr><td class="num">' + (k + 1) + '</td><td>' + esc(s.pseudo) + '</td><td class="num">' + s.score + '</td><td class="num">' + s.jours + '</td><td><button class="danger" data-score="' + esc(s.id) + '" data-nom="' + esc(s.pseudo) + '">Retirer</button></td></tr>'; }).join("") + '</table></div>';
+    } else if(onglet === "codes"){
+      h = '<div class="carte"><form id="formCode" class="row"><input id="nouveauCode" maxlength="12" placeholder="Nouveau code spécial (ex. NOEL26)" style="flex:1;min-width:180px;text-transform:uppercase"><button type="submit">Créer</button></form>'
+        + '<p class="sub" style="margin-top:8px">Un code spécial donne un colis à chaque appareil qui le tape (une fois par appareil).</p></div><div class="carte tableau"><table><tr><th>Code</th><th>État</th><th>Utilisations</th><th></th></tr>'
+        + d.speciaux.map(function(c){ return '<tr><td><b>' + esc(c.code) + '</b></td><td><span class="pastille ' + (c.actif ? "on" : "off") + '">' + (c.actif ? "Actif" : "Désactivé") + '</span></td><td class="num">' + c.n + '</td><td class="row"><button class="alt" data-basculer="' + esc(c.code) + '">' + (c.actif ? "Désactiver" : "Activer") + '</button><button class="danger" data-codesuppr="' + esc(c.code) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
+    }
+    $("contenu").innerHTML = h;
+    var f = $("formCode"); if(f) f.addEventListener("submit", function(e){ e.preventDefault(); action("codeCreer", { code:$("nouveauCode").value }, "Code créé."); });
+  }
+  function action(a, extra, ok){ appel(a, extra).then(function(d){ if(d.erreur){ message(d.erreur); return; } charger(); setTimeout(function(){ message(ok, true); }, 300); }).catch(function(){ message("Impossible de joindre le serveur."); }); }
+  $("contenu").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(!b) return;
+    if(b.dataset.suppr && confirm("Supprimer « " + (b.dataset.nom || "ce joueur") + " » des chiffres du monde et du classement ?")) action("supprimerJoueur", { id:b.dataset.suppr }, "Joueur supprimé.");
+    else if(b.dataset.score && confirm("Retirer « " + b.dataset.nom + " » du classement ?")) action("supprimerScore", { id:b.dataset.score }, "Score retiré.");
+    else if(b.dataset.basculer) action("codeBasculer", { code:b.dataset.basculer }, "Code modifié.");
+    else if(b.dataset.codesuppr && confirm("Supprimer le code « " + b.dataset.codesuppr + " » ?")) action("codeSupprimer", { code:b.dataset.codesuppr }, "Code supprimé.");
+  });
+  if(mdp){ $("connexion").className = "cache"; $("tableau").className = ""; charger(); }
+})();
+</script>
+</body>
+</html>

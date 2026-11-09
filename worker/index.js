@@ -134,6 +134,67 @@ async function parrainagePost(request, env){
   return reponse({ erreur: "action" }, 400);
 }
 
+// ---------- Administration : /api/admin (POST, réservé à Fabien) ----------
+// Le mot de passe est un « secret » Cloudflare nommé ADMIN_MDP, choisi et saisi par Fabien dans le tableau de bord
+// Cloudflare (il n'est écrit nulle part dans le code). Chaque demande l'envoie dans l'en-tête Authorization (HTTPS).
+// Protection contre les essais au hasard : après 5 mauvais mots de passe, l'adresse est bloquée 15 minutes.
+// Pas d'en-tête CORS : seule la page admin.html du site peut appeler ces routes depuis un navigateur.
+const ENTETES_ADMIN = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" };
+const repAdmin = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: ENTETES_ADMIN });
+async function empreinte(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)))); }
+async function memeMdp(a, b){ const x = await empreinte(a), y = await empreinte(b); let d = 0; for(let i = 0; i < x.length; i++) d |= x[i] ^ y[i]; return d === 0; }
+async function adminPost(request, env){
+  if(!env.ADMIN_MDP || String(env.ADMIN_MDP).length < 10) return repAdmin({ erreur: "Le mot de passe d’administration n’est pas encore configuré dans Cloudflare (secret ADMIN_MDP, 10 caractères au moins)." }, 503);
+  const ip = request.headers.get("CF-Connecting-IP") || "inconnue", cleEchecs = "admin_echecs_" + ip;
+  const echecs = +(await env.CLASSEMENT.get(cleEchecs)) || 0;
+  if(echecs >= 5) return repAdmin({ erreur: "Trop d’essais. Réessaie dans 15 minutes." }, 429);
+  const mdp = (request.headers.get("Authorization") || "").replace(/^Bearer /, "");
+  if(!mdp || !(await memeMdp(mdp, env.ADMIN_MDP))){
+    await env.CLASSEMENT.put(cleEchecs, String(echecs + 1), { expirationTtl: 900 });
+    return repAdmin({ erreur: "Mot de passe incorrect." }, 401);
+  }
+  let d; try{ d = await request.json(); }catch(e){ return repAdmin({ erreur: "données" }, 400); }
+  const now = Date.now(), JOUR = 24 * 3600 * 1000;
+  const monde = await lireMonde(env), liste = await lireListe(env), parr = await lireParr(env);
+  const ecrireMonde = () => env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(monde));
+  const ecrireListe = () => env.CLASSEMENT.put(CLE, JSON.stringify(liste));
+  const ecrireParr = () => env.CLASSEMENT.put(CLE_PARR, JSON.stringify(parr));
+  const joueurs = () => Object.keys(monde.j).map((id) => { const e = monde.j[id], s = liste.find((x) => x.id === id);
+    return { id, pseudo: e.n || (s && s.pseudo) || "", vivants: e.v, jour: e.d, morts: e.m || 0, zombies: e.z || 0, parties: e.p || 0, vu: e.t, score: s ? s.score : null, code: parr.parId[id] || null, filleuls: parr.parId[id] && parr.codes[parr.parId[id]] ? parr.codes[parr.parId[id]].n : 0 }; })
+    .sort((a, b) => b.vu - a.vu);
+  switch(d.action){
+    case "resume": {
+      const js = joueurs();
+      return repAdmin({ joueurs: js.length, actifs24h: js.filter((j) => now - j.vu < JOUR).length, actifs7j: js.filter((j) => now - j.vu < 7 * JOUR).length,
+        enPartie: js.filter((j) => j.vivants > 0 && now - j.vu < 3 * JOUR).length, survivants: js.filter((j) => now - j.vu < 3 * JOUR).reduce((t, j) => t + j.vivants, 0),
+        morts: js.reduce((t, j) => t + j.morts, 0), zombies: js.reduce((t, j) => t + j.zombies, 0), parties: js.reduce((t, j) => t + j.parties, 0),
+        classement: liste.length, codes: Object.keys(parr.codes).length, parrainages: Object.keys(parr.utilises).length,
+        speciaux: Object.keys(parr.speciaux).map((c) => ({ code: c, actif: !!parr.speciaux[c].actif, n: parr.speciaux[c].n || 0 })),
+        tombes: monde.tombes || [] });
+    }
+    case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500) });
+    case "classement": return repAdmin({ scores: liste.slice(0, 200) });
+    case "supprimerJoueur": {
+      const id = String(d.id || ""); if(!id) return repAdmin({ erreur: "id" }, 400);
+      delete monde.j[id]; const k = liste.findIndex((e) => e.id === id); if(k >= 0) liste.splice(k, 1);
+      await ecrireMonde(); if(k >= 0) await ecrireListe();
+      return repAdmin({ ok: true });
+    }
+    case "supprimerScore": {
+      const k = liste.findIndex((e) => e.id === String(d.id || "")); if(k < 0) return repAdmin({ erreur: "introuvable" }, 404);
+      liste.splice(k, 1); await ecrireListe(); return repAdmin({ ok: true });
+    }
+    case "codeCreer": {
+      const c = normCode(d.code); if(c.length < 3) return repAdmin({ erreur: "Code trop court (3 caractères au moins)." }, 400);
+      if(parr.speciaux[c] || parr.codes[c]) return repAdmin({ erreur: "Ce code existe déjà." }, 400);
+      parr.speciaux[c] = { actif: true, n: 0 }; await ecrireParr(); return repAdmin({ ok: true });
+    }
+    case "codeBasculer": { const c = normCode(d.code); if(!parr.speciaux[c]) return repAdmin({ erreur: "introuvable" }, 404); parr.speciaux[c].actif = !parr.speciaux[c].actif; await ecrireParr(); return repAdmin({ ok: true }); }
+    case "codeSupprimer": { const c = normCode(d.code); if(!parr.speciaux[c]) return repAdmin({ erreur: "introuvable" }, 404); delete parr.speciaux[c]; await ecrireParr(); return repAdmin({ ok: true }); }
+  }
+  return repAdmin({ erreur: "action" }, 400);
+}
+
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {
   async fetch(request, env){
@@ -143,6 +204,11 @@ export default {
       if(request.method === "GET") return onRequestGet({ request, env });
       if(request.method === "POST") return onRequestPost({ request, env });
       return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/admin"){
+      if(!env.CLASSEMENT) return repAdmin({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "POST") return adminPost(request, env);
+      return repAdmin({ erreur: "méthode" }, 405);
     }
     if(url.pathname === "/api/parrainage"){
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
