@@ -213,6 +213,8 @@ Cuisine (2026-11-09, idée de Fabien) :
 - Trait « Cuisinier » : +1 portion par plat, −1 dégât en combat
 - Simulation : Malin 311 avec cuisine, 315 sans (médiane) mais 10 % ≤ 253 au lieu de 194 : la cuisine sauve les parties difficiles sans rendre le jeu plus facile (elle coûte de l'eau et du bois) ; Léo cuisinier 296 (fouineur 313, optimiste 285) ; Naïf 27
 
+Bug corrigé (2026-11-09, signalé par Fabien : « morte de soif alors que j'avais de l'eau ») : une jauge de soif ou de faim tombée à 0 ne remontait plus jamais (la ration de la nuit compense juste la perte du jour, et le rattrapage exigeait une jauge > 0) → perte de PV chaque nuit jusqu'à la mort, avec de l'eau au stock. Maintenant le rattrapage marche aussi à 0, et une jauge en danger (≤ `BAL.critique` = 10) reçoit sa ration de rattrapage en priorité même s'il en reste peu. Simulation : Malin 317, Naïf 29
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
 2. Cannibalisme en dernier recours (comme manger Rex) : choisir qui, gros malus de moral, nouvel état « Folie » (actions folles : frappe un survivant, réveille tout le monde, sort la nuit, laisse la porte ouverte) qui annonce la fin. Question de classement d'âge (PEGI) à garder en tête : rester suggéré, sans image, et peut-être un réglage « contenus sensibles »

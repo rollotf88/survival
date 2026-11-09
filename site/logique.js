@@ -242,7 +242,7 @@ function besoinNuit(cat){
   v.forEach(function(x){
     var perte = cat === "eau" ? BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0) : BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
     var j = (cat === "eau" ? x.soif : x.faim) - perte + (cat === "eau" ? BAL.soifParJour : BAL.faimParJour);
-    if(j > 0 && j < BAL.rattrapage && reste > 0){ b++; reste--; }
+    if(j < BAL.rattrapage && (reste > 0 || j <= BAL.critique && rations(cat) > b)){ b++; reste--; }
   });
   return b;
 }
@@ -782,8 +782,10 @@ function finJour(){
     if(prendreRations("eau", 1))  x.soif += BAL.soifParJour; else n.push(["b2", x.nom + " n’a rien à boire."]);
     x.faim = Math.max(0, Math.min(100, x.faim)); x.soif = Math.max(0, Math.min(100, x.soif));
     // Rattrapage : une ration de plus si la jauge est basse et qu'il en reste assez pour les autres
-    if(x.soif > 0 && x.soif < BAL.rattrapage && rations("eau") > vivants().length && prendreRations("eau", 1)) x.soif = Math.min(100, x.soif + BAL.soifParJour);
-    if(x.faim > 0 && x.faim < BAL.rattrapage && rations("nour") > vivants().length && prendreRations("nour", 1)) x.faim = Math.min(100, x.faim + BAL.faimParJour);
+    // (avant le 2026-11-09, une jauge tombée à 0 ne remontait plus jamais : mort de soif avec de l'eau au stock)
+    // Une jauge en danger (≤ 10) passe avant les autres : la ration de rattrapage est donnée même s'il en reste peu
+    if(x.soif < BAL.rattrapage && (rations("eau") > vivants().length || x.soif <= BAL.critique && rations("eau") > 0) && prendreRations("eau", 1)) x.soif = Math.min(100, x.soif + BAL.soifParJour);
+    if(x.faim < BAL.rattrapage && (rations("nour") > vivants().length || x.faim <= BAL.critique && rations("nour") > 0) && prendreRations("nour", 1)) x.faim = Math.min(100, x.faim + BAL.faimParJour);
     if(x.faim <= 0 || x.soif <= 0) blesser(x, BAL.degatsFaimSoif, n, x.soif <= 0 ? "mort de soif" : "mort de faim");
     else if(x.hp < 100) x.hp = Math.min(100, x.hp + BAL.regenPV);
     if(!chaud) blesser(x, BAL.degatsFroid, n, "mort de froid");

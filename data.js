@@ -81,6 +81,7 @@ var BAL = {
   moralHautFouille: 1,      // …et trouve 1 objet de plus
   faimParJour: 30, soifParJour: 30, // perte de jauge par jour (une ration rend autant)
   rattrapage: 50,           // la nuit, sous 50 de faim ou de soif, on prend une ration de plus si le stock le permet
+  critique: 10,             // jauge en danger : elle reçoit sa ration de rattrapage en priorité
   degatsFaimSoif: 20,       // PV perdus si la jauge est à zéro
   degatsFroid: 5,           // PV perdus par nuit sans chaleur
   regenPV: 5,               // PV regagnés par nuit si bien nourri
