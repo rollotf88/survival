@@ -199,6 +199,11 @@ Combat tactique (2026-11-09, demande de Fabien « profiter de la taille de l'éc
 - Simulation : avec les nouvelles tactiques le combat devenait trop facile (341 points, 43 morts en combat sur 400 parties ; un robot qui ne fait que frapper : 304 et 631 morts) ; réglé avec `zombieEnPlus` 0,025 et `maxEnPlus` 3 : Malin 314 (médiane, 10 % ≤ 220), 142 morts en combat sur 400 parties ; Naïf 27
 - Le contrôleur teste le combat à 5 zombies et après un tour
 
+Fin de combat, stats et chiffres du monde (2026-11-09, demandes de Fabien) :
+- Fin de combat (`openCombat` quand `C.fin`) : tampon « Victoire ! / En fuite ! / Défaite… » sur la scène (`.tampon`), zombies abattus couchés et grisés avec une flaque, bilan en tuiles (tours, zombies abattus `C.abattus`, vie perdue depuis `C.pv0`) + état de chaque membre (vie, arme), bouton « 🔍 Fouiller les lieux »
+- Stats du joueur : `G.stats.zombies` (compté dans `zombieTombe`) ; totaux de toutes les parties dans localStorage `survival_stats` (`statsJoueur()`, `cumulerPartie()` au game over, classement.js). RAPPEL demandé par Fabien : ajouter un bouton « 📊 Stats » dans le menu joueur (zombies tués, morts, parties, jours, meilleur score…) en se servant de `statsJoueur()`
+- Chiffres du monde : `/api/monde` (worker/index.js, clé KV `monde` du même KV CLASSEMENT) ; chaque appareil envoie ses totaux et ses membres en vie (`envoyerMonde` : début de partie, nuit avec un mort, game over ; sinon au plus toutes les 10 min, car le KV gratuit accepte ~1000 écritures par jour). Une famille compte « en vie » si elle a donné des nouvelles depuis moins de 3 jours. Panneau « En ce moment » (`panneauMonde`, `poserMonde`, `remplirMonde`) : point rouge qui bat, 3 compteurs animés (survivants en vie, morts, zombies abattus), fil qui défile (familles tombées, la plus ancienne en vie, record, nombre de joueurs, tes propres chiffres). Dans la fenêtre « Partie en cours » de l'accueil et sur l'écran d'histoire ; hors ligne, il montre les chiffres du joueur
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

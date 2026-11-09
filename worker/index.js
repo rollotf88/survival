@@ -46,7 +46,39 @@ async function onRequestPost({ request, env }){
   return reponse({ ok: true, rang, total: garde.length, record, meilleur: ancien ? ancien.score : score });
 }
 
-// Point d'entrée : /api/classement -> le classement ; tout le reste -> les fichiers du jeu
+// ---------- Chiffres du monde : /api/monde ----------
+// GET  -> { survivants, familles, morts, zombies, joueurs, parties, record, doyen, tombes }
+// POST {id, pseudo, vivants, jour, zombies, morts, parties, fin?} -> enregistre les totaux de cet appareil
+// Tout est dans la clé « monde » du même KV que le classement.
+const CLE_MONDE = "monde", ACTIF = 3 * 24 * 3600 * 1000, MAX_APPAREILS = 5000;
+const entier = (v, max) => { v = Math.floor(+v); return v >= 0 && v <= max ? v : 0; };
+async function lireMonde(env){ return (await env.CLASSEMENT.get(CLE_MONDE, { type: "json" })) || { j: {}, tombes: [] }; }
+async function mondeGet(env){
+  const m = await lireMonde(env), now = Date.now();
+  let survivants = 0, familles = 0, morts = 0, zombies = 0, joueurs = 0, parties = 0, doyen = null;
+  for(const id in m.j){
+    const e = m.j[id]; joueurs++; morts += e.m || 0; zombies += e.z || 0; parties += e.p || 0;
+    if(e.v > 0 && now - e.t < ACTIF){ survivants += e.v; familles++; if(!doyen || e.d > doyen.jour) doyen = { pseudo: e.n || "", jour: e.d }; }
+  }
+  const liste = await lireListe(env), r = liste[0];
+  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen,
+    record: r ? { pseudo: r.pseudo, score: r.score, jours: r.jours } : null, tombes: (m.tombes || []).slice(0, 5) });
+}
+async function mondePost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const pseudo = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16);
+  const m = await lireMonde(env), now = Date.now();
+  m.j[id] = { v: entier(d.vivants, 4), d: entier(d.jour, 400), n: pseudo, m: entier(d.morts, 100000), z: entier(d.zombies, 1000000), p: entier(d.parties, 10000), t: now };
+  if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 400), s: entier(d.fin.score, 1600), t: now }].concat(m.tombes || []).slice(0, 10); }
+  const ids = Object.keys(m.j);
+  if(ids.length > MAX_APPAREILS) ids.sort((a, b) => m.j[a].t - m.j[b].t).slice(0, ids.length - MAX_APPAREILS).forEach((k) => delete m.j[k]);
+  await env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(m));
+  return reponse({ ok: true });
+}
+
+// Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {
   async fetch(request, env){
     const url = new URL(request.url);
@@ -54,6 +86,13 @@ export default {
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "GET") return onRequestGet({ request, env });
       if(request.method === "POST") return onRequestPost({ request, env });
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/monde"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "GET") return mondeGet(env);
+      if(request.method === "POST") return mondePost(request, env);
       return reponse({ erreur: "méthode" }, 405);
     }
     return env.ASSETS.fetch(request);

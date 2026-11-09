@@ -545,7 +545,8 @@ function creerCombat(){
   for(var k = 0; k < C.maxEnPlus; k++) if(hasard() < Math.min(0.6, G.day * C.zombieEnPlus)) nb++;
   var zs = [];
   for(var k = 0; k < nb; k++) zs.push(nouveauZombie(tirerZombie()));
-  G.combat = { zombies:zs, tour:1, journal:[], resume:[], fin:null };
+  var pv0 = {}; equipeCombat().forEach(function(x){ pv0[G.m.indexOf(x)] = x.hp; }); // pour le bilan du combat
+  G.combat = { zombies:zs, tour:1, journal:[], resume:[], fin:null, pv0:pv0, abattus:0 };
   preparerIntentions();
   return G.combat;
 }
@@ -584,6 +585,7 @@ function bruit(J, x){
 function peutCocktail(){ return compter("alcool") > 0 && compter("chiffon") > 0 && possede(function(o){ return o.allume; }); }
 // Un zombie tombe : le Gonflé explose et blesse toute l'équipe
 function zombieTombe(z, protege, J){
+  G.combat.abattus = (G.combat.abattus || 0) + 1; G.stats.zombies = (G.stats.zombies || 0) + 1; // compté pour les stats du joueur
   var T = typeZombie(z); if(!T.explose) return;
   J.push(["b2", "💥 " + z.nom + " explose en tombant !"]);
   equipeCombat().forEach(function(x){

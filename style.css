@@ -776,3 +776,44 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 .combat .row .btn{padding-left:8px;padding-right:8px;min-width:0;white-space:nowrap}
 .combat .row .btn:first-child{flex:1 1 auto}
 .sheet.large{max-width:min(780px,100%)}
+/* ---------- Fin de combat : tampon, zombies à terre, bilan ---------- */
+.zc.mort{opacity:1}
+.zc.mort .zp{transform:rotate(-78deg) translate(-18%,10%);filter:grayscale(.85) brightness(.55) sepia(.4) hue-rotate(-30deg);border-color:#5a1a10;box-shadow:none;transition:transform .5s ease-in}
+.zc.mort .zp::after{content:none}
+.zc.mort::before{content:"";position:absolute;left:8%;right:8%;bottom:12px;height:16px;border-radius:50%;background:radial-gradient(ellipse at center,rgba(120,10,6,.85),rgba(120,10,6,0) 70%)}
+.zc.mort .zn,.zc.mort .zpv{opacity:.55}
+.tampon{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) rotate(-8deg);font-family:"Bangers","Impact",sans-serif;font-size:44px;letter-spacing:.06em;white-space:nowrap;padding:0 14px;border:4px solid currentColor;border-radius:10px;background:rgba(20,12,6,.55);text-shadow:0 3px 0 #000;animation:tampon .5s cubic-bezier(.2,1.6,.4,1) both;z-index:3}
+.tampon.victoire{color:#ffcf4a}.tampon.fuite{color:#f0a24a}.tampon.defaite{color:#e0533a}
+@keyframes tampon{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(2.4)}100%{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}}
+.combat.fini .tuiles{margin:0}
+.bilan-m{display:flex;gap:8px;align-items:center;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:4px 6px}
+.bilan-m.mort{opacity:.7;filter:grayscale(.8)}
+.combat.fini{flex-direction:column}
+@media (orientation:landscape) and (max-height:500px){.combat.fini{flex-direction:row}.tampon{font-size:34px}}
+@media (min-width:900px){.combat.fini{flex-direction:row;align-items:flex-start}}
+@media (prefers-reduced-motion:reduce){.tampon{animation:none}.zc.mort .zp{transition:none}}
+/* ---------- Accueil : « En ce moment » (chiffres du monde) ---------- */
+.monde{width:100%;max-width:420px;margin:10px auto 0;background:rgba(29,20,14,.82);color:#fff6e6;border:3px solid var(--bois);border-radius:16px;padding:8px 10px 6px;box-shadow:0 6px 14px rgba(0,0,0,.45);text-align:left}
+.m-tete{display:flex;align-items:center;gap:7px;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.m-tete small{margin-left:auto;text-transform:none;letter-spacing:0;color:#d9c7a8;font-size:11.5px}
+.pouls{width:10px;height:10px;border-radius:50%;background:#e0533a;box-shadow:0 0 0 0 rgba(224,83,58,.7);animation:pouls 1.6s ease-out infinite}
+.monde.horsligne .pouls{background:#9a8a74;animation:none}
+@keyframes pouls{0%{box-shadow:0 0 0 0 rgba(224,83,58,.7)}70%{box-shadow:0 0 0 9px rgba(224,83,58,0)}100%{box-shadow:0 0 0 0 rgba(224,83,58,0)}}
+.m-grille{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0 4px}
+.m-c{text-align:center;border-radius:10px;background:rgba(255,246,230,.07);padding:4px 2px}
+.m-c b{display:block;font-family:"Bangers","Impact",sans-serif;font-size:28px;line-height:1.05;letter-spacing:.03em}
+.m-c small{display:block;font-size:10.5px;font-weight:700;color:#d9c7a8;line-height:1.15}
+.m-c.vie b{color:#8fd16a}.m-c.mort b{color:#ff7a5c}.m-c.zomb b{color:#ffcf4a}
+.m-fil{margin:0;min-height:2.6em;font-size:12px;line-height:1.3;color:#f3e6cf;opacity:0;transform:translateY(4px);transition:opacity .25s,transform .25s}
+.m-fil.on{opacity:1;transform:none}
+.m-fil b{color:#ffcf4a}
+.monde.compact{margin:6px 0 2px;padding:6px 8px 4px}
+.monde.compact .m-c b{font-size:22px}
+.monde.compact .m-fil{min-height:2.6em;font-size:11.5px}
+@media (max-height:640px){.monde.compact .m-fil{display:none}.monde.compact .m-c small{font-size:9.5px}}
+@media (orientation:landscape) and (max-height:500px){.monde{margin-top:4px;padding:5px 8px 3px}.m-c b{font-size:20px}.m-fil{min-height:1.3em}}
+@media (prefers-reduced-motion:reduce){.pouls{animation:none}.m-fil{transition:none}}
+.sheet .monde{margin:4px 0 10px;max-width:none}
+@media (orientation:landscape) and (max-height:500px){.sheet .monde .m-fil{display:none}.sheet .monde{margin:2px 0 6px}}
+@media (max-height:700px) and (orientation:portrait){.accueil .logo.grand{width:min(34vw,120px)}body.fond .accueil h1{font-size:44px}}
+@media (orientation:landscape) and (max-height:500px){.sheet .monde .m-tete{display:none}.sheet .monde{padding:3px 6px}.sheet .monde .m-grille{margin:0}.sheet .monde .m-c{padding:2px}.sheet .monde .m-c b{font-size:18px}}

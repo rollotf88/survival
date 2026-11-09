@@ -283,7 +283,8 @@ function openCombat(){
   }).join("");
   var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
   var h = '<h2 class="ctitre">🧟 ' + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
-    + '<div class="arene" style="background-image:url(\'' + fondCombat(L) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div></div>'
+    + '<div class="arene" style="background-image:url(\'' + fondCombat(L) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div>'
+    + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
     + (C.journal.length ? '<div class="journal" id="journal">' + puces(C.journal) + '</div>' : '') + '</div><div class="cdroite">';
   if(!fini){
@@ -302,7 +303,18 @@ function openCombat(){
         + '<div class="acts">' + acts.map(function(t){ return '<button class="act' + (c === t[0] ? " on" : "") + '" data-act="cact" data-id="' + j + ':' + t[0] + '"><span>' + t[1] + '</span><small>' + t[2] + '</small></button>'; }).join("") + '</div></div>';
     }).join("");
   }
-  h += fini ? '<button class="btn" style="width:100%" data-act="cfin">Continuer</button>'
+  if(fini){
+    // Bilan : tours, zombies abattus, vie perdue, puis l'état de chacun (vie, arme)
+    var perdu = 0; for(var jj in (C.pv0 || {})) perdu += Math.max(0, C.pv0[jj] - (G.m[jj].al ? G.m[jj].hp : 0));
+    var ab = C.abattus !== undefined ? C.abattus : C.zombies.filter(function(z){ return !z.pv; }).length, nt = Math.max(1, C.tour - 1);
+    h += tuiles([["tour" + (nt > 1 ? "s" : ""), nt, ""], ["abattu" + (ab > 1 ? "s" : ""), "🧟 " + ab, ab ? "ok" : ""], ["vie perdue", perdu ? "−" + perdu : "0", perdu >= 30 ? "ko" : perdu ? "moy" : "ok"]]);
+    h += G.exp.equipe.map(function(j){
+      var x = G.m[j], a = x.eq.arme;
+      return '<div class="bilan-m' + (x.al ? "" : " mort") + '"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + (x.al ? "" : " · " + accorder(roleDe(x), "mort")) + '</b>' + (x.al ? barre("❤️", x.hp) : "")
+        + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol : x.al ? "✊ Plus d’arme" : "") + '</small></span></div>';
+    }).join("");
+  }
+  h += fini ? '<button class="btn" style="width:100%" data-act="cfin">' + (C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
   if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
@@ -665,6 +677,7 @@ function openEvent(ev){
 function finiSiMorts(){ if(!vivants().length){ over(); return true; } return false; }
 function over(){
   effacerSauvegarde();
+  if(typeof cumulerPartie === "function"){ cumulerPartie(); envoyerMonde(true, { jour:G.day - 1, score:G.score }); }
   var d = G.day - 1, nouveau = G.score > RECORD, jour = "";
   if(nouveau){ RECORD = G.score; try{ localStorage.setItem("survival_record", RECORD); }catch(e){} }
   var auto = false;
@@ -735,7 +748,7 @@ function tick(){
   document.body.classList.toggle("urgence", tm <= 10 && tm > 0);
   var sec = Math.ceil(tm);
   if(tm <= 10 && tm > 0 && sec !== derniereSeconde){ derniereSeconde = sec; if(sec % 2 === 0) son("porte"); if(typeof vibrer === "function") vibrer(sec <= 3 ? 120 : 40); }
-  if(G.tl <= 0){ demarrer(); render(); show('<h2>Trop tard !</h2><p>Les zombies enfoncent la porte. Vous fuyez avec ce qu’il y a dans le sac.</p>' + BTN_FERMER("Courir")); }
+  if(G.tl <= 0){ demarrer(); if(typeof envoyerMonde === "function") envoyerMonde(true); render(); show('<h2>Trop tard !</h2><p>Les zombies enfoncent la porte. Vous fuyez avec ce qu’il y a dans le sac.</p>' + BTN_FERMER("Courir")); }
 }
 var derniereSeconde = null;
 setInterval(tick, 250);
@@ -795,7 +808,9 @@ function rIntro(){
     + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
+    + '<div class="monde-place" data-compact="1"></div>'
     + '<button class="btn" style="width:100%" data-act="intro">Continuer</button></div>';
+  if(typeof poserMonde === "function") poserMonde();
 }
 // Noms et traits de la dernière famille (gardés dans le navigateur)
 function familleRetenue(){
@@ -922,7 +937,7 @@ document.addEventListener("click", function(e){
   else if(a === "saisieok"){ validerSaisie(id); return; }
   else if(a === "trait"){ var qt = id.split(":"); changerTrait(+qt[0], +qt[1]); }
   else if(a === "house"){ if(G.seed) return; if(i !== G.h){ G.h = i; G.pack = {}; G.info = "Tu as changé de maison : le sac est vidé."; } }
-  else if(a === "start") demarrer();
+  else if(a === "start"){ demarrer(); if(typeof envoyerMonde === "function") envoyerMonde(true); }
   else if(a === "sel" && modeMini()){ openMembre(i); return; }
   else if(a === "msel"){ var xm = G.m[i]; if(peutSortir(xm)){ var pm = G.sel.indexOf(i); if(pm >= 0) G.sel.splice(pm, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); } render(); openMembre(i); return; }
   else if(a === "sel"){ var x = G.m[i]; if(peutSortir(x)){ var p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); } }
@@ -971,6 +986,7 @@ document.addEventListener("click", function(e){
   else if(a === "refuge"){ openRef(); return; }
   else if(a === "dormir"){ openDormir(); return; }
   else if(a === "endday"){ var n = finJour(); render(); openNuit(n);
+    if(typeof envoyerMonde === "function" && vivants().length) envoyerMonde(n.some(function(l){ return l[0] === "mort"; }));
     if(typeof vibrer === "function" && n.some(function(x){ return x[0] === "b2" && x[1].indexOf("🧟 Attaque de nuit (") === 0; })) vibrer([150, 80, 150]); // attaque perdue
     finiSiMorts(); return; }
   else if(a === "close"){ fermer(); return; }
@@ -1064,9 +1080,11 @@ if(enCours){
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p></div>';
   show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
     + enCours.m.filter(function(x){ return x.al; }).map(function(x){ return iconeMembre(x); }).join(" ") + '</p>'
+    + '<div class="monde-place" data-compact="1"></div>'
     + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="continuer">▶️ Continuer</button>'
     + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guide">📖 Guide du survivant</button>'
     + '<button class="btn alt" style="width:100%" data-act="nouvelle">🆕 Nouvelle famille (la partie en cours sera perdue)</button>');
+  if(typeof poserMonde === "function") poserMonde();
 } else nouvelleFamille();
 
 /* =====================================================================
