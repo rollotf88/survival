@@ -65,6 +65,8 @@ var BAL = {
     endurantSoif: 5,        //   mais perd 5 de soif de plus par jour
     tireur: 2,              // Tireur : +2 dégâts à l'arme à feu
     nerveux: 0.2,           //   mais ses tirs attirent plus souvent un zombie (+20 %)
+    cuisinier: 1,           // Cuisinier : chaque plat donne 1 portion de plus
+    maladroit: 1,           //   mais −1 dégât en combat
     optimiste: 2,           // Optimiste : moral +2 chaque nuit
     reveur: 1               //   mais 1 objet de moins par fouille
   },
@@ -134,6 +136,11 @@ var BAL = {
     lancers: 3,              // mini-jeu : 3 lancers par pêcheur (chaque touche ferrée à temps = 1 poisson)
     fenetre: 0.75,           // le bouchon reste enfoncé 0,75 s : il faut toucher pendant ce temps
     chanceRobot: 0.65        // réussite d'un lancer pour les robots de simulation
+  },
+  // Cuisine : la cuisinière à bois (pas d'électricité) transforme ingrédients + vivres en plats plus nourrissants
+  cuisine: {
+    planches: 1,             // chaque plat cuisiné brûle 1 planche dans la cuisinière
+    herbesPotager: 0.3       // chaque nuit, chaque niveau de potager a 30 % de chances de donner des herbes
   },
   // Forêt : on y coupe du bois avec une hache en main. Les arbres ne repoussent pas
   foret: {
@@ -281,6 +288,19 @@ var OBJETS = {
   chiffon:    { nom:"Chiffon", pl:"Chiffons", g:"m", icone:"🧶", cat:"materiau", place:1, empile:true, desc:"Pour bandages, torches et sacs" },
   clous:      { nom:"Poignée de clous", pl:"Poignées de clous", g:"f", icone:"🔩", cat:"materiau", place:1, empile:true, desc:"Pour pièges et armes cloutées" },
   ferraille:  { nom:"Morceau de ferraille", pl:"Morceaux de ferraille", g:"m", icone:"⚙️", cat:"materiau", place:1, empile:true, desc:"Pour réparer et fabriquer" },
+  // Cuisine (2026-11-09) : ingrédients (ne se mangent pas seuls) et plats (1 objet = 1 portion, se gâtent : sol = nuits de fraîcheur)
+  epices:     { nom:"Épices", pl:"Épices", g:"f", icone:"🧂", cat:"ingredient", place:1, empile:true, desc:"Sel, poivre et herbes de Provence : relèvent un plat (cuisine)" },
+  huile:      { nom:"Bouteille d’huile", pl:"Bouteilles d’huile", g:"f", icone:"🫒", cat:"ingredient", place:1, empile:true, desc:"Pour frire et cuire (cuisine)" },
+  farine:     { nom:"Sac de farine", pl:"Sacs de farine", g:"m", icone:"🌾", cat:"ingredient", place:1, empile:true, desc:"Pour les galettes et les tartes (cuisine)" },
+  champignons:{ nom:"Champignons", pl:"Champignons", g:"m", icone:"🍄", cat:"ingredient", place:1, empile:true, desc:"Cueillis en forêt : pour le ragoût (cuisine)" },
+  baies:      { nom:"Baies sauvages", pl:"Baies sauvages", g:"f", icone:"🫐", cat:"ingredient", place:1, empile:true, desc:"Cueillies en forêt : pour la tarte (cuisine)" },
+  herbes:     { nom:"Herbes fraîches", pl:"Herbes fraîches", g:"f", icone:"🌿", cat:"ingredient", place:1, empile:true, desc:"Thym, persil… (potager, village) : pour le poisson (cuisine)" },
+  soupe:      { nom:"Soupe de pâtes", pl:"Soupes de pâtes", g:"f", icone:"🍜", cat:"plat", place:1, sol:3, plat:{ faim:45, moral:2 }, desc:"+45 de faim et moral +2 (se garde 3 nuits)" },
+  poissonHerbes:{ nom:"Poisson aux herbes", pl:"Poissons aux herbes", g:"m", icone:"🐟", cat:"plat", place:1, sol:3, plat:{ faim:45, pv:10 }, desc:"+45 de faim et +10 PV (se garde 3 nuits)" },
+  ragout:     { nom:"Ragoût forestier", pl:"Ragoûts forestiers", g:"m", icone:"🍲", cat:"plat", place:1, sol:3, plat:{ faim:50, en:10 }, desc:"+50 de faim et +10 ⚡ (se garde 3 nuits)" },
+  galettes:   { nom:"Galettes", pl:"Galettes", g:"f", icone:"🫓", cat:"plat", place:1, sol:8, plat:{ faim:35 }, desc:"+35 de faim (se gardent 8 nuits)" },
+  rizSaute:   { nom:"Riz sauté", pl:"Riz sautés", g:"m", icone:"🍛", cat:"plat", place:1, sol:3, plat:{ faim:40 }, desc:"+40 de faim (se garde 3 nuits)" },
+  tarte:      { nom:"Tarte aux baies", pl:"Tartes aux baies", g:"f", icone:"🥧", cat:"plat", place:1, sol:3, plat:{ faim:35, moral:4 }, desc:"+35 de faim et moral +4 : un vrai festin (se garde 3 nuits)" },
   poisson:    { nom:"Poisson", pl:"Poissons", g:"m", icone:"🐟", cat:"nour", place:1, empile:true, rations:2, desc:"2 rations de nourriture (pêché à l’étang)" },
   ruban:      { nom:"Rouleau d’adhésif", pl:"Rouleaux d’adhésif", g:"m", icone:"➰", cat:"materiau", place:1, empile:true, desc:"Pour réparer et assembler" },
   alcool:     { nom:"Bouteille d’alcool", pl:"Bouteilles d’alcool", g:"f", icone:"🍾", cat:"materiau", place:1, empile:true, desc:"Désinfecte, brûle bien" },
@@ -311,6 +331,16 @@ var RECETTES = [
   { id:"canne",   ingredients:{ planche:1, ruban:1, clous:1 } }
 ];
 var REPARATION = { ferraille:1, ruban:1 }; // coût d'une réparation d'arme
+/* ---------- Cuisine : recettes (« eau » = des rations d'eau, pas un objet) ----------
+   Une ration normale donne +30 de faim ; un plat donne plus, avec un bonus, mais se gâte. */
+var RECETTES_CUISINE = [
+  { id:"soupe",         ingredients:{ pates:1, eau:1, epices:1 },        portions:3 },
+  { id:"poissonHerbes", ingredients:{ poisson:1, herbes:1 },             portions:2 },
+  { id:"ragout",        ingredients:{ champignons:1, conserve:1, eau:1 }, portions:3 },
+  { id:"galettes",      ingredients:{ farine:1, huile:1, eau:1 },        portions:4 },
+  { id:"rizSaute",      ingredients:{ riz:1, huile:1, epices:1 },        portions:10 },
+  { id:"tarte",         ingredients:{ baies:1, farine:1, huile:1 },      portions:4 }
+];
 
 /* ---------- Atelier : démontage (objet -> matériaux récupérés) ---------- */
 var DEMONTAGE = {
@@ -323,7 +353,7 @@ var DEMONTAGE = {
 /* Ordre et titres des catégories dans l'écran du stock */
 var CATEGORIES = [
   ["eau","Eau"],["nour","Nourriture"],["soin","Soins"],["energie","Énergie"],["arme","Armes"],["munition","Munitions"],
-  ["outil","Outils et éclairage"],["sac","Sacs"],["voiture","Voiture"],["defense","Défense"],["animal","Animaux"],["installation","Installations"],["confort","Confort"],["materiau","Matériaux"]
+  ["outil","Outils et éclairage"],["sac","Sacs"],["voiture","Voiture"],["defense","Défense"],["animal","Animaux"],["installation","Installations"],["confort","Confort"],["materiau","Matériaux"],["ingredient","Ingrédients (cuisine)"],["plat","Plats cuisinés"]
 ];
 
 /* ---------- Maisons de départ : ce qu'on peut mettre dans le sac ---------- */
@@ -350,6 +380,7 @@ var TRAITS = {
   agile:     { nom:"Doigts de fée", icone:"🗝️", plus:"crochète mieux les serrures (zone verte plus large)", moins:"frêle (porte 1 objet de moins)" },
   endurant:  { nom:"Endurant",      icone:"🏃", plus:"les expéditions lui coûtent 10 ⚡ de moins", moins:"assoiffé (−5 de soif de plus par jour)" },
   tireur:    { nom:"Tireur",        icone:"🎯", plus:"vise juste (+2 dégâts avec une arme à feu)", moins:"nerveux (ses tirs attirent plus souvent un zombie)" },
+  cuisinier: { nom:"Cuisinier",     icone:"👨‍🍳", plus:"chaque plat cuisiné donne 1 portion de plus", moins:"peu bagarreur (−1 dégât en combat)" },
   optimiste: { nom:"Optimiste",     icone:"😊", plus:"moral +2 chaque nuit (tant qu’il est en vie)", moins:"rêveur (1 objet de moins en fouille)" }
 };
 
@@ -413,6 +444,13 @@ var LIEUX = [
 // La forêt (ajoutée à la fin pour ne pas décaler les sauvegardes) : du bois avec une hache, mais des zombies entre les arbres
 LIEUX.push({ nom:"Forêt", icone:"🌲", danger:0.40, distance:2, jour:5, bois:true,
   butin:{ bouteille:1, couverture:1, alcool:1, chiffon:1 } });
+// Ingrédients de cuisine ajoutés au butin des lieux (2026-11-09)
+var INGREDIENTS_LIEUX = {
+  "Maison voisine":{ epices:1, huile:1 }, "Rue des pavillons":{ epices:2, huile:1, herbes:1 }, "Supermarché":{ epices:3, huile:3, farine:2 },
+  "Village voisin":{ epices:2, huile:2, farine:3, herbes:2, baies:1 }, "Entrepôt logistique":{ epices:2, huile:2, farine:3 }, "Centre commercial":{ huile:2, farine:1 },
+  "École Jules-Ferry":{ farine:1 }, "Camping des Pins":{ epices:1, champignons:2, baies:2 }, "Étang":{ champignons:1 }, "Forêt":{ champignons:6, baies:5, herbes:1 }
+};
+LIEUX.forEach(function(L){ var a = INGREDIENTS_LIEUX[L.nom]; if(a) for(var k in a) L.butin[k] = (L.butin[k] || 0) + a[k]; });
 var LIEUX_AVANT_ETANG = 13;
 
 /* ---------- Missions urgentes ----------
@@ -462,7 +500,8 @@ var VALEURS = {
   bouteille:2, bidon:8, conserve:2, conserves:8, riz:12, biscuits:4, pates:3, barre:1, ration:4,
   bandage:3, trousse:6, antibio:5, canette:4, planche:1, pile:2, chiffon:1, clous:1, ferraille:2,
   ruban:2, alcool:2, epingle:1, jerrican:8, boiteBalles:6, boiteCart:6, balle:1, cartouche:1.5,
-  batterie:10, roue:10, courroie:8, piege:4, poisson:2, poule:6, canne:5
+  batterie:10, roue:10, courroie:8, piege:4, poisson:2, poule:6, canne:5,
+  epices:2, huile:2, farine:2, champignons:1, baies:1, herbes:1
 };
 
 /* ---------- Chapitres ----------
@@ -646,6 +685,7 @@ var ASTUCES = {
   score:      "⭐ Ton score : 1 point par jour et par membre en vie. Garde toute la famille en vie le plus longtemps possible !",
   atelier:    "🛠️ Le refuge : construis des défenses, fabrique (soins, armes, bâche pour l’eau de pluie…), répare et démonte. Et plus tard, répare la voiture.",
   foret:      "🌲 La forêt : un survivant avec une hache en main coupe du bois (2 ou 3 planches). Les arbres ne repoussent pas, et la hache s’use.",
+  cuisine:    "🍲 La cuisine : la cuisinière à bois transforme tes vivres et des ingrédients (épices, huile, farine, champignons…) en plats plus nourrissants, avec un bonus. 1 planche par plat, et les plats se gâtent vite.",
   peche:      "🎣 L’étang : équipe une canne à pêche (case outil) pour pêcher. Ne le vide pas : sous 4 poissons, ils ne se reproduisent plus.",
   mission:    "🎯 Une mission ! Elle a un délai : touche le bouton 🎯 en bas de l’écran pour la voir et livrer ce qu’il faut. Réussir rapporte des objets et du moral.",
   serrure:    "🗝️ Appuie quand le curseur rouge passe dans la zone verte. Chaque raté casse une épingle."

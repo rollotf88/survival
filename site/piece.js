@@ -39,6 +39,12 @@ var DECOR_PIECE = [
 var PIECES = [
   // Salon et chambre : la cheminée montre le feu allumé ou éteint (G.feu)
   { id:"salon", nom:"Salon", img:function(){ return G.feu ? "images/refuge-fond-propre.webp" : "images/refuge-fond-eteint-propre.webp"; }, l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  // La cuisine (2026-11-09) : la cuisinière montre le feu le jour où on a cuisiné
+  { id:"cuisine", nom:"Cuisine", img:function(){ return G.cuisineJour === G.day ? "images/piece-cuisine-feu.webp" : "images/piece-cuisine.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:740 }, decor:[], zones:[
+    ["pCuisiner",   20, 420, 290, 740, function(){ return "🍲"; }, "Cuisiner", .55],
+    ["pRecettes",  290, 465, 745, 680, function(){ return "🔪"; }, "Recettes", .5],
+    ["pGardeManger", 715, 225, 1022, 660, function(){ return ic("conserve", "🥫"); }, "Garde-manger", .3]
+  ]},
   { id:"chambre", nom:"Chambre", img:function(){ return G.feu ? "images/piece-chambre-feu-propre.webp" : "images/piece-chambre-propre.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
     decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0; }] ], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
@@ -71,7 +77,7 @@ var PIECES = [
   ]}
 ];
 var pieceIdx = 0;
-var BOUTON_PIECE = { chambre:"dormir", reserve:"stock", atelier:"refuge", garage:"fouille", cour:"refuge" };
+var BOUTON_PIECE = { cuisine:"refuge", chambre:"dormir", reserve:"stock", atelier:"refuge", garage:"fouille", cour:"refuge" };
 // La barre des pièces (flèches + points) s'efface après 3 s ; elle revient au changement de pièce ou quand on touche la pièce
 var minuteurNav = null, dernierePieceNav = null;
 function montrerNav(force){
@@ -207,6 +213,8 @@ document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act");
   if(a === "pTable") openRef("fabriquer");
+  else if(a === "pCuisiner" || a === "pRecettes"){ selRef = null; openRef("cuisine"); }
+  else if(a === "pGardeManger"){ filtreStock = "vivres"; selStock = null; openStock(); }
   else if(a === "pCheminee") openFeu();
   else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("feu"); render(); openFeu(); }
   else if(a === "pSac") openStock();

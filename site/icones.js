@@ -595,6 +595,43 @@ var ICONES_SVG = {
 };
 
 // Dessin complet (contour ajouté ici pour toutes les icônes)
+/* ---------- Cuisine (2026-11-09) : ingrédients et plats ---------- */
+function bol(contenu, couleur){ // un bol vu de côté, rempli
+  return '<path d="M6 24 H42 Q41 40 24 42 Q7 40 6 24Z" fill="#d97a4a"/>' + '<ellipse cx="24" cy="24" rx="18" ry="5" fill="' + couleur + '"/>' + (contenu || "") + '<path d="M12 33 Q24 37 36 33" stroke="#f3b38a" stroke-width="1.6" fill="none"/>';
+}
+function vapeur(){ return '<path d="M18 16 Q15 12 18 8 M24 15 Q21 11 24 6 M30 16 Q27 12 30 8" stroke="#b9c4c9" stroke-width="1.8" fill="none"/>'; }
+ICONES_SVG.epices = '<rect x="15" y="14" width="18" height="28" rx="4" fill="' + COUL.blanc + '"/><rect x="14" y="7" width="20" height="8" rx="2" fill="' + COUL.rouge + '"/>' +
+  '<circle cx="19" cy="10" r="1" fill="' + COUL.trait + '"/><circle cx="24" cy="10" r="1" fill="' + COUL.trait + '"/><circle cx="29" cy="10" r="1" fill="' + COUL.trait + '"/>' +
+  '<rect x="15" y="28" width="18" height="14" rx="3" fill="#c96a3a"/><path d="M18 33 h3 M25 36 h4 M19 39 h2" stroke="#7a3a1a" stroke-width="1.4"/>';
+ICONES_SVG.huile = '<path d="M20 4 H28 V12 Q36 16 36 26 V42 Q36 45 33 45 H15 Q12 45 12 42 V26 Q12 16 20 12Z" fill="#c9b23a"/>' +
+  '<rect x="19" y="2" width="10" height="5" rx="1.5" fill="' + COUL.oliveFonce + '"/><rect x="15" y="26" width="18" height="11" rx="2" fill="' + COUL.blanc + '"/><ellipse cx="24" cy="31.5" rx="4" ry="3" fill="' + COUL.olive + '"/>';
+ICONES_SVG.farine = '<path d="M12 14 Q10 30 11 42 Q24 46 37 42 Q38 30 36 14 Q24 18 12 14Z" fill="' + COUL.tissu + '"/>' +
+  '<path d="M12 14 Q15 8 18 11 Q21 6 24 10 Q27 6 30 11 Q33 8 36 14" fill="' + COUL.tissu + '"/><path d="M14 15 Q24 19 34 15" stroke="' + COUL.brun + '" stroke-width="2" fill="none"/>' +
+  '<path d="M24 38 V24 M24 28 L20 25 M24 28 L28 25 M24 33 L20 30 M24 33 L28 30" stroke="' + COUL.blond + '" stroke-width="1.8" fill="none"/>';
+ICONES_SVG.champignons = '<path d="M27 28 Q27 40 25 43 H34 Q32 40 32 28Z" fill="' + COUL.blanc + '"/><path d="M18 29 Q18 6 30 6 Q42 6 42 29Z" fill="#a8582e"/>' +
+  '<circle cx="26" cy="16" r="2" fill="' + COUL.tissu + '"/><circle cx="34" cy="13" r="1.6" fill="' + COUL.tissu + '"/><circle cx="36" cy="21" r="1.8" fill="' + COUL.tissu + '"/>' +
+  '<path d="M11 34 Q11 42 10 44 H17 Q16 42 16 34Z" fill="' + COUL.blanc + '"/><path d="M5 35 Q5 22 13.5 22 Q22 22 22 35Z" fill="#c9773f"/>';
+ICONES_SVG.baies = '<path d="M24 6 Q30 4 36 8 Q30 12 24 10Z" fill="' + COUL.olive + '"/><path d="M24 9 V16" stroke-width="2"/>' +
+  '<circle cx="18" cy="24" r="6" fill="#5b3a8c"/><circle cx="30" cy="24" r="6" fill="#6b4aa0"/><circle cx="24" cy="33" r="6" fill="#5b3a8c"/><circle cx="14" cy="36" r="5" fill="' + COUL.rouge + '"/><circle cx="34" cy="36" r="5" fill="' + COUL.rouge + '"/>' +
+  '<circle cx="16" cy="22" r="1.4" fill="#b9a3e0" stroke="none"/><circle cx="28" cy="22" r="1.4" fill="#b9a3e0" stroke="none"/><circle cx="22" cy="31" r="1.4" fill="#b9a3e0" stroke="none"/>';
+ICONES_SVG.herbes = '<path d="M24 44 V20 M24 30 Q14 26 10 14 M24 30 Q34 26 38 14 M24 22 Q18 14 20 4 M24 22 Q30 14 28 4" stroke="' + COUL.oliveFonce + '" stroke-width="2.4" fill="none"/>' +
+  '<ellipse cx="11" cy="15" rx="4" ry="6" transform="rotate(-35 11 15)" fill="' + COUL.olive + '"/><ellipse cx="37" cy="15" rx="4" ry="6" transform="rotate(35 37 15)" fill="' + COUL.olive + '"/>' +
+  '<ellipse cx="20" cy="6" rx="3.5" ry="5.5" transform="rotate(-15 20 6)" fill="#7fa85c"/><ellipse cx="28" cy="6" rx="3.5" ry="5.5" transform="rotate(15 28 6)" fill="#7fa85c"/>' +
+  '<rect x="19" y="32" width="10" height="5" rx="1.5" fill="' + COUL.rouge + '"/>';
+ICONES_SVG.soupe = vapeur() + bol('<path d="M12 24 Q16 21 20 24 T28 24 T36 24" stroke="' + COUL.blond + '" stroke-width="1.8" fill="none"/>', COUL.jaune);
+ICONES_SVG.poissonHerbes = '<ellipse cx="24" cy="32" rx="21" ry="10" fill="' + COUL.blanc + '"/><ellipse cx="24" cy="31" rx="15" ry="6" fill="#e9eef0" stroke="none"/>' +
+  '<path d="M10 30 Q20 21 31 28 L38 23 V35 L31 31 Q20 38 10 30Z" fill="#e0a05a"/><circle cx="15" cy="29" r="1.3" fill="' + COUL.trait + '"/>' +
+  '<path d="M20 27 L22 33 M25 27 L27 33" stroke="#9a5a2a" stroke-width="1.4"/><ellipse cx="34" cy="38" rx="3" ry="1.8" fill="' + COUL.olive + '"/><ellipse cx="14" cy="38" rx="3" ry="1.8" fill="' + COUL.olive + '"/>';
+ICONES_SVG.ragout = vapeur() + '<path d="M6 22 H42 V36 Q42 42 36 42 H12 Q6 42 6 36Z" fill="' + COUL.gris + '"/><rect x="2" y="24" width="5" height="4" rx="1.5" fill="' + COUL.gris + '"/><rect x="41" y="24" width="5" height="4" rx="1.5" fill="' + COUL.gris + '"/>' +
+  '<ellipse cx="24" cy="22" rx="18" ry="5" fill="#8a4a24"/><circle cx="17" cy="21" r="2.6" fill="#c9773f"/><circle cx="29" cy="22" r="2.4" fill="#c9773f"/><circle cx="23" cy="20" r="1.8" fill="' + COUL.olive + '"/>';
+ICONES_SVG.galettes = '<ellipse cx="24" cy="38" rx="18" ry="5" fill="#d9a441"/><ellipse cx="24" cy="31" rx="18" ry="5" fill="#e3b45a"/><ellipse cx="24" cy="24" rx="18" ry="5" fill="#ecc06a"/>' +
+  '<circle cx="18" cy="23" r="1.2" fill="#a8702a" stroke="none"/><circle cx="27" cy="25" r="1.2" fill="#a8702a" stroke="none"/><circle cx="31" cy="22" r="1" fill="#a8702a" stroke="none"/>';
+ICONES_SVG.rizSaute = bol('<circle cx="18" cy="23" r="1.6" fill="' + COUL.rouge + '" stroke="none"/><circle cx="27" cy="25" r="1.6" fill="' + COUL.olive + '" stroke="none"/><circle cx="31" cy="22" r="1.4" fill="' + COUL.jaune + '" stroke="none"/><circle cx="22" cy="21" r="1.2" fill="' + COUL.olive + '" stroke="none"/>', "#f6f0dc") +
+  '<path d="M8 22 Q24 10 40 22" fill="#f6f0dc"/>';
+ICONES_SVG.tarte = '<path d="M4 28 L8 38 Q24 44 40 38 L44 28Z" fill="#c98a3a"/><ellipse cx="24" cy="27" rx="20" ry="8" fill="#e3a85a"/><ellipse cx="24" cy="26" rx="15" ry="5.5" fill="#5b3a8c"/>' +
+  '<circle cx="18" cy="25" r="2" fill="#7b5ab0" stroke="none"/><circle cx="26" cy="27" r="2" fill="' + COUL.rouge + '" stroke="none"/><circle cx="30" cy="24" r="1.8" fill="#7b5ab0" stroke="none"/><circle cx="22" cy="23" r="1.6" fill="' + COUL.rouge + '" stroke="none"/>' +
+  '<path d="M12 22 L36 30 M12 30 L36 22" stroke="#e3a85a" stroke-width="2.4"/>';
+
 function svgIcone(id){
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
 }

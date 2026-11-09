@@ -104,6 +104,20 @@ var MALIN = {
     if(MALIN.missions !== false && livraisonPossible() >= 0 && (mission().id !== "medicament" || soinsDispo() > 2)) livrerMission();
     VOITURE.pieces.forEach(function(p){ installerPiece(p); });
     while(voitureReparee() && G.voiture.essence <= VOITURE.reservoir - VOITURE.litresJerrican && fairePlein());
+    // Cuisine : tant qu'il y a moins de 2 plats par personne et assez de planches pour le feu de cheminée
+    if(MALIN.cuisine !== false){
+      var gc = 0;
+      while(gc++ < 6 && platsDispo().length < vivants().length * 2 && compter("planche") > MALIN.reserveBois + 2){
+        var fait = false;
+        for(var rc = 0; rc < RECETTES_CUISINE.length && !fait; rc++){
+          var rcp = RECETTES_CUISINE[rc];
+          if(rcp.ingredients.eau && rations("eau") < vivants().length * 4) continue; // l'eau d'abord pour boire
+          if(rcp.id === "rizSaute" && platsDispo().length > 0) continue;
+          fait = !!cuisiner(rc);
+        }
+        if(!fait) break;
+      }
+    }
     var essais = 0;
     while(artisan() && essais++ < 20){
       var abime = armesAbimees().filter(function(o){ return o.sol < OBJETS[o.id].sol / 2; })[0];

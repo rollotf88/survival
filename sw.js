@@ -52,6 +52,8 @@ var FICHIERS = [
   "images/portrait-hurleur.webp",
   "images/portrait-gonfle.webp",
   "images/portrait-soldat.webp",
+  "images/piece-cuisine.webp",
+  "images/piece-cuisine-feu.webp",
   "images/lieux/maison.webp",
   "images/lieux/rue.webp",
   "images/lieux/super.webp",

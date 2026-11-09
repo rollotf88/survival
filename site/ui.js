@@ -84,14 +84,14 @@ var ORDRE_FAMILLES = ["eau", "nour", "soin", "arme", "lumiere", "outil", "moral"
 function famillePick(k){
   var o = OBJETS[k];
   if(o.cat === "eau") return "eau";
-  if(o.cat === "nour" || o.cat === "energie") return "nour";
+  if(o.cat === "nour" || o.cat === "energie" || o.cat === "plat" || o.cat === "ingredient") return "nour";
   if(o.cat === "soin") return "soin";
   if(o.emplacement === "arme" || o.cat === "munition") return "arme";
   if(o.lumiere || k === "pile") return "lumiere";
   if(o.emplacement === "outil" || o.emplacement === "sac") return "outil";
   return "moral";
 }
-var NOM_COURT = { clous:"Clous", ruban:"Adhésif", chiffon:"Chiffon", ferraille:"Ferraille", alcool:"Alcool", epingle:"Épingles", jerrican:"Jerrican", bouteille:"Eau", conserve:"Conserve", batterie:"Batterie", courroie:"Courroie", bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
+var NOM_COURT = { epices:"Épices", huile:"Huile", farine:"Farine", champignons:"Champignons", baies:"Baies", herbes:"Herbes", soupe:"Soupe", poissonHerbes:"Poisson", ragout:"Ragoût", galettes:"Galettes", rizSaute:"Riz sauté", tarte:"Tarte", eau:"Eau", clous:"Clous", ruban:"Adhésif", chiffon:"Chiffon", ferraille:"Ferraille", alcool:"Alcool", epingle:"Épingles", jerrican:"Jerrican", bouteille:"Eau", conserve:"Conserve", batterie:"Batterie", courroie:"Courroie", bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
   lampe:"Lampe", peluche:"Peluche", photo:"Photo", cartes:"Cartes", outils:"Outils", sacados:"Sac à dos", riz:"Riz", fusil:"Fusil",
   boiteCart:"Cartouches", pdb:"Pied-de-biche", canette:"Canette", sacoche:"Sacoche" };
 // « Ce qu'il te manque » : une case par besoin, cochée dès qu'un objet du sac y répond
@@ -407,6 +407,12 @@ function openSoins(i){
     h += '<button class="loc craft" data-act="ration" data-id="' + i + ':' + r[0] + '"' + (ok ? "" : " disabled") + '><span class="em">' + icone(r[1]) + '</span><span class="eqt"><b>' + r[2] + '</b><small>'
       + (!dispo ? "Plus rien au refuge" : r[4] > seuilRation(r[0]) ? "Pas besoin : " + r[3] + " " + r[4] + " / 100, la ration de la nuit suffit" : "+" + (r[0] === "eau" ? BAL.soifParJour : BAL.faimParJour) + " de " + r[3] + " (" + r[3] + " : " + r[4] + " / 100) · il en reste " + dispo) + '</small></span></button>';
   });
+  var gp = {}; platsDispo().forEach(function(o){ gp[o.id] = (gp[o.id] || 0) + 1; });
+  Object.keys(gp).forEach(function(pid){
+    var P = OBJETS[pid].plat, ok = x.al && x.faim <= 100 - P.faim / 2;
+    h += '<button class="loc craft" data-act="plat" data-id="' + i + ':' + pid + '"' + (ok ? "" : " disabled") + '><span class="em">' + icone(pid) + '</span><span class="eqt"><b>Manger : ' + OBJETS[pid].nom + '</b><small>'
+      + (ok ? OBJETS[pid].desc.replace(/ \(se gard.*\)$/, "") + " · il en reste " + gp[pid] : "Pas faim (faim " + x.faim + " / 100) : la nuit, chacun mange un plat s’il y en a") + '</small></span></button>';
+  });
   h += '<p class="sub">🌙 Chaque nuit, chacun boit et mange déjà <b>1 ration</b> automatiquement, sans gaspillage (et 1 de plus si sa jauge tombe sous ' + BAL.rattrapage + '). Une ration en plus ne sert qu’en cas d’urgence, quand une jauge est basse.</p>';
   show(h + BTN_FERMER());
 }
@@ -473,7 +479,7 @@ function etageres(cases, mini){
    et la fiche de l'objet touché en dessous (avec « Équiper sur… » pour les armes, outils et sacs). */
 var FAMILLES_STOCK = [
   ["tout", "📦", "Tout", null],
-  ["vivres", "🥫", "Vivres", ["eau", "nour", "energie"]],
+  ["vivres", "🥫", "Vivres", ["eau", "nour", "energie", "plat", "ingredient"]],
   ["soins", "🩹", "Soins", ["soin"]],
   ["combat", "🗡️", "Combat", ["arme", "munition", "defense"]],
   ["outils", "🔦", "Outils", ["outil", "sac", "voiture", "installation"]],
@@ -524,7 +530,7 @@ function openStock(){
 }
 
 /* ---------- Refuge : construire et atelier (onglets) ---------- */
-var ONGLETS = [ ["construire","🔨","Construire"], ["fabriquer","🛠️","Fabriquer"], ["reparer","🔧","Réparer"], ["demonter","♻️","Démonter"], ["voiture","🚗","Voiture"] ];
+var ONGLETS = [ ["construire","🔨","Construire"], ["fabriquer","🛠️","Fabriquer"], ["cuisine","🍲","Cuisine"], ["reparer","🔧","Réparer"], ["demonter","♻️","Démonter"], ["voiture","🚗","Voiture"] ];
 var enVoiture = false, pieceChoisie = null;
 // Place des emplacements sur le dessin de la voiture en panne, en % de l'image (gauche, haut)
 var POS_PIECES = { batterie:[17, 50], roue:[27, 79], courroie:[7, 71] };
@@ -561,6 +567,20 @@ function ingredients(ing, besoin){
 }
 // Bouton d'un travail d'atelier : le verbe, et dessous qui s'y colle (mini-portrait, −10 ⚡) ;
 // grisé avec la raison s'il manque quelque chose ou si tout le monde est trop fatigué
+// Cuisine : ingrédients (l'eau compte en rations) + la planche pour la cuisinière
+function ingredientsCuisine(ing){
+  var t = [], tout = {}; for(var k in ing) tout[k] = ing[k]; tout.planche = BAL.cuisine.planches;
+  for(var k2 in tout){
+    var eau = k2 === "eau", a = eau ? rations("eau") : compter(k2), ok = a >= tout[k2], ico = eau ? icone("bouteille") : icone(k2);
+    t.push('<span class="ing2 ' + (ok ? "ok" : "ko") + '" title="' + (eau ? "Rations d’eau" : OBJETS[k2].nom) + '"><span class="ing2-case">' + ico + '</span><b>' + a + '/' + tout[k2] + '</b><small>' + (eau ? "Eau" : NOM_COURT[k2] || OBJETS[k2].nom) + '</small></span>');
+  }
+  return '<div class="ings2">' + t.join("") + '</div>';
+}
+function boutonCuisine(r){
+  var e = empechementCuisine(r), x = artisan();
+  return '<button class="btn travail" data-act="cuire" data-id="' + r + '"' + (e ? " disabled" : "") + '>'
+    + (e ? '<span>❌ ' + e + '</span>' : '<span>🍲 Cuisiner</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + BAL.energieCraft + ' ⚡</small>') + '</button>';
+}
 function boutonTravail(texte, act, id, ing, besoin){
   var manque = []; for(var k in ing || {}) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
   var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? "Il faut " + nommer(besoin, 1)
@@ -637,6 +657,20 @@ function openRef(onglet){
           }
           return caseObjet(r.rec.id, { act:"refsel", cle:"c:" + r.i, sel:selRef === "c:" + r.i, pret:!r.e, terne:!!r.e });
         }), 10);
+    } else if(ongletRef === "cuisine"){
+      astuce("cuisine");
+      var pd = platsDispo(), gp = {}; pd.forEach(function(o){ gp[o.id] = (gp[o.id] || 0) + 1; });
+      h += '<p class="sub">🔥 Cuisinière à bois : ' + nommer("planche", BAL.cuisine.planches) + ' par plat (il en reste ' + compter("planche") + ') · ' + (pd.length ? "🍲 Prêts : " + liste(Object.keys(gp).map(function(id){ return nommer(id, gp[id]); })) : "aucun plat prêt") + '</p>';
+      h += etageres(RECETTES_CUISINE.map(function(rec, i){ return { rec:rec, i:i, e:empechementCuisine(i) }; })
+        .sort(function(a, b){ return (a.e ? 1 : 0) - (b.e ? 1 : 0); })
+        .map(function(r){
+          if(selRef === "k:" + r.i){
+            var o = OBJETS[r.rec.id], np = portionsRecette(r.i);
+            fiche = '<div class="invfiche"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + ' · ' + np + ' portions</b><small>Chaque portion : ' + o.desc + '</small></span></div>'
+              + ingredientsCuisine(r.rec.ingredients) + boutonCuisine(r.i);
+          }
+          return caseObjet(r.rec.id, { act:"refsel", cle:"k:" + r.i, sel:selRef === "k:" + r.i, pret:!r.e, terne:!!r.e, n:gp[r.rec.id] || null });
+        }), 6);
     } else if(ongletRef === "reparer"){
       var ab = armesAbimees(), e = empechement(REPARATION);
       h += ab.length ? etageres(ab.map(function(o){
@@ -944,6 +978,8 @@ document.addEventListener("click", function(e){
   else if(a === "soins"){ openSoins(i); return; }
   else if(a === "heal"){ soigner(i); hide(); }
   else if(a === "boire"){ boire(i); hide(); }
+  else if(a === "cuire"){ var mc = cuisiner(i); if(mc) msgAtelier = mc; openRef("cuisine"); render(); return; }
+  else if(a === "plat"){ var qp = id.split(":"); var xp = G.m[+qp[0]]; mangerPlat(xp, qp[1]); openSoins(+qp[0]); render(); return; }
   else if(a === "ration"){ var qr = id.split(":"); prendreRation(+qr[0], qr[1]); openSoins(+qr[0]); render(); return; }
   else if(a === "slot"){ retourEquip = b.getAttribute("data-retour"); var q = id.split(":"); openSlot(+q[0], q[1]); return; }
   else if(a === "equip"){ var q = id.split(":"); equiper(+q[0], q[1], +q[2]);

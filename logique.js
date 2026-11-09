@@ -238,12 +238,51 @@ function peutPrendreRation(x, cat){ var j = cat === "eau" ? x.soif : x.faim; ret
 // Rations que la famille prendra cette nuit (1 chacun + rattrapage si la jauge est basse)
 function besoinNuit(cat){
   var v = vivants(), b = v.length, reste = rations(cat) - v.length;
+  if(cat === "nour"){ var pl = Math.min(platsDispo().length, v.filter(function(x){ return x.faim - BAL.faimParJour + 45 <= 110; }).length); b -= pl; reste += pl; } // ceux qui mangent un plat ne prennent pas de ration
   v.forEach(function(x){
     var perte = cat === "eau" ? BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0) : BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
     var j = (cat === "eau" ? x.soif : x.faim) - perte + (cat === "eau" ? BAL.soifParJour : BAL.faimParJour);
     if(j > 0 && j < BAL.rattrapage && reste > 0){ b++; reste--; }
   });
   return b;
+}
+/* ---------- Cuisine ---------- */
+function platsDispo(){ return G.stock.o.filter(function(o){ return OBJETS[o.id].plat; }); }
+function aIngredient(k, n){ return k === "eau" ? rations("eau") >= n : compter(k) >= n; }
+// Pourquoi on ne peut pas cuisiner cette recette (null = c'est possible)
+function empechementCuisine(r){
+  var rec = RECETTES_CUISINE[r], manque = [];
+  for(var k in rec.ingredients) if(!aIngredient(k, rec.ingredients[k])) manque.push(k);
+  if(manque.length) return "Il manque des ingrédients";
+  if(compter("planche") < BAL.cuisine.planches) return "Il faut " + nommer("planche", BAL.cuisine.planches) + " pour la cuisinière";
+  if(!artisan()) return "Tout le monde est trop fatigué";
+  return null;
+}
+function portionsRecette(r){ return RECETTES_CUISINE[r].portions + (vivants().some(function(x){ return x.trait === "cuisinier"; }) ? BAL.traits.cuisinier : 0); }
+function cuisiner(r){
+  if(empechementCuisine(r)) return null;
+  var rec = RECETTES_CUISINE[r], x = artisan(), n = portionsRecette(r);
+  x.en -= BAL.energieCraft;
+  for(var k in rec.ingredients){ if(k === "eau") prendreRations("eau", rec.ingredients[k]); else consommer(k, rec.ingredients[k]); }
+  retirer("planche", BAL.cuisine.planches);
+  ajouter(rec.id, n, 1); G.cuisineJour = G.day; G.stats.plats = (G.stats.plats || 0) + n;
+  return x.nom + " cuisine " + nommer(rec.id, n) + ".";
+}
+// Un membre mange un plat (celui qui se gâtera le plus tôt, ou le plat choisi) ; renvoie son id
+function mangerPlat(x, id){
+  var ps = platsDispo().filter(function(o){ return !id || o.id === id; }).sort(function(a, b){ return a.sol - b.sol; });
+  if(!ps.length) return null;
+  var o = ps[0], P = OBJETS[o.id].plat; retirerInstance(o.uid);
+  x.faim = Math.min(100, x.faim + P.faim);
+  if(P.pv) x.hp = Math.min(100, x.hp + P.pv);
+  if(P.en) x.en = Math.min(100, x.en + P.en);
+  if(P.moral) changerMoral(P.moral);
+  return o.id;
+}
+// La nuit : on mange un plat s'il ne gaspille presque rien, ou s'il va se gâter de toute façon
+function platUtile(x){
+  var ps = platsDispo().sort(function(a, b){ return a.sol - b.sol; }); if(!ps.length) return false;
+  return ps[0].sol <= 1 || x.faim + OBJETS[ps[0].id].plat.faim <= 110;
 }
 function prendreRation(i, cat){
   var x = G.m[i]; if(!peutPrendreRation(x, cat)) return false;
@@ -473,8 +512,11 @@ function finExpedition(){
   var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.trait === "fouineur"; }) ? BAL.traits.fouine : 0)
     - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur
     + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0);
-  nb = Math.min(lieu.butin.length, Math.max(survivants.length ? 1 : 0, Math.round(nb * mult)));
-  var trouves = lieu.butin.splice(0, nb);
+  nb = Math.max(survivants.length ? 1 : 0, Math.round(nb * mult));
+  // On pioche nb objets ; les ingrédients de cuisine croisés en chemin viennent en plus (ils ne prennent pas la place d'une trouvaille)
+  var trouves = [], kb = 0, pris0 = 0;
+  while(kb < lieu.butin.length && pris0 < nb){ if(OBJETS[lieu.butin[kb]].cat !== "ingredient") pris0++; kb++; }
+  if(survivants.length) trouves = lieu.butin.splice(0, kb);
   // Pêche : chaque survivant qui a une canne attrape des poissons (tant qu'il en reste)
   var peches = 0;
   if(LIEUX[i].peche && E.peche){
@@ -513,6 +555,7 @@ function finExpedition(){
   // Transport : bras + sacs ; ce qui ne rentre pas reste sur place
   var places = placesEquipe(survivants) + (E.voiture && survivants.length ? VOITURE.coffre : 0);
   var pris = [], laisses = [];
+  trouves.sort(function(a, b){ return (OBJETS[a].cat === "ingredient" ? 1 : 0) - (OBJETS[b].cat === "ingredient" ? 1 : 0); }); // les ingrédients en dernier dans les sacs
   trouves.forEach(function(id){ if(OBJETS[id].place <= places){ places -= OBJETS[id].place; pris.push(id); } else laisses.push(id); });
   // Les poissons qu'on ne peut pas porter sont relâchés dans l'étang
   lieu.butin = laisses.filter(function(id){ return id !== "poisson"; }).concat(lieu.butin);
@@ -570,7 +613,7 @@ function degatsMembre(x){
     if(compter(mu) > 0){ retirer(mu, 1); tir = true; comment = "tire " + (OBJETS[a.id].g === "f" ? "à la " : "au ") + minus(OBJETS[a.id].nom); }
     else { d = C.crosse; comment = "n’a plus " + (mu === "balle" ? "de balles" : "de cartouches") + ", frappe avec la crosse"; }
   }
-  var T = BAL.traits, bonus = (x.trait === "costaud" && !tir ? T.costaud : 0) - (x.trait === "soigneur" ? T.pacifiste : 0)
+  var T = BAL.traits, bonus = (x.trait === "costaud" && !tir ? T.costaud : 0) - (x.trait === "soigneur" ? T.pacifiste : 0) - (x.trait === "cuisinier" ? T.maladroit : 0)
     + (x.trait === "tireur" && tir ? T.tireur : 0);
   return { dg:Math.max(1, R(d[0], d[1]) + bonus - (fatigue(x) ? C.malusFatigue : 0)), comment:comment, tir:tir };
 }
@@ -726,7 +769,7 @@ function finJour(){
       n.push(["g2", "🔥 Le feu de cheminée a brûlé toute la nuit (−" + BAL.feu.planches + " planche" + (BAL.feu.planches > 1 ? "s" : "") + (BAL.feu.nuitsParPlanche > 1 ? ", elle durera " + BAL.feu.nuitsParPlanche + " nuits" : "") + ")."]);
     } else { G.feu = false; n.push(["b2", "🔥 Le feu s’est éteint : " + (possede(function(o){ return o.allume; }) ? "plus de planches à brûler." : "plus de briquet pour le rallumer.")]); }
   }
-  var auChaud = feu ? 99 : compter("couverture") * BAL.feu.couvrePar, froids = [];
+  var auChaud = feu ? 99 : compter("couverture") * BAL.feu.couvrePar, froids = [], diner = [];
   vivants().forEach(function(x, kx){
     var chaud = kx < auChaud; if(!chaud) froids.push(x.nom);
     x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
@@ -734,7 +777,8 @@ function finJour(){
     var repos = (chaud ? BAL.reposNuit + (feu ? BAL.feu.repos : 0) : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
     if(x.canette) n.push(["", "🥴 " + x.nom + " dort mal après sa canette (+" + repos + " ⚡ seulement)."]);
     x.en = Math.min(100, x.en + repos); x.canette = false;
-    if(prendreRations("nour", 1)) x.faim += BAL.faimParJour; else n.push(["b2", x.nom + " n’a rien à manger."]);
+    var plat = platUtile(x) ? mangerPlat(x) : null;
+    if(plat) diner.push(plat); else if(prendreRations("nour", 1)) x.faim += BAL.faimParJour; else n.push(["b2", x.nom + " n’a rien à manger."]);
     if(prendreRations("eau", 1))  x.soif += BAL.soifParJour; else n.push(["b2", x.nom + " n’a rien à boire."]);
     x.faim = Math.max(0, Math.min(100, x.faim)); x.soif = Math.max(0, Math.min(100, x.soif));
     // Rattrapage : une ration de plus si la jauge est basse et qu'il en reste assez pour les autres
@@ -802,6 +846,12 @@ function finJour(){
     o.sol--;
     if(o.sol <= 0){ retirerInstance(o.uid); n.push(["b2", icone(o.id) + " " + (OBJETS[o.id].g === "f" ? "La " : "Le ") + minus(OBJETS[o.id].nom) + " est usé" + (OBJETS[o.id].g === "f" ? "e" : "") + ", à refaire."]); }
   });
+  // Le dîner : les plats mangés, puis ceux qui se gâtent
+  if(diner.length){ var g = {}; diner.forEach(function(id){ g[id] = (g[id] || 0) + 1; }); n.push(["g2", "🍲 Au dîner : " + liste(Object.keys(g).map(function(id){ return nommer(id, g[id]); })) + "."]); }
+  var gates = {}; platsDispo().forEach(function(o){ o.sol--; if(o.sol <= 0){ retirerInstance(o.uid); gates[o.id] = (gates[o.id] || 0) + 1; } });
+  if(Object.keys(gates).length) n.push(["b2", "🤢 Gâté" + (Object.keys(gates).length > 1 || gates[Object.keys(gates)[0]] > 1 ? "s" : "") + " : " + liste(Object.keys(gates).map(function(id){ return nommer(id, gates[id]); })) + ", à jeter."]);
+  // Le potager donne parfois des herbes fraîches
+  for(var hp = 0; hp < G.ref.pot; hp++) if(hasard() < BAL.cuisine.herbesPotager){ ajouter("herbes", 1); n.push(["g2", icone("herbes") + " Des herbes fraîches ont poussé au potager."]); break; }
   var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour;
   G.reste.eau += pe; G.reste.nour += pn;
   if(pe) n.push(["g2", ic("ref_eau", "🪣") + " Le récupérateur a recueilli " + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]);

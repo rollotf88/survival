@@ -206,8 +206,15 @@ Fin de combat, stats et chiffres du monde (2026-11-09, demandes de Fabien) :
 
 Étiquettes des scènes discrètes (2026-11-09, retour de Fabien « trop voyantes, agressif ») : plus de pastille ni de cadre, texte clair avec ombre douce sur un halo sombre qui se fond dans l'image, fondu de 0,9 s ; le canapé qui invite à dormir a une lueur chaude qui respire (`lueurDouce`) au lieu de la pastille orange (fin de style.css)
 
+Cuisine (2026-11-09, idée de Fabien) :
+- Pièce « Cuisine » juste après le salon (`PIECES`, images Gemini `piece-cuisine.webp` / `piece-cuisine-feu.webp` le jour où on a cuisiné : `G.cuisineJour`) : cuisinière → Cuisiner, plan de travail → Recettes (onglet 🍲 Cuisine du refuge), garde-manger → Stock filtré sur Vivres. Bouton du bas lié : Refuge
+- 6 ingrédients (`cat:"ingredient"` : épices, huile, farine, champignons, baies, herbes ; `INGREDIENTS_LIEUX` les ajoute au butin des lieux, la forêt en a beaucoup ; le potager donne parfois des herbes, `BAL.cuisine.herbesPotager`). En fouille, ce sont des trouvailles EN PLUS (ils ne prennent pas la place d'un objet) et ils passent en dernier dans les sacs
+- 6 plats (`cat:"plat"`, objets uniques : 1 objet = 1 portion, `sol` = nuits de fraîcheur, 3 ou 8 pour les galettes ; effets dans `plat:{faim, moral, pv, en}`) ; `RECETTES_CUISINE` (« eau » = rations d'eau) ; chaque plat brûle 1 planche + 10 ⚡ (`cuisiner`, `empechementCuisine`, `portionsRecette`). La nuit, chacun mange d'abord un plat s'il ne gaspille presque rien (`platUtile`) ; les plats se gâtent ; ＋ d'un membre → « Manger : … » (`mangerPlat`). Icônes dessinées (icones.js, fin)
+- Trait « Cuisinier » : +1 portion par plat, −1 dégât en combat
+- Simulation : Malin 311 avec cuisine, 315 sans (médiane) mais 10 % ≤ 253 au lieu de 194 : la cuisine sauve les parties difficiles sans rendre le jeu plus facile (elle coûte de l'eau et du bois) ; Léo cuisinier 296 (fouineur 313, optimiste 285) ; Naïf 27
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
-1. Cuisine : nouvelle pièce (image Gemini), ingrédients à trouver dans les lieux, recettes, cuisson SANS électricité (cheminée / poêle à bois, réchaud de camping), plats plus nourrissants avec bonus, sans rendre le jeu trop simple (simuler). Nouveau trait « Cuisinier »
+1. Cuisine — FAITE (voir plus haut)
 2. Cannibalisme en dernier recours (comme manger Rex) : choisir qui, gros malus de moral, nouvel état « Folie » (actions folles : frappe un survivant, réveille tout le monde, sort la nuit, laisse la porte ouverte) qui annonce la fin. Question de classement d'âge (PEGI) à garder en tête : rester suggéré, sans image, et peut-être un réglage « contenus sensibles »
 3. Rencontres de PNJ au hasard avec dialogues à choix (façon livre dont vous êtes le héros) : ressources, ou la mort d'un membre selon les réponses
 4. Parrainage : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)

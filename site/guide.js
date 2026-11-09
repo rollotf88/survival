@@ -33,6 +33,10 @@ function reglesGuide(){
       "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chaque pêcheur a " + B.peche.lancers + " lancers : quand le bouchon s’enfonce, touche « Ferrer » à temps pour attraper un poisson (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
       "Les poissons se reproduisent lentement (+1 toutes les " + B.peche.nuitsParNaissance + " nuits), mais seulement s’il en reste au moins " + B.peche.seuil + " : vide l’étang et il ne donnera plus rien. " +
       "Les poules pondent souvent un œuf la nuit (+1 ration), boivent 1 ration d’eau pour " + B.poules.eauPour + " poules, et chaque poule ajoute +" + Math.round(B.poules.attaque * 100) + " % de risque d’attaque. Sans eau, l’une d’elles meurt."],
+    ["La cuisine", "🍲",
+      "Dans la cuisine (ou l’onglet 🍲 du refuge), la cuisinière à bois transforme tes vivres et des ingrédients (épices, huile, farine, champignons, baies, herbes) en plats : " +
+      RECETTES_CUISINE.map(function(r){ var o = OBJETS[r.id]; return o.nom.toLowerCase() + " (" + r.portions + " portions)"; }).join(", ") + ". " +
+      "Chaque plat brûle " + nommer("planche", B.cuisine.planches) + " et coûte " + B.energieCraft + " ⚡ au cuisinier. Une portion nourrit plus qu’une ration (+35 à +50 de faim au lieu de +30) avec un bonus (moral, PV, énergie), mais les plats se gâtent en 3 nuits (les galettes en 8). La nuit, chacun mange d’abord un plat s’il y en a. Le potager donne parfois des herbes."],
     ["La forêt et le bois", "🌲",
       "La forêt (à partir du jour " + LIEUX.filter(function(L){ return L.bois; })[0].jour + ") : chaque survivant qui a une hache en main (case arme) abat un arbre et rapporte " + B.foret.coupe[0] + " ou " + B.foret.coupe[1] + " planches. " +
       "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
