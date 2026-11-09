@@ -23,6 +23,7 @@ var FICHIERS = [
   "images/sac-dos.webp",
   "images/logo.webp",
   "images/nuit.webp",
+  "images/aube.webp",
   "images/voiture-panne.webp",
   "images/voiture-ok.webp",
   "images/rex.webp",

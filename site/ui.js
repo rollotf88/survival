@@ -462,7 +462,9 @@ function openRef(onglet){
 
 /* ---------- Nuit, événements, mort ---------- */
 function openNuit(n){
-  show('<div class="banniere"><img src="images/nuit.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
+  // Bandeau : le refuge assiégé s'il y a eu une attaque cette nuit, sinon l'aube calme (griffures sur les planches)
+  var attaque = n.some(function(l){ return String(l[1]).indexOf("Attaque de nuit") >= 0; });
+  show('<div class="banniere"><img src="images/' + (attaque ? "nuit" : "aube") + '.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
 }
 function openEvent(ev){
   G.ev = ev; G.evIdx = EVENEMENTS.indexOf(ev);
