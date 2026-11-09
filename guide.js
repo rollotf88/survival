@@ -101,6 +101,7 @@ function openMenu(){
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
+  if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= 100 ? "Fonder ou rejoindre" : "Dès le jour 100");
   if(typeof openInviter === "function"){
     h += t("inviter", "🎁 Inviter", "Un colis pour toi et ton ami");
     var nc = lireColis(), nb = lireBonus().length;

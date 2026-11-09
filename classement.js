@@ -385,3 +385,70 @@ document.addEventListener("click", function(e){
   else if(a === "copiercode"){ try{ navigator.clipboard.writeText(SITE_JEU + "/?code=" + id); $("msgcode").textContent = "✅ Lien copié !"; }catch(e3){ $("msgcode").textContent = SITE_JEU + "/?code=" + id; } }
 });
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "champcode") validerCode(); });
+
+/* =====================================================================
+   CLANS (phase 1 des guerres de clans) : à partir du jour 100 (réglable par l'administration),
+   créer un clan, en rejoindre un (5 familles max), le quitter ; le chef peut exclure.
+   Le bastion et les guerres viendront ensuite.
+   ===================================================================== */
+// Blasons provisoires (emoji) : une planche Gemini les remplacera (images/blasons/1..12.webp)
+var BLASONS = ["🐺", "🦅", "🐻", "🦂", "🔥", "💀", "⚔️", "🛡️", "🌲", "🏴", "⚙️", "🐍"];
+function blason(n){ return '<span class="blason">' + (BLASONS[(n || 1) - 1] || "🏴") + '</span>'; }
+function adresseClans(){ return adresseClassement().replace("/api/classement", "/api/clans"); }
+var etatClans = null, choixBlason = 1;
+function jourPartie(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.cumule ? G.day : (typeof enCours !== "undefined" && enCours ? enCours.day : 0); }
+function appelClans(corps){
+  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = jourPartie();
+  if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
+  return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
+}
+function openClans(msg){
+  show('<h2>⚔️ Clans</h2><p class="sub">Chargement…</p>' + BTN_FERMER());
+  appelClans({ action:"liste" }).then(function(d){ etatClans = d; afficherClans(msg); })
+    .catch(function(){ show('<h2>⚔️ Clans</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "les clans") + '</p>' + BTN_FERMER()); });
+}
+function quand(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "à l’instant" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; }
+function afficherClans(msg){
+  var d = etatClans, j = jourPartie(), ok = j >= d.jourMin, h = '<h2>⚔️ Clans</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '');
+  if(d.monClan){
+    var c = d.monClan;
+    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small></span></div>';
+    h += '<div class="clan-membres">' + c.membresListe.map(function(m){
+      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + echapper(m.pseudo || "?") + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + '</small>'
+        + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
+    }).join("") + '</div>';
+    h += '<p class="sub">🏰 Bientôt : le bastion du clan (réserve commune, défenses) puis les guerres contre les autres clans complets.</p>'
+      + '<div class="row"><button class="btn alt" data-act="clanquitter">Quitter le clan</button><button class="btn" data-act="close">Fermer</button></div>';
+    show(h); return;
+  }
+  h += '<p class="sub">' + (ok ? "Tu as tenu " + j + " jours : tu peux fonder un clan ou en rejoindre un (5 familles maximum)." : "🔒 Les clans s’ouvrent quand ta famille a tenu <b>" + d.jourMin + " jours</b> (tu en es au jour " + j + "). Voici ceux qui t’attendent :") + '</p>';
+  h += d.clans.length ? '<div class="clan-liste">' + d.clans.map(function(c){
+    var plein = c.membres >= 5;
+    return '<div class="clan-l">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + '</b><small>👑 ' + echapper(c.chef) + ' · ' + c.membres + ' / 5 · ' + c.jours + ' j</small></span>'
+      + (ok ? '<button class="mini" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '</div>';
+  }).join("") + '</div>' : '<p>Aucun clan pour l’instant. Sois le premier à en fonder un !</p>';
+  h += (ok ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="clancreer">🏴 Fonder un clan</button>' : '') + BTN_FERMER();
+  show(h);
+}
+function openCreerClan(err){
+  if(!lirePseudo()){ show('<h2>🏴 Fonder un clan</h2><p>Choisis d’abord ton pseudo (il apparaîtra dans le clan).</p><div class="row"><button class="btn" data-act="saisie" data-id="p">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
+  show('<h2>🏴 Fonder un clan</h2><p class="sub">Tu en seras le chef. Les autres familles qui ont tenu assez longtemps pourront te rejoindre.</p>'
+    + '<input id="nomclan" class="champ grand" maxlength="20" autocomplete="off" placeholder="Nom du clan">'
+    + '<p class="sub" style="margin:8px 0 4px">Blason :</p><div class="blasons">' + BLASONS.map(function(b, k){ return '<button class="bl' + (choixBlason === k + 1 ? " on" : "") + '" data-act="clanblason" data-id="' + (k + 1) + '">' + b + '</button>'; }).join("") + '</div>'
+    + '<p class="msg" id="msgclan">' + (err || "") + '</p><div class="row"><button class="btn" data-act="clancreerok">Fonder le clan</button><button class="btn alt" data-act="clans">Retour</button></div>');
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  var reponse = function(d, ok){ if(d.erreur){ openClans("❌ " + d.erreur); return; } openClans(ok); };
+  if(a === "clans") openClans();
+  else if(a === "clancreer") openCreerClan();
+  else if(a === "clanblason"){ var nom = ($("nomclan") || {}).value || ""; choixBlason = +id; openCreerClan(); $("nomclan").value = nom; }
+  else if(a === "clancreerok"){
+    var n = ($("nomclan").value || "").trim(); if(n.length < 3){ $("msgclan").textContent = "Le nom doit faire au moins 3 lettres."; return; }
+    appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
+  }
+  else if(a === "clanrejoindre") appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });
+  else if(a === "clanquitter"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Vraiment quitter ?"; return; } appelClans({ action:"quitter" }).then(function(d){ reponse(d, "Tu as quitté le clan."); }); }
+  else if(a === "clanexclure"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Confirmer"; return; } appelClans({ action:"exclure", cible:id }).then(function(d){ reponse(d, "Membre exclu."); }); }
+});

@@ -67,6 +67,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         <button data-o="joueurs">👥 Joueurs</button>
         <button data-o="classement">🏆 Classement</button>
         <button data-o="codes">🎟️ Codes</button>
+        <button data-o="clans">🏰 Clans</button>
       </div>
       <button class="alt" id="deconnexion">Se déconnecter</button>
     </div>
@@ -126,7 +127,14 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         + '<p class="sub" style="margin-top:8px">Un code spécial donne un colis à chaque appareil qui le tape (une fois par appareil).</p></div><div class="carte tableau"><table><tr><th>Code</th><th>État</th><th>Utilisations</th><th></th></tr>'
         + d.speciaux.map(function(c){ return '<tr><td><b>' + esc(c.code) + '</b></td><td><span class="pastille ' + (c.actif ? "on" : "off") + '">' + (c.actif ? "Actif" : "Désactivé") + '</span></td><td class="num">' + c.n + '</td><td class="row"><button class="alt" data-basculer="' + esc(c.code) + '">' + (c.actif ? "Désactiver" : "Activer") + '</button><button class="danger" data-codesuppr="' + esc(c.code) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
     }
+    if(onglet === "clans"){
+      h = '<div class="carte"><form id="formJour" class="row"><label for="jourMin" style="font-weight:700">Jours de survie pour accéder aux clans</label><input id="jourMin" type="number" min="1" max="1000" value="' + d.jourMin + '" style="width:110px"><button type="submit">Enregistrer</button></form>'
+        + '<p class="sub" style="margin-top:8px">100 par défaut. Baisse-le (ex. 1) pour tester les clans avec tes amis, puis remets 100.</p></div>'
+        + '<div class="carte tableau"><table><tr><th>Clan</th><th>Chef</th><th>Familles</th><th>Jours</th><th>Membres</th><th></th></tr>'
+        + d.clans.map(function(c){ return '<tr><td><b>' + esc(c.nom) + '</b></td><td>' + esc(c.chef) + '</td><td class="num">' + c.membres + ' / 5</td><td class="num">' + c.jours + '</td><td>' + esc(c.liste) + '</td><td><button class="danger" data-clansuppr="' + esc(c.id) + '" data-nom="' + esc(c.nom) + '">Dissoudre</button></td></tr>'; }).join("") + '</table></div>';
+    }
     $("contenu").innerHTML = h;
+    var fj = $("formJour"); if(fj) fj.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourClan", { jour:$("jourMin").value }, "Réglage enregistré."); });
     var f = $("formCode"); if(f) f.addEventListener("submit", function(e){ e.preventDefault(); action("codeCreer", { code:$("nouveauCode").value }, "Code créé."); });
   }
   function action(a, extra, ok){ appel(a, extra).then(function(d){ if(d.erreur){ message(d.erreur); return; } charger(); setTimeout(function(){ message(ok, true); }, 300); }).catch(function(){ message("Impossible de joindre le serveur."); }); }
@@ -135,6 +143,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     if(b.dataset.suppr && confirm("Supprimer « " + (b.dataset.nom || "ce joueur") + " » des chiffres du monde et du classement ?")) action("supprimerJoueur", { id:b.dataset.suppr }, "Joueur supprimé.");
     else if(b.dataset.score && confirm("Retirer « " + b.dataset.nom + " » du classement ?")) action("supprimerScore", { id:b.dataset.score }, "Score retiré.");
     else if(b.dataset.basculer) action("codeBasculer", { code:b.dataset.basculer }, "Code modifié.");
+    else if(b.dataset.clansuppr && confirm("Dissoudre le clan « " + b.dataset.nom + " » ? Ses membres redeviennent sans clan.")) action("clanSupprimer", { clan:b.dataset.clansuppr }, "Clan dissous.");
     else if(b.dataset.codesuppr && confirm("Supprimer le code « " + b.dataset.codesuppr + " » ?")) action("codeSupprimer", { code:b.dataset.codesuppr }, "Code supprimé.");
   });
   if(mdp){ $("connexion").className = "cache"; $("tableau").className = ""; charger(); }

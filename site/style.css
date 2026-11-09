@@ -901,3 +901,16 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 /* Accueil : le voile de la fenêtre « Partie en cours » laisse passer les doigts vers la vitrine */
 body.accueil-ouvert #modal{pointer-events:none}
 body.accueil-ouvert #modal .sheet{pointer-events:auto}
+/* ---------- Clans ---------- */
+.blason{display:inline-grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:radial-gradient(circle at 50% 35%,#5a3a22,#2a1a10);border:2px solid var(--bois);font-size:24px}
+.clan-tete{display:flex;gap:10px;align-items:center;margin:4px 0 8px}
+.clan-tete b{display:block;font-size:18px}.clan-tete small{color:var(--mut)}
+.clan-membres,.clan-liste{display:flex;flex-direction:column;gap:5px;margin:0 0 8px}
+.clan-m,.clan-l{display:flex;gap:8px;align-items:center;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:5px 8px}
+.clan-m{flex-wrap:wrap}.clan-m .cm-nom{font-weight:700;flex:1}.clan-m small{color:var(--mut);font-size:11.5px}
+.clan-m.moi{border-color:var(--acc)}
+.clan-l .cl-info{flex:1;min-width:0}.clan-l .cl-info b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.clan-l small{color:var(--mut);font-size:11.5px}
+.blasons{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.blasons .bl{font-size:22px;padding:4px 0;border:2px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer}
+.blasons .bl.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}

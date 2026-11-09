@@ -134,6 +134,74 @@ async function parrainagePost(request, env){
   return reponse({ erreur: "action" }, 400);
 }
 
+// ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
+// {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
+// {action:"creer", id, pseudo, jour, nom, blason}    -> crée un clan (le créateur en est le chef)
+// {action:"rejoindre", id, pseudo, jour, clan}       -> rejoint un clan qui a de la place (5 au maximum)
+// {action:"quitter", id}                             -> quitte (si le chef part, le plus ancien devient chef ; un clan vide disparaît)
+// {action:"exclure", id, cible}                      -> le chef exclut un membre
+// Accès à partir du jour `jourMinClan` de sa partie (100, réglable dans l'administration : clé KV « reglages »).
+const CLE_CLANS = "clans", CLE_REGLAGES = "reglages", MAX_CLAN = 5, BLASONS_OK = 12;
+async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {}; c.clans = c.clans || {}; c.parJoueur = c.parJoueur || {}; return c; }
+async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 100; return r; }
+const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
+function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
+  return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree }; }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+async function clansPost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const C = await lireClans(env), R = await lireReglages(env), now = Date.now();
+  const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+  const pseudo = nomPropre(d.pseudo, 16), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
+  const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; } }
+  switch(d.action){
+    case "liste": {
+      const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);
+      if(mon) await sauver(); // garde la dernière visite du membre (inactivité visible du chef)
+      return reponse({ jourMin: R.jourMinClan, clans: liste, monClan: mon ? detailClan(mon, id) : null });
+    }
+    case "creer": {
+      if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
+      if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour fonder un clan." });
+      if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      const nom = nomPropre(d.nom, 20); if(nom.length < 3) return reponse({ erreur: "Le nom du clan doit faire au moins 3 lettres." });
+      if(Object.values(C.clans).some((c) => c.nom.toLowerCase() === nom.toLowerCase())) return reponse({ erreur: "Ce nom de clan est déjà pris." });
+      const blason = Math.max(1, Math.min(BLASONS_OK, Math.floor(+d.blason) || 1));
+      let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
+      C.clans[cid] = { id: cid, nom, blason, chef: id, cree: now, membres: [{ id, pseudo, jour, vu: now, rejoint: now }] };
+      C.parJoueur[id] = cid; await sauver();
+      return reponse({ ok: true, monClan: detailClan(C.clans[cid], id) });
+    }
+    case "rejoindre": {
+      if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
+      if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour rejoindre un clan." });
+      if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      const c = C.clans[String(d.clan || "")]; if(!c) return reponse({ erreur: "Ce clan n’existe plus." });
+      if(c.membres.length >= MAX_CLAN) return reponse({ erreur: "Ce clan est complet (" + MAX_CLAN + " familles)." });
+      c.membres.push({ id, pseudo, jour, vu: now, rejoint: now }); C.parJoueur[id] = c.id; await sauver();
+      return reponse({ ok: true, monClan: detailClan(c, id) });
+    }
+    case "quitter": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      mon.membres = mon.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
+      if(!mon.membres.length) delete C.clans[mon.id];
+      else if(mon.chef === id) mon.chef = mon.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
+      await sauver(); return reponse({ ok: true });
+    }
+    case "exclure": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut exclure un membre." });
+      const cible = String(d.cible || ""); if(cible === id) return reponse({ erreur: "Pour partir, utilise « Quitter le clan »." });
+      if(!mon.membres.some((m) => m.id === cible)) return reponse({ erreur: "Ce membre n’est plus dans le clan." });
+      mon.membres = mon.membres.filter((m) => m.id !== cible); delete C.parJoueur[cible];
+      await sauver(); return reponse({ ok: true, monClan: detailClan(mon, id) });
+    }
+  }
+  return reponse({ erreur: "action" }, 400);
+}
+
 // ---------- Administration : /api/admin (POST, réservé à Fabien) ----------
 // Le mot de passe est un « secret » Cloudflare nommé ADMIN_MDP, choisi et saisi par Fabien dans le tableau de bord
 // Cloudflare (il n'est écrit nulle part dans le code). Chaque demande l'envoie dans l'en-tête Authorization (HTTPS).
@@ -187,6 +255,20 @@ async function adminPost(request, env){
       const k = liste.findIndex((e) => e.id === String(d.id || "")); if(k < 0) return repAdmin({ erreur: "introuvable" }, 404);
       liste.splice(k, 1); await ecrireListe(); return repAdmin({ ok: true });
     }
+    case "clans": {
+      const C = await lireClans(env), R = await lireReglages(env);
+      return repAdmin({ jourMin: R.jourMinClan, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { liste: c.membres.map((m) => m.pseudo + " (j" + m.jour + ")").join(", ") })) });
+    }
+    case "reglageJourClan": {
+      const R = await lireReglages(env), j = Math.floor(+d.jour);
+      if(!(j >= 1 && j <= 1000)) return repAdmin({ erreur: "Entre 1 et 1000 jours." }, 400);
+      R.jourMinClan = j; await env.CLASSEMENT.put(CLE_REGLAGES, JSON.stringify(R)); return repAdmin({ ok: true });
+    }
+    case "clanSupprimer": {
+      const C = await lireClans(env), c = C.clans[String(d.clan || "")]; if(!c) return repAdmin({ erreur: "introuvable" }, 404);
+      c.membres.forEach((m) => { delete C.parJoueur[m.id]; }); delete C.clans[c.id];
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C)); return repAdmin({ ok: true });
+    }
     case "codeCreer": {
       const c = normCode(d.code); if(c.length < 3) return repAdmin({ erreur: "Code trop court (3 caractères au moins)." }, 400);
       if(parr.speciaux[c] || parr.codes[c]) return repAdmin({ erreur: "Ce code existe déjà." }, 400);
@@ -212,6 +294,12 @@ export default {
       if(!env.CLASSEMENT) return repAdmin({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
       if(request.method === "POST") return adminPost(request, env);
       return repAdmin({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/clans"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return clansPost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
     }
     if(url.pathname === "/api/parrainage"){
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
