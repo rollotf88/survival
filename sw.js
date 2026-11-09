@@ -42,6 +42,8 @@ var FICHIERS = [
   "images/entree-fond.webp",
   "images/sac-dos.webp",
   "images/logo.webp",
+  "images/case.webp",
+  "images/case-sel.webp",
   "images/lieux/maison.webp",
   "images/lieux/rue.webp",
   "images/lieux/super.webp",
