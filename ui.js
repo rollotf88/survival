@@ -823,33 +823,56 @@ function validerFamille(){
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "saisie"){ var b = document.querySelector("[data-act=saisieok]"); if(b) b.click(); } });
 
 /* ---------- Pastilles du haut : ce qu'elles veulent dire ---------- */
+/* ---------- Pastilles du haut : fenêtres façon jeu (en-tête, tuiles, détail en journal) ---------- */
+function teteInfo(icone, titre, valeur, cls){ return '<div class="infotete ' + (cls || "") + '"><span class="it-ico">' + icone + '</span><span class="it-txt"><small>' + titre + '</small><b>' + valeur + '</b></span></div>'; }
+function tuiles(t){ return '<div class="tuiles">' + t.map(function(x){ return '<div class="tuile ' + (x[2] || "") + '"><b>' + x[1] + '</b><small>' + x[0] + '</small></div>'; }).join("") + '</div>'; }
 function openInfo(id){
-  var h = "";
+  var h = "", v = vivants().length, L = [];
   if(id === "eau" || id === "nour"){
-    var eau = id === "eau", r = rations(id), b = besoinNuit(id), nuits = b ? Math.floor(r / Math.max(1, vivants().length)) : 0;
-    h = '<h2>' + ic(eau ? "bouteille" : "conserve", eau ? "💧" : "🥫") + ' ' + (eau ? "Rations d’eau" : "Rations de nourriture") + ' : ' + r + '</h2>'
-      + '<p>Chaque nuit, chaque membre ' + (eau ? "boit" : "mange") + ' <b>1 ration</b> tout seul. Si sa jauge ' + (eau ? "de soif" : "de faim") + ' est basse (sous ' + BAL.rattrapage + '), il en prend une de plus quand il en reste assez pour les autres.</p>'
-      + '<p class="g2 msg">🌙 Cette nuit : <b>' + Math.min(b, r) + ' ration' + (Math.min(b, r) > 1 ? "s" : "") + '</b> · réserve pour environ <b>' + nuits + ' nuit' + (nuits > 1 ? "s" : "") + '</b></p>'
-      + (r < vivants().length ? '<p class="msg">⚠️ Pas assez pour tout le monde ce soir : ' + (eau ? "la soif" : "la faim") + ' va faire des dégâts.</p>' : '')
-      + '<p class="sub">Une ration de plus dans la journée (bouton ＋ d’un membre) ne sert qu’en urgence, quand une jauge est basse. ' + (eau ? "Le récupérateur d’eau, la bâche et la pluie remplissent la réserve." : "Le potager, la pêche, les poules et le collet remplissent la réserve.") + '</p>';
+    var eau = id === "eau", r = rations(id), b = Math.min(besoinNuit(id), r), nuits = v ? Math.floor(r / v) : 0;
+    var prod = eau ? G.ref.eau * REFUGE.eau.parJour : G.ref.pot * REFUGE.pot.parJour;
+    h = teteInfo(ic(eau ? "bouteille" : "conserve", eau ? "💧" : "🥫"), eau ? "Rations d’eau" : "Rations de nourriture", r, r < v ? "ko" : "")
+      + tuiles([["cette nuit", "−" + b, r < v ? "ko" : ""], ["gagné / nuit", "+" + prod, prod ? "ok" : ""], ["réserve", "≈ " + nuits + " nuit" + (nuits > 1 ? "s" : ""), nuits < 2 ? "ko" : nuits < 4 ? "moy" : "ok"]]);
+    if(r < v) L.push(["b2", "⚠️ Pas assez pour tout le monde ce soir : " + (eau ? "la soif" : "la faim") + " va faire des dégâts."]);
+    L.push(["", "🌙 Chaque nuit, chacun " + (eau ? "boit" : "mange") + " 1 ration, et 1 de plus si sa jauge tombe sous " + BAL.rattrapage + "."]);
+    if(prod) L.push(["g2", ic(eau ? "ref_eau" : "ref_pot", eau ? "🪣" : "🥕") + " " + (eau ? "Le récupérateur" : "Le potager") + " rapporte " + prod + " ration" + (prod > 1 ? "s" : "") + " par nuit."]);
+    else L.push(["", (eau ? "🪣 Construis un récupérateur d’eau, fabrique une bâche, ou profite de la pluie." : "🥕 Construis un potager, pêche à l’étang, élève des poules ou pose des collets.")]);
+    L.push(["", "➕ Une ration de plus dans la journée (bouton ＋ d’un membre) ne sert qu’en urgence."]);
+    h += puces(L);
   } else if(id === "soin"){
-    var l = []; for(var k in G.stock.n) if(OBJETS[k].soin) l.push(icone(k) + " " + nommer(k, G.stock.n[k]) + " (+" + OBJETS[k].soin + " PV)");
-    h = '<h2>' + ic("bandage", "🩹") + ' Objets de soin : ' + soinsDispo() + '</h2><p>' + (l.length ? l.join("<br>") : "Aucun soin au refuge.") + '</p>'
-      + '<p class="sub">Pour soigner quelqu’un, touche le ＋ de sa carte. Le meilleur soin adapté est choisi tout seul.' + (bonusSoin() ? " Grâce au soigneur, chaque soin rend " + bonusSoin() + " PV de plus." : "") + ' La nuit, un membre bien nourri regagne ' + BAL.regenPV + ' PV.</p>';
+    var cs = []; for(var k in G.stock.n) if(OBJETS[k].soin) cs.push(caseObjet(k, { act:"aucun", cle:k, n:G.stock.n[k], fixe:true }));
+    var blesses = vivants().filter(function(x){ return x.hp < 100; }).length;
+    h = teteInfo(ic("bandage", "🩹"), "Objets de soin", soinsDispo(), soinsDispo() ? "" : "ko")
+      + tuiles([["blessés", blesses, blesses ? "ko" : "ok"], ["bonus soigneur", bonusSoin() ? "+" + bonusSoin() + " PV" : "—", bonusSoin() ? "ok" : ""], ["repos / nuit", "+" + BAL.regenPV + " PV", ""]])
+      + (cs.length ? etageres(cs, 5) : '');
+    L.push(["", "➕ Pour soigner quelqu’un, touche le ＋ de sa carte : le soin le mieux adapté est choisi tout seul."]);
+    if(!cs.length) L.push(["b2", "🩹 Aucun soin au refuge : cherche à l’hôpital, au supermarché, ou fabrique des bandages à l’atelier."]);
+    h += puces(L);
   } else if(id === "def"){
-    var p = [];
-    if(G.ref.barr) p.push(ic("ref_barr", "🧱") + " Barricade niveau " + G.ref.barr + " : +" + G.ref.barr * BAL.defenseBarricade);
-    equipes().forEach(function(o){ if(OBJETS[o.id].def) p.push(icone(o.id) + " " + OBJETS[o.id].nom + " en main : +" + OBJETS[o.id].def); });
-    if(compter("piege") > 0) p.push(icone("piege") + " Piège à zombies : +" + BAL.piegeDef + " (un seul usage)");
-    if(chien()) p.push(ic("chien", "🐕") + " " + chien().nom + " monte la garde : +" + BAL.chien.defense);
-    var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce);
-    h = '<h2>' + ic("bouclier", "🛡️") + ' Défense de nuit : ' + defenseNuit() + '</h2><p>' + (p.length ? p.join("<br>") : "Rien pour l’instant : construis la barricade et garde des armes au refuge.") + '</p>'
-      + '<p class="msg">🧟 Cette nuit : environ <b>' + ch + ' %</b> de risque d’attaque, d’une force de <b>' + f + ' à ' + (f + 2) + '</b>. Si votre défense est plus faible, ils blessent quelqu’un, volent de la nourriture et abîment la barricade.</p>';
+    var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce), d = defenseNuit();
+    var etat = d >= f + 2 ? "ok" : d >= f ? "moy" : "ko";
+    h = teteInfo(ic("bouclier", "🛡️"), "Défense de nuit", d, etat)
+      + tuiles([["risque cette nuit", ch + " %", ch >= 50 ? "ko" : ch >= 30 ? "moy" : "ok"], ["force attendue", f + " à " + (f + 2), ""], ["verdict", d >= f + 2 ? "Solide" : d >= f ? "Juste" : "Trop faible", etat]]);
+    if(G.ref.barr) L.push(["g2", ic("ref_barr", "🧱") + " Barricade niveau " + G.ref.barr + " : +" + G.ref.barr * BAL.defenseBarricade]);
+    equipes().forEach(function(o){ if(OBJETS[o.id].def) L.push(["g2", icone(o.id) + " " + OBJETS[o.id].nom + " en main : +" + OBJETS[o.id].def]); });
+    if(compter("piege") > 0) L.push(["g2", icone("piege") + " Piège à zombies : +" + BAL.piegeDef + " (un seul usage)"]);
+    if(chien()) L.push(["g2", ic("chien", "🐕") + " " + chien().nom + " monte la garde : +" + BAL.chien.defense]);
+    if(!L.length) L.push(["b2", "🧱 Rien pour l’instant : construis la barricade et garde des armes en main."]);
+    L.push(["b2", "🧟 Attaque perdue : un blessé, de la nourriture volée et un niveau de barricade détruit."]);
+    h += puces(L);
   } else if(id === "moral"){
     var visage = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟"); // le même visage que la pastille du haut
-    h = '<h2>' + visage + ' Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt. <b>À ' + BAL.moralHaut + ' ou plus, l’équipe trouve 1 objet de plus en fouille.</b></p>'
-      + '<p>' + (G.moral < BAL.moralBas ? '<span class="moins">⚠️ Sous ' + BAL.moralBas + ', l’équipe fouille moins bien.</span>' : 'Sous ' + BAL.moralBas + ', l’équipe fouillerait moins bien.') + '</p>'
-      + '<p class="sub">Pour le remonter : les objets de confort (peluche, photo, cartes…) au refuge, les bons choix le matin, les chapitres réussis, un chien' + (vivants().some(function(x){ return x.trait === "optimiste"; }) ? ", et votre optimiste" : "") + '.</p>';
+    var mo = 0; G.stock.o.concat(equipes()).forEach(function(o){ mo += OBJETS[o.id].moral || 0; }); for(var kk in G.stock.n) mo += (OBJETS[kk].moral || 0) * G.stock.n[kk];
+    var gain = BAL.moralBonusObjet * mo + (G.feu ? BAL.feu.moral : 0) + BAL.traits.optimiste * vivants().filter(function(x){ return x.trait === "optimiste"; }).length;
+    var net = gain - BAL.moralPerteNuit, m = Math.round(G.moral);
+    h = teteInfo(visage, "Moral de la famille", m + " / 100", m < BAL.moralBas ? "ko" : m >= BAL.moralHaut ? "ok" : "")
+      + '<div class="jmoral"><span class="z-bas" style="width:' + BAL.moralBas + '%"></span><span class="z-mid" style="width:' + (BAL.moralHaut - BAL.moralBas) + '%"></span><span class="z-haut" style="width:' + (100 - BAL.moralHaut) + '%"></span><i style="left:' + m + '%"></i></div>'
+      + '<div class="jmoral-leg"><span>fouille moins bien</span><span>normal</span><span>+1 objet</span></div>'
+      + tuiles([["perte / nuit", "−" + BAL.moralPerteNuit, "ko"], ["gain / nuit", "+" + gain, gain ? "ok" : ""], ["bilan / nuit", (net >= 0 ? "+" + net : "−" + (-net)), net >= 0 ? "ok" : "ko"]]);
+    L.push(["", "🧸 Les objets de confort au refuge (peluche, photo, cartes…) remontent le moral chaque nuit."]);
+    L.push(["", "🔥 Un feu de cheminée, les bons choix du matin, les chapitres et les missions réussis aussi."]);
+    L.push(["b2", "💀 Une mort fait chuter le moral de 25."]);
+    h += puces(L);
   }
   show(h + BTN_FERMER());
 }

@@ -702,3 +702,20 @@ body.fond{touch-action:pan-y}
 .slot.use{box-shadow:0 0 0 2px var(--bad) !important}
 .slot.use::before{content:"!";position:absolute;left:-5px;top:-6px;width:14px;height:14px;border-radius:50%;background:var(--bad);color:#fff;font-size:10px;font-weight:800;line-height:14px;text-align:center;z-index:1}
 body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.5px var(--bad);background:color-mix(in srgb,var(--bad) 18%,var(--bg))}
+/* ---------- Fenêtres des pastilles du haut ---------- */
+.infotete{display:flex;align-items:center;gap:12px;margin:0 0 8px}
+.it-ico{flex:0 0 58px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:30px;background:radial-gradient(circle at 50% 35%,var(--card),var(--bg));border:3px solid var(--bois);box-shadow:0 3px 0 rgba(20,10,4,.3)}
+.it-ico .ico{width:36px;height:36px}
+.it-txt small{display:block;font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.it-txt b{display:block;font-family:"Bangers","Impact",sans-serif;font-size:34px;line-height:1;letter-spacing:.03em;color:var(--ink)}
+.infotete.ok .it-ico{border-color:var(--ok)}.infotete.ko .it-ico{border-color:var(--bad)}.infotete.ko .it-txt b{color:var(--bad)}
+.tuiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.tuile{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 4px;text-align:center;box-shadow:0 2px 0 var(--line)}
+.tuile b{display:block;font-size:18px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tuile small{display:block;font-size:10.5px;font-weight:700;color:var(--mut);line-height:1.15}
+.tuile.ok b{color:var(--ok)}.tuile.moy b{color:var(--acc)}.tuile.ko b{color:var(--bad)}
+.jmoral{position:relative;display:flex;height:14px;border-radius:8px;overflow:visible;border:2px solid var(--bois);margin:2px 0 3px}
+.jmoral span{display:block;height:100%}
+.jmoral .z-bas{background:color-mix(in srgb,var(--bad) 60%,var(--bg));border-radius:6px 0 0 6px}.jmoral .z-mid{background:color-mix(in srgb,var(--line) 70%,var(--bg))}.jmoral .z-haut{background:color-mix(in srgb,var(--ok) 60%,var(--bg));border-radius:0 6px 6px 0}
+.jmoral i{position:absolute;top:-6px;width:6px;height:22px;margin-left:-3px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px var(--card)}
+.jmoral-leg{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--mut);margin-bottom:8px}
