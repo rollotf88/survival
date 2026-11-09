@@ -340,18 +340,65 @@ function ligneObjet(id, n, inst){
   var extra = inst && inst.sol ? barre("🔧", Math.round(inst.sol / o.sol * 100)) + '<small>' + (unite ? inst.sol + unite : 'Solidité ' + inst.sol + ' / ' + o.sol) + '</small>' : '<small>' + o.desc + '</small>';
   return '<div class="eq"><span class="em">' + icone(id) + '</span><span class="eqt"><b>' + o.nom + (n > 1 ? " ×" + n : "") + '</b>' + extra + '</span></div>';
 }
+/* Stock en cases, façon jeu mobile : onglets par famille, une case par objet (quantité, usure),
+   et la fiche de l'objet touché en dessous (avec « Équiper sur… » pour les armes, outils et sacs). */
+var FAMILLES_STOCK = [
+  ["tout", "📦", "Tout", null],
+  ["vivres", "🥫", "Vivres", ["eau", "nour", "energie"]],
+  ["soins", "🩹", "Soins", ["soin"]],
+  ["combat", "🗡️", "Combat", ["arme", "munition", "defense"]],
+  ["outils", "🔦", "Outils", ["outil", "sac", "voiture", "installation"]],
+  ["materiaux", "🪵", "Matériaux", ["materiau"]],
+  ["divers", "🧸", "Divers", ["confort", "animal"]]
+];
+var filtreStock = "tout", selStock = null, msgStock = "";
+function casesStock(){
+  var t = [];
+  for(var k in G.stock.n) if(G.stock.n[k] > 0) t.push({ cle:"n:" + k, id:k, n:G.stock.n[k] });
+  G.stock.o.forEach(function(o){ t.push({ cle:"o:" + o.uid, id:o.id, n:1, inst:o }); });
+  var ordre = CATEGORIES.map(function(c){ return c[0]; });
+  return t.sort(function(a, b){ return ordre.indexOf(OBJETS[a.id].cat) - ordre.indexOf(OBJETS[b.id].cat) || (OBJETS[a.id].nom < OBJETS[b.id].nom ? -1 : 1); });
+}
 function openStock(){
-  var h = '<h2>' + ic("caisse", "📦") + ' Le stock du refuge</h2><p class="sub">💧 ' + rations("eau") + ' rations d’eau · 🥫 ' + rations("nour") + ' rations de nourriture'
-    + (G.reste.eau || G.reste.nour ? ' (dont ' + G.reste.eau + ' eau et ' + G.reste.nour + ' nourriture déjà entamées)' : '') + '</p>';
-  var vide = true;
-  CATEGORIES.forEach(function(c){
-    var lignes = "";
-    for(var k in G.stock.n) if(OBJETS[k].cat === c[0]) lignes += ligneObjet(k, G.stock.n[k]);
-    G.stock.o.filter(function(o){ return OBJETS[o.id].cat === c[0]; }).forEach(function(o){ lignes += ligneObjet(o.id, 1, o); });
-    if(lignes){ vide = false; h += '<b>' + c[1] + '</b><div class="eqs">' + lignes + '</div>'; }
-  });
-  if(vide) h += '<p>Le stock est vide.</p>';
+  var tout = casesStock(), F = FAMILLES_STOCK.filter(function(f){ return f[0] === filtreStock; })[0] || FAMILLES_STOCK[0];
+  var vis = tout.filter(function(c){ return !F[3] || F[3].indexOf(OBJETS[c.id].cat) >= 0; });
+  if(selStock && !tout.some(function(c){ return c.cle === selStock; })) selStock = null;
+  var h = '<h2>' + ic("caisse", "📦") + ' Le stock du refuge</h2>'
+    + '<p class="sub">' + ic("bouteille", "💧") + ' ' + rations("eau") + ' · ' + ic("conserve", "🥫") + ' ' + rations("nour") + ' rations · ' + tout.length + ' case' + (tout.length > 1 ? "s" : "") + '</p>';
+  if(msgStock){ h += '<p class="g2 msg">' + msgStock + '</p>'; msgStock = ""; }
+  h += '<div class="invtabs">' + FAMILLES_STOCK.map(function(f){
+    var nb = f[3] ? tout.filter(function(c){ return f[3].indexOf(OBJETS[c.id].cat) >= 0; }).length : tout.length;
+    return '<button class="invtab' + (f[0] === filtreStock ? " on" : "") + '" data-act="invf" data-id="' + f[0] + '"' + (nb || f[0] === "tout" ? "" : " disabled") + '>' + f[1] + '<small>' + f[2] + '</small></button>';
+  }).join("") + '</div>';
+  // La grille : les objets, puis des cases vides pour garder un vrai « sac de jeu »
+  var nbCases = Math.max(15, Math.ceil(vis.length / 5) * 5);
+  h += '<div class="inv">';
+  for(var k = 0; k < nbCases; k++){
+    var c = vis[k];
+    if(!c){ h += '<span class="islot vide"></span>'; continue; }
+    var o = OBJETS[c.id], us = c.inst && c.inst.sol ? Math.round(c.inst.sol / o.sol * 100) : null;
+    h += '<button class="islot f-' + famillePick(c.id) + (c.cle === selStock ? " sel" : "") + '" data-act="invsel" data-id="' + c.cle + '" aria-label="' + o.nom + (c.n > 1 ? " ×" + c.n : "") + '">' + icone(c.id)
+      + (c.n > 1 ? '<span class="nb">' + c.n + '</span>' : '')
+      + (us !== null ? '<span class="usure"><i class="' + niveau(us) + '" style="width:' + us + '%"></i></span>' : '') + '</button>';
+  }
+  h += '</div>';
+  // Fiche de l'objet touché
+  var sel = tout.filter(function(c){ return c.cle === selStock; })[0];
+  if(sel){
+    var o = OBJETS[sel.id], d = sel.inst;
+    h += '<div class="invfiche"><span class="em">' + icone(sel.id) + '</span><span class="eqt"><b>' + o.nom + (sel.n > 1 ? " ×" + sel.n : "") + '</b><small>' + o.desc + '</small>'
+      + (d && d.sol ? barre("🔧", Math.round(d.sol / o.sol * 100)) + '<small>' + (o.nuit ? d.sol + " nuits restantes" : o.lumiere ? d.sol + " fouilles restantes" : "Solidité " + d.sol + " / " + o.sol) + '</small>' : '') + '</span></div>';
+    if(o.emplacement && d){
+      h += '<p class="sub">Équiper sur :</p><div class="invequip">' + G.m.map(function(x, i){
+        if(!x.al) return "";
+        var porte = x.eq[o.emplacement];
+        return '<button class="loc" data-act="invequip" data-id="' + i + ':' + o.emplacement + ':' + d.uid + '"><span class="em">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (porte ? "remplace : " + OBJETS[porte.id].nom : "case vide") + '</small></button>';
+      }).join("") + '</div>';
+    }
+  } else if(!tout.length) h += '<p>Le stock est vide.</p>';
+  else h += '<p class="sub">Touche une case pour voir l’objet.</p>';
   show(h + BTN_FERMER());
+  if(sel){ var fi = document.querySelector(".invfiche"); if(fi) fi.scrollIntoView({ block:"nearest" }); }
 }
 
 /* ---------- Refuge : construire et atelier (onglets) ---------- */
@@ -744,7 +791,10 @@ document.addEventListener("click", function(e){
   }
   else if(a === "cfin"){ apresEtape(avantFouille()); return; }
   else if(a === "son"){ basculerSon(); return; }
-  else if(a === "stock"){ openStock(); return; }
+  else if(a === "stock"){ selStock = null; openStock(); return; }
+  else if(a === "invf"){ filtreStock = id; openStock(); return; }
+  else if(a === "invsel"){ selStock = selStock === id ? null : id; openStock(); return; }
+  else if(a === "invequip"){ var qe = id.split(":"); if(equiper(+qe[0], qe[1], +qe[2])) msgStock = "✅ " + G.m[+qe[0]].nom + " porte maintenant " + nommer(G.m[+qe[0]].eq[qe[1]].id, 1) + "."; selStock = null; render(); openStock(); return; }
   else if(a === "chapitre"){ openChapitre(); return; }
   else if(a === "mission"){ openMission(); return; }
   else if(a === "livrer"){ var lm = livrerMission(); render(); if(lm) show('<h2>🎯 Mission réussie</h2><p>' + lm + '</p>' + BTN_FERMER()); return; }
