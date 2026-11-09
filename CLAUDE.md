@@ -154,6 +154,8 @@ Portraits des zombies et de Marco (2026-11-09, Gemini, grille 2 × 2) : `images/
 
 Voiture dessinée (2026-11-09, Gemini, même cadrage pour les deux) : `images/voiture-panne.webp` / `voiture-ok.webp` (recadrées en bande, fond détouré) dans l'onglet 🚗 Voiture ; les 3 emplacements sont posés sur le dessin (`POS_PIECES` en % : batterie dans le moteur, roue sur l'essieu, courroie à l'avant), glisser-déposer inchangé ; réparée = image avec phares allumés. Le contrôleur d'affichage teste aussi l'onglet Voiture. Bandeau de nuit (`images/nuit.webp`, Gemini : le refuge barricadé la nuit, zombies autour) en haut du bilan de chaque nuit (`.banniere`, testé par le contrôleur). Version « aube » (`images/aube.webp`, même cadrage, griffures sur les planches) quand il n'y a pas eu d'attaque, la nuit avec zombies sinon. Images restantes possibles : lieux (5 grilles 2 × 2), refuge amélioré, game over
 
+Illustrations des lieux (2026-11-09, en cours) : grilles 2 × 2 de Gemini (format 16:9) découpées dans `images/lieux/<nom>.webp` (640 px de large) ; `IMAGES_LIEUX` (nom du lieu → fichier), `imageLieu(L)`, `vignetteLieu(L)` (data.js). Bandeau en haut du résultat de fouille, vignette dans « Où envoyer l'équipe ? » (sinon l'icône dessinée). `preparer-site.py` copie aussi `images/lieux`. Faits : Maison voisine, Rue des pavillons, Supermarché, Hôpital (version à enseignes en français demandée, à remplacer quand Fabien envoie le fichier). Restent 16 lieux (4 grilles). Le contrôleur teste aussi la liste des lieux et le résultat
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

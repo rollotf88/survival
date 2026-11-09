@@ -20,6 +20,11 @@ var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue",
   "Camping des Pins":"lieuCamping", "Clinique vétérinaire":"lieuClinique", "Bunker du survivaliste":"lieuBunker", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase" };
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
+// Illustrations peintes des lieux (Gemini, grilles de 4 découpées) : images/lieux/<nom>.webp
+var IMAGES_LIEUX = { "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital" };
+function imageLieu(L){ return typeof ICONES_SVG !== "undefined" && IMAGES_LIEUX[L.nom] ? "images/lieux/" + IMAGES_LIEUX[L.nom] + ".webp" : null; }
+// Petite vignette pour la liste des lieux (sinon l'icône dessinée)
+function vignetteLieu(L){ var i = imageLieu(L); return i ? '<img class="vign" src="' + i + '" alt="">' : iconeLieu(L); }
 // Portraits peints (images faites avec ChatGPT par Fabien, découpées dans images/)
 var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-maman.webp", "Léo":"images/portrait-leo.webp", "Emma":"images/portrait-emma.webp",
   // Recrues (Leonardo.ai, 2026-11-09)

@@ -144,7 +144,7 @@ function openLoc(){
     var dg = radio ? (d < 0.3 ? "📻 Danger faible" : d < 0.5 ? "📻 Danger moyen" : "📻 Danger élevé") : "Danger inconnu";
     var peut = equipePeutAller(team, i, auto);
     var pourquoi = !reste ? "" : auto && !voitureReparee() ? " · 🚗 voiture nécessaire (en panne)" : auto && !voitureOk(i) ? " · ⛽ pas assez d’essence" : !peut ? " · 😴 trop fatigués" : "";
-    h += '<button class="loc"' + (reste && peut ? "" : " disabled") + ' data-act="loc" data-id="' + i + '"><b>' + iconeLieu(L) + ' ' + L.nom + (G.mission && G.mission.lieu === i ? " 🎯" : "") + '</b> <span class="pill">' + (L.peche ? "🐟 " + G.lieux[i].poissons + (G.lieux[i].butin.length ? " · " + G.lieux[i].butin.length + " obj." : "") : reste ? reste + " objet" + (reste > 1 ? "s" : "") : "Vidé") + '</span><small>' + DISTANCES[L.distance] + ' · ⚡ −' + coutEnergie(i, auto) + (auto ? " · ⛽ −" + litres(i) + " L" : "") + pourquoi + '</small><small>' + (cd.join(" · ") || "Accès libre") + ' · ' + dg + '</small></button>';
+    h += '<button class="loc"' + (reste && peut ? "" : " disabled") + ' data-act="loc" data-id="' + i + '"><b>' + vignetteLieu(L) + ' ' + L.nom + (G.mission && G.mission.lieu === i ? " 🎯" : "") + '</b> <span class="pill">' + (L.peche ? "🐟 " + G.lieux[i].poissons + (G.lieux[i].butin.length ? " · " + G.lieux[i].butin.length + " obj." : "") : reste ? reste + " objet" + (reste > 1 ? "s" : "") : "Vidé") + '</span><small>' + DISTANCES[L.distance] + ' · ⚡ −' + coutEnergie(i, auto) + (auto ? " · ⛽ −" + litres(i) + " L" : "") + pourquoi + '</small><small>' + (cd.join(" · ") || "Accès libre") + ' · ' + dg + '</small></button>';
   });
   show(h + BTN_FERMER("Annuler"));
 }
@@ -218,7 +218,7 @@ function openCombat(){
 }
 
 function openResultat(r){
-  var i = r.lieu, L = LIEUX[i], h = '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
+  var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
   h += '<p><b>' + (r.pris.length ? "Vous trouvez " + nommerListe(r.pris) + "." : "Vous rentrez les mains vides.") + '</b></p>';
   if(r.pris.length) h += '<div class="loot">' + r.pris.map(function(g){ return '<span>' + icone(g.id) + (g.n > 1 ? "×" + g.n : "") + '</span>'; }).join("") + '</div>';
   if(r.laisses.length) h += '<p class="sub">🎒 Plus de place : vous laissez sur place ' + nommerListe(r.laisses) + '. Un sac permet de rapporter plus.</p>';

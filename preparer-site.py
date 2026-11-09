@@ -13,6 +13,11 @@ os.makedirs("site/images"); os.makedirs("site/sons")
 for f in FICHIERS: shutil.copy(f, "site/" + f)
 for f in os.listdir("images"):
     if f.endswith((".webp", ".png")): shutil.copy("images/" + f, "site/images/" + f)
+# Illustrations des lieux (sous-dossier)
+if os.path.isdir("images/lieux"):
+    os.makedirs("site/images/lieux")
+    for f in os.listdir("images/lieux"):
+        if f.endswith(".webp"): shutil.copy("images/lieux/" + f, "site/images/lieux/" + f)
 for f in os.listdir("sons"): shutil.copy("sons/" + f, "site/sons/" + f)
 
 # Nouvelle version du cache hors connexion (date + heure)
