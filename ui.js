@@ -34,7 +34,36 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<ul>' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
 }
-function show(h){ $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+/* ---------- Le personnage qui parle (comme dans les MMO) ----------
+   Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
+   À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
+var PNJ = { marchand:"Le marchand", roux:"Mme Roux", blesse:"Survivant blessé", pillard:"Chef des pillards", marco:"Marco" };
+function parle(nom, portrait){
+  var sh = $("sheet"); if(!sh) return;
+  var img = portrait.charAt(0) === "<" ? portrait : '<img src="images/portrait-' + portrait + '.webp" alt="">';
+  var l = document.createElement("div"); l.id = "locuteur"; l.setAttribute("aria-hidden", "true");
+  l.innerHTML = '<span class="loc-portrait">' + img + '</span><span class="loc-nom">' + nom + '</span>';
+  $("modal").appendChild(l); sh.classList.add("parle");
+  var place = function(){ var r = sh.getBoundingClientRect(); l.style.left = (r.left + 12) + "px"; l.style.top = Math.max(4, r.top - 46) + "px"; };
+  place(); requestAnimationFrame(place);
+}
+// Qui parle dans un événement du matin (null = personne en particulier)
+function locuteurEvenement(ev){
+  var m = function(x){ return x ? [x.nom, iconeMembre(x)] : null; };
+  switch(ev.titre){
+    case "🧔 Un marchand louche": return [PNJ.marchand, "marchand"];
+    case "🚪 Un survivant blessé": return [PNJ.blesse, "blesse"];
+    case "🏴 Des pillards": return [PNJ.pillard, "pillard"];
+    case "👵 La vieille voisine": return [PNJ.roux, "roux"];
+    case "🚪 On frappe à la porte": return G.evCible ? [G.evCible, iconeMembre({ nom:G.evCible, icone:G.evIcone, al:true, hp:100, en:100, faim:100, soif:100 })] : null;
+    case "🤒 La fièvre": return m(membre(G.evCible));
+    case "🧸 Cauchemars": return m(parRole("Emma"));
+    case "🍽️ Dispute à table": return m(parRole("Maman"));
+    case "🐕 Un chien errant": return ["Le chien", '<img src="images/rex.webp" alt="" class="loc-rex">'];
+  }
+  return null;
+}
 function hide(){ $("modal").style.display = "none"; }
 var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
@@ -336,6 +365,7 @@ function openMarche(){
       + (o.fait ? "✅ Échange déjà fait" : "Donner " + nommer(o.donne.id, o.donne.n) + " (vous en avez " + compter(o.donne.id) + ") contre " + nommer(o.recoit.id, o.recoit.n)) + '</small></button>';
   });
   show(h + BTN_FERMER());
+  parle("Marco", "marco");
 }
 
 /* ---------- Fiche du chien ---------- */
@@ -578,6 +608,7 @@ function openEvent(ev){
   var h = (im ? '<div class="banniere"><img src="images/evenements/' + im + '.webp" alt=""></div>' : '') + '<h2>' + G.ev.titre + '</h2><p>' + texteEvenement(G.ev) + '</p>';
   G.ev.choix.forEach(function(c, i){ h += '<button class="loc" data-act="ev" data-id="' + i + '"><b>' + c[0] + '</b></button>'; });
   show(h);
+  var qui = locuteurEvenement(G.ev); if(qui) parle(qui[0], qui[1]);
 }
 function finiSiMorts(){ if(!vivants().length){ over(); return true; } return false; }
 function over(){
@@ -668,6 +699,7 @@ function fermer(){
   var A = G.annonces && G.annonces.shift();
   if(!A || !vivants().length){ hide(); return; }
   show('<h2>📖 Chapitre ' + A.num + ' terminé</h2><p><b>' + A.titre + '</b></p><p>' + perso(A.texte) + '</p><p class="g2 msg">🎁 ' + [A.recompense, A.moral ? "Moral +" + A.moral : ""].filter(Boolean).join(" · ") + '</p><p class="histoire"><i>' + perso(chapitreCourant().recit) + '</i></p><p class="sub">Prochain : ' + chapitreCourant().titre + ' — ' + chapitreCourant().objectif + '</p>' + BTN_FERMER("Continuer"));
+  var conteur = vivants()[0]; if(conteur) parle(conteur.nom, iconeMembre(conteur));
 }
 
 /* ---------- Glisser-déposer des pièces de voiture ----------

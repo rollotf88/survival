@@ -179,6 +179,8 @@ Retours de Fabien du 2026-11-09 (après-midi) :
 - Combat : le zombie touché tremble (`.z.coup`), le membre blessé clignote en rouge (`.cm.blesse`) grâce à `dernierPV` ; portraits plus grands sur écrans hauts
 - Bruitages fabriqués en code (`SONS_SYNTH`, `jouerSynth` dans ui.js) : feu (allumer la cheminée), poules (poulailler), moulinet (poisson ferré), bois (toucher une case du stock ou du refuge)
 
+Personnage qui parle (2026-11-09, idée de Fabien « comme les MMO ») : `parle(nom, portrait)` (ui.js, à appeler après `show`) affiche un médaillon `#locuteur` avec le portrait qui dépasse du haut de la fenêtre à gauche et le nom à côté ; `show()` l'efface. Utilisé : événements (`locuteurEvenement` : marchand, survivant blessé, chef des pillards, Mme Roux — portraits Gemini `images/portrait-marchand|blesse|pillard|roux.webp` —, recrue qui frappe, membre fiévreux, Emma (cauchemars), Maman (dispute), Rex), marché (Marco), fin de chapitre (un membre vivant raconte). Pas pour les fenêtres de gestion (stock, refuge…)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT
