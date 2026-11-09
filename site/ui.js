@@ -140,7 +140,7 @@ function rGame(){
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
-    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : on ? "✔ Part fouiller" : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
+    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
     var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + classeUsure(o) + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
@@ -353,6 +353,7 @@ function openMembre(i){
   var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2><p class="sub">' + (T ? T.icone + " " + T.nom + " · <span class=\"plus\">+ " + T.plus + "</span> · <span class=\"moins\">− " + T.moins + "</span>" : "Recrue") + (x.al ? "" : " · 💀 " + accorder(roleDe(x), "mort")) + '</p></span></div>';
   if(!x.al){ show(h + BTN_FERMER()); return; }
   [["❤️","Vie",x.hp],["⚡","Énergie",x.en],[ic("conserve", "🥫"),"Faim",x.faim],[ic("bouteille", "💧"),"Soif",x.soif]].forEach(function(j){ h += '<div class="jauge">' + barre(j[0], j[2]) + '<small>' + j[1] + ' ' + j[2] + '/100</small></div>'; });
+  if(x.folie) h += '<div class="jauge folie">' + barre("🌀", x.folie) + '<small>Folie ' + x.folie + '/100 · ' + (fou(x) ? "fouille moins bien, peut faire des choses terribles la nuit ; à 100, il part pour toujours" : "encore maître de lui") + '</small></div>';
   h += '<p class="sub">Équipement (touche une case) :</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
     return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '<small>' + (o ? OBJETS[o.id].nom : e[2]) + '</small></button>';

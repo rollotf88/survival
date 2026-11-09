@@ -206,7 +206,9 @@ function openDormir(){
   if(chien()) L.push(["", ic("chien", "🐕") + " " + chien().nom + " mange 1 ration et monte la garde."]);
   if(compter("poule")) L.push(["", ic("poule", "🐔") + " Les poules boivent " + Math.ceil(compter("poule") / BAL.poules.eauPour) + " ration(s) d’eau et pondent peut-être."]);
   L.push([defenseNuit() >= f + 2 ? "g2" : defenseNuit() >= f ? "" : "b2", "🧟 Environ " + ch + " % de risque d’attaque, force " + f + " à " + (f + 2) + " · votre défense : " + defenseNuit() + "."]);
+  if(sacrificePossible()) L.push(["b2", "💀 Quelqu’un va mourir de faim, et il n’y a plus rien. Il reste une solution, la pire de toutes…"]);
   show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2><p class="sub">La journée se termine. Cette nuit :</p>' + puces(L)
+    + (sacrificePossible() ? '<button class="loc sombre" data-act="sacrifice"><b>🕯️ Le choix impossible</b><small>Sacrifier l’un des vôtres pour que les autres survivent</small></button>' : '')
     + '<div class="row"><button class="btn" data-act="endday">🌙 Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
 }
 document.addEventListener("click", function(e){

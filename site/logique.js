@@ -511,7 +511,8 @@ function finExpedition(){
   var survivants = team.filter(function(x){ return x.al; });
   var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.trait === "fouineur"; }) ? BAL.traits.fouine : 0)
     - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur
-    + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0);
+    + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0)
+    - survivants.filter(fou).length;
   nb = Math.max(survivants.length ? 1 : 0, Math.round(nb * mult));
   // On pioche nb objets ; les ingrédients de cuisine croisés en chemin viennent en plus (ils ne prennent pas la place d'une trouvaille)
   var trouves = [], kb = 0, pris0 = 0;
@@ -858,6 +859,7 @@ function finJour(){
   G.reste.eau += pe; G.reste.nour += pn;
   if(pe) n.push(["g2", ic("ref_eau", "🪣") + " Le récupérateur a recueilli " + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]);
   if(pn) n.push(["g2", ic("ref_pot", "🥕") + " Le potager a donné " + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]);
+  nuitFolie(n);
   nuitMonde(n);
   var moral = 0;
   G.stock.o.concat(equipes()).forEach(function(o){ moral += OBJETS[o.id].moral || 0; });
@@ -964,6 +966,67 @@ function reussirMission(){
 function chien(){
   if(G.chien === true) G.chien = { nom:"Rex", faim:0 }; // anciennes sauvegardes
   return G.chien || null;
+}
+/* ---------- Le dernier recours et la folie (contenu sensible) ----------
+   Quand la famille meurt de faim et qu'il n'y a plus rien, on peut proposer l'impensable. Rien n'est montré :
+   seulement un choix et ses conséquences. La folie qui suit annonce la fin. CONTENUS_SENSIBLES est réglé par ui.js. */
+var CONTENUS_SENSIBLES = true;
+function sacrificePossible(){
+  return CONTENUS_SENSIBLES && vivants().length >= 2 && famine() && !platsDispo().length && vivants().some(function(x){ return x.faim <= BAL.sacrifice.faimMax; });
+}
+function sacrifier(i){
+  var x = G.m[i], S = BAL.sacrifice; if(!x || !x.al || !sacrificePossible()) return null;
+  x.hp = 0; x.al = false;
+  G.dd.push({ n:x.nom, r:roleDe(x), c:(FEMININS.indexOf(roleDe(x)) >= 0 ? "sacrifiée" : "sacrifié") + " pour que les autres survivent", j:G.day, ic:x.icone });
+  rendreAuStock([x]);
+  G.reste.nour += S.viande; changerMoral(S.moral);
+  vivants().forEach(function(y){ y.folie = Math.min(100, (y.folie || 0) + R(S.folie[0], S.folie[1])); });
+  G.stats.sacrifices = (G.stats.sacrifices || 0) + 1;
+  return "Personne ne parlera jamais de cette nuit. Au matin, " + x.nom + " n’est plus là, et la famille a de quoi manger (+" + S.viande + " rations)… mais plus personne n’ose croiser le regard des autres. Moral " + S.moral + ".";
+}
+function fou(x){ return x.al && (x.folie || 0) >= BAL.folie.seuil; }
+// Chaque nuit : la folie monte (ou baisse un peu si le moral tient), et pousse parfois à un acte fou
+function nuitFolie(n){
+  var F = BAL.folie;
+  vivants().forEach(function(x){
+    if(!x.al || !x.folie) return;
+    x.folie = Math.max(0, Math.min(100, x.folie + (G.moral >= F.moralCalme ? F.calme : F.hausse)));
+    if(!fou(x)) return;
+    changerMoral(-F.moralParFou);
+    if(x.folie >= 100){
+      // Il a perdu la raison : il part dans la nuit et ne revient pas
+      x.hp = 0; x.al = false; changerMoral(-25);
+      var cause = FEMININS.indexOf(roleDe(x)) >= 0 ? "partie dans la nuit, folle à lier" : "parti dans la nuit, fou à lier";
+      n.push(["mort", x.nom + " a perdu la raison. Une nuit, " + (FEMININS.indexOf(roleDe(x)) >= 0 ? "elle" : "il") + " est sorti" + (FEMININS.indexOf(roleDe(x)) >= 0 ? "e" : "") + " sans un mot et n’est jamais revenu" + (FEMININS.indexOf(roleDe(x)) >= 0 ? "e" : "") + ".", roleDe(x)]);
+      G.dd.push({ n:x.nom, r:roleDe(x), c:cause, j:G.day, ic:x.icone }); rendreAuStock([x]);
+      return;
+    }
+    if(hasard() < x.folie / F.diviseur) acteFou(x, n);
+  });
+}
+function acteFou(x, n){
+  var autres = vivants().filter(function(y){ return y !== x; }), t = R(0, 4);
+  if(t === 0 && autres.length){
+    var y = autres[R(0, autres.length - 1)], dg = R(15, 30);
+    n.push(["b2", "🌀 Pris de folie, " + x.nom + " frappe violemment " + y.nom + " (−" + dg + " PV)."]);
+    blesser(y, dg, n, "tué par " + x.nom + (FEMININS.indexOf(roleDe(x)) >= 0 ? ", devenue folle" : ", devenu fou"));
+  } else if(t === 1){
+    vivants().forEach(function(y){ y.en = Math.max(0, y.en - 15); });
+    n.push(["b2", "🌀 " + x.nom + " a hurlé toute la nuit : personne n’a dormi (−15 ⚡ chacun)."]);
+  } else if(t === 2){
+    var d2 = R(10, 25);
+    var fx = FEMININS.indexOf(roleDe(x)) >= 0 ? "e" : "";
+    n.push(["b2", "🌀 " + x.nom + " est sorti" + fx + " en pleine nuit… et revient au petit matin, couvert" + fx + " de griffures (−" + d2 + " PV)."]);
+    blesser(x, d2, n, "mort dehors, seul dans la nuit");
+  } else if(t === 3){
+    var v = vivants(), z = v[R(0, v.length - 1)], d3 = R(10, 25), abime = G.ref.barr > 0;
+    if(abime) G.ref.barr--;
+    n.push(["b2", "🌀 " + x.nom + " a laissé la porte grande ouverte : des zombies sont entrés ! " + z.nom + " est blessé" + (FEMININS.indexOf(roleDe(z)) >= 0 ? "e" : "") + " (−" + d3 + " PV)" + (abime ? ", la barricade est abîmée" : "") + "."]);
+    blesser(z, d3, n, "tué pendant l’attaque de nuit");
+  } else {
+    var pr = prendreRations("nour", R(2, 4));
+    n.push(["b2", "🌀 " + x.nom + " a mangé en cachette une partie des réserves" + (pr ? " (−" + pr + " rations)" : "") + "."]);
+  }
 }
 // Famine : il ne reste pas de quoi nourrir la famille ce soir
 function famine(){ return rations("nour") < vivants().length; }

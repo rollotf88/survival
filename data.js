@@ -119,6 +119,22 @@ var BAL = {
     viande: 6,               // en cas de famine, le manger donne 6 rations...
     moral: -25               // ...mais le moral s'effondre
   },    // mais la nuit suivante, ce membre récupère 20 de moins
+  // Dernier recours (contenu sensible, désactivable dans le menu) : quand la famille meurt de faim
+  sacrifice: {
+    faimMax: 10,             // proposé seulement si quelqu'un est à 10 de faim ou moins, sans plus rien à manger
+    viande: 10,              // +10 rations de nourriture
+    moral: -40,              // le moral s'effondre
+    folie: [35, 60]          // chaque survivant gagne 35 à 60 de folie
+  },
+  // La folie (après le dernier recours) : elle monte chaque nuit et pousse à des actes fous
+  folie: {
+    seuil: 20,               // à partir de 20, le membre est « pris de folie » (fouille 1 objet de moins)
+    hausse: 6,               // +6 par nuit...
+    calme: -3,               // ...ou −3 si le moral est au moins à 60
+    moralCalme: 60,
+    moralParFou: 2,          // chaque membre fou fait perdre 2 de moral par nuit
+    diviseur: 180            // chance d'un acte fou chaque nuit = folie / 180 (jusqu'à 55 %)
+  },
   // Crochetage (mini-jeu) : quand personne n'a d'outil pour ouvrir une porte
   crochetage: {
     goupilles: 3,            // nombre de goupilles à mettre en place

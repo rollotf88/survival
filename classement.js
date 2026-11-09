@@ -227,3 +227,34 @@ function poserMonde(){
   envoyerMonde(!dejaEnvoye).then(remplirMonde, remplirMonde);
 }
 poserMonde(); // l'accueil a pu s'afficher avant le chargement de ce fichier
+
+/* ---------- Le choix impossible (contenu sensible) ---------- */
+function lireSensible(){ try{ return localStorage.getItem("survival_sensible") !== "0"; }catch(e){ return true; } }
+CONTENUS_SENSIBLES = lireSensible();
+function openSacrifice(choix, confirme){
+  if(!sacrificePossible()){ show('<h2>🕯️ Le choix impossible</h2><p>Ce n’est plus nécessaire.</p>' + BTN_FERMER()); return; }
+  var h = '<div class="sacrifice"><h2>🕯️ Le choix impossible</h2>';
+  if(choix === undefined){
+    h += '<p>Il n’y a plus rien à manger. Demain, quelqu’un mourra de faim. Dans le silence, une idée terrible fait son chemin…</p>'
+      + '<p class="sub">Si tu choisis quelqu’un, la famille aura de quoi tenir quelques jours (+' + BAL.sacrifice.viande + ' rations). Mais le moral s’effondrera, et la <b>folie</b> s’installera chez les survivants : elle grandira chaque nuit et les poussera à des actes terribles.</p>'
+      + '<div class="sacr-liste">' + vivants().map(function(x){ var i = G.m.indexOf(x); return '<button class="sacr-m" data-act="sacrchoix" data-id="' + i + '"><span class="cmp">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>❤️ ' + x.hp + ' · faim ' + x.faim + '</small></button>'; }).join("") + '</div>'
+      + '<button class="btn" style="width:100%" data-act="close">Non. Jamais.</button>';
+  } else {
+    var x = G.m[choix];
+    h += '<p>' + x.nom + '… Vraiment ? Il n’y aura pas de retour en arrière, et personne n’oubliera.</p>'
+      + '<div class="row"><button class="btn alt" data-act="sacrok" data-id="' + choix + '">Oui, il le faut</button><button class="btn" data-act="close">Non</button></div>';
+  }
+  show(h + '</div>');
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "sacrifice") openSacrifice();
+  else if(a === "sacrchoix") openSacrifice(+id);
+  else if(a === "sacrok"){
+    var t = sacrifier(+id); render();
+    show('<div class="sacrifice"><h2>La nuit la plus longue</h2><p>' + (t || "Ce n’est plus possible.") + '</p>' + BTN_FERMER("Continuer") + '</div>');
+    if(typeof sauver === "function") sauver();
+  }
+  else if(a === "menusensible"){ CONTENUS_SENSIBLES = !CONTENUS_SENSIBLES; try{ localStorage.setItem("survival_sensible", CONTENUS_SENSIBLES ? "1" : "0"); }catch(e2){} openMenu(); }
+});

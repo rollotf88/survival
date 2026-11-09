@@ -104,6 +104,8 @@ var MALIN = {
     if(MALIN.missions !== false && livraisonPossible() >= 0 && (mission().id !== "medicament" || soinsDispo() > 2)) livrerMission();
     VOITURE.pieces.forEach(function(p){ installerPiece(p); });
     while(voitureReparee() && G.voiture.essence <= VOITURE.reservoir - VOITURE.litresJerrican && fairePlein());
+    // Dernier recours (seulement si MALIN.sacrifice) : le plus faible est sacrifié
+    if(MALIN.sacrifice && sacrificePossible()){ var fv = vivants().sort(function(a, b){ return a.hp - b.hp; })[0]; sacrifier(G.m.indexOf(fv)); }
     // Cuisine : tant qu'il y a moins de 2 plats par personne et assez de planches pour le feu de cheminée
     if(MALIN.cuisine !== false){
       var gc = 0;

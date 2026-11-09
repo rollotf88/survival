@@ -37,6 +37,8 @@ function reglesGuide(){
       "Dans la cuisine (ou l’onglet 🍲 du refuge), la cuisinière à bois transforme tes vivres et des ingrédients (épices, huile, farine, champignons, baies, herbes) en plats : " +
       RECETTES_CUISINE.map(function(r){ var o = OBJETS[r.id]; return o.nom.toLowerCase() + " (" + r.portions + " portions)"; }).join(", ") + ". " +
       "Chaque plat brûle " + nommer("planche", B.cuisine.planches) + " et coûte " + B.energieCraft + " ⚡ au cuisinier. Une portion nourrit plus qu’une ration (+35 à +50 de faim au lieu de +30) avec un bonus (moral, PV, énergie), mais les plats se gâtent en 3 nuits (les galettes en 8). La nuit, chacun mange d’abord un plat s’il y en a. Le potager donne parfois des herbes."],
+    ["Le dernier recours", "🕯️",
+      "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
     ["La forêt et le bois", "🌲",
       "La forêt (à partir du jour " + LIEUX.filter(function(L){ return L.bois; })[0].jour + ") : chaque survivant qui a une hache en main (case arme) abat un arbre et rapporte " + B.foret.coupe[0] + " ou " + B.foret.coupe[1] + " planches. " +
       "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
@@ -103,6 +105,7 @@ function openMenu(){
   h += t("revoirastuces", "💡 Astuces", "Les revoir");
   h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
   if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
+  h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus durs" : "🚫 Contenus durs", CONTENUS_SENSIBLES ? "Activés (dernier recours)" : "Coupés");
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
   h += '</div>';
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';

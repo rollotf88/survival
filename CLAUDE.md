@@ -215,9 +215,15 @@ Cuisine (2026-11-09, idée de Fabien) :
 
 Bug corrigé (2026-11-09, signalé par Fabien : « morte de soif alors que j'avais de l'eau ») : une jauge de soif ou de faim tombée à 0 ne remontait plus jamais (la ration de la nuit compense juste la perte du jour, et le rattrapage exigeait une jauge > 0) → perte de PV chaque nuit jusqu'à la mort, avec de l'eau au stock. Maintenant le rattrapage marche aussi à 0, et une jauge en danger (≤ `BAL.critique` = 10) reçoit sa ration de rattrapage en priorité même s'il en reste peu. Simulation : Malin 317, Naïf 29
 
+Le dernier recours et la folie (2026-11-09, idée de Fabien, contenu sensible) :
+- `sacrificePossible()` : contenus durs activés (`CONTENUS_SENSIBLES`, réglage « 🕯️ Contenus durs » du menu, localStorage `survival_sensible`, activé par défaut), au moins 2 vivants, famine, aucun plat, quelqu'un à 10 de faim ou moins. Proposé au coucher (`openDormir` : ligne d'alerte + bouton sombre « 🕯️ Le choix impossible ») → `openSacrifice` (classement.js) : portraits des vivants, confirmation, texte suggéré sans aucune description. `sacrifier(i)` : +10 rations, moral −40, chaque survivant gagne 35 à 60 de folie (`BAL.sacrifice`)
+- Folie (`x.folie`, `BAL.folie`, `nuitFolie` dans `finJour`) : +6 par nuit (−3 si moral ≥ 60) ; à 20 ou plus (`fou(x)`) : carte « 🌀 Folie N », jauge dans la fiche, 1 objet de moins en fouille, moral −2 par nuit, et chaque nuit folie/180 de chances d'un acte fou (`acteFou` : frappe un autre membre, hurle toute la nuit, sort seul et revient blessé, laisse la porte ouverte = blessé + barricade abîmée, mange en cachette). À 100 : part dans la nuit pour toujours
+- Simulation : sacrifier n'est jamais rentable (Malin 303 avec, 317 sans) : ça retarde la fin de quelques jours puis la folie emporte la famille, comme voulu
+- Classement d'âge : rester suggéré (aucune image), réglage pour couper ; à revoir avant les stores
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
-2. Cannibalisme en dernier recours (comme manger Rex) : choisir qui, gros malus de moral, nouvel état « Folie » (actions folles : frappe un survivant, réveille tout le monde, sort la nuit, laisse la porte ouverte) qui annonce la fin. Question de classement d'âge (PEGI) à garder en tête : rester suggéré, sans image, et peut-être un réglage « contenus sensibles »
+2. Dernier recours et folie — FAIT (voir plus haut)
 3. Rencontres de PNJ au hasard avec dialogues à choix (façon livre dont vous êtes le héros) : ressources, ou la mort d'un membre selon les réponses
 4. Parrainage : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
 5. Panneau d'administration (nombre de joueurs, supprimer, gérer les codes), protégé : mot de passe choisi par Fabien et rangé comme secret Cloudflare (Claude ne le voit jamais)
