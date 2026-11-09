@@ -143,13 +143,16 @@ const ENTETES_ADMIN = { "Content-Type": "application/json; charset=utf-8", "Cach
 const repAdmin = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: ENTETES_ADMIN });
 async function empreinte(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)))); }
 async function memeMdp(a, b){ const x = await empreinte(a), y = await empreinte(b); let d = 0; for(let i = 0; i < x.length; i++) d |= x[i] ^ y[i]; return d === 0; }
+// Mot de passe PROVISOIRE (demande de Fabien, 2026-11-09, en attendant son propre hébergeur) : utilisé tant que le
+// secret ADMIN_MDP n'existe pas. À remplacer avant une vraie sortie : n'importe qui peut deviner « 123456 ».
+const MDP_PROVISOIRE = "123456";
 async function adminPost(request, env){
-  if(!env.ADMIN_MDP || String(env.ADMIN_MDP).length < 10) return repAdmin({ erreur: "Le mot de passe d’administration n’est pas encore configuré dans Cloudflare (secret ADMIN_MDP, 10 caractères au moins)." }, 503);
+  const mdpAdmin = env.ADMIN_MDP || MDP_PROVISOIRE;
   const ip = request.headers.get("CF-Connecting-IP") || "inconnue", cleEchecs = "admin_echecs_" + ip;
   const echecs = +(await env.CLASSEMENT.get(cleEchecs)) || 0;
   if(echecs >= 5) return repAdmin({ erreur: "Trop d’essais. Réessaie dans 15 minutes." }, 429);
   const mdp = (request.headers.get("Authorization") || "").replace(/^Bearer /, "");
-  if(!mdp || !(await memeMdp(mdp, env.ADMIN_MDP))){
+  if(!mdp || !(await memeMdp(mdp, mdpAdmin))){
     await env.CLASSEMENT.put(cleEchecs, String(echecs + 1), { expirationTtl: 900 });
     return repAdmin({ erreur: "Mot de passe incorrect." }, 401);
   }

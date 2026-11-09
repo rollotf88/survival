@@ -236,6 +236,7 @@ Parrainage (2026-11-09, idée de Fabien) :
 - Menu ☰ en 4 colonnes en paysage bas ; « 🕯️ Contenus / Durs : activés »
 
 Panneau d'administration (2026-11-09) :
+- MOT DE PASSE PROVISOIRE « 123456 » (`MDP_PROVISOIRE` dans worker/index.js, demandé par Fabien en attendant son propre hébergeur) tant que le secret `ADMIN_MDP` n'existe pas : À CHANGER avant une vraie sortie
 - `admin.html` (page à part, noindex) → `/api/admin` (worker/index.js, POST). Mot de passe = secret Cloudflare `ADMIN_MDP` (10 caractères au moins), créé par Fabien dans le tableau de bord Cloudflare (Workers → survival-refuge → Paramètres → Variables et secrets → Ajouter → type Secret). Claude ne le voit jamais. Envoyé dans l'en-tête Authorization (HTTPS), comparé par empreinte SHA-256 ; 5 mauvais essais = adresse bloquée 15 min (clé KV `admin_echecs_<ip>`) ; pas d'en-tête CORS sur ces routes ; mot de passe gardé dans l'onglet (sessionStorage) jusqu'à la déconnexion
 - Onglets : Résumé (joueurs, actifs 24 h / 7 j, familles et survivants en vie, parties, morts, zombies, classement, codes, parrainages, dernières familles tombées), Joueurs (500 derniers vus, supprimer = retiré du monde et du classement), Classement (retirer un score), Codes (créer, activer / désactiver, supprimer les codes spéciaux comme « 18-25 »)
 
