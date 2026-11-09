@@ -34,7 +34,7 @@ function envoyerScore(){
   try{ localStorage.setItem("survival_pseudo", pseudo); }catch(e){}
   $("msgcl").textContent = "Envoi…";
   fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ id:idAppareil(), pseudo:pseudo, score:dernierEnvoi.score, jours:dernierEnvoi.jours }) })
+    body:JSON.stringify({ id:idAppareil(), pseudo:pseudo, score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif() }) })
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.ok){ $("msgcl").textContent = "Score refusé par le serveur."; return; }
@@ -47,7 +47,7 @@ function envoyerScore(){
 function envoyerScoreAuto(){
   var el = function(){ return $("envoiauto"); };
   fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ id:idAppareil(), pseudo:lirePseudo(), score:dernierEnvoi.score, jours:dernierEnvoi.jours }) })
+    body:JSON.stringify({ id:idAppareil(), pseudo:lirePseudo(), score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif() }) })
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!el()) return;
@@ -63,10 +63,10 @@ function openClassement(message){
     var el = $("listecl"); if(!el) return;
     if(!d.scores || !d.scores.length){ el.textContent = "Personne n’a encore envoyé de score. Sois le premier !"; return; }
     var h = '<ol class="classement">' + d.scores.map(function(e, k){
-      return '<li class="' + (e.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span><b>' + echapper(e.pseudo) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>';
+      return '<li class="' + (e.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>';
     }).join("") + '</ol>';
     // Hors des 50 premiers : on montre quand même sa place
-    if(d.moi && d.monRang > d.scores.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + echapper(d.moi.pseudo) + '</b><span class="pts">⭐ ' + d.moi.score + ' · ' + d.moi.jours + ' j</span></li></ol>';
+    if(d.moi && d.monRang > d.scores.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">⭐ ' + d.moi.score + ' · ' + d.moi.jours + ' j</span></li></ol>';
     h += '<p class="sub">' + d.total + ' joueur' + (d.total > 1 ? "s" : "") + ' · ⭐ = meilleur score (1 point par jour et par survivant)</p>';
     el.outerHTML = h;
   }).catch(function(){ var el = $("listecl"); if(el) el.textContent = MSG_HORS_LIGNE; });
@@ -119,7 +119,7 @@ function openStats(){
       + '</div>';
     if(!J.parties) h += '<p class="sub">Joue une première partie pour remplir tes stats.</p>';
   }
-  show(h + '<button class="btn" style="width:100%" data-act="menu">↩️ Menu</button>');
+  show(h + '<div class="row"><button class="btn alt" data-act="cadres">🖼️ Mon cadre</button><button class="btn" data-act="menu">↩️ Menu</button></div>');
 }
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "pseudo") envoyerScore(); });
 
@@ -294,7 +294,7 @@ function openInviter(){
     + '<div class="moncode"><small>Ton code</small><b id="moncode">…</b></div><p class="msg" id="msgcode"></p>'
     + '<div class="row"><button class="btn" data-act="partagercode" disabled id="btnpartage">📤 Partager</button><button class="btn alt" data-act="copiercode" disabled id="btncopie">📋 Copier le lien</button></div>'
     + '<button class="loc" data-act="saisircode"><b>🎟️ J’ai un code d’invitation</b><small>Un seul code d’ami par appareil (et les codes spéciaux)</small></button>'
-    + '<button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
+    + '<div class="row"><button class="btn alt" data-act="sacbonus">🎒 Mes bonus (' + lireBonus().length + ')</button><button class="btn alt" data-act="menu">↩️ Menu</button></div>');
   var code = null; try{ code = localStorage.getItem("survival_code"); }catch(e){}
   var poser = function(c, n){ code = c; var e = $("moncode"); if(!e) return; e.textContent = c; $("btnpartage").disabled = false; $("btncopie").disabled = false; $("btnpartage").setAttribute("data-id", c); $("btncopie").setAttribute("data-id", c); if(n) $("msgcode").textContent = "👥 Déjà utilisé par " + n + " ami" + (n > 1 ? "s" : "") + " !"; };
   if(code) poser(code);
@@ -400,7 +400,7 @@ function adresseClans(){ return adresseClassement().replace("/api/classement", "
 var etatClans = null, choixBlason = 1;
 function jourPartie(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.cumule ? G.day : (typeof enCours !== "undefined" && enCours ? enCours.day : 0); }
 function appelClans(corps){
-  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = jourPartie();
+  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = jourPartie(); corps.cadre = cadreActif();
   if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
   return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
 }
@@ -416,10 +416,11 @@ function afficherClans(msg){
     var c = d.monClan;
     h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small></span></div>';
     h += '<div class="clan-membres">' + c.membresListe.map(function(m){
-      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + echapper(m.pseudo || "?") + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + '</small>'
+      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
     h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
+      + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>'
       + '<div class="row"><button class="btn alt" data-act="clanquitter">Quitter le clan</button><button class="btn" data-act="close">Fermer</button></div>';
     show(h); return;
   }
@@ -429,7 +430,7 @@ function afficherClans(msg){
     return '<div class="clan-l">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + '</b><small>👑 ' + echapper(c.chef) + ' · ' + c.membres + ' / 5 · ' + c.jours + ' j</small></span>'
       + (ok ? '<button class="mini" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '</div>';
   }).join("") + '</div>' : '<p>Aucun clan pour l’instant. Sois le premier à en fonder un !</p>';
-  h += (ok ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="clancreer">🏴 Fonder un clan</button>' : '') + BTN_FERMER();
+  h += (ok ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="clancreer">🏴 Fonder un clan</button>' : '') + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>' + BTN_FERMER();
   show(h);
 }
 function openCreerClan(err){
@@ -589,3 +590,61 @@ document.addEventListener("click", function(e){
   else if(a === "guerreattaquer") openAssaut(id);
   else if(a === "guerrego") lancerAssaut(id);
 });
+
+/* =====================================================================
+   FINITIONS DES CLANS (phase 4) : classement des clans, alerte quand on est attaqué,
+   cadres d'avatar débloqués par les succès (affichés à côté du pseudo partout)
+   ===================================================================== */
+var CADRES = [
+  { id:"bois",    nom:"Bois",    min:0,  desc:"Le cadre de départ" },
+  { id:"bronze",  nom:"Bronze",  min:5,  desc:"5 succès débloqués" },
+  { id:"argent",  nom:"Argent",  min:10, desc:"10 succès débloqués" },
+  { id:"or",      nom:"Or",      min:15, desc:"15 succès débloqués" },
+  { id:"legende", nom:"Légende", min:999, desc:"Tous les succès débloqués" }
+];
+function nbSuccesSur(){ return typeof nbSucces === "function" ? nbSucces() : 0; }
+function cadreMin(c){ return c.id === "legende" ? (typeof SUCCES !== "undefined" ? SUCCES.length : 18) : c.min; }
+function cadreDebloque(c){ return nbSuccesSur() >= cadreMin(c); }
+function cadreActif(){ var c = ""; try{ c = localStorage.getItem("survival_cadre") || ""; }catch(e){} var C = CADRES.find(function(x){ return x.id === c; }); return C && cadreDebloque(C) ? c : "bois"; }
+// Le pseudo d'un joueur dans son cadre (classement, clan, guerre)
+function pseudoCadre(p, cadre){ return '<span class="pc cadre-' + (cadre || "bois") + '">' + echapper(p || "?") + '</span>'; }
+function openCadres(msg){
+  var a = cadreActif(), n = nbSuccesSur(), ex = typeof iconeMembre === "function" ? iconeMembre({ nom:"Papa", r:"Papa", icone:"👨", al:true, hp:100, en:100, faim:100, soif:100 }) : "👤";
+  show('<h2>🖼️ Mon cadre</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '') + '<p class="sub">Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Débloque les plus beaux avec les succès (' + n + ' débloqués).</p>'
+    + '<div class="cadres">' + CADRES.map(function(c){ var ok = cadreDebloque(c);
+      return '<button class="cadre-choix' + (c.id === a ? " on" : "") + '" data-act="choixcadre" data-id="' + c.id + '"' + (ok ? "" : " disabled") + '><span class="cadre-ex cadre-' + c.id + '">' + ex + '</span><b>' + c.nom + '</b><small>' + (ok ? (c.id === a ? "✔ Porté" : c.desc) : "🔒 " + c.desc) + '</small></button>'; }).join("") + '</div>'
+    + '<p class="sub">Aperçu : ' + pseudoCadre(lirePseudo() || "Ton pseudo", a) + '</p><button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
+}
+function openClassementClans(){
+  show('<h2>🏆 Classement des clans</h2><p class="sub" id="listeclans">Chargement…</p><div class="row"><button class="btn alt" data-act="clans">⚔️ Clans</button><button class="btn" data-act="close">Fermer</button></div>');
+  appelClans({ action:"classementClans" }).then(function(d){
+    var el = $("listeclans"); if(!el) return;
+    if(!d.clans || !d.clans.length){ el.textContent = "Aucun clan pour l’instant."; return; }
+    el.outerHTML = '<ol class="classement clans">' + d.clans.map(function(c, k){
+      return '<li class="' + (c.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + '</b><span class="pts">🏆 ' + c.gagnees + ' · ★ ' + c.etoiles + '</span></li>';
+    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · 🏆 guerres gagnées · ★ étoiles gagnées en tout' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
+  }).catch(function(){ var el = $("listeclans"); if(el) el.textContent = MSG_HORS_LIGNE; });
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "cadres") openCadres();
+  else if(a === "choixcadre"){ try{ localStorage.setItem("survival_cadre", id); }catch(e2){} openCadres("🖼️ Cadre « " + CADRES.find(function(c){ return c.id === id; }).nom + " » porté !"); }
+  else if(a === "classementclans") openClassementClans();
+});
+// Au lancement : ton clan a-t-il été attaqué depuis ta dernière visite ?
+(function(){
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  setTimeout(function(){
+    appelClans({ action:"guerre" }).then(function(d){
+      var W = d && d.guerre; if(!W) return;
+      var vu = 0; try{ vu = +localStorage.getItem("survival_vu_assauts") || 0; }catch(e){}
+      var nouveaux = W.assauts.filter(function(s){ return !s.nous && s.t > vu; });
+      var max = W.assauts.reduce(function(m, s){ return Math.max(m, s.t || 0); }, vu);
+      try{ localStorage.setItem("survival_vu_assauts", max); }catch(e){}
+      if(!vu || !nouveaux.length || typeof fileSucces === "undefined") return;
+      nouveaux.slice(0, 3).forEach(function(s){ fileSucces.push({ icone:"⚔️", titre:"Ton clan est attaqué !", nom:s.qui + " a attaqué " + s.cible + (s.etoiles ? " (" + "★".repeat(s.etoiles) + ")" : " : repoussé !") }); });
+      montrerSucces();
+    }).catch(function(){});
+  }, 6000);
+})();

@@ -931,3 +931,21 @@ button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}
 .gu-vs{font-family:"Bangers","Impact",sans-serif;font-size:26px;color:var(--bad)}
 .carte-guerre{margin-bottom:8px}
 .gu-etoiles{font-size:40px;text-align:center;color:#e8a92a;letter-spacing:.1em;margin:0 0 6px}
+/* ---------- Cadres d'avatar (pseudo encadré) ---------- */
+.pc{display:inline-block;padding:0 7px;border-radius:9px;border:2px solid #8a5a34;background:color-mix(in srgb,#8a5a34 12%,transparent);line-height:1.35;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.pc.cadre-bronze{border-color:#b8733b;background:linear-gradient(90deg,rgba(184,115,59,.18),rgba(232,170,110,.25))}
+.pc.cadre-argent{border-color:#9fb0bb;background:linear-gradient(90deg,rgba(159,176,187,.2),rgba(230,238,242,.35));box-shadow:0 0 0 1px rgba(255,255,255,.4) inset}
+.pc.cadre-or{border-color:#e0a929;background:linear-gradient(90deg,rgba(224,169,41,.22),rgba(255,224,130,.35));box-shadow:0 0 6px rgba(224,169,41,.55)}
+.pc.cadre-legende{border-color:#c23bd6;background:linear-gradient(90deg,rgba(194,59,214,.22),rgba(255,170,60,.3));box-shadow:0 0 8px rgba(194,59,214,.6);animation:legende 3s ease-in-out infinite}
+@keyframes legende{50%{box-shadow:0 0 12px rgba(255,170,60,.8)}}
+.cadres{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px;margin:6px 0 8px}
+.cadre-choix{display:flex;flex-direction:column;align-items:center;gap:2px;border:2px solid var(--line);border-radius:12px;background:var(--bg);padding:6px 3px;cursor:pointer;color:var(--ink);font:inherit}
+.cadre-choix.on{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.cadre-choix:disabled{opacity:.5;cursor:default}
+.cadre-choix small{font-size:10px;color:var(--mut);text-align:center}
+.cadre-ex{display:block;width:46px;height:46px;border-radius:12px;overflow:hidden;font-size:34px;line-height:46px;text-align:center;border:3px solid #8a5a34}
+.cadre-ex .portrait{width:100%;height:100%;display:block}
+.cadre-ex.cadre-bronze{border-color:#b8733b}.cadre-ex.cadre-argent{border-color:#c9d4da;box-shadow:0 0 4px #fff}.cadre-ex.cadre-or{border-color:#e0a929;box-shadow:0 0 8px rgba(224,169,41,.7)}.cadre-ex.cadre-legende{border-color:#c23bd6;box-shadow:0 0 10px rgba(194,59,214,.8)}
+.classement.clans li{display:flex;align-items:center;gap:6px}
+.classement.clans .blason{flex-basis:30px;width:30px;height:30px}
+@media (prefers-reduced-motion:reduce){.pc.cadre-legende{animation:none}}

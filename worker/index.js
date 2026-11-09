@@ -20,8 +20,8 @@ async function onRequestGet({ request, env }){
   const k = moi ? liste.findIndex((e) => e.id === moi) : -1;
   return reponse({
     total: liste.length,
-    scores: liste.slice(0, 50).map(({ pseudo, score, jours, id }) => ({ pseudo, score, jours, moi: !!moi && id === moi })),
-    monRang: k >= 0 ? k + 1 : null, moi: k >= 0 ? { pseudo: liste[k].pseudo, score: liste[k].score, jours: liste[k].jours } : null
+    scores: liste.slice(0, 50).map(({ pseudo, score, jours, id, cadre }) => ({ pseudo, score, jours, cadre: cadre || "", moi: !!moi && id === moi })),
+    monRang: k >= 0 ? k + 1 : null, moi: k >= 0 ? { pseudo: liste[k].pseudo, score: liste[k].score, jours: liste[k].jours, cadre: liste[k].cadre || "" } : null
   });
 }
 
@@ -37,8 +37,9 @@ async function onRequestPost({ request, env }){
   const liste = await lireListe(env);
   const ancien = liste.find((e) => e.id === id);
   let record = true;
-  if(ancien){ if(score > ancien.score){ ancien.score = score; ancien.jours = jours; } else record = false; ancien.pseudo = pseudo; }
-  else liste.push({ id, pseudo, score, jours });
+  const cadre = cadreDe(d);
+  if(ancien){ if(score > ancien.score){ ancien.score = score; ancien.jours = jours; } else record = false; ancien.pseudo = pseudo; if(cadre) ancien.cadre = cadre; }
+  else liste.push({ id, pseudo, score, jours, cadre });
   liste.sort((a, b) => b.score - a.score || a.jours - b.jours);
   const garde = liste.slice(0, GARDES);
   await env.CLASSEMENT.put(CLE, JSON.stringify(garde));
@@ -140,6 +141,8 @@ async function parrainagePost(request, env){
 // (combat tactique dans le jeu). Étoiles : 1 pour la victoire, +1 si personne n'est mort, +1 si gagné en 3 tours ou moins.
 // Butin : une petite part de la réserve adverse (jamais plus de 30 % de ce qu'elle avait au début de la guerre).
 const DUREE_GUERRE = 3, JOUR_MS = 24 * 3600 * 1000;
+const CADRES_OK = ["bois", "bronze", "argent", "or", "legende"];
+const cadreDe = (d) => CADRES_OK.indexOf(String(d.cadre || "")) >= 0 ? String(d.cadre) : "";
 function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
 function cloreGuerres(C){
   const now = Date.now();
@@ -160,7 +163,7 @@ function vueGuerre(C, W, mon, id){
   return { id: W.id, jour: j, fini: !!W.fini, gagnant: W.gagnant === mon.id ? "nous" : W.gagnant ? "eux" : null, finJour, fin: W.debut + DUREE_GUERRE * JOUR_MS,
     nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp] }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0 },
     cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
-    dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
+    dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ t: s.t || 0, jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
 }
 
 // ---------- Bastion du clan (phase 2) : réserve commune, défenses, journal ----------
@@ -192,7 +195,7 @@ async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAG
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree }; }
-function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -201,7 +204,7 @@ async function clansPost(request, env){
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
   const pseudo = nomPropre(d.pseudo, 16), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
-  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; } }
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; } }
   switch(d.action){
     case "liste": {
       const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);
@@ -216,7 +219,7 @@ async function clansPost(request, env){
       if(Object.values(C.clans).some((c) => c.nom.toLowerCase() === nom.toLowerCase())) return reponse({ erreur: "Ce nom de clan est déjà pris." });
       const blason = Math.max(1, Math.min(BLASONS_OK, Math.floor(+d.blason) || 1));
       let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
-      C.clans[cid] = { id: cid, nom, blason, chef: id, cree: now, membres: [{ id, pseudo, jour, vu: now, rejoint: now }] };
+      C.clans[cid] = { id: cid, nom, blason, chef: id, cree: now, membres: [{ id, pseudo, jour, vu: now, rejoint: now, cadre: cadreDe(d) }] };
       C.parJoueur[id] = cid; await sauver();
       return reponse({ ok: true, monClan: detailClan(C.clans[cid], id) });
     }
@@ -226,7 +229,7 @@ async function clansPost(request, env){
       if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
       const c = C.clans[String(d.clan || "")]; if(!c) return reponse({ erreur: "Ce clan n’existe plus." });
       if(c.membres.length >= MAX_CLAN) return reponse({ erreur: "Ce clan est complet (" + MAX_CLAN + " familles)." });
-      c.membres.push({ id, pseudo, jour, vu: now, rejoint: now }); C.parJoueur[id] = c.id; await sauver();
+      c.membres.push({ id, pseudo, jour, vu: now, rejoint: now, cadre: cadreDe(d) }); C.parJoueur[id] = c.id; await sauver();
       return reponse({ ok: true, monClan: detailClan(c, id) });
     }
     case "quitter": {
@@ -268,6 +271,13 @@ async function clansPost(request, env){
       for(const m in cout){ mon.reserve[m] -= cout[m]; if(!mon.reserve[m]) delete mon.reserve[m]; }
       mon.def[k]++; noter(mon, pseudo || "?", "a construit : " + k + " (niveau " + mon.def[k] + ")"); await sauver();
       return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "classementClans": {
+      const tous = Object.values(C.clans).map((c) => { const b = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 };
+        return Object.assign(resumeClan(c), { gagnees: b.gagnees, perdues: b.perdues, nulles: b.nulles, etoiles: c.etoilesTotal || 0, moi: !!mon && mon.id === c.id }); })
+        .sort((x, y) => y.gagnees - x.gagnees || y.etoiles - x.etoiles || y.jours - x.jours);
+      const k = mon ? tous.findIndex((c) => c.id === mon.id) : -1;
+      return reponse({ clans: tous.slice(0, 50), monRang: k >= 0 ? k + 1 : null, total: tous.length });
     }
     case "guerre": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
@@ -319,7 +329,7 @@ async function clansPost(request, env){
       const camp = s.camp, adv = bastionDe(C.clans[camp === "a" ? W.b : W.a] || { reserve: {} });
       s.fini = true; s.etoiles = d.victoire ? Math.max(1, Math.min(3, Math.floor(+d.etoiles) || 1)) : 0;
       // On garde la meilleure attaque par cible et par jour : seules les étoiles en plus comptent
-      W.etoiles[camp] += s.etoiles;
+      W.etoiles[camp] += s.etoiles; s.t = now; mon.etoilesTotal = (mon.etoilesTotal || 0) + s.etoiles;
       if(s.etoiles){
         const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
         const ids = Object.keys(adv.reserve).filter((k) => adv.reserve[k] > 0).sort((x, y) => adv.reserve[y] - adv.reserve[x]).slice(0, 3);

@@ -103,9 +103,8 @@ function openMenu(){
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
   if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= 100 ? "Fonder ou rejoindre" : "Dès le jour 100");
   if(typeof openInviter === "function"){
-    h += t("inviter", "🎁 Inviter", "Un colis pour toi et ton ami");
     var nc = lireColis(), nb = lireBonus().length;
-    h += t("sacbonus", (nc ? "🪂 " : "🎒 ") + "Bonus", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " gardés");
+    h += t(nc ? "sacbonus" : "inviter", (nc ? "🪂 " : "🎁 ") + "Inviter", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " bonus gardés");
   }
   if(typeof openStats === "function") h += t("stats", "📊 Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
   h += t("revoirastuces", "💡 Astuces", "Les revoir");
