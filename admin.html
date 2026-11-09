@@ -101,7 +101,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   });
   function charger(){
     message("");
-    appel(onglet === "codes" ? "resume" : onglet).then(function(d){ // les codes spéciaux sont dans le résumé if(d._statut === 401 || d._statut === 429){ deconnecter(d.erreur); return; } if(d.erreur){ message(d.erreur); return; } afficher(d); })
+    // les codes spéciaux sont dans le résumé
+    appel(onglet === "codes" ? "resume" : onglet).then(function(d){ if(d._statut === 401 || d._statut === 429){ deconnecter(d.erreur); return; } if(d.erreur){ message(d.erreur); return; } afficher(d); })
       .catch(function(){ message("Impossible de joindre le serveur."); });
   }
   function tuile(v, t){ return '<div class="tuile"><b>' + esc(v) + '</b><small>' + esc(t) + '</small></div>'; }
