@@ -391,9 +391,11 @@ document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.targ
    créer un clan, en rejoindre un (5 familles max), le quitter ; le chef peut exclure.
    Le bastion et les guerres viendront ensuite.
    ===================================================================== */
-// Blasons provisoires (emoji) : une planche Gemini les remplacera (images/blasons/1..12.webp)
+// Blasons peints (Gemini, 2026-11-09) : images/blasons/1..12.webp, dans cet ordre (l'emoji sert de secours)
 var BLASONS = ["🐺", "🦅", "🐻", "🦂", "🔥", "💀", "⚔️", "🛡️", "🌲", "🏴", "⚙️", "🐍"];
-function blason(n){ return '<span class="blason">' + (BLASONS[(n || 1) - 1] || "🏴") + '</span>'; }
+var NOMS_BLASONS = ["Loup", "Aigle", "Ours", "Scorpion", "Flamme", "Crâne", "Épées", "Bouclier", "Sapin", "Drapeau noir", "Engrenage", "Serpent"];
+function imgBlason(n){ n = Math.max(1, Math.min(12, n || 1)); return '<img src="images/blasons/' + n + '.webp" alt="' + NOMS_BLASONS[n - 1] + '">'; }
+function blason(n){ return '<span class="blason">' + imgBlason(n) + '</span>'; }
 function adresseClans(){ return adresseClassement().replace("/api/classement", "/api/clans"); }
 var etatClans = null, choixBlason = 1;
 function jourPartie(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.cumule ? G.day : (typeof enCours !== "undefined" && enCours ? enCours.day : 0); }
@@ -434,7 +436,7 @@ function openCreerClan(err){
   if(!lirePseudo()){ show('<h2>🏴 Fonder un clan</h2><p>Choisis d’abord ton pseudo (il apparaîtra dans le clan).</p><div class="row"><button class="btn" data-act="saisie" data-id="p">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
   show('<h2>🏴 Fonder un clan</h2><p class="sub">Tu en seras le chef. Les autres familles qui ont tenu assez longtemps pourront te rejoindre.</p>'
     + '<input id="nomclan" class="champ grand" maxlength="20" autocomplete="off" placeholder="Nom du clan">'
-    + '<p class="sub" style="margin:8px 0 4px">Blason :</p><div class="blasons">' + BLASONS.map(function(b, k){ return '<button class="bl' + (choixBlason === k + 1 ? " on" : "") + '" data-act="clanblason" data-id="' + (k + 1) + '">' + b + '</button>'; }).join("") + '</div>'
+    + '<p class="sub" style="margin:8px 0 4px">Blason :</p><div class="blasons">' + BLASONS.map(function(b, k){ return '<button class="bl' + (choixBlason === k + 1 ? " on" : "") + '" data-act="clanblason" data-id="' + (k + 1) + '" aria-label="' + NOMS_BLASONS[k] + '">' + imgBlason(k + 1) + '</button>'; }).join("") + '</div>'
     + '<p class="msg" id="msgclan">' + (err || "") + '</p><div class="row"><button class="btn" data-act="clancreerok">Fonder le clan</button><button class="btn alt" data-act="clans">Retour</button></div>');
 }
 document.addEventListener("click", function(e){
