@@ -462,7 +462,7 @@ function openRef(onglet){
 
 /* ---------- Nuit, événements, mort ---------- */
 function openNuit(n){
-  show('<h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
+  show('<div class="banniere"><img src="images/nuit.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
 }
 function openEvent(ev){
   G.ev = ev; G.evIdx = EVENEMENTS.indexOf(ev);

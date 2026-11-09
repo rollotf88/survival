@@ -62,6 +62,7 @@ async function toutControler(){
   G.sel = [0, 1]; G.exp = { lieu:0, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false }; G.sel = [];
   G.combat = { zombies:ZOMBIES.map(function(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }), tour:1, journal:[], resume:[], fin:null };
   openCombat(); await att(100); res.combat = controleAffichage(); hide(); G.combat = null; G.exp = null;
+  openNuit([["g2", "🧟 Attaque de nuit repoussée (force 4 contre votre défense 5)."], ["", "🐕 Rex a mangé sa ration."], ["g2", "🥕 Le potager a donné 1 ration de nourriture."], ["b2", "🥶 Nuit glaciale : on dort mal."]]); await att(100); res.nuit = controleAffichage(); hide();
   openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();
