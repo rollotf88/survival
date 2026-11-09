@@ -460,3 +460,16 @@ body.fond .panneau h1{color:var(--ink);text-shadow:none}
 .famille > .btn{margin-top:10px}
 @media (min-width:700px) and (max-height:500px){ .famille > .btn{margin-top:6px} }
 .btn.partir{white-space:nowrap}
+/* ---------- Écran du sac (2026-11-09) : noms, familles de couleur, besoins, urgence ---------- */
+.tile{padding:5px 2px 4px;--fam:var(--line);border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--fam)}
+.tile small{color:var(--ink);font-size:10.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.tile .pl{position:absolute;top:2px;left:4px;font-size:9px;font-weight:800;color:var(--mut);line-height:1}
+.f-eau{--fam:#3d8fd1}.f-nour{--fam:#5c9a3a}.f-soin{--fam:#d0443a}.f-arme{--fam:#6f6f78}.f-lumiere{--fam:#e3b62c}.f-outil{--fam:#9a6a3f}.f-moral{--fam:#d77aa8}
+.besoins{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.besoins span{display:flex;flex-direction:column;align-items:center;border:2px solid var(--line);border-radius:10px;background:var(--card);font-size:13px;line-height:1.1;padding:2px 0;opacity:.75}
+.besoins span.ok{border-color:var(--ok);opacity:1}
+.besoins small{font-size:9.5px;font-weight:800;color:var(--mut)}
+body.urgence .timer{animation:urgence .5s ease-in-out infinite alternate;border-color:var(--bad)}
+body.urgence #tsec{background:var(--bad);color:#fff;border-color:var(--bad);transform:scale(1.15)}
+@keyframes urgence{from{box-shadow:0 0 0 0 rgba(178,59,38,.0)}to{box-shadow:0 0 10px 3px rgba(178,59,38,.8)}}
+@media (prefers-reduced-motion:reduce){body.urgence .timer{animation:none}}

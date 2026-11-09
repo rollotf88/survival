@@ -39,6 +39,30 @@ function hide(){ $("modal").style.display = "none"; }
 var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
+// Familles d'objets (couleur du liseré et ordre d'affichage)
+var ORDRE_FAMILLES = ["eau", "nour", "soin", "arme", "lumiere", "outil", "moral"];
+function famillePick(k){
+  var o = OBJETS[k];
+  if(o.cat === "eau") return "eau";
+  if(o.cat === "nour" || o.cat === "energie") return "nour";
+  if(o.cat === "soin") return "soin";
+  if(o.emplacement === "arme" || o.cat === "munition") return "arme";
+  if(o.lumiere || k === "pile") return "lumiere";
+  if(o.emplacement === "outil" || o.emplacement === "sac") return "outil";
+  return "moral";
+}
+var NOM_COURT = { bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
+  lampe:"Lampe", peluche:"Peluche", photo:"Photo", cartes:"Cartes", outils:"Outils", sacados:"Sac à dos", riz:"Riz", fusil:"Fusil",
+  boiteCart:"Cartouches", pdb:"Pied-de-biche", canette:"Canette", sacoche:"Sacoche" };
+// « Ce qu'il te manque » : une case par besoin, cochée dès qu'un objet du sac y répond
+var BESOINS_SAC = [
+  ["💧", "Eau", function(o){ return o.cat === "eau"; }],
+  ["🥫", "Manger", function(o){ return o.cat === "nour"; }],
+  ["🩹", "Soins", function(o){ return o.cat === "soin"; }],
+  ["🛡️", "Défense", function(o){ return o.emplacement === "arme"; }],
+  ["🔦", "Lumière", function(o){ return !!o.lumiere; }],
+  ["🔥", "Chaleur", function(o){ return !!o.chaleur; }]
+];
 function rPick(){
   setTimeout(function(){ astuce("depart"); }, 0);
   var H = MAISONS[G.h], u = placesUtilisees(), libre = capSac() - u, cells = "", tiles = "";
@@ -48,14 +72,15 @@ function rPick(){
     for(var p = 1; p < OBJETS[k].place; p++) cells += '<button class="cell f s"' + lab + '>' + icone(k) + '</button>';
   }
   for(var i = u; i < capSac(); i++) cells += '<div class="cell"></div>';
-  for(var k in H.objets){
+  Object.keys(H.objets).sort(function(a, b){ return ORDRE_FAMILLES.indexOf(famillePick(a)) - ORDRE_FAMILLES.indexOf(famillePick(b)); }).forEach(function(k){
     var c = G.pack[k] || 0, ok = c < H.objets[k] && libre >= OBJETS[k].place;
-    tiles += '<button class="tile' + (ok ? "" : " off") + '" data-act="add" data-id="' + k + '" aria-label="Prendre ' + OBJETS[k].nom + '">' + (c ? '<span class="n">' + c + '</span>' : "") + icone(k) + '<small>' + OBJETS[k].place + ' pl.</small></button>';
-  }
+    tiles += '<button class="tile f-' + famillePick(k) + (ok ? "" : " off") + '" data-act="add" data-id="' + k + '" aria-label="Prendre ' + OBJETS[k].nom + ' (' + OBJETS[k].place + ' place' + (OBJETS[k].place > 1 ? "s" : "") + ')">' + (c ? '<span class="n">' + c + '</span>' : "") + (OBJETS[k].place > 1 ? '<span class="pl">' + OBJETS[k].place + ' pl.</span>' : "") + icone(k) + '<small>' + (NOM_COURT[k] || OBJETS[k].nom) + '</small></button>';
+  });
   var tabs = MAISONS.map(function(x, j){ return '<button class="tab' + (j === G.h ? " on" : "") + '" data-act="house" data-id="' + j + '"' + (G.seed && j !== G.h ? " disabled" : "") + '>' + ic(ICONE_MAISON[x.nom], x.icone) + ' ' + x.nom + '<small>' + x.cap + ' places</small></button>'; }).join("");
   var tm = Math.max(0, G.tl), pc = Math.min(100, Math.round(tm / BAL.tempsDepart * 100));
+  document.body.classList.toggle("urgence", tm <= 10);
   $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><span class="mode">' + (G.seed ? "🏆 Partie classée" : "🎲 Partie libre") + '</span><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
-    + '<div class="pk"><p class="sub" style="grid-area:sub">Ils arrivent ! Choisis ce que la famille emporte avant la fin du compte à rebours.</p>'
+    + '<div class="pk"><div class="besoins" style="grid-area:sub" aria-label="Ce qu’il faut emporter">' + BESOINS_SAC.map(function(b){ var ok = Object.keys(G.pack).some(function(k){ return b[2](OBJETS[k]); }); return '<span class="' + (ok ? "ok" : "") + '" title="' + b[1] + '">' + b[0] + ' ' + (ok ? "✅" : "❌") + '<small>' + b[1] + '</small></span>'; }).join("") + '</div>'
     + '<div style="grid-area:bag"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div>'
     + '<div class="stage" style="grid-area:tiles"><div class="tiles">' + tiles + '</div></div>'
     + '<div class="sub" style="grid-area:info;min-height:34px"><b>' + G.info + '</b></div>'
@@ -508,11 +533,17 @@ function tick(){
   var tm = Math.max(0, G.tl), pc = Math.min(100, Math.round(tm / BAL.tempsDepart * 100)), s = $("tsec"), b = $("tbar");
   if(s) s.textContent = "⏱ " + Math.ceil(tm) + " s";
   if(b){ b.style.width = pc + "%"; b.className = pc < 30 ? "lo" : ""; }
+  // 10 dernières secondes : tout clignote, ça cogne à la porte, le téléphone vibre
+  document.body.classList.toggle("urgence", tm <= 10 && tm > 0);
+  var sec = Math.ceil(tm);
+  if(tm <= 10 && tm > 0 && sec !== derniereSeconde){ derniereSeconde = sec; if(sec % 2 === 0) son("porte"); if(typeof vibrer === "function") vibrer(sec <= 3 ? 120 : 40); }
   if(G.tl <= 0){ demarrer(); render(); show('<h2>Trop tard !</h2><p>Les zombies enfoncent la porte. Vous fuyez avec ce qu’il y a dans le sac.</p>' + BTN_FERMER("Courir")); }
 }
+var derniereSeconde = null;
 setInterval(tick, 250);
 
 function render(){
+  if(G.ph !== "pick") document.body.classList.remove("urgence");
   document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille"); // fond peint du refuge
   if(typeof placerPiece === "function") setTimeout(placerPiece, 0); // zones cliquables de la pièce (piece.js)
   if(G.ph === "accueil") return; if(G.ph === "intro"){ rIntro(); return; } if(G.ph === "famille"){ rFamille(); return; } if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); if(typeof verifierSucces === "function") verifierSucces(); } }

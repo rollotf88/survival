@@ -144,6 +144,8 @@ Famille personnalisée, histoire, partie classée (2026-11-09, demandes de Fabie
 - Cartes : contour + coche ✔ quand un membre est choisi pour partir (la bordure « bois » cachait l'ancien contour) ; sur téléphone, l'équipement porté s'affiche en petit sous les jauges (`.porte`)
 - Badge « Powered by Netlify » : réglé par le passage à Cloudflare (2026-11-09)
 
+Écran du sac retravaillé (2026-11-09) : nom court sous chaque objet (`NOM_COURT`), liseré de couleur et ordre par famille (`famillePick`, `ORDRE_FAMILLES` : eau, manger, soins, défense, lumière, outils, moral), ligne « ce qu'il faut emporter » (`BESOINS_SAC` : eau, manger, soins, défense, lumière, chaleur, ✅ / ❌), 10 dernières secondes : classe `urgence` (barre qui clignote, compteur rouge), coups à la porte et vibrations. Bouton « 🚪 Partir ! ». Fond et sac dessiné : en attente d'une image (ChatGPT ou autre)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT
