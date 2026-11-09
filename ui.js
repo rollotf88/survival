@@ -502,6 +502,15 @@ function ingredients(ing, besoin){
   }
   return '<div class="ings2">' + t.join("") + '</div>';
 }
+// Bouton d'un travail d'atelier : le verbe, et dessous qui s'y colle (mini-portrait, −10 ⚡) ;
+// grisé avec la raison s'il manque quelque chose ou si tout le monde est trop fatigué
+function boutonTravail(texte, act, id, ing, besoin){
+  var manque = []; for(var k in ing || {}) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
+  var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? "Il faut " + nommer(besoin, 1)
+    : manque.length ? "Il manque " + nommerListe(manque) : !x ? "Tout le monde est trop fatigué" : "";
+  return '<button class="btn travail" data-act="' + act + '" data-id="' + id + '"' + (raison ? " disabled" : "") + '>'
+    + (raison ? '<span>❌ ' + raison + '</span>' : '<span>' + texte + '</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + BAL.energieCraft + ' ⚡</small>') + '</button>';
+}
 // Phrase d'état sous une recette : prêt, ou ce qui manque exactement
 function etatTravail(ing, besoin, texteOk){
   var manque = [];
@@ -559,7 +568,6 @@ function openRef(onglet){
       return caseObjet(null, { act:"refsel", cle:"b:" + k, sel:selRef === "b:" + k, icone:ic("ref_" + k, r.icone), nom:r.nom, badge:l + "/" + r.max, pret:peut, terne:mx });
     }), 5);
   } else {
-    h += '<p class="sub">Chaque travail coûte ' + BAL.energieCraft + ' ⚡ au plus reposé' + (x ? ' (' + iconeMembre(x) + ' ' + x.nom + ' ⚡' + x.en + ')' : ' : 😴 tout le monde est trop fatigué') + '.</p>';
     if(ongletRef === "fabriquer"){
       // Ce qu'on peut fabriquer tout de suite en premier, marqué d'une coche
       h += etageres(RECETTES.map(function(rec, i){ return { rec:rec, i:i, e:empechement(rec.ingredients, rec.besoin) }; })
@@ -568,16 +576,14 @@ function openRef(onglet){
           if(selRef === "c:" + r.i){
             var o = OBJETS[r.rec.id];
             fiche = '<div class="invfiche"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + '</b><small>' + o.desc + '</small></span></div>'
-              + ingredients(r.rec.ingredients, r.rec.besoin) + etatTravail(r.rec.ingredients, r.rec.besoin, "Prêt")
-              + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="craft" data-id="' + r.i + '"' + (r.e ? " disabled" : "") + '>🛠️ Fabriquer</button>';
+              + ingredients(r.rec.ingredients, r.rec.besoin) + boutonTravail("🛠️ Fabriquer", "craft", r.i, r.rec.ingredients, r.rec.besoin);
           }
           return caseObjet(r.rec.id, { act:"refsel", cle:"c:" + r.i, sel:selRef === "c:" + r.i, pret:!r.e, terne:!!r.e });
         }), 10);
     } else if(ongletRef === "reparer"){
       var ab = armesAbimees(), e = empechement(REPARATION);
       h += ab.length ? etageres(ab.map(function(o){
-        if(selRef === "r:" + o.uid) fiche = ligneObjet(o.id, 1, o) + '<p class="sub">Une réparation rend ' + Math.round(BAL.reparation * 100) + ' % de la solidité. Il faut :</p>' + ingredients(REPARATION) + etatTravail(REPARATION, null, "Prêt")
-          + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="repair" data-id="' + o.uid + '"' + (e ? " disabled" : "") + '>🔧 Réparer</button>';
+        if(selRef === "r:" + o.uid) fiche = ligneObjet(o.id, 1, o) + '<p class="sub">Une réparation rend ' + Math.round(BAL.reparation * 100) + ' % de la solidité. Il faut :</p>' + ingredients(REPARATION) + boutonTravail("🔧 Réparer", "repair", o.uid, REPARATION);
         return caseObjet(o.id, { act:"refsel", cle:"r:" + o.uid, sel:selRef === "r:" + o.uid, usure:Math.round(o.sol / OBJETS[o.id].sol * 100), pret:!e });
       }), 5) : '<p>Aucune arme abîmée.</p>';
     } else {
@@ -586,7 +592,7 @@ function openRef(onglet){
         if(selRef === "d:" + o.uid){
           var rec = []; for(var k in DEMONTAGE[o.id]) rec.push(icone(k) + " " + nommer(k, DEMONTAGE[o.id][k]));
           fiche = '<div class="invfiche"><span class="em">' + icone(o.id) + '</span><span class="eqt"><b>' + OBJETS[o.id].nom + '</b><small>Tu récupères : ' + rec.join(", ") + '</small></span></div>'
-            + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="salvage" data-id="' + o.uid + '"' + (x ? "" : " disabled") + '>♻️ Démonter</button>';
+            + boutonTravail("♻️ Démonter", "salvage", o.uid);
         }
         return caseObjet(o.id, { act:"refsel", cle:"d:" + o.uid, sel:selRef === "d:" + o.uid, usure:o.sol ? Math.round(o.sol / OBJETS[o.id].sol * 100) : null });
       }), 5) : '<p>Rien à démonter dans le stock (les objets équipés ne sont pas proposés).</p>';

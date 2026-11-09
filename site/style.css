@@ -660,3 +660,8 @@ body.fond{touch-action:pan-y}
 .ing2.ko b{background:var(--bad);color:#fff}
 .ing2 small{font-size:10px;font-weight:700;color:var(--mut);text-align:center;line-height:1.1;margin-top:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ing2.outil .ing2-case{background-image:url("images/case-sel.webp")}
+/* Bouton de travail d'atelier : le verbe, puis qui travaille et ce que ça coûte */
+.btn.travail{width:100%;margin-bottom:8px;display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+.btn.travail .qui{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;opacity:.85}
+.btn.travail .mini{font-size:20px;line-height:1}
+.btn.travail:disabled span{font-size:14px}
