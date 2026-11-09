@@ -470,7 +470,8 @@ function openNuit(n){
 }
 function openEvent(ev){
   G.ev = ev; G.evIdx = EVENEMENTS.indexOf(ev);
-  var h = '<h2>' + G.ev.titre + '</h2><p>' + texteEvenement(G.ev) + '</p>';
+  var im = IMAGES_EVENEMENTS[G.ev.titre];
+  var h = (im ? '<div class="banniere"><img src="images/evenements/' + im + '.webp" alt=""></div>' : '') + '<h2>' + G.ev.titre + '</h2><p>' + texteEvenement(G.ev) + '</p>';
   G.ev.choix.forEach(function(c, i){ h += '<button class="loc" data-act="ev" data-id="' + i + '"><b>' + c[0] + '</b></button>'; });
   show(h);
 }

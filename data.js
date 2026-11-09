@@ -474,6 +474,11 @@ var CHAPITRES = [
 ];
 var TENIR_TOUS_LES = 10; // après les chapitres : « Tenir bon jusqu'au jour N », N de 10 en 10
 
+// Illustrations des événements (Gemini, grilles de 4 découpées) : images/evenements/<nom>.webp
+var IMAGES_EVENEMENTS = { "🚪 Un survivant blessé":"frappe", "🧔 Un marchand louche":"marchand", "🧸 Cauchemars":"cauchemars", "💧 Voisins assoiffés":"voisins",
+  "🚪 On frappe à la porte":"frappe", "🌧️ L’orage":"orage", "🏴 Des pillards":"pillards", "🤒 La fièvre":"fievre", "🐕 Un chien errant":"chien",
+  "📻 Un message radio":"radio", "🚙 Une voiture accidentée":"voiture", "👵 La vieille voisine":"voisine", "🔥 Incendie":"incendie",
+  "🍽️ Dispute à table":"dispute", "🧟 Une horde au loin":"horde", "🔐 Un coffre-fort":"coffre", "🐔 Une poule égarée":"poule" };
 /* ---------- Événements à dilemmes (le matin) ----------
    Chaque choix est une fonction qui modifie le jeu et renvoie le texte du résultat. */
 var EVENEMENTS = [

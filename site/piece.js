@@ -18,24 +18,33 @@ var ZONES_PIECE = [
   ["pCheminee",  155, 355, 320, 530, function(){ return "🔥"; }, "Feu", .5],
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
+  ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", .5, function(){ return compter("radio") > 0; }],
+  ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
   ["chapitre",   365, 570, 660, 678, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
+  ["oCartes",    372, 578, 410, 604, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
   ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .5, function(){ return !!chien(); }]
 ];
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
 // [image, x0, y0, x1, y1, condition]
 var DECOR_PIECE = [
   ["images/planches.webp", 904, 262, 1022, 454, function(){ return G.ref && G.ref.barr >= 1; }], // barricade construite : planches sur la porte
-  ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }]                   // Rex adopté : couché devant le canapé
+  ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],                  // Rex adopté : couché devant le canapé
+  // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)
+  ["images/objet-radio.webp",  771, 192, 823, 234, function(){ return compter("radio") > 0; }],
+  ["images/objet-photo.webp",  247, 312, 285, 356, function(){ return compter("photo") > 0; }],
+  ["images/objet-cartes.webp", 372, 578, 410, 604, function(){ return compter("cartes") > 0; }]
 ];
 /* ---------- Les pièces de la maison, qu'on fait défiler (glisser du doigt, flèches ou points) ----------
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
 var PIECES = [
   // Salon et chambre : la cheminée montre le feu allumé ou éteint (G.feu)
-  { id:"salon", nom:"Salon", img:function(){ return G.feu ? "images/refuge-fond.webp" : "images/refuge-fond-eteint.webp"; }, l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
-  { id:"chambre", nom:"Chambre", img:function(){ return G.feu ? "images/piece-chambre-feu.webp" : "images/piece-chambre.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 }, decor:[], zones:[
+  { id:"salon", nom:"Salon", img:function(){ return G.feu ? "images/refuge-fond-propre.webp" : "images/refuge-fond-eteint-propre.webp"; }, l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"chambre", nom:"Chambre", img:function(){ return G.feu ? "images/piece-chambre-feu-propre.webp" : "images/piece-chambre-propre.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
+    decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0; }] ], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
     ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],
+    ["oPeluche",    405, 395, 476, 495, function(){ return icone("peluche"); }, "Peluche", .5, function(){ return compter("peluche") > 0; }],
     ["pPorte",      900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85]
   ]},
   { id:"reserve", nom:"Réserve", img:"images/piece-reserve.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:770 }, decor:[], zones:[
@@ -193,6 +202,10 @@ document.addEventListener("click", function(e){
   else if(a === "pConstruire") openRef("construire");
   else if(a === "pVoiture") openRef("voiture");
   else if(a === "pPotager") openElement("pot");
+  else if(a === "oPeluche") openObjetPiece("peluche");
+  else if(a === "oRadio") openObjetPiece("radio");
+  else if(a === "oCartes") openObjetPiece("cartes");
+  else if(a === "oPhoto") openObjetPiece("photo");
   else if(a === "pRecup") openElement("eau");
   else if(a === "pPoules") openPoules();
   else if(a === "buildel"){ var be = b.getAttribute("data-id"); var ok = ameliorer(be); render(); openElement(be, ok ? "✅ " + REFUGE[be].nom + " amélioré : niveau " + G.ref[be] + " !" : ""); if(ok && typeof son === "function") son("construire"); }
@@ -341,3 +354,20 @@ document.addEventListener("touchcancel", function(){ if(tireFeuille){ $("sheet")
 document.addEventListener("pointerdown", function(e){ if(e.pointerType === "mouse") debutTire(e.clientX, e.clientY, e.target); });
 document.addEventListener("pointermove", function(e){ if(e.pointerType === "mouse") suiteTire(e.clientX, e.clientY); });
 document.addEventListener("pointerup", function(e){ if(e.pointerType === "mouse") finTire(); });
+
+/* ---------- Objets de confort posés dans les pièces : ce qu'ils apportent ---------- */
+var TEXTES_OBJETS_PIECE = {
+  peluche: "La peluche d’Emma. Elle la serre fort chaque soir : tout le monde dort un peu mieux en la voyant.",
+  photo: "La photo de famille d’avant. Elle rappelle pour qui on se bat.",
+  cartes: "Un vieux jeu de cartes. Une partie le soir, et on oublie un moment les grattements dehors.",
+  radio: "La radio grésille. Elle capte parfois des messages : on sait mieux où sont les dangers."
+};
+function openObjetPiece(id){
+  var o = OBJETS[id], n = compter(id), m = (o.moral || 0) * BAL.moralBonusObjet * n;
+  var h = '<div class="rt"><span class="em" style="font-size:52px">' + icone(id) + '</span><span class="eqt"><h2>' + o.nom + '</h2><p class="sub">' + (n > 1 ? n + " au refuge" : "Au refuge") + '</p></span></div>';
+  h += '<p>' + perso(TEXTES_OBJETS_PIECE[id] || o.desc) + '</p><ul>';
+  if(m) h += '<li>😀 <b>Moral +' + m + '</b> chaque nuit, tant qu’' + (o.g === "f" ? "elle" : "il") + ' est au refuge (le moral baisse de ' + BAL.moralPerteNuit + ' par nuit sinon).</li><li>À ' + BAL.moralHaut + ' de moral ou plus, l’équipe trouve 1 objet de plus en fouille ; sous ' + BAL.moralBas + ', elle fouille mal.</li>';
+  if(o.radio) h += '<li>📻 Montre le danger de chaque lieu dans la liste « Où envoyer l’équipe ? ».</li><li>🗺️ Fait découvrir les lieux secrets ' + BAL.avanceRadio + ' jours plus tôt, et capte parfois des messages le matin.</li>';
+  h += '</ul>';
+  show(h + BTN_FERMER());
+}

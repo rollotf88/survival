@@ -167,7 +167,9 @@ Retours de Fabien du 2026-11-09 (après-midi) :
 - Barre des pièces : s'efface après 3 s (classe `navvue`, `montrerNav`) ; revient au changement de pièce ou en touchant la pièce ; cachée = pas touchable. Le bouton du bas lié à la pièce est encadré (`BOUTON_PIECE` : chambre → Dormir, réserve → Stock, atelier et cour → Refuge, garage → Fouiller)
 - Fermer une fenêtre en la faisant glisser vers le bas (doigt ou souris), seulement si elle a un bouton `data-act="close"` et qu'elle est en haut de son défilement (piece.js, `debutTire`)
 - Moral : à 70 ou plus, +1 objet par fouille (`BAL.moralHaut`, `moralHautFouille`). Simulation : peluche prise en premier = +34 points (+15 sans ce bonus) ; le robot Malin ne prend pas les objets de confort (sac plein avant), d'où 323 de base
-- À faire (images Gemini demandées) : objets de confort visibles dans les pièces seulement si on les a (peluche, cartes, radio, photo) ; illustrations des événements ; inventaire en cases façon jeu mobile (plus tard)
+- Objets de confort visibles seulement si on les a : salon et chambre « propres » (sans radio, photo, peluche : `refuge-fond-propre`, `refuge-fond-eteint-propre`, `piece-chambre-propre`, `piece-chambre-feu-propre` ; les deux versions « éteint » ont été retouchées par Claude en recollant les zones propres des versions avec feu) + sprites détourés `images/objet-peluche|radio|cartes|photo.webp` posés par `decor` (radio sur la bibliothèque, photo sur la cheminée, cartes sur la table basse, peluche sur le lit de la chambre). Toucher un objet → `openObjetPiece(id)` (moral par nuit, rôle de la radio)
+- Événements illustrés : `IMAGES_EVENEMENTS` (data.js, titre → fichier), 16 scènes dans `images/evenements/` (4 grilles Gemini) en bandeau en haut de la fenêtre d'événement ; « Un survivant blessé » réutilise « frappe ». `preparer-site.py` copie aussi `images/evenements`
+- Plus tard : inventaire en cases façon jeu mobile
 
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu

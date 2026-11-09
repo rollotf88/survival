@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261109-1508";
+var VERSION = "survival-20261109-1519";
 var FICHIERS = [
   "./",
   "index.html",
@@ -26,6 +26,14 @@ var FICHIERS = [
   "images/piece-chambre.webp",
   "images/piece-chambre-feu.webp",
   "images/refuge-fond-eteint.webp",
+  "images/refuge-fond-propre.webp",
+  "images/refuge-fond-eteint-propre.webp",
+  "images/piece-chambre-propre.webp",
+  "images/piece-chambre-feu-propre.webp",
+  "images/objet-peluche.webp",
+  "images/objet-radio.webp",
+  "images/objet-cartes.webp",
+  "images/objet-photo.webp",
   "images/piece-cour.webp",
   "images/piece-cour-pot.webp",
   "images/piece-cour-eau.webp",
@@ -54,6 +62,22 @@ var FICHIERS = [
   "images/lieux/camping.webp",
   "images/lieux/clinique.webp",
   "images/lieux/bunker.webp",
+  "images/evenements/frappe.webp",
+  "images/evenements/marchand.webp",
+  "images/evenements/cauchemars.webp",
+  "images/evenements/voisins.webp",
+  "images/evenements/orage.webp",
+  "images/evenements/pillards.webp",
+  "images/evenements/fievre.webp",
+  "images/evenements/chien.webp",
+  "images/evenements/radio.webp",
+  "images/evenements/voiture.webp",
+  "images/evenements/voisine.webp",
+  "images/evenements/incendie.webp",
+  "images/evenements/dispute.webp",
+  "images/evenements/horde.webp",
+  "images/evenements/coffre.webp",
+  "images/evenements/poule.webp",
   "images/nuit.webp",
   "images/aube.webp",
   "images/voiture-panne.webp",

@@ -69,6 +69,7 @@ async function toutControler(){
   if(typeof openElement === "function"){ openElement("pot"); await att(80); res.potager = controleAffichage(); ajouter("poule", 2); openPoules(); await att(80); res.poulailler = controleAffichage(); hide(); }
   if(typeof openPeche === "function"){ var ie = LIEUX.findIndex(function(L){ return L.peche; }); G.exp = { lieu:ie, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false, peche:{ lancers:3, faits:1, prises:1 } }; openPeche(); await att(100); res.peche = controleAffichage(); clearTimeout(minPeche); phasePeche = null; hide(); G.exp = null; }
   if(typeof openFeu === "function"){ openFeu(); await att(80); res.feu = controleAffichage(); hide(); }
+  var evp = EVENEMENTS.find(function(e){ return e.titre.indexOf("pillards") >= 0; }); G.day = Math.max(G.day, 8); openEvent(evp); await att(100); res.evenement = controleAffichage(); hide(); G.ev = null; G.evIdx = null;
   openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();
@@ -85,7 +86,7 @@ async function toutControler(){
 async function verifNav(){
   var att = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }, pb = [];
   if(typeof fermerAstuce === "function") fermerAstuce(true); hide();
-  nouvellePartie(null); G.pack = { bidon:1 }; demarrer(); G.chien = { nom:"Rex", faim:0 }; G.ref.barr = 1; render(); await att(200);
+  nouvellePartie(null); G.pack = { bidon:1, peluche:1, radio:1, cartes:1, photo:1 }; demarrer(); G.chien = { nom:"Rex", faim:0 }; G.ref.barr = 1; render(); await att(200);
   for(var k = 0; k < PIECES.length; k++){
     allerPiece(k); await att(150); document.getElementById("piece").classList.add("montrer");
     var n = document.querySelector("#piece .navpieces"); if(!n){ pb.push(PIECES[k].id + " : pas de barre"); continue; }
