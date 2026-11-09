@@ -169,6 +169,7 @@ function rGame(){
 function openLoc(){
   astuce("lieux");
   if(LIEUX.some(function(L, i){ return L.peche && lieuOuvert(i); })) astuce("peche");
+  if(LIEUX.some(function(L, i){ return L.bois && lieuOuvert(i); })) astuce("foret");
   var h = '<h2>Où envoyer l’équipe ?</h2>';
   var team = G.sel.map(function(j){ return G.m[j]; });
   var porte = function(test){ return team.some(function(x){ return x.eq.outil && test(OBJETS[x.eq.outil.id]); }); };
@@ -187,13 +188,14 @@ function openLoc(){
     if(L.sombre) icones.push(porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? ["🔦", "ok", "Sombre : lampe prête"] : ["🔦", "ko", "Sombre : lampe sans pile"]) : porte(function(o){ return o.lumiere === 1; }) ? ["🔥", "moy", "Sombre : lueur faible"] : ["🌑", "ko", "Sombre : pas de lumière"]);
     if(L.verrou) icones.push(porte(function(o){ return o.ouvre; }) ? ["🔓", "ok", "Verrouillé : de quoi ouvrir"] : ["🔒", "ko", "Verrouillé : porte à forcer"]);
     if(L.peche) icones.push(porte(function(o){ return o.peche; }) ? ["🎣", "ok", "Canne à pêche prête"] : ["🎣", "ko", "Pas de canne à pêche"]);
+    if(L.bois) icones.push(bucherons(team).length ? ["🪓", "ok", "Hache prête"] : ["🪓", "ko", "Pas de hache"]);
     if(auto) icones.push(["🚗", voitureOk(i) ? "ok" : "ko", "En voiture : ⛽ −" + litres(i) + " L"]);
     var dg = radio ? (d < 0.3 ? ["faible", "ok"] : d < 0.5 ? ["moyen", "moy"] : ["élevé", "ko"]) : ["?", ""];
     var pourquoi = !reste ? "Vidé" : auto && !voitureReparee() ? "Voiture en panne" : auto && !voitureOk(i) ? "Pas assez d’essence" : !peut ? "Trop fatigués" : "";
     var im = imageLieu(L);
     cartes.push({ ok:!!ok, vide:!reste, html:'<button class="carte-lieu' + (ok ? "" : " off") + (G.mission && G.mission.lieu === i ? " mission" : "") + '" data-act="loc" data-id="' + i + '"' + (ok ? "" : " disabled") + ' aria-label="' + L.nom + (pourquoi ? " : " + pourquoi : "") + '">'
       + '<span class="cl-img">' + (im ? '<img src="' + im + '" alt="">' : '<span class="cl-ico">' + iconeLieu(L) + '</span>')
-      + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : reste ? reste + " obj." : "Vidé") + '</span>'
+      + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : L.bois ? "🌲 " + G.lieux[i].arbres : reste ? reste + " obj." : "Vidé") + '</span>'
       + (G.mission && G.mission.lieu === i ? '<span class="cl-mission">🎯</span>' : '')
       + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
       + '<span class="cl-nom">' + L.nom + '</span>'

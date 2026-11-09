@@ -31,6 +31,9 @@ function reglesGuide(){
       "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chaque pêcheur a " + B.peche.lancers + " lancers : quand le bouchon s’enfonce, touche « Ferrer » à temps pour attraper un poisson (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
       "Les poissons se reproduisent lentement (+1 toutes les " + B.peche.nuitsParNaissance + " nuits), mais seulement s’il en reste au moins " + B.peche.seuil + " : vide l’étang et il ne donnera plus rien. " +
       "Les poules pondent souvent un œuf la nuit (+1 ration), boivent 1 ration d’eau pour " + B.poules.eauPour + " poules, et chaque poule ajoute +" + Math.round(B.poules.attaque * 100) + " % de risque d’attaque. Sans eau, l’une d’elles meurt."],
+    ["La forêt et le bois", "🌲",
+      "La forêt (à partir du jour " + LIEUX.filter(function(L){ return L.bois; })[0].jour + ") : chaque survivant qui a une hache en main (case arme) abat un arbre et rapporte " + B.foret.coupe[0] + " ou " + B.foret.coupe[1] + " planches. " +
+      "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
     ["Le monde bouge", "🏴",
       "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. " +
       "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. " +

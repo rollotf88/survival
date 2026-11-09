@@ -80,10 +80,12 @@ function demarrer(){
   // Chaque lieu reçoit sa vraie liste d'objets, mélangée
   G.lieux = LIEUX.map(function(L){
     var b = []; for(var id in L.butin) for(var i = 0; i < L.butin[id]; i++) b.push(id);
-    melanger(b, G.seed ? graine(hacher(G.seed + "|lieu|" + L.nom)) : null); return L.peche ? { butin:b, poissons:BAL.peche.poissons } : { butin:b };
+    melanger(b, G.seed ? graine(hacher(G.seed + "|lieu|" + L.nom)) : null); return etatLieu(L, b);
   });
   equiperDepart();
 }
+// État de départ d'un lieu : sa liste d'objets, + les poissons (étang) ou les arbres (forêt)
+function etatLieu(L, b){ var l = { butin:b }; if(L.peche) l.poissons = BAL.peche.poissons; if(L.bois) l.arbres = BAL.foret.arbres; return l; }
 // Anciennes sauvegardes (avant l'étang) : on insère l'étang à sa place dans la liste des lieux
 function migrerPartie(g){
   var ie = LIEUX.findIndex(function(L){ return L.peche; });
@@ -97,7 +99,7 @@ function migrerPartie(g){
   while(g.lieux && g.lieux.length < LIEUX.length){
     var L = LIEUX[g.lieux.length], b2 = [];
     for(var id2 in L.butin) for(var k2 = 0; k2 < L.butin[id2]; k2++) b2.push(id2);
-    g.lieux.push(L.peche ? { butin:melanger(b2, graine(hacher(L.nom))), poissons:BAL.peche.poissons } : { butin:melanger(b2, graine(hacher(L.nom))) });
+    g.lieux.push(etatLieu(L, melanger(b2, graine(hacher(L.nom)))));
   }
   if(!g.decouverts) g.decouverts = {};
   // Avant les traits : chaque membre garde son atout d'origine
@@ -304,7 +306,8 @@ function userArme(x, n){
 /* ---------- Expédition (fouille d'un lieu) ---------- */
 function dangerLieu(i){ return LIEUX[i].danger + Math.min(BAL.dangerMaxAjoute, G.day * BAL.dangerParJour) + (G.hordeJour === G.day ? 0.2 : 0); }
 // Ce qui reste à prendre dans un lieu (à l'étang : les objets + les poissons)
-function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0); }
+function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0) + (LIEUX[i].bois ? (l.arbres || 0) : 0); }
+function bucherons(team){ return team.filter(function(x){ return x.al && x.eq.arme && OBJETS[x.eq.arme.id].coupe; }); }
 function lieuOuvert(i){ return (!LIEUX[i].jour || G.day >= LIEUX[i].jour) && (!LIEUX[i].secret || !!(G.decouverts && G.decouverts[i])); }
 // Jour où un lieu secret est découvert (plus tôt avec une radio)
 function jourDecouverte(i){ return LIEUX[i].secret - (possede(function(o){ return o.radio; }) ? BAL.avanceRadio : 0); }
@@ -490,6 +493,21 @@ function finExpedition(){
     n.push(["g2", "🎣 " + x.nom + " pêche " + (k ? nommer("poisson", k) : "rien") + "."]);
     c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); }
   });
+  // Forêt : chaque survivant qui a une hache en main coupe du bois (tant qu'il reste des arbres)
+  if(LIEUX[i].bois){
+    var bu = bucherons(survivants);
+    bu.forEach(function(x){
+      if(lieu.arbres <= 0) return;
+      var k = Math.min(lieu.arbres, Math.max(1, Math.round(R(BAL.foret.coupe[0], BAL.foret.coupe[1]) * mult)));
+      lieu.arbres -= k; G.stats.bois = (G.stats.bois || 0) + k;
+      for(var pb = 0; pb < k; pb++) trouves.unshift("planche");
+      n.push(["g2", "🪓 " + x.nom + " abat un arbre : " + nommer("planche", k) + "."]);
+      var h = x.eq.arme; h.sol -= BAL.foret.usure;
+      if(h.sol <= 0){ x.eq.arme = null; n.push(["b2", "💥 La hache " + de(x.nom) + " se brise sur un tronc !"]); } else avertirUsure(x, h, n, "coup");
+    });
+    if(survivants.length && !bu.length && lieu.arbres > 0) n.push(["b2", "🪓 Sans hache en main, impossible de couper du bois."]);
+    if(lieu.arbres <= 0 && bu.length) n.push(["b2", "🌲 Il ne reste plus un arbre debout dans la forêt."]);
+  }
   if(LIEUX[i].peche && !peches && survivants.length && !survivants.some(function(x){ return x.eq.outil && OBJETS[x.eq.outil.id].peche; })) n.push(["b2", "🎣 Sans canne à pêche, impossible d’attraper les poissons."]);
 
   // Transport : bras + sacs ; ce qui ne rentre pas reste sur place

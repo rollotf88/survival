@@ -18,6 +18,8 @@ function remplirSac(priorites){
 function toutRanger(){ G.m.forEach(function(x, i){ EMPLACEMENTS.forEach(function(e){ desequiper(i, e[0]); }); }); }
 function prendre(i, slot, test){
   var d = pourEmplacement(slot).filter(function(o){ return !test || test(OBJETS[o.id]); });
+  // Armes : la plus forte d'abord (sinon l'ordre du stock décide)
+  if(slot === "arme") d.sort(function(a, b){ var f = function(o){ var g = OBJETS[o.id].degats; return g ? g[0] + g[1] : 0; }; return f(b) - f(a); });
   if(d.length) equiper(i, slot, d[0].uid);
 }
 function disponibles(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ return peutSortir(G.m[i]); }); }
@@ -36,7 +38,8 @@ function partir(bot, i){
   // Mini-jeu de pêche : le robot réussit un lancer sur deux à trois
   if(r.peche){ while(G.exp.peche.faits < G.exp.peche.lancers) lancerPeche(Math.random() < BAL.peche.chanceRobot); finExpedition(); }
 }
-function lieuxPossibles(){ return LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && (G.lieux[i].butin.length || LIEUX[i].peche && G.lieux[i].poissons > BAL.peche.seuil && pourEmplacement("outil").concat(equipes()).some(function(o){ return OBJETS[o.id].peche; })); }); }
+function lieuxPossibles(){ return LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && (G.lieux[i].butin.length || LIEUX[i].peche && G.lieux[i].poissons > BAL.peche.seuil && pourEmplacement("outil").concat(equipes()).some(function(o){ return OBJETS[o.id].peche; }) || LIEUX[i].bois && MALIN.foret !== false && G.lieux[i].arbres > 0 && aHache() && compter("planche") < 6); }); }
+function aHache(){ return pourEmplacement("arme").concat(equipes()).some(function(o){ return OBJETS[o.id].coupe; }); }
 
 /* ---------- Robot « malin » : joue raisonnablement ---------- */
 var MALIN = {
@@ -70,7 +73,7 @@ var MALIN = {
       var lampe = pourEmplacement("outil").some(function(o){ return OBJETS[o.id].lumiere === 2; }) && compter("pile") > 0;
       var ouvrir = pourEmplacement("outil").some(function(o){ return OBJETS[o.id].ouvre; });
       var score = function(i){
-        var L = LIEUX[i], s = Math.min(resteLieu(i) - (L.peche ? BAL.peche.seuil : 0), 10) / (1 + 2 * dangerLieu(i)) / coutEnergie(i, LIEUX[i].voiture);
+        var L = LIEUX[i], s = Math.min(resteLieu(i) - (L.peche ? BAL.peche.seuil : 0) - (L.bois && (!aHache() || MALIN.foret === false || compter("planche") >= 6) ? G.lieux[i].arbres : 0), 10) / (1 + 2 * dangerLieu(i)) / coutEnergie(i, LIEUX[i].voiture);
         if(G.mission && G.mission.lieu === i) s *= 3; // mission de secours
         if(L.sombre && !lampe) s *= 0.5; if(L.verrou && !(ouvrir && dispo.length > (L.sombre ? 1 : 0))) s *= 0.5;
         return s;
@@ -81,8 +84,9 @@ var MALIN = {
         if(L.sombre && n === 0) prendre(i, "outil", function(o){ return o.lumiere; });
         if(L.verrou && !G.m[i].eq.outil) prendre(i, "outil", function(o){ return o.ouvre; });
         if(L.peche) prendre(i, "outil", function(o){ return o.peche; });
+        if(L.bois && n === 0 && MALIN.foret !== false){ if(!(G.m[i].eq.arme && OBJETS[G.m[i].eq.arme.id].coupe)){ desequiper(i, "arme"); prendre(i, "arme", function(o){ return o.coupe; }); if(!G.m[i].eq.arme) prendre(i, "arme"); } }
       });
-      G.m.forEach(function(x, i){ if(x.al) prendre(i, "arme"); });
+      G.m.forEach(function(x, i){ if(x.al && !x.eq.arme) prendre(i, "arme"); });
       G.sel = dispo;
       partir(MALIN, cible);
       if(!vivants().length) return;

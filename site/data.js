@@ -130,6 +130,12 @@ var BAL = {
     fenetre: 0.75,           // le bouchon reste enfoncé 0,75 s : il faut toucher pendant ce temps
     chanceRobot: 0.65        // réussite d'un lancer pour les robots de simulation
   },
+  // Forêt : on y coupe du bois avec une hache en main. Les arbres ne repoussent pas
+  foret: {
+    arbres: 24,              // planches qu'on peut tirer de la forêt en tout
+    coupe: [2, 3],           // planches coupées par bûcheron et par sortie
+    usure: 1                 // la hache perd 1 de solidité à chaque sortie de coupe
+  },
   // Poules : des œufs, mais elles boivent et leurs caquètements attirent les zombies
   poules: {
     oeuf: 0.7,               // chaque poule pond 1 ration de nourriture 7 nuits sur 10
@@ -218,7 +224,7 @@ var OBJETS = {
   couteau:    { nom:"Couteau", pl:"Couteaux", g:"m", icone:"🔪", cat:"arme", place:1, emplacement:"arme", def:1, degats:[2,3], sol:12, desc:"Dégâts 2-3 · défense +1" },
   batte:      { nom:"Batte", pl:"Battes", g:"f", icone:"🏏", cat:"arme", place:2, emplacement:"arme", def:2, degats:[3,4], sol:15, desc:"Dégâts 3-4 · défense +2" },
   barrefer:   { nom:"Barre de fer", pl:"Barres de fer", g:"f", icone:"🦯", cat:"arme", place:2, emplacement:"arme", def:2, degats:[3,5], sol:25, desc:"Dégâts 3-5 · défense +2, très solide" },
-  hache:      { nom:"Hache", pl:"Haches", g:"f", icone:"🪓", cat:"arme", place:2, emplacement:"arme", def:3, degats:[4,6], sol:20, desc:"Dégâts 4-6 · défense +3" },
+  hache:      { nom:"Hache", pl:"Haches", g:"f", icone:"🪓", cat:"arme", place:2, emplacement:"arme", coupe:true, def:3, degats:[4,6], sol:20, desc:"Dégâts 4-6 · défense +3" },
   machette:   { nom:"Machette", pl:"Machettes", g:"f", icone:"🗡️", cat:"arme", place:1, emplacement:"arme", def:3, degats:[4,5], sol:16, desc:"Dégâts 4-5 · défense +3, légère" },
   // Armes à feu : très puissantes, mais chaque tir use une munition et fait du bruit
   pistolet:   { nom:"Pistolet", pl:"Pistolets", g:"m", icone:"🔫", cat:"arme", place:1, emplacement:"arme", def:3, degats:[6,9], munition:"balle", sol:30, desc:"Dégâts 6-9 · 1 balle par tir, bruyant" },
@@ -385,6 +391,9 @@ var LIEUX = [
     butin:{ ration:12, bidon:3, trousse:3, boiteBalles:3, boiteCart:2, fusil:1, barrefer:1, canette:3, pile:4 } }
 ];
 // Nombre de lieux avant l'ajout de l'étang (pour reprendre les anciennes sauvegardes)
+// La forêt (ajoutée à la fin pour ne pas décaler les sauvegardes) : du bois avec une hache, mais des zombies entre les arbres
+LIEUX.push({ nom:"Forêt", icone:"🌲", danger:0.40, distance:2, jour:5, bois:true,
+  butin:{ bouteille:1, couverture:1, alcool:1, chiffon:1 } });
 var LIEUX_AVANT_ETANG = 13;
 
 /* ---------- Missions urgentes ----------
@@ -617,6 +626,7 @@ var ASTUCES = {
   dormir:     "🌙 Plus personne n’a assez d’énergie : appuie sur Dormir (ou touche le canapé). Chacun mange et boit une ration (touche ＋ sur une carte pour boire ou manger en plus)… et la nuit, ils peuvent attaquer.",
   score:      "⭐ Ton score : 1 point par jour et par membre en vie. Garde toute la famille en vie le plus longtemps possible !",
   atelier:    "🛠️ Le refuge : construis des défenses, fabrique (soins, armes, bâche pour l’eau de pluie…), répare et démonte. Et plus tard, répare la voiture.",
+  foret:      "🌲 La forêt : un survivant avec une hache en main coupe du bois (2 ou 3 planches). Les arbres ne repoussent pas, et la hache s’use.",
   peche:      "🎣 L’étang : équipe une canne à pêche (case outil) pour pêcher. Ne le vide pas : sous 4 poissons, ils ne se reproduisent plus.",
   mission:    "🎯 Une mission ! Elle a un délai : touche le bouton 🎯 en bas de l’écran pour la voir et livrer ce qu’il faut. Réussir rapporte des objets et du moral.",
   serrure:    "🗝️ Appuie quand le curseur rouge passe dans la zone verte. Chaque raté casse une épingle."
