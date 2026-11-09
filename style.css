@@ -854,3 +854,21 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 .r-res{margin:4px 0 6px;font-weight:600}
 .r-res.ok{color:var(--ok)}.r-res.ko{color:var(--bad)}
 .r-choix small{color:var(--mut)}
+/* ---------- Parrainage ---------- */
+.moncode{text-align:center;border:3px dashed var(--bois);border-radius:14px;padding:6px;margin:8px 0;background:var(--bg)}
+.moncode small{display:block;font-size:11px;font-weight:800;text-transform:uppercase;color:var(--mut)}
+.moncode b{font-family:"Bangers","Impact",sans-serif;font-size:40px;letter-spacing:.12em}
+.lien-code{display:block;width:100%;background:none;border:0;color:var(--acc);font:inherit;font-weight:700;font-size:13px;text-decoration:underline;margin:6px 0 0;cursor:pointer}
+.caisses{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 4px;min-height:150px;background:linear-gradient(#8aa6b8,#d9c7a8 70%,#8a6a48 70%);border:3px solid var(--bois);border-radius:14px;overflow:hidden}
+.caisse{position:relative;background:none;border:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 0 10px;font:inherit;animation:tombe 1.6s ease-out both}
+.caisse.c1{animation-delay:.25s}.caisse.c2{animation-delay:.5s}
+.caisse .para{font-size:34px;line-height:1;animation:balance 1.8s ease-in-out infinite}
+.caisse .boite{font-size:44px;line-height:1;filter:drop-shadow(0 3px 2px rgba(0,0,0,.4))}
+.caisse:hover .boite,.caisse:focus-visible .boite{transform:scale(1.12)}
+.caisse.perdue{opacity:.25;transition:opacity .4s}
+.caisse.ouverte .boite{animation:ouvre .6s ease-out forwards}
+@keyframes tombe{0%{transform:translateY(-140px)}100%{transform:translateY(0)}}
+@keyframes balance{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes ouvre{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-8deg)}100%{transform:scale(1.25)}}
+@media (prefers-reduced-motion:reduce){.caisse,.caisse .para,.caisse.ouverte .boite{animation:none}}
+@media (orientation:landscape) and (max-height:500px){ .menugrille{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:4px 0 6px} .menugrille .mt{padding:5px 7px} .menugrille .mt b{font-size:13px} }

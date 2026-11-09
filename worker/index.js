@@ -78,6 +78,62 @@ async function mondePost(request, env){
   return reponse({ ok: true });
 }
 
+// ---------- Parrainage : /api/parrainage (POST seulement) ----------
+// {action:"moncode", id}                 -> { code }  (créé la première fois : 2 lettres + 3 chiffres, ex. BL615)
+// {action:"utiliser", id, code, pseudo}  -> { ok, colis } ou { erreur }  (un code d'invitation par appareil ; codes spéciaux à part)
+// {action:"nouvelles", id}               -> { filleuls:[pseudos] }  (les utilisations de mon code depuis la dernière fois, puis on vide)
+// Tout est dans la clé « parrainage » du KV. Codes spéciaux (ex. « 18-25 » pour les bêta-testeurs) : speciaux[code] = { actif, n }
+const CLE_PARR = "parrainage", LETTRES = "ABCDEFGHJKLMNPRSTUVWXYZ";
+async function lireParr(env){
+  const p = (await env.CLASSEMENT.get(CLE_PARR, { type: "json" })) || {};
+  p.codes = p.codes || {}; p.parId = p.parId || {}; p.utilises = p.utilises || {}; p.attente = p.attente || {}; p.spUtilises = p.spUtilises || {};
+  p.speciaux = p.speciaux || { "18-25": { actif: true, n: 0 } };
+  return p;
+}
+const normCode = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12);
+async function parrainagePost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const p = await lireParr(env);
+  if(d.action === "moncode"){
+    let code = p.parId[id];
+    if(!code){
+      do{ code = LETTRES[Math.floor(Math.random() * LETTRES.length)] + LETTRES[Math.floor(Math.random() * LETTRES.length)] + String(Math.floor(Math.random() * 1000)).padStart(3, "0"); }
+      while(p.codes[code] || p.speciaux[code]);
+      p.codes[code] = { id, n: 0 }; p.parId[id] = code;
+      await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+    }
+    return reponse({ code, n: p.codes[code].n });
+  }
+  if(d.action === "utiliser"){
+    const code = normCode(d.code), pseudo = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16) || "Un nouveau joueur";
+    const sp = p.speciaux[code];
+    if(sp){
+      if(!sp.actif) return reponse({ erreur: "Ce code n’est plus actif." });
+      const deja = p.spUtilises[id] || [];
+      if(deja.indexOf(code) >= 0) return reponse({ erreur: "Tu as déjà utilisé ce code." });
+      p.spUtilises[id] = deja.concat([code]); sp.n = (sp.n || 0) + 1;
+      await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+      return reponse({ ok: true, colis: 1, special: true });
+    }
+    const c = p.codes[code];
+    if(!c) return reponse({ erreur: "Ce code n’existe pas." });
+    if(c.id === id) return reponse({ erreur: "C’est ton propre code !" });
+    if(p.utilises[id]) return reponse({ erreur: "Tu as déjà utilisé un code d’invitation." });
+    p.utilises[id] = code; c.n = (c.n || 0) + 1;
+    p.attente[c.id] = (p.attente[c.id] || []).concat([pseudo]).slice(-20);
+    await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+    return reponse({ ok: true, colis: 1 });
+  }
+  if(d.action === "nouvelles"){
+    const f = p.attente[id] || [];
+    if(f.length){ delete p.attente[id]; await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p)); }
+    return reponse({ filleuls: f });
+  }
+  return reponse({ erreur: "action" }, 400);
+}
+
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {
   async fetch(request, env){
@@ -86,6 +142,12 @@ export default {
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "GET") return onRequestGet({ request, env });
       if(request.method === "POST") return onRequestPost({ request, env });
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/parrainage"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return parrainagePost(request, env);
       return reponse({ erreur: "méthode" }, 405);
     }
     if(url.pathname === "/api/monde"){

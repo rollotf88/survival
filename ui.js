@@ -885,6 +885,7 @@ function rFamille(){
       }).join("") + '</div>'
     + '<div class="tabs modes"><button class="tab' + (G.seed ? " on" : "") + '" data-act="modefam" data-id="classee">🏆 Partie classée<small>La même pour tous aujourd’hui</small></button>'
     + '<button class="tab' + (G.seed ? "" : " on") + '" data-act="modefam" data-id="libre">🎲 Partie libre<small>Au hasard, sans classement</small></button></div>'
+    + (typeof openSaisieCode === "function" ? '<button class="lien-code" data-act="saisircode">🎟️ ' + (codeEnAttente() ? "Code d’invitation reçu : " + echapper(codeEnAttente()) + " (toucher pour valider)" : "J’ai un code d’invitation") + '</button>' : '')
     + '<p class="msg" id="msgfam"></p><button class="btn" style="width:100%" data-act="famok">Préparer le sac ⏱</button></div>';
 }
 // Fenêtre pour taper un prénom (k = 0 à 3) ou le pseudo (k = "p")

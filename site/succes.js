@@ -45,7 +45,7 @@ function montrerSucces(){
   if(b && b.classList.contains("on")) return; // le suivant viendra après
   var s = fileSucces.shift(); if(!s) return;
   if(!b){ b = document.createElement("div"); b.id = "bandeauSucces"; b.setAttribute("role", "status"); document.body.appendChild(b); }
-  b.innerHTML = '<span class="em">' + s.icone + '</span><span><small>🏅 Succès débloqué</small><b>' + s.nom + '</b></span>';
+  b.innerHTML = '<span class="em">' + s.icone + '</span><span><small>' + (s.titre || "🏅 Succès débloqué") + '</small><b>' + s.nom + '</b></span>';
   b.classList.add("on"); son("construire"); vibrer([60, 40, 60]);
   clearTimeout(minuteurSucces);
   minuteurSucces = setTimeout(function(){ b.classList.remove("on"); setTimeout(montrerSucces, 400); }, 3200);

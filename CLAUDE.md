@@ -227,11 +227,18 @@ Rencontres en chemin (2026-11-09, idée de Fabien « livre dont vous êtes le h�
 - Portraits Gemini (grille `images/sources/pnj-2-gemini.jpg`) : images/portrait-fillette|precheur|mere|chefcamp.webp ; la radio et le chien piégé n'ont pas de portrait
 - Simulation : neutre (Malin 317 prudent, 318 audacieux, 321 sans rencontres ; ~7 rencontres par partie) ; Naïf 29
 
+Parrainage (2026-11-09, idée de Fabien) :
+- Serveur `/api/parrainage` (worker/index.js, POST, clé KV `parrainage`) : `moncode` (crée un code 2 lettres + 3 chiffres par appareil, ex. BL615), `utiliser` (un code d'ami par appareil, pas le sien ; codes spéciaux `speciaux[code] = {actif, n}`, « 18-25 » créé actif par défaut, chacun une fois par appareil), `nouvelles` (pseudos des filleuls depuis la dernière fois, puis vidé)
+- Client (fin de classement.js) : menu ☰ → « 🎁 Inviter » (`openInviter` : mon code en grand, Partager via navigator.share sinon copie du message, Copier le lien `…/?code=BL615`, « J'ai un code ») et « 🎒 Bonus » (`openSacBonus`). Écran de la famille : lien « 🎟️ J'ai un code d'invitation » (prérempli si on arrive par un lien `?code=`, gardé dans `survival_code_attente`). Au lancement, `nouvelles` → bandeau « 🎉 Ton code … a été utilisé par … » (file des succès, champ `titre`) + colis
+- Largage (`openLargage`) : 3 caisses qui tombent en parachute, on en touche une → bonus au hasard (`BONUS` : renfort = nouveau membre si quelqu'un est mort, survie = bidon + conserves, trousse = 2 trousses + antibio, armes = fusil + cartouches, mecano = pièce de voiture manquante + jerrican). `survival_bonus` (3 max), `survival_colis` (colis pas encore ouverts). Un seul bonus par partie (`G.bonusUtilise`), un bonus non utilisé reste pour la partie suivante
+- Aucune écriture depuis localhost (tests de Claude). Protection simple : un code par appareil (effacer les données du navigateur permet de recommencer)
+- Menu ☰ en 4 colonnes en paysage bas ; « 🕯️ Contenus / Durs : activés »
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
 2. Dernier recours et folie — FAIT (voir plus haut)
 3. Rencontres en chemin — FAIT (voir plus haut)
-4. Parrainage : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
+4. Parrainage — FAIT (voir plus haut). Idée d'origine : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
 5. Panneau d'administration (nombre de joueurs, supprimer, gérer les codes), protégé : mot de passe choisi par Fabien et rangé comme secret Cloudflare (Claude ne le voit jamais)
 6. Plus tard : guerres de clans (après 100 jours, bastion de 5 joueurs max avec pièces différentes, lobby, chef qui peut exclure, attaques sur 24 h, guerre de quelques jours, butin limité, mines et barricades, avatar du clan)
 7. Accueil : présenter toutes les fonctionnalités du jeu pour donner envie

@@ -101,11 +101,16 @@ function openMenu(){
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
+  if(typeof openInviter === "function"){
+    h += t("inviter", "🎁 Inviter", "Un colis pour toi et ton ami");
+    var nc = lireColis(), nb = lireBonus().length;
+    h += t("sacbonus", (nc ? "🪂 " : "🎒 ") + "Bonus", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " gardés");
+  }
   if(typeof openStats === "function") h += t("stats", "📊 Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
   h += t("revoirastuces", "💡 Astuces", "Les revoir");
   h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
   if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
-  h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus durs" : "🚫 Contenus durs", CONTENUS_SENSIBLES ? "Activés (dernier recours)" : "Coupés");
+  h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus" : "🚫 Contenus", CONTENUS_SENSIBLES ? "Durs : activés" : "Durs : coupés");
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
   h += '</div>';
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';

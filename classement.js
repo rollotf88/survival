@@ -258,3 +258,130 @@ document.addEventListener("click", function(e){
   }
   else if(a === "menusensible"){ CONTENUS_SENSIBLES = !CONTENUS_SENSIBLES; try{ localStorage.setItem("survival_sensible", CONTENUS_SENSIBLES ? "1" : "0"); }catch(e2){} openMenu(); }
 });
+
+/* =====================================================================
+   PARRAINAGE : mon code, utiliser un code, le largage (mini-jeu) et le sac de bonus
+   - survival_bonus : bonus gardés (3 au maximum), un seul utilisable par partie (G.bonusUtilise)
+   - survival_colis : colis gagnés pas encore ouverts
+   ===================================================================== */
+var BONUS = {
+  renfort: { nom:"Survivant de renfort", icone:"🧑", desc:"Un nouveau membre rejoint la famille (si quelqu’un est mort)",
+    possible:function(){ return vivants().length < FAMILLE.length; },
+    appliquer:function(){ var noms = [["Nora", "👩"], ["Sam", "🧑"], ["Inès", "👩"], ["Yanis", "🧑"]].filter(function(r){ return !G.m.some(function(x){ return x.al && x.nom === r[0]; }); }); var r = noms[0] || ["Alex", "🧑"]; recruter(r[0], r[1]); return r[0] + " rejoint la famille !"; } },
+  survie:  { nom:"Caisse de survie", icone:"📦", desc:"8 rations d’eau et 8 de nourriture",
+    possible:function(){ return true; }, appliquer:function(){ ajouter("bidon", 1); ajouter("conserves", 1); return "Un bidon d’eau et un lot de conserves au stock."; } },
+  trousse: { nom:"Trousse militaire", icone:"💊", desc:"2 trousses de soins et 1 antibiotique",
+    possible:function(){ return true; }, appliquer:function(){ ajouter("trousse", 2); ajouter("antibio", 1); return "2 trousses de soins et un antibiotique au stock."; } },
+  armes:   { nom:"Caisse d’armes", icone:"🔫", desc:"Un fusil de chasse et une boîte de cartouches",
+    possible:function(){ return true; }, appliquer:function(){ ajouter("fusil", 1, 1); ajouter("boiteCart", 1); return "Un fusil de chasse et des cartouches au stock."; } },
+  mecano:  { nom:"Kit du mécano", icone:"🔧", desc:"Une pièce de voiture manquante et un jerrican",
+    possible:function(){ return true; },
+    appliquer:function(){ var p = VOITURE.pieces.filter(function(k){ return !G.voiture.installees[k] && !compter(k); })[0]; if(p) ajouter(p, 1); ajouter("jerrican", 1); return (p ? nommer(p, 1).replace(/^./, function(c){ return c.toUpperCase(); }) + " et un" : "Un") + " jerrican au stock."; } }
+};
+var MAX_BONUS = 3;
+function lireBonus(){ try{ return JSON.parse(localStorage.getItem("survival_bonus")) || []; }catch(e){ return []; } }
+function ecrireBonus(b){ try{ localStorage.setItem("survival_bonus", JSON.stringify(b)); }catch(e){} }
+function lireColis(){ try{ return +localStorage.getItem("survival_colis") || 0; }catch(e){ return 0; } }
+function ecrireColis(n){ try{ localStorage.setItem("survival_colis", Math.max(0, n)); }catch(e){} }
+function adresseParrainage(){ return adresseClassement().replace("/api/classement", "/api/parrainage"); }
+function appelParrainage(corps){
+  return fetch(adresseParrainage(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
+}
+// Le menu : « 🎁 Inviter » et « 🎒 Bonus »
+function openInviter(){
+  var lien = SITE_JEU + "/?code=";
+  show('<h2>🎁 Inviter des amis</h2><p>Partage ton code : quand un ami l’utilise, <b>vous recevez chacun un colis</b> de ravitaillement largué sur le quartier, avec un bonus exclusif.</p>'
+    + '<div class="moncode"><small>Ton code</small><b id="moncode">…</b></div><p class="msg" id="msgcode"></p>'
+    + '<div class="row"><button class="btn" data-act="partagercode" disabled id="btnpartage">📤 Partager</button><button class="btn alt" data-act="copiercode" disabled id="btncopie">📋 Copier le lien</button></div>'
+    + '<button class="loc" data-act="saisircode"><b>🎟️ J’ai un code d’invitation</b><small>Un seul code d’ami par appareil (et les codes spéciaux)</small></button>'
+    + '<button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
+  var code = null; try{ code = localStorage.getItem("survival_code"); }catch(e){}
+  var poser = function(c, n){ code = c; var e = $("moncode"); if(!e) return; e.textContent = c; $("btnpartage").disabled = false; $("btncopie").disabled = false; $("btnpartage").setAttribute("data-id", c); $("btncopie").setAttribute("data-id", c); if(n) $("msgcode").textContent = "👥 Déjà utilisé par " + n + " ami" + (n > 1 ? "s" : "") + " !"; };
+  if(code) poser(code);
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){ if(!code) $("msgcode").textContent = "(Test sur l’ordinateur : pas de code créé.)"; return; }
+  appelParrainage({ action:"moncode", id:idAppareil() }).then(function(d){ if(d.code){ try{ localStorage.setItem("survival_code", d.code); }catch(e){} poser(d.code, d.n); } })
+    .catch(function(){ if(!code){ var m = $("msgcode"); if(m) m.textContent = MSG_HORS_LIGNE; } });
+}
+function texteInvitation(c){ return "Je survis à l’apocalypse dans SURVIVAL – Le dernier refuge 🧟 Rejoins-moi avec mon code " + c + " : on reçoit chacun un colis de ravitaillement ! " + SITE_JEU + "/?code=" + c; }
+function openSaisieCode(pre){
+  show('<h2>🎟️ Code d’invitation</h2><p class="sub">Tape le code d’un ami (ou un code spécial).</p>'
+    + '<input id="champcode" class="champ grand" maxlength="12" autocomplete="off" autocapitalize="characters" value="' + echapper(pre || "") + '" placeholder="Ex. BL615">'
+    + '<p class="msg" id="msgcode"></p><div class="row"><button class="btn" data-act="validercode">Valider</button><button class="btn alt" data-act="close">Annuler</button></div>');
+  setTimeout(function(){ var c = $("champcode"); if(c) c.focus(); }, 50);
+}
+function validerCode(){
+  var c = ($("champcode").value || "").trim(), m = $("msgcode");
+  if(!c){ m.textContent = "Tape un code."; return; }
+  m.textContent = "Vérification…";
+  appelParrainage({ action:"utiliser", id:idAppareil(), code:c, pseudo:lirePseudo() }).then(function(d){
+    if(d.ok){ ecrireColis(lireColis() + (d.colis || 1)); try{ localStorage.removeItem("survival_code_attente"); }catch(e){} openLargage(d.special ? "Code spécial accepté !" : "Code accepté ! Ton ami reçoit aussi un colis."); }
+    else m.textContent = "❌ " + (d.erreur || "Code refusé.");
+  }).catch(function(){ m.textContent = MSG_HORS_LIGNE; });
+}
+/* ---------- Le largage : 3 caisses tombent en parachute, on en ouvre une ---------- */
+function openLargage(titre){
+  var n = lireColis();
+  if(!n){ openSacBonus(); return; }
+  if(lireBonus().length >= MAX_BONUS){ show('<h2>🪂 Colis en attente : ' + n + '</h2><p>Ton sac de bonus est plein (' + MAX_BONUS + ' au maximum). Utilise un bonus pendant une partie, puis reviens ouvrir ton colis.</p><button class="btn" style="width:100%" data-act="sacbonus">🎒 Voir mes bonus</button>' + BTN_FERMER()); return; }
+  show('<div class="largage"><h2>🪂 ' + (titre || "Ravitaillement largué !") + '</h2><p class="sub">Un avion survole le quartier et largue trois caisses. Tu n’as le temps d’en récupérer qu’une. Laquelle ?' + (n > 1 ? " (" + n + " colis)" : "") + '</p>'
+    + '<div class="caisses">' + [0, 1, 2].map(function(k){ return '<button class="caisse c' + k + '" data-act="caisse" data-id="' + k + '" aria-label="Caisse ' + (k + 1) + '"><span class="para">🪂</span><span class="boite">📦</span></button>'; }).join("") + '</div></div>');
+}
+function ouvrirCaisse(k){
+  var ids = Object.keys(BONUS), id = ids[Math.floor(Math.random() * ids.length)], B = BONUS[id];
+  var b = lireBonus(); b.push(id); ecrireBonus(b); ecrireColis(lireColis() - 1);
+  document.querySelectorAll(".caisse").forEach(function(c, j){ c.disabled = true; if(j !== k) c.classList.add("perdue"); else c.classList.add("ouverte"); });
+  setTimeout(function(){
+    show('<div class="largage"><h2>📦 ' + B.icone + ' ' + B.nom + ' !</h2><p>' + B.desc + '.</p><p class="sub">Il rejoint ton sac de bonus (' + lireBonus().length + ' / ' + MAX_BONUS + '). Tu pourras l’utiliser <b>une fois par partie</b>, au moment de ton choix ; s’il ne sert pas, il reste pour la partie suivante.</p>'
+      + (lireColis() ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="largage">🪂 Ouvrir le colis suivant (' + lireColis() + ')</button>' : '')
+      + '<button class="btn alt" style="width:100%" data-act="sacbonus">🎒 Mes bonus</button></div>');
+    if(typeof son === "function") son("butin");
+  }, 650);
+}
+function openSacBonus(msg){
+  var b = lireBonus(), enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
+  var h = '<h2>🎒 Mes bonus · ' + b.length + ' / ' + MAX_BONUS + '</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '')
+    + '<p class="sub">Un seul bonus par partie' + (enJeu && G.bonusUtilise ? " : tu as déjà utilisé le tien pour cette partie." : ".") + ' Gagne des colis en invitant des amis.</p>';
+  h += b.length ? b.map(function(id, k){
+    var B = BONUS[id]; if(!B) return "";
+    var raison = !enJeu ? "Pendant une partie" : G.bonusUtilise ? "Déjà un bonus cette partie" : !B.possible() ? "Pas utile pour l’instant" : "";
+    return '<button class="loc craft" data-act="utiliserbonus" data-id="' + k + '"' + (raison ? " disabled" : "") + '><span class="em">' + B.icone + '</span><span class="eqt"><b>' + B.nom + '</b><small>' + (raison ? "❌ " + raison + " · " : "") + B.desc + '</small></span></button>';
+  }).join("") : '<p>Aucun bonus pour l’instant.</p>';
+  if(lireColis()) h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="largage">🪂 Ouvrir mon colis (' + lireColis() + ')</button>';
+  show(h + '<div class="row"><button class="btn alt" data-act="inviter">🎁 Inviter</button><button class="btn alt" data-act="menu">↩️ Menu</button></div>');
+}
+function utiliserBonus(k){
+  var b = lireBonus(), id = b[k], B = BONUS[id];
+  if(!B || !G || G.ph !== "game" || G.bonusUtilise || !B.possible()) return;
+  var t = B.appliquer(); G.bonusUtilise = id; b.splice(k, 1); ecrireBonus(b);
+  render(); if(typeof sauver === "function") sauver();
+  openSacBonus(B.icone + " " + t);
+}
+// Au lancement : un code reçu par lien (?code=) et les nouvelles de mes filleuls
+(function(){
+  var m = /[?&]code=([A-Za-z0-9-]{3,12})/.exec(location.search);
+  if(m){ try{ localStorage.setItem("survival_code_attente", m[1].toUpperCase()); }catch(e){} try{ history.replaceState(null, "", location.pathname); }catch(e){} }
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  setTimeout(function(){
+    appelParrainage({ action:"nouvelles", id:idAppareil() }).then(function(d){
+      if(!d || !d.filleuls || !d.filleuls.length) return;
+      ecrireColis(lireColis() + d.filleuls.length);
+      var c = ""; try{ c = localStorage.getItem("survival_code") || ""; }catch(e){}
+      if(typeof fileSucces !== "undefined"){ d.filleuls.forEach(function(p){ fileSucces.push({ icone:"🎉", titre:"Parrainage", nom:"Ton code " + c + " a été utilisé par " + p + " ! Un colis t’attend (menu ☰)" }); }); montrerSucces(); }
+    }).catch(function(){});
+  }, 2500);
+})();
+function codeEnAttente(){ try{ return localStorage.getItem("survival_code_attente") || ""; }catch(e){ return ""; } }
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "inviter") openInviter();
+  else if(a === "saisircode") openSaisieCode(codeEnAttente());
+  else if(a === "validercode") validerCode();
+  else if(a === "largage") openLargage();
+  else if(a === "caisse") ouvrirCaisse(+id);
+  else if(a === "sacbonus") openSacBonus();
+  else if(a === "utiliserbonus") utiliserBonus(+id);
+  else if(a === "partagercode"){ var t = texteInvitation(id); if(navigator.share) navigator.share({ title:"SURVIVAL – Le dernier refuge", text:t }).catch(function(){}); else { try{ navigator.clipboard.writeText(t); $("msgcode").textContent = "✅ Message copié : colle-le à tes amis."; }catch(e2){} } }
+  else if(a === "copiercode"){ try{ navigator.clipboard.writeText(SITE_JEU + "/?code=" + id); $("msgcode").textContent = "✅ Lien copié !"; }catch(e3){ $("msgcode").textContent = SITE_JEU + "/?code=" + id; } }
+});
+document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "champcode") validerCode(); });
