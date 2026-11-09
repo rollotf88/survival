@@ -419,7 +419,7 @@ function afficherClans(msg){
       return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + echapper(m.pseudo || "?") + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
-    h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="bastion">🏰 Le bastion (réserve, défenses)</button><p class="sub">⚔️ Bientôt : les guerres contre les autres clans complets.</p>'
+    h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
       + '<div class="row"><button class="btn alt" data-act="clanquitter">Quitter le clan</button><button class="btn" data-act="close">Fermer</button></div>';
     show(h); return;
   }
@@ -515,3 +515,77 @@ document.addEventListener("click", function(e){
 });
 // Au lancement : bonus des tours de guet de mon clan (lu une fois)
 (function(){ if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; setTimeout(function(){ appelClans({ action:"liste" }).then(function(d){ noterTours(d && d.monClan ? d.monClan.tours : 0); }).catch(function(){}); }, 4000); })();
+
+/* ---------- Guerres de clans (phase 3) ---------- */
+var etatGuerre = null;
+function tempsRestant(t){ var m = Math.max(0, Math.round((t - Date.now()) / 60000)); return m >= 60 ? Math.floor(m / 60) + " h " + (m % 60) + " min" : m + " min"; }
+function openGuerre(msg){
+  show('<h2>⚔️ La guerre</h2><p class="sub">Chargement…</p>' + BTN_FERMER());
+  appelClans({ action:"guerre" }).then(function(d){ if(d.erreur){ show('<h2>⚔️ La guerre</h2><p>❌ ' + d.erreur + '</p>' + BTN_FERMER()); return; } etatGuerre = d; afficherGuerre(msg); })
+    .catch(function(){ show('<h2>⚔️ La guerre</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "la guerre") + '</p>' + BTN_FERMER()); });
+}
+function bandeauGuerre(W){
+  return '<div class="gu-tete"><span class="gu-camp">' + blason(W.nous.blason) + '<b>' + echapper(W.nous.nom) + '</b><span class="gu-et">' + W.nous.etoiles + ' ★</span></span><span class="gu-vs">VS</span>'
+    + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b><span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
+}
+function afficherGuerre(msg){
+  var d = etatGuerre, W = d.guerre, h = '<h2>⚔️ La guerre</h2>' + (msg ? '<p class="msg ' + (msg.charAt(0) === "❌" ? "" : "g2") + '">' + msg + '</p>' : '');
+  if(d.bilan) h += '<p class="sub">Bilan du clan : ' + d.bilan.gagnees + ' victoire' + (d.bilan.gagnees > 1 ? "s" : "") + ', ' + d.bilan.perdues + ' défaite' + (d.bilan.perdues > 1 ? "s" : "") + ', ' + d.bilan.nulles + ' nulle' + (d.bilan.nulles > 1 ? "s" : "") + '.</p>';
+  if(!W){
+    if(d.derniere) h += '<div class="carte-guerre">' + bandeauGuerre(d.derniere) + '<p class="etat ' + (d.derniere.gagnant === "nous" ? "ok" : d.derniere.gagnant ? "ko" : "") + '">' + (d.derniere.gagnant === "nous" ? "🏆 Dernière guerre gagnée !" : d.derniere.gagnant ? "Dernière guerre perdue." : "Dernière guerre : match nul.") + '</p></div>';
+    if(!d.complet) h += '<p>🔒 Il faut <b>5 familles</b> dans le clan pour partir en guerre. Les clans incomplets ne peuvent ni attaquer ni être attaqués.</p>';
+    else if(d.recherche) h += '<p>🔎 Le clan cherche un adversaire de sa taille… La guerre commencera dès qu’un autre clan complet sera prêt.</p>' + (d.chef ? '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guerreannuler">Annuler la recherche</button>' : '');
+    else h += '<p>Une guerre dure <b>3 jours</b>. Chaque jour, chaque membre peut lancer <b>un assaut</b> contre une famille adverse : un combat tactique contre ses défenseurs, ses mines et ses remparts. Les étoiles décident du vainqueur, et chaque victoire rapporte une part de la réserve adverse.</p>'
+      + (d.chef ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="guerrechercher">⚔️ Chercher une guerre</button>' : '<p class="sub">Seul le chef peut lancer la recherche d’un adversaire.</p>');
+    show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>'); return;
+  }
+  h += bandeauGuerre(W) + '<p class="sub">Jour ' + W.jour + ' / 3 · ' + (W.jour < 3 ? "nouveaux assauts dans " + tempsRestant(W.finJour) : "fin de la guerre dans " + tempsRestant(W.fin)) + ' · 🧱 remparts ' + W.eux.remparts + ' · 💣 ' + W.eux.mines + ' mine' + (W.eux.mines > 1 ? "s" : "") + '</p>';
+  var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
+  h += '<p class="titre-butin">🎯 Familles adverses</p><div class="clan-liste">' + W.cibles.map(function(c){
+    var raison = !enJeu ? "Pendant une partie" : W.dejaMoi ? "Ton assaut est fait" : c.attaquee ? "Déjà attaquée" : "";
+    return '<div class="clan-l"><span class="cl-info"><b>' + echapper(c.pseudo || "?") + '</b><small>Jour ' + (c.jour || "?") + (c.attaquee ? " · attaquée aujourd’hui" : "") + '</small></span><button class="mini" data-act="guerreattaquer" data-id="' + echapper(c.id) + '"' + (raison ? " disabled title=\"" + raison + "\"" : "") + '>' + (raison && raison !== "Pendant une partie" ? "✔" : "⚔️ Attaquer") + '</button></div>';
+  }).join("") + '</div>';
+  if(W.dejaMoi) h += '<p class="sub">✅ Tu as lancé ton assaut aujourd’hui. Reviens demain !</p>';
+  if(W.assauts.length) h += '<p class="titre-butin">📜 Assauts</p><div class="fil">' + W.assauts.map(function(s){ return '<div class="lj ' + (s.nous ? "bon" : "mauvais") + '"><span class="lj-ico">' + (s.nous ? "⚔️" : "🛡️") + '</span><span class="lj-txt">Jour ' + s.jour + ' : <b>' + echapper(s.qui) + '</b> attaque ' + echapper(s.cible) + ' → ' + (s.etoiles ? "★".repeat(s.etoiles) : "repoussé") + '</span></div>'; }).join("") + '</div>';
+  show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
+}
+// Qui part à l'assaut : les 2 membres en état de sortir avec le plus de vie et d'énergie
+function equipeAssaut(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ var x = G.m[i]; return x.al && x.en >= BAL.energieAssaut && x.hp > 25; })
+  .sort(function(a, b){ return (G.m[b].hp + G.m[b].en) - (G.m[a].hp + G.m[a].en); }).slice(0, BAL.membresParExpedition); }
+function openAssaut(cible){
+  var eq = equipeAssaut(), c = etatGuerre.guerre.cibles.find(function(x){ return x.id === cible; }) || {};
+  if(!eq.length){ afficherGuerre("❌ Personne n’a assez d’énergie (" + BAL.energieAssaut + " ⚡) ni de vie pour partir à l’assaut. Reviens après une nuit de repos."); return; }
+  show('<h2>⚔️ Assaut sur ' + echapper(c.pseudo || "?") + '</h2><p>Partent à l’assaut : <b>' + liste(eq.map(function(i){ return G.m[i].nom; })) + '</b> (−' + BAL.energieAssaut + ' ⚡ chacun). Ils affronteront les défenseurs du bastion adverse, ses mines et ses remparts.</p>'
+    + '<p class="sub">⚠️ Les blessures et les morts sont réelles. Tu peux fuir pendant le combat, mais sans étoile.</p>'
+    + '<div class="row"><button class="btn" data-act="guerrego" data-id="' + echapper(cible) + '">⚔️ À l’assaut !</button><button class="btn alt" data-act="guerre">Retour</button></div>');
+}
+function lancerAssaut(cible){
+  var eq = equipeAssaut(); if(!eq.length) return;
+  appelClans({ action:"debutAssaut", cible:cible }).then(function(d){
+    if(d.erreur){ openGuerre("❌ " + d.erreur); return; }
+    creerAssaut(d, eq); render(); if(typeof sauver === "function") sauver();
+    choixCombat = {}; cibleCombat = 0; dernierPV = null; openCombat();
+  }).catch(function(){ openGuerre("❌ " + MSG_HORS_LIGNE); });
+}
+function terminerAssaut(){
+  var b = bilanAssaut();
+  appelClans({ action:"finAssaut", assaut:b.assaut, victoire:b.victoire, etoiles:b.etoiles }).then(function(d){
+    finirAssaut(); var butin = [];
+    if(!d.erreur) (d.butin || []).forEach(function(p){ if(OBJETS[p[0]]){ ajouter(p[0], p[1]); butin.push(nommer(p[0], p[1])); } });
+    render(); if(typeof sauver === "function") sauver();
+    show('<h2>' + (b.victoire ? "⭐ Assaut réussi !" : "🛡️ Assaut repoussé") + '</h2><p class="gu-etoiles">' + (b.etoiles ? "★".repeat(b.etoiles) + "☆".repeat(3 - b.etoiles) : "☆☆☆") + '</p>'
+      + (b.resume.length ? puces(b.resume) : '') + (butin.length ? '<p>🎒 Butin pris dans la réserve adverse : <b>' + liste(butin) + '</b>.</p>' : b.victoire ? '<p class="sub">La réserve adverse était vide.</p>' : '')
+      + (d.erreur ? '<p class="msg">❌ ' + d.erreur + '</p>' : '')
+      + '<div class="row"><button class="btn" data-act="guerre">⚔️ La guerre</button><button class="btn alt" data-act="close">Fermer</button></div>');
+    finiSiMorts();
+  }).catch(function(){ finirAssaut(); render(); show('<h2>⚔️ Assaut</h2><p>' + MSG_HORS_LIGNE + '</p>' + BTN_FERMER()); });
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "guerre") openGuerre();
+  else if(a === "guerrechercher") appelClans({ action:"chercherGuerre" }).then(function(d){ openGuerre(d.erreur ? "❌ " + d.erreur : d.debut ? "⚔️ Un adversaire a été trouvé : la guerre commence !" : "🔎 Recherche lancée. La guerre commencera dès qu’un autre clan complet sera prêt."); });
+  else if(a === "guerreannuler") appelClans({ action:"annulerRecherche" }).then(function(d){ openGuerre(d.erreur ? "❌ " + d.erreur : "Recherche annulée."); });
+  else if(a === "guerreattaquer") openAssaut(id);
+  else if(a === "guerrego") lancerAssaut(id);
+});

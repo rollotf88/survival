@@ -134,6 +134,35 @@ async function parrainagePost(request, env){
   return reponse({ erreur: "action" }, 400);
 }
 
+// ---------- Guerres de clans (phase 3) ----------
+// Seuls deux clans COMPLETS (5 familles) peuvent se battre. Le chef lance la recherche ; dès qu'un autre clan complet
+// cherche aussi, la guerre commence : 3 jours, chaque jour chaque membre peut lancer 1 assaut contre une famille adverse
+// (combat tactique dans le jeu). Étoiles : 1 pour la victoire, +1 si personne n'est mort, +1 si gagné en 3 tours ou moins.
+// Butin : une petite part de la réserve adverse (jamais plus de 30 % de ce qu'elle avait au début de la guerre).
+const DUREE_GUERRE = 3, JOUR_MS = 24 * 3600 * 1000;
+function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
+function cloreGuerres(C){
+  const now = Date.now();
+  for(const wid in C.guerres){
+    const W = C.guerres[wid]; if(W.fini || now < W.debut + DUREE_GUERRE * JOUR_MS) continue;
+    W.fini = true; W.gagnant = W.etoiles.a > W.etoiles.b ? W.a : W.etoiles.b > W.etoiles.a ? W.b : null;
+    [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.guerre = null; c.historique = [wid].concat(c.historique || []).slice(0, 10);
+      c.bilan = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 }; if(!W.gagnant) c.bilan.nulles++; else if(W.gagnant === cid) c.bilan.gagnees++; else c.bilan.perdues++; });
+  }
+  // On ne garde que les 30 dernières guerres terminées
+  const finies = Object.keys(C.guerres).filter((w) => C.guerres[w].fini).sort((x, y) => C.guerres[y].debut - C.guerres[x].debut);
+  finies.slice(30).forEach((w) => { delete C.guerres[w]; });
+}
+function vueGuerre(C, W, mon, id){
+  const camp = W.a === mon.id ? "a" : "b", adv = C.clans[camp === "a" ? W.b : W.a] || { nom: "?", blason: 1, membres: [], def: {} };
+  const j = Math.min(DUREE_GUERRE, jourGuerre(W)), finJour = W.debut + j * JOUR_MS;
+  const dejaMoi = W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false);
+  return { id: W.id, jour: j, fini: !!W.fini, gagnant: W.gagnant === mon.id ? "nous" : W.gagnant ? "eux" : null, finJour, fin: W.debut + DUREE_GUERRE * JOUR_MS,
+    nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp] }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0 },
+    cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
+    dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
+}
+
 // ---------- Bastion du clan (phase 2) : réserve commune, défenses, journal ----------
 // Objets qu'on peut déposer (empilables uniquement) et coût des défenses (payé avec la réserve)
 const DEPOSABLES = ["bidon", "bouteille", "conserve", "conserves", "riz", "pates", "biscuits", "barre", "ration", "poisson", "bandage", "trousse", "antibio", "balle", "cartouche", "planche", "ferraille", "clous", "ruban", "chiffon", "alcool", "pile", "jerrican", "canette", "epices", "huile", "farine"];
@@ -158,12 +187,12 @@ function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris 
 // {action:"exclure", id, cible}                      -> le chef exclut un membre
 // Accès à partir du jour `jourMinClan` de sa partie (100, réglable dans l'administration : clé KV « reglages »).
 const CLE_CLANS = "clans", CLE_REGLAGES = "reglages", MAX_CLAN = 5, BLASONS_OK = 12;
-async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {}; c.clans = c.clans || {}; c.parJoueur = c.parJoueur || {}; return c; }
+async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {}; c.clans = c.clans || {}; c.parJoueur = c.parJoueur || {}; c.guerres = c.guerres || {}; c.file = c.file || []; cloreGuerres(c); return c; }
 async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 100; return r; }
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree }; }
-function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -239,6 +268,68 @@ async function clansPost(request, env){
       for(const m in cout){ mon.reserve[m] -= cout[m]; if(!mon.reserve[m]) delete mon.reserve[m]; }
       mon.def[k]++; noter(mon, pseudo || "?", "a construit : " + k + " (niveau " + mon.def[k] + ")"); await sauver();
       return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "guerre": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const W = mon.guerre ? C.guerres[mon.guerre] : null;
+      return reponse({ ok: true, complet: mon.membres.length >= MAX_CLAN, chef: mon.chef === id, recherche: !!mon.recherche, bilan: mon.bilan || null,
+        guerre: W ? vueGuerre(C, W, mon, id) : null,
+        derniere: !W && mon.historique && C.guerres[mon.historique[0]] ? vueGuerre(C, C.guerres[mon.historique[0]], mon, id) : null });
+    }
+    case "chercherGuerre": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      if(mon.chef !== id) return reponse({ erreur: "Seul le chef peut lancer une guerre." });
+      if(mon.membres.length < MAX_CLAN) return reponse({ erreur: "Il faut " + MAX_CLAN + " familles dans le clan pour partir en guerre." });
+      if(mon.guerre) return reponse({ erreur: "Le clan est déjà en guerre." });
+      C.file = C.file.filter((cid) => C.clans[cid] && C.clans[cid].recherche && !C.clans[cid].guerre && C.clans[cid].membres.length >= MAX_CLAN && cid !== mon.id);
+      if(C.file.length){
+        const autre = C.clans[C.file.shift()], wid = "w" + Math.random().toString(36).slice(2, 9);
+        C.guerres[wid] = { id: wid, a: autre.id, b: mon.id, debut: now, etoiles: { a: 0, b: 0 }, assauts: [], pris: { a: {}, b: {} }, depart: { a: Object.assign({}, autre.reserve || {}), b: Object.assign({}, mon.reserve || {}) } };
+        autre.guerre = mon.guerre = wid; autre.recherche = mon.recherche = false;
+        noter(bastionDe(autre), "⚔️", "La guerre contre « " + mon.nom + " » commence !"); noter(bastionDe(mon), "⚔️", "La guerre contre « " + autre.nom + " » commence !");
+        await sauver(); return reponse({ ok: true, debut: true });
+      }
+      mon.recherche = true; C.file.push(mon.id); await sauver();
+      return reponse({ ok: true, attente: true });
+    }
+    case "annulerRecherche": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef peut annuler." });
+      mon.recherche = false; C.file = C.file.filter((cid) => cid !== mon.id); await sauver(); return reponse({ ok: true });
+    }
+    case "debutAssaut": {
+      if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
+      const W = C.guerres[mon.guerre], j = jourGuerre(W); if(W.fini || j > DUREE_GUERRE) return reponse({ erreur: "La guerre est terminée." });
+      const camp = W.a === mon.id ? "a" : "b", adv = C.clans[camp === "a" ? W.b : W.a];
+      if(!adv) return reponse({ erreur: "Le clan adverse n’existe plus." });
+      if(W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Tu as déjà lancé ton assaut aujourd’hui. Reviens demain !" });
+      const cible = adv.membres.find((m) => m.id === String(d.cible || "")); if(!cible) return reponse({ erreur: "Cette famille n’est plus dans le clan adverse." });
+      if(W.assauts.some((s) => s.cible === cible.id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Cette famille a déjà été attaquée aujourd’hui." });
+      bastionDe(adv); const mines = Math.min(3, adv.def.mines || 0); adv.def.mines -= mines;
+      W.assauts = W.assauts.filter((s) => !(s.par === id && s.fini === false)); // un assaut abandonné ne compte pas
+      const sid = "s" + Math.random().toString(36).slice(2, 9);
+      W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
+      if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
+      await sauver();
+      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, mines });
+    }
+    case "finAssaut": {
+      if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
+      const W = C.guerres[mon.guerre], s = W.assauts.find((x) => x.id === String(d.assaut || "") && x.par === id && x.fini === false);
+      if(!s) return reponse({ erreur: "Assaut introuvable." });
+      const camp = s.camp, adv = bastionDe(C.clans[camp === "a" ? W.b : W.a] || { reserve: {} });
+      s.fini = true; s.etoiles = d.victoire ? Math.max(1, Math.min(3, Math.floor(+d.etoiles) || 1)) : 0;
+      // On garde la meilleure attaque par cible et par jour : seules les étoiles en plus comptent
+      W.etoiles[camp] += s.etoiles;
+      if(s.etoiles){
+        const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
+        const ids = Object.keys(adv.reserve).filter((k) => adv.reserve[k] > 0).sort((x, y) => adv.reserve[y] - adv.reserve[x]).slice(0, 3);
+        ids.forEach((k) => { const plafond = Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0); const n = Math.min(plafond, Math.max(1, Math.floor(adv.reserve[k] * 0.05 * s.etoiles)));
+          if(n > 0){ adv.reserve[k] -= n; if(!adv.reserve[k]) delete adv.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
+        noter(adv, "⚔️", (pseudo || "?") + " a pillé le bastion (" + s.etoiles + " ★)");
+      }
+      noter(bastionDe(mon), "⚔️", (pseudo || "?") + " a attaqué " + s.ciblePseudo + " : " + (s.etoiles ? s.etoiles + " ★" : "repoussé"));
+      await sauver();
+      return reponse({ ok: true, etoiles: s.etoiles, butin: s.butin, guerre: vueGuerre(C, W, mon, id) });
     }
     case "exclure": {
       if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut exclure un membre." });

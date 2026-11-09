@@ -138,7 +138,7 @@ function openGuide(){
       return '<div class="gsec"><b>' + iconeLieu(L) + ' ' + L.nom + '</b><p class="sub">' + tags.join(" · ") + '</p><div class="gmini">' + Object.keys(L.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>';
     }).join("");
   } else if(guideOnglet === "zombies"){
-    h += ZOMBIES.map(function(z){
+    h += ZOMBIES.filter(function(z){ return z.jour < 1000; }).map(function(z){
       return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + z.pv + ' PV · frappe ' + z.degats[0] + ' à ' + z.degats[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
     }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
   } else {

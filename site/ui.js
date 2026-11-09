@@ -261,7 +261,7 @@ var choixCombat = {}, cibleCombat = 0;
 var dernierPV = null; // PV au tour précédent : sert à animer qui vient d'être touché
 function openCombat(){
   astuce("combat");
-  var C = G.combat, L = LIEUX[G.exp.lieu], fini = !!C.fin;
+  var C = G.combat, L = G.exp.guerre ? { nom:G.exp.nomLieu.replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); }) } : LIEUX[G.exp.lieu], fini = !!C.fin;
   if(dernierPV && dernierPV.c !== C) dernierPV = null; // nouveau combat
   if(!fini && zombiesDebout().some(function(z){ return !z.int; })) preparerIntentions(); // ancienne sauvegarde
   var debout = zombiesDebout();
@@ -315,7 +315,7 @@ function openCombat(){
         + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol : x.al ? "✊ Plus d’arme" : "") + '</small></span></div>';
     }).join("");
   }
-  h += fini ? '<button class="btn" style="width:100%" data-act="cfin">' + (C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
+  h += fini ? '<button class="btn" style="width:100%" data-act="cfin">' + (G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
   if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
@@ -1090,7 +1090,7 @@ document.addEventListener("click", function(e){
     while(!G.combat.fin && g++ < 50) tout = tout.concat(tourAuto());
     G.combat.journal = tout; render(); openCombat(); return;
   }
-  else if(a === "cfin"){ apresEtape(avantFouille()); return; }
+  else if(a === "cfin"){ if(G.exp && G.exp.guerre && typeof terminerAssaut === "function"){ terminerAssaut(); return; } apresEtape(avantFouille()); return; }
   else if(a === "son"){ basculerSon(); return; }
   else if(a === "stock"){ selStock = null; openStock(); return; }
   else if(a === "invf"){ filtreStock = id; openStock(); return; }

@@ -923,3 +923,11 @@ button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}
 /* ---------- Bastion ---------- */
 .bast-def{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 8px;margin-bottom:8px}
 .bast-def .invfiche{margin:0 0 4px}
+/* ---------- Guerres de clans ---------- */
+.gu-tete{display:flex;align-items:center;justify-content:space-between;gap:6px;border:3px solid var(--bois);border-radius:14px;background:linear-gradient(90deg,color-mix(in srgb,var(--ok) 18%,var(--bg)),var(--bg) 45%,var(--bg) 55%,color-mix(in srgb,var(--bad) 18%,var(--bg)));padding:6px 8px;margin:4px 0 6px}
+.gu-camp{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;text-align:center}
+.gu-camp b{font-size:13px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gu-et{font-family:"Bangers","Impact",sans-serif;font-size:24px;color:var(--acc)}
+.gu-vs{font-family:"Bangers","Impact",sans-serif;font-size:26px;color:var(--bad)}
+.carte-guerre{margin-bottom:8px}
+.gu-etoiles{font-size:40px;text-align:center;color:#e8a92a;letter-spacing:.1em;margin:0 0 6px}

@@ -13,7 +13,7 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
 var PORTRAITS_PNJ = { rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
-  rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
+  defenseur:"images/portrait-pillard.webp", rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
 // Décor du combat selon le lieu (images/combat/*.webp)
 var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
   usine:["Zone industrielle", "Garage auto", "Entrepôt logistique", "Base militaire", "Caserne des pompiers", "Péniche du canal"] };
@@ -121,6 +121,7 @@ var BAL = {
   },    // mais la nuit suivante, ce membre récupère 20 de moins
   // Rencontres en chemin : une chance à chaque fouille, au plus une par jour
   rencontres: { jour:3, chance:0.1, bonusTrait:0.2 },
+  energieAssaut: 40,        // un assaut de bastion (guerre de clans) coûte 40 ⚡ à chaque membre de l'équipe
   // Dernier recours (contenu sensible, désactivable dans le menu) : quand la famille meurt de faim
   sacrifice: {
     faimMax: 10,             // proposé seulement si quelqu'un est à 10 de faim ou moins, sans plus rien à manger
@@ -234,7 +235,9 @@ var ZOMBIES = [
   { id:"rampant", nom:"Rampant", icone:"🧟", pv:4,  degats:[3, 6],  jour:6,  poids:2, premier:true, desc:"Il se traîne au sol sans qu’on le voie : il frappe avant tout le monde." },
   { id:"hurleur", nom:"Hurleur", icone:"🧟", pv:5,  degats:[2, 4],  jour:8,  poids:2, hurle:true, desc:"Un tour sur deux, il hurle et appelle un autre zombie. À abattre en premier !" },
   { id:"gonfle",  nom:"Gonflé",  icone:"🧟", pv:10, degats:[2, 4],  jour:10, poids:1, explose:[4, 7], desc:"Quand il meurt, il explose et blesse toute l’équipe (moitié moins pour qui se protège)." },
-  { id:"soldat",  nom:"Soldat",  icone:"🪖", pv:12, degats:[6, 10], jour:15, poids:1, armure:3, desc:"Son gilet retire 3 dégâts à chaque coup. Vise la tête : l’armure ne protège pas." }
+  { id:"soldat",  nom:"Soldat",  icone:"🪖", pv:12, degats:[6, 10], jour:15, poids:1, armure:3, desc:"Son gilet retire 3 dégâts à chaque coup. Vise la tête : l’armure ne protège pas." },
+  // Guerres de clans : les défenseurs d'un bastion adverse (jamais tirés au hasard : jour 99999)
+  { id:"defenseur", nom:"Défenseur", icone:"🧔", pv:12, degats:[4, 8], jour:99999, poids:0, desc:"Un survivant d’un autre clan qui défend son bastion. Les remparts le rendent plus coriace." }
 ];
 function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }
 var DISTANCES = ["", "🚶 Près", "🚶 Moyen", "🚶 Loin", "🚗 Éloigné", "🚗 Très éloigné"];
