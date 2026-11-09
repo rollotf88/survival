@@ -596,7 +596,7 @@ var RECRUES = [ { nom:"Sam", icone:"🧑" }, { nom:"Nora", icone:"👩‍🦱" }
 /* ---------- Astuces de première partie ----------
    Chacune s'affiche une seule fois, au bon moment (bulle en haut de l'écran). */
 var ASTUCES = {
-  pieces:     "👉 La maison a plusieurs pièces : glisse le doigt sur la pièce (ou touche les flèches ◀ ▶ en haut) pour aller à l’atelier et au garage.",
+  pieces:     "👉 La maison a plusieurs pièces : glisse le doigt sur la pièce (ou touche les flèches ◀ ▶ en haut) pour aller à la réserve, à l’atelier, au garage et dans la cour.",
   depart:     "⏱ Vite ! Touche les objets pour les mettre dans le sac. Tout servira : de l’eau et à manger d’abord, puis de quoi se défendre et s’éclairer.",
   famille:    "👨‍👩‍👧‍👦 Voici ta famille. Touche 1 ou 2 membres, puis 🔍 Fouiller pour les envoyer chercher des objets. Raccourci : les objets de la pièce sont cliquables (porte, table, canapé…).",
   equipement: "🗡️ Sous chaque membre, 3 cases : arme, outil (lampe, boîte à outils…) et sac. Une case orange avec un « + » : un objet t’attend au stock, touche-la pour l’équiper.",

@@ -57,7 +57,7 @@ async function toutControler(){
   nouvellePartie(graineDuJour()); render(); await att(150); res.depart = controleAffichage();
   G.pack = { bidon:2, conserves:1, couteau:1, lampe:1 }; demarrer(); G.day = 12; G.chap = 4; G.chien = { nom:"Rex", faim:1 }; G.ref.barr = 1;
   render(); await att(300); var p = document.getElementById("piece"); if(p) p.classList.add("montrer"); res.principal = controleAffichage();
-  if(typeof allerPiece === "function"){ allerPiece(1); await att(200); res.atelier = controleAffichage(); allerPiece(2); await att(200); res.garage = controleAffichage(); allerPiece(0); await att(150); }
+  if(typeof allerPiece === "function"){ for(var kp = 1; kp < PIECES.length; kp++){ allerPiece(kp); await att(200); res["piece_" + PIECES[kp].id] = controleAffichage(); } allerPiece(0); await att(150); }
   G.sel = [0]; render(); await att(150); res.selection = controleAffichage(); G.sel = []; render();
   // Combat avec 3 zombies (portraits peints) et 2 membres
   G.sel = [0, 1]; G.exp = { lieu:0, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false }; G.sel = [];
@@ -76,4 +76,22 @@ async function toutControler(){
   Object.keys(localStorage).filter(function(k){ return k.indexOf("survival") === 0; }).forEach(function(k){ localStorage.removeItem(k); });
   var pb = {}; for(var k in res) if(res[k].length) pb[k] = res[k];
   return innerWidth + "x" + innerHeight + " : " + (Object.keys(pb).length ? JSON.stringify(pb) : "aucun problème");
+}
+
+// Pièces qu'on fait défiler : la barre (flèches + points) ne doit cacher aucune étiquette, chaque pièce doit avoir des zones visibles
+async function verifNav(){
+  var att = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }, pb = [];
+  if(typeof fermerAstuce === "function") fermerAstuce(true); hide();
+  nouvellePartie(null); G.pack = { bidon:1 }; demarrer(); G.chien = { nom:"Rex", faim:0 }; G.ref.barr = 1; render(); await att(200);
+  for(var k = 0; k < PIECES.length; k++){
+    allerPiece(k); await att(150); document.getElementById("piece").classList.add("montrer");
+    var n = document.querySelector("#piece .navpieces"); if(!n){ pb.push(PIECES[k].id + " : pas de barre"); continue; }
+    var a = n.getBoundingClientRect();
+    if(a.left < 0 || a.right > innerWidth) pb.push(PIECES[k].id + " : barre hors de l'écran");
+    document.querySelectorAll("#piece .zone .etiq").forEach(function(e){ var b = e.getBoundingClientRect(); if(a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) pb.push(PIECES[k].id + " : " + e.textContent.trim()); });
+    if(!document.querySelectorAll("#piece .zone").length) pb.push(PIECES[k].id + " : aucune zone visible");
+  }
+  allerPiece(0);
+  Object.keys(localStorage).filter(function(k){ return k.indexOf("survival") === 0; }).forEach(function(k){ localStorage.removeItem(k); });
+  return innerWidth + "x" + innerHeight + " pièces : " + (pb.length ? JSON.stringify(pb) : "aucun problème");
 }

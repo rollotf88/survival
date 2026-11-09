@@ -31,15 +31,25 @@ var DECOR_PIECE = [
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
 var PIECES = [
   { id:"salon", nom:"Salon", img:"images/refuge-fond.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"reserve", nom:"Réserve", img:"images/piece-reserve.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:770 }, decor:[], zones:[
+    ["stock",       160, 260, 835, 765, function(){ return ic("caisse", "📦"); }, "Stock", .5],
+    ["pConstruire", 790, 395, 1010, 810, function(){ return ic("ref_barr", "🧱"); }, "Construire", .3]
+  ]},
   { id:"atelier", nom:"Atelier", img:"images/piece-atelier.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:700 }, decor:[], zones:[
     ["pReparer",    340, 210, 720, 435, function(){ return "🔧"; }, "Réparer", .5],
     ["pConstruire",   0, 340, 290, 710, function(){ return ic("ref_barr", "🧱"); }, "Construire", .4],
     ["pDemonter",   715, 225, 1022, 660, function(){ return "♻️"; }, "Démonter", .3],
     ["pTable",      290, 465, 745, 680, function(){ return ic("marteau", "🛠️"); }, "Fabriquer", .55]
   ]},
-  { id:"garage", nom:"Garage", img:"images/piece-garage.webp", l:768, h:1376, cadre:{ x0:0, x1:768, y0:250, y1:900 }, decor:[], zones:[
+  // Le garage montre la voiture réparée dès que les 3 pièces sont installées
+  { id:"garage", nom:"Garage", img:function(){ return G.voiture && voitureReparee() ? "images/piece-garage-ok.webp" : "images/piece-garage.webp"; }, l:768, h:1376, cadre:{ x0:0, x1:768, y0:250, y1:900 }, decor:[], zones:[
     ["pPorte",   200, 370, 570, 555, function(){ return ic("loupe", "🔍"); }, "Partir", .5],
     ["pVoiture", 150, 555, 590, 890, function(){ return "🚗"; }, "Voiture", .5]
+  ]},
+  { id:"cour", nom:"Cour", img:"images/piece-cour.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[], zones:[
+    ["pConstruire",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
+    ["pConstruire", 430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
+    ["stock",       790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
   ]}
 ];
 var pieceIdx = 0;
@@ -66,7 +76,7 @@ function placerPiece(){
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
   var vw = window.innerWidth, P = PIECES[pieceIdx], F = P.cadre;
-  corps.backgroundImage = 'url("' + P.img + '")';
+  corps.backgroundImage = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
   var dx = (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
