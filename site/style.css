@@ -473,3 +473,14 @@ body.urgence .timer{animation:urgence .5s ease-in-out infinite alternate;border-
 body.urgence #tsec{background:var(--bad);color:#fff;border-color:var(--bad);transform:scale(1.15)}
 @keyframes urgence{from{box-shadow:0 0 0 0 rgba(178,59,38,.0)}to{box-shadow:0 0 10px 3px rgba(178,59,38,.8)}}
 @media (prefers-reduced-motion:reduce){body.urgence .timer{animation:none}}
+/* ---------- Avant la fuite : l'entrée de la maison (image Leonardo.ai de Fabien, 2026-11-09) ---------- */
+body.fond.maison{background:#7a4f2c url("images/entree-fond.webp") center top/cover no-repeat}
+body.fond.maison::before{background:linear-gradient(to bottom,rgba(20,14,10,.45),rgba(20,14,10,.05) 22%,rgba(20,14,10,.15) 60%,rgba(20,14,10,.4))}
+/* Écran du sac : la porte se voit en haut, le sac et les objets dans un panneau en bas */
+body.maison .pk{flex:0 1 auto;margin-top:auto;min-height:0;background:color-mix(in srgb,var(--card) 92%,transparent);border:3px solid var(--bois);border-radius:16px;padding:8px;box-shadow:0 4px 0 rgba(20,10,4,.35)}
+body.maison .mode,body.maison #tsec{background:var(--card)}
+body.maison .mode{border-radius:16px;padding:1px 8px;font-weight:800;font-size:13px;border:2px solid var(--bois)}
+/* Téléphone debout : l'image est un peu agrandie et remontée pour que la porte et la fenêtre aux zombies se voient au-dessus du panneau */
+@media (orientation:portrait) and (max-aspect-ratio:9/16){ body.fond.maison{background-size:auto 110%;background-position:80% 100%} }
+@media (orientation:landscape){ body.fond.maison{background-position:center 40%} }
+@media (orientation:landscape) and (max-height:500px){ body.maison .pk{padding:3px 6px;border-width:2px;gap:4px;box-shadow:none} }

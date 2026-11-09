@@ -19,6 +19,7 @@ var FICHIERS = [
   "piece.js",
   "manifest.json",
   "images/refuge-fond.webp",
+  "images/entree-fond.webp",
   "images/portrait-papa.webp",
   "images/portrait-maman.webp",
   "images/portrait-leo.webp",

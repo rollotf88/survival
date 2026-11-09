@@ -544,7 +544,8 @@ setInterval(tick, 250);
 
 function render(){
   if(G.ph !== "pick") document.body.classList.remove("urgence");
-  document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille"); // fond peint du refuge
+  document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille" || G.ph === "pick"); // fond peint
+  document.body.classList.toggle("maison", G.ph === "intro" || G.ph === "famille" || G.ph === "pick"); // avant la fuite : l'entrée de la maison
   if(typeof placerPiece === "function") setTimeout(placerPiece, 0); // zones cliquables de la pièce (piece.js)
   if(G.ph === "accueil") return; if(G.ph === "intro"){ rIntro(); return; } if(G.ph === "famille"){ rFamille(); return; } if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); if(typeof verifierSucces === "function") verifierSucces(); } }
 // Ferme la fenêtre, ou montre d'abord un chapitre terminé
