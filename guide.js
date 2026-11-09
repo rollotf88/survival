@@ -25,7 +25,7 @@ function reglesGuide(){
       "Pour chaque membre : Frapper (dégâts selon l’arme) ou Se protéger (dégâts reçus ÷2). Fuir réussit " + Math.round(B.combat.fuite * 100) + " % du temps, mais on rapporte moitié moins. " +
       "Les armes s’usent à chaque coup et finissent par casser. Une arme à feu frappe fort mais utilise une munition et attire parfois un zombie de plus. Le bouton 🤖 Auto joue pour toi."],
     ["Pêche et poules", ic("poule", "🐔"),
-      "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chacun attrape " + B.peche.prises[0] + " à " + B.peche.prises[1] + " poissons (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
+      "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chaque pêcheur a " + B.peche.lancers + " lancers : quand le bouchon s’enfonce, touche « Ferrer » à temps pour attraper un poisson (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
       "Les poissons se reproduisent lentement (+1 toutes les " + B.peche.nuitsParNaissance + " nuits), mais seulement s’il en reste au moins " + B.peche.seuil + " : vide l’étang et il ne donnera plus rien. " +
       "Les poules pondent souvent un œuf la nuit (+1 ration), boivent 1 ration d’eau pour " + B.poules.eauPour + " poules, et chaque poule ajoute +" + Math.round(B.poules.attaque * 100) + " % de risque d’attaque. Sans eau, l’une d’elles meurt."],
     ["Le monde bouge", "🏴",

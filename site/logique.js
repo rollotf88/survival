@@ -397,7 +397,24 @@ function expedition(i, voiture){
 // Après la porte : rencontre éventuelle (combat), sinon fouille directe
 function suiteExpedition(){
   if(hasard() < G.exp.d){ G.combat = creerCombat(); return { combat:true }; }
+  return avantFouille();
+}
+// Avant la fouille : à l'étang, s'il reste des poissons et qu'un survivant a une canne, on pêche (mini-jeu)
+function pecheursEquipe(){ return G.exp.equipe.map(function(j){ return G.m[j]; }).filter(function(x){ return x.al && x.eq.outil && OBJETS[x.eq.outil.id].peche; }); }
+function avantFouille(){
+  var E = G.exp;
+  if(LIEUX[E.lieu].peche && !E.peche && G.lieux[E.lieu].poissons > 0){
+    var p = pecheursEquipe();
+    if(p.length){ E.peche = { lancers:BAL.peche.lancers * p.length, faits:0, prises:0 }; return { peche:true }; }
+  }
   return finExpedition();
+}
+// Un lancer du mini-jeu : reussi = le joueur a ferré pendant que le bouchon était enfoncé
+function lancerPeche(reussi){
+  var P = G.exp.peche; if(!P || P.faits >= P.lancers) return false;
+  P.faits++;
+  if(reussi && P.prises < G.lieux[G.exp.lieu].poissons) P.prises++;
+  return true;
 }
 
 /* ---------- Crochetage ----------
@@ -448,7 +465,15 @@ function finExpedition(){
   var trouves = lieu.butin.splice(0, nb);
   // Pêche : chaque survivant qui a une canne attrape des poissons (tant qu'il en reste)
   var peches = 0;
-  if(LIEUX[i].peche) survivants.forEach(function(x){
+  if(LIEUX[i].peche && E.peche){
+    // Résultat du mini-jeu : les poissons ferrés, partagés entre les pêcheurs ; chaque canne s'use
+    peches = Math.min(lieu.poissons, E.peche.prises);
+    lieu.poissons -= peches; G.stats.poissons = (G.stats.poissons || 0) + peches;
+    for(var pp = 0; pp < peches; pp++) trouves.unshift("poisson");
+    n.push([peches ? "g2" : "b2", "🎣 " + (peches ? "Vous pêchez " + nommer("poisson", peches) + " (" + peches + " touche" + (peches > 1 ? "s" : "") + " sur " + E.peche.lancers + ")." : "Aucun poisson cette fois : ils ont tous filé.")]);
+    survivants.forEach(function(x){ var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return; c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); } });
+  }
+  else if(LIEUX[i].peche) survivants.forEach(function(x){
     var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return;
     var k = Math.min(lieu.poissons, Math.max(1, Math.round(R(BAL.peche.prises[0], BAL.peche.prises[1]) * mult)));
     lieu.poissons -= k; peches += k; G.stats.poissons = (G.stats.poissons || 0) + k;

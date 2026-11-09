@@ -67,6 +67,7 @@ async function toutControler(){
   G.sel = [0]; openLoc(); await att(100); res.lieux = controleAffichage(); hide(); G.sel = [];
   openResultat({ lieu:2, notes:[["g2", "🔦 Papa éclaire les lieux avec la lampe torche."]], pris:[{ id:"conserve", n:2 }, { id:"bandage", n:1 }], laisses:[], vide:false }); await att(100); res.resultat = controleAffichage(); hide();
   if(typeof openElement === "function"){ openElement("pot"); await att(80); res.potager = controleAffichage(); ajouter("poule", 2); openPoules(); await att(80); res.poulailler = controleAffichage(); hide(); }
+  if(typeof openPeche === "function"){ var ie = LIEUX.findIndex(function(L){ return L.peche; }); G.exp = { lieu:ie, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false, peche:{ lancers:3, faits:1, prises:1 } }; openPeche(); await att(100); res.peche = controleAffichage(); clearTimeout(minPeche); phasePeche = null; hide(); G.exp = null; }
   openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();

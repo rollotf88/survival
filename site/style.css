@@ -534,3 +534,15 @@ body.fond{touch-action:pan-y}
 #piece .navpt.on span{background:var(--acc);box-shadow:0 0 0 2px rgba(232,163,61,.35)}
 #piece .navnom{color:#fff6e6;font-size:11px;font-weight:800;margin:0 4px 0 2px;white-space:nowrap}
 #piece.compact .navpieces{left:6px;transform:none}
+/* Mini-jeu de pêche : l'eau, le fil et le bouchon (dessinés en CSS) */
+.etangjeu{position:relative;height:120px;border-radius:14px;border:2px solid var(--bois);overflow:hidden;margin:4px 0 6px;
+  background:radial-gradient(ellipse at 50% 70%,rgba(255,255,255,.18),transparent 40%),linear-gradient(180deg,#6f9aa3,#2f5a63)}
+.etangjeu .fil{position:absolute;left:50%;top:0;width:1.5px;height:48%;background:rgba(255,255,255,.75)}
+.bouchon{position:absolute;left:50%;top:44%;width:22px;height:30px;margin-left:-11px;border-radius:50% 50% 45% 45%;border:2px solid #2e1f15;
+  background:linear-gradient(180deg,#e2483a 0 50%,#fff6e6 50% 100%);animation:flotte 1.6s ease-in-out infinite;transition:transform .12s}
+@keyframes flotte{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bouchon.touche{animation:none;transform:translateY(18px) scale(.85);box-shadow:0 0 0 8px rgba(255,255,255,.35),0 0 0 18px rgba(255,255,255,.15)}
+.bouchon.prise{animation:none;transform:translateY(-34px) rotate(-12deg)}
+.bouchon.rate{animation:none;opacity:.55}
+@media (prefers-reduced-motion:reduce){.bouchon{animation:none}}
+@media (orientation:landscape) and (max-height:500px){.etangjeu{height:80px}}

@@ -227,3 +227,49 @@ function openPoules(){
   }
   show(h + BTN_FERMER());
 }
+
+/* ---------- Mini-jeu de pêche (à l'étang, avec une canne) ----------
+   Le bouchon flotte ; au bout d'un moment au hasard il s'enfonce pendant BAL.peche.fenetre secondes :
+   il faut toucher « Ferrer ! » à ce moment-là. Trop tôt, le poisson fuit ; trop tard, il se décroche.
+   Chaque touche réussie = 1 poisson (logique.js : lancerPeche). */
+var phasePeche = null, minPeche = null, msgPeche = "";
+function openPeche(){
+  var P = G.exp && G.exp.peche; if(!P) return;
+  clearTimeout(minPeche);
+  var fini = P.faits >= P.lancers, reste = G.lieux[G.exp.lieu].poissons;
+  var h = '<h2>' + ic("canne", "🎣") + ' Pêche à l’étang</h2>'
+    + '<p class="sub">' + (fini ? "Pêche terminée" : "Lancer " + (P.faits + 1) + " / " + P.lancers) + ' · 🐟 ' + P.prises + ' prise' + (P.prises > 1 ? "s" : "") + ' · ' + reste + ' poisson' + (reste > 1 ? "s" : "") + ' dans l’étang</p>'
+    + '<div class="etangjeu"><span class="fil"></span><span class="bouchon" id="bouchon"></span></div>'
+    + '<p class="msg" id="msgpeche">' + (msgPeche || "Attends que le bouchon s’enfonce, puis touche vite « Ferrer » !") + '</p>'
+    + (fini ? '<button class="btn" style="width:100%" data-act="pechefin">Rentrer avec la pêche</button>' : '<button class="btn" style="width:100%" data-act="ferrer">🎣 Ferrer !</button>');
+  msgPeche = "";
+  show(h);
+  if(!fini) lancerBouchon();
+}
+function lancerBouchon(){
+  phasePeche = "attente";
+  minPeche = setTimeout(function(){
+    var b = $("bouchon"); if(!b) return;
+    phasePeche = "touche"; b.className = "bouchon touche";
+    if(typeof vibrer === "function") vibrer(40);
+    minPeche = setTimeout(function(){ finLancer(false, "Trop tard : le poisson s’est décroché."); }, BAL.peche.fenetre * 1000);
+  }, 1200 + Math.random() * 2600); // le moment de la touche : au hasard (adresse du joueur, comme le crochetage)
+}
+function finLancer(ok, msg){
+  if(phasePeche !== "attente" && phasePeche !== "touche") return;
+  clearTimeout(minPeche); phasePeche = "resultat";
+  lancerPeche(ok); msgPeche = msg; setTimeout(sauver, 0);
+  var b = $("bouchon"); if(b) b.className = "bouchon " + (ok ? "prise" : "rate");
+  var m = $("msgpeche"); if(m) m.textContent = msg;
+  if(ok && typeof son === "function") son("butin");
+  setTimeout(function(){ if($("modal").style.display === "flex" && G.exp && G.exp.peche) openPeche(); }, 950);
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "ferrer"){
+    if(phasePeche === "attente") finLancer(false, "Trop tôt ! Le poisson a eu peur.");
+    else if(phasePeche === "touche") finLancer(true, "Ferré ! Un beau poisson. 🐟");
+  }
+  else if(a === "pechefin"){ clearTimeout(minPeche); phasePeche = null; msgPeche = ""; apresEtape(finExpedition()); }
+});

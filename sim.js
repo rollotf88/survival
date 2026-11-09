@@ -32,7 +32,9 @@ function partir(bot, i){
     r = suiteExpedition(); garde = 0;
   }
   if(r.combat) while(!G.combat.fin && garde++ < 50) bot.combat();
-  if(r.combat) finExpedition();
+  if(r.combat) r = avantFouille();
+  // Mini-jeu de pêche : le robot réussit un lancer sur deux à trois
+  if(r.peche){ while(G.exp.peche.faits < G.exp.peche.lancers) lancerPeche(Math.random() < BAL.peche.chanceRobot); finExpedition(); }
 }
 function lieuxPossibles(){ return LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && (G.lieux[i].butin.length || LIEUX[i].peche && G.lieux[i].poissons > BAL.peche.seuil && pourEmplacement("outil").concat(equipes()).some(function(o){ return OBJETS[o.id].peche; })); }); }
 

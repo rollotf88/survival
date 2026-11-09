@@ -121,7 +121,10 @@ var BAL = {
     prises: [1, 3],          // poissons attrapés par pêcheur
     poissons: 16,            // poissons dans l'étang au départ (et au maximum)
     seuil: 4,                // en dessous de 4 poissons, ils ne se reproduisent plus : l'étang meurt
-    nuitsParNaissance: 2     // sinon, +1 poisson toutes les 2 nuits
+    nuitsParNaissance: 2,    // sinon, +1 poisson toutes les 2 nuits
+    lancers: 3,              // mini-jeu : 3 lancers par pêcheur (chaque touche ferrée à temps = 1 poisson)
+    fenetre: 0.75,           // le bouchon reste enfoncé 0,75 s : il faut toucher pendant ce temps
+    chanceRobot: 0.65        // réussite d'un lancer pour les robots de simulation
   },
   // Poules : des œufs, mais elles boivent et leurs caquètements attirent les zombies
   poules: {

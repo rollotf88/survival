@@ -154,6 +154,7 @@ function apresEtape(r){
   render();
   if(r.serrure){ jeuSerrure = false; msgSerrure = ""; openSerrure(); }
   else if(r.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
+  else if(r.peche){ openPeche(); }
   else { openResultat(r); finiSiMorts(); }
 }
 
@@ -740,7 +741,7 @@ document.addEventListener("click", function(e){
     while(!G.combat.fin && g++ < 50) tout = tout.concat(tourAuto());
     G.combat.journal = tout; render(); openCombat(); return;
   }
-  else if(a === "cfin"){ apresEtape(finExpedition()); return; }
+  else if(a === "cfin"){ apresEtape(avantFouille()); return; }
   else if(a === "son"){ basculerSon(); return; }
   else if(a === "stock"){ openStock(); return; }
   else if(a === "chapitre"){ openChapitre(); return; }
@@ -817,7 +818,7 @@ function reprendre(g){
   if(G.exp && G.exp.serrure && !G.exp.serrure.fin){ jeuSerrure = false; msgSerrure = ""; openSerrure(); }
   else if(G.exp && G.exp.serrure && !G.combat && G.exp.serrure.fin){ msgSerrure = ""; openSerrure(); }
   else if(G.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
-  else if(G.exp){ apresEtape(finExpedition()); }
+  else if(G.exp){ if(G.exp.peche && G.exp.peche.faits < G.exp.peche.lancers) openPeche(); else apresEtape(G.exp.peche ? finExpedition() : avantFouille()); }
   else if(G.ev) openEvent(G.ev);
   else fermer(); // montre les chapitres terminés en attente, sinon rien
 }
