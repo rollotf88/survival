@@ -77,7 +77,50 @@ document.addEventListener("click", function(e){
   if(a === "envoiscore") openEnvoiScore();
   else if(a === "envoyerscore") envoyerScore();
   else if(a === "classement") openClassement();
+  else if(a === "stats"){ ongletStats = b.getAttribute("data-id") || ongletStats; openStats(); }
 });
+
+/* ---------- Fenêtre « 📊 Mes stats » (menu ☰) ---------- */
+var ongletStats = null;
+function openStats(){
+  var g = partieEnJeu();
+  if(!ongletStats || (ongletStats === "partie" && !g)) ongletStats = g ? "partie" : "toutes";
+  var T = function(icone, valeur, nom, cls){ return '<div class="tuile st ' + (cls || "") + '"><span class="st-ico">' + icone + '</span><b>' + valeur + '</b><small>' + nom + '</small></div>'; };
+  var pl = function(n, mot){ return n > 1 ? mot + "s" : mot; };
+  var h = '<h2>📊 Mes stats</h2><div class="tabs onglets">'
+    + (g ? '<button class="tab' + (ongletStats === "partie" ? " on" : "") + '" data-act="stats" data-id="partie">Cette partie<small>Jour ' + G.day + '</small></button>' : '')
+    + '<button class="tab' + (ongletStats === "toutes" ? " on" : "") + '" data-act="stats" data-id="toutes">Toutes tes parties<small>Depuis le début</small></button></div>';
+  if(ongletStats === "partie"){
+    var S = G.stats, nl = Object.keys(S.lieux || {}).length;
+    h += '<div class="tuiles stats">'
+      + T("📅", G.day - 1, pl(G.day - 1, "jour") + " tenu" + (G.day - 1 > 1 ? "s" : ""))
+      + T("⭐", G.score, "points", "ok")
+      + T("👪", vivants().length + "/" + G.m.length, "en vie", vivants().length < G.m.length ? "ko" : "ok")
+      + T(ic("rodeur", "🧟"), S.zombies || 0, pl(S.zombies || 0, "zombie") + " " + pl(S.zombies || 0, "abattu"))
+      + T("🗺️", nl, pl(nl, "lieu") .replace("lieus", "lieux") + " fouillé" + (nl > 1 ? "s" : ""))
+      + T("🛠️", S.fabriques || 0, pl(S.fabriques || 0, "objet") + " " + pl(S.fabriques || 0, "fabriqué"))
+      + T("🐟", S.poissons || 0, pl(S.poissons || 0, "poisson") + " " + pl(S.poissons || 0, "pêché"))
+      + T("🪓", S.bois || 0, pl(S.bois || 0, "planche") + " " + pl(S.bois || 0, "coupée"))
+      + T("🎯", S.missions || 0, pl(S.missions || 0, "mission") + " " + pl(S.missions || 0, "réussie"))
+      + '</div>';
+    if(G.dd.length) h += '<p class="sub st-morts">💀 ' + G.dd.map(function(z){ return '<b>' + echapper(z.n) + '</b> (jour ' + z.j + ')'; }).join(", ") + '</p>';
+  } else {
+    var J = statsJoueur(), moy = J.parties ? Math.round(J.jours / J.parties) : 0;
+    h += '<div class="tuiles stats">'
+      + T("👪", J.parties, pl(J.parties, "famille"))
+      + T("🏆", J.meilleur, "meilleur score", "ok")
+      + T("📅", J.plusLongue, "plus longue survie (jours)")
+      + T(ic("rodeur", "🧟"), J.zombies, pl(J.zombies, "zombie") + " " + pl(J.zombies, "abattu"))
+      + T("💀", J.morts, pl(J.morts, "mort"), J.morts ? "ko" : "")
+      + T("⏳", J.jours, pl(J.jours, "jour") + " au total")
+      + T("📊", moy, "jours par famille")
+      + T("🐟", J.poissons, pl(J.poissons, "poisson") + " " + pl(J.poissons, "pêché"))
+      + T("🪓", J.bois, pl(J.bois, "planche") + " " + pl(J.bois, "coupée"))
+      + '</div>';
+    if(!J.parties) h += '<p class="sub">Joue une première partie pour remplir tes stats.</p>';
+  }
+  show(h + '<button class="btn" style="width:100%" data-act="menu">↩️ Menu</button>');
+}
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "pseudo") envoyerScore(); });
 
 /* =====================================================================
@@ -91,10 +134,14 @@ document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.targ
 function statsCumul(){ try{ return JSON.parse(localStorage.getItem("survival_stats")) || {}; }catch(e){ return {}; } }
 function partieEnJeu(){ return typeof G !== "undefined" && G && G.ph === "game" && G.stats && !G.cumule; }
 // Totaux du joueur : parties terminées + partie en cours
+var STATS_CUMUL = ["poissons", "bois", "fabriques", "crochetages", "missions", "eloignes"]; // compteurs de G.stats ajoutés tels quels
 function statsJoueur(){
   var c = statsCumul(), g = partieEnJeu();
-  return { zombies:(c.zombies || 0) + (g ? G.stats.zombies || 0 : 0), morts:(c.morts || 0) + (g ? G.dd.length : 0),
-           parties:(c.parties || 0) + (g ? 1 : 0), jours:(c.jours || 0) + (g ? G.day - 1 : 0), meilleur:Math.max(c.meilleur || 0, g ? G.score : 0) };
+  var r = { zombies:(c.zombies || 0) + (g ? G.stats.zombies || 0 : 0), morts:(c.morts || 0) + (g ? G.dd.length : 0),
+           parties:(c.parties || 0) + (g ? 1 : 0), jours:(c.jours || 0) + (g ? G.day - 1 : 0), meilleur:Math.max(c.meilleur || 0, g ? G.score : 0),
+           plusLongue:Math.max(c.plusLongue || 0, g ? G.day - 1 : 0) };
+  STATS_CUMUL.forEach(function(k){ r[k] = (c[k] || 0) + (g ? G.stats[k] || 0 : 0); });
+  return r;
 }
 // Fin de partie : on ajoute ses chiffres aux totaux (une seule fois)
 function cumulerPartie(){
@@ -102,6 +149,8 @@ function cumulerPartie(){
   var c = statsCumul();
   c.zombies = (c.zombies || 0) + (G.stats.zombies || 0); c.morts = (c.morts || 0) + G.dd.length; c.parties = (c.parties || 0) + 1;
   c.jours = (c.jours || 0) + Math.max(0, G.day - 1); c.meilleur = Math.max(c.meilleur || 0, G.score);
+  c.plusLongue = Math.max(c.plusLongue || 0, G.day - 1);
+  STATS_CUMUL.forEach(function(k){ c[k] = (c[k] || 0) + (G.stats[k] || 0); });
   G.cumule = true;
   try{ localStorage.setItem("survival_stats", JSON.stringify(c)); }catch(e){}
 }

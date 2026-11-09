@@ -817,3 +817,13 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 @media (orientation:landscape) and (max-height:500px){.sheet .monde .m-fil{display:none}.sheet .monde{margin:2px 0 6px}}
 @media (max-height:700px) and (orientation:portrait){.accueil .logo.grand{width:min(34vw,120px)}body.fond .accueil h1{font-size:44px}}
 @media (orientation:landscape) and (max-height:500px){.sheet .monde .m-tete{display:none}.sheet .monde{padding:3px 6px}.sheet .monde .m-grille{margin:0}.sheet .monde .m-c{padding:2px}.sheet .monde .m-c b{font-size:18px}}
+/* ---------- Mes stats ---------- */
+.tuiles.stats{margin:6px 0 8px}
+.tuile.st{padding:5px 3px 6px}
+.tuile.st .st-ico{display:block;font-size:20px;line-height:1.1;height:24px}
+.tuile.st .st-ico .portrait{width:24px;height:24px;display:inline-block;vertical-align:middle}
+.tuile.st b{font-family:"Bangers","Impact",sans-serif;font-size:26px;letter-spacing:.03em;line-height:1.05}
+.tuile.st small{font-size:10.5px}
+.st-morts{margin:0 0 8px}
+@media (max-height:640px){.tuile.st b{font-size:22px}.tuile.st .st-ico{font-size:16px;height:18px}.tuile.st .st-ico .portrait{width:18px;height:18px}}
+@media (orientation:landscape) and (max-height:500px){.tuiles.stats{grid-template-columns:repeat(5,minmax(0,1fr))}.tuile.st b{font-size:20px}.tuile.st .st-ico{display:none}}

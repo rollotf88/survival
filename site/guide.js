@@ -95,6 +95,7 @@ function openMenu(){
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
+  if(typeof openStats === "function") h += t("stats", "📊 Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
   h += t("revoirastuces", "💡 Astuces", "Les revoir");
   h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
   if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
