@@ -82,7 +82,7 @@ var ONGLETS_GUIDE = [["regles","📜","Règles"],["objets","🎒","Objets"],["li
 function openMenu(){
   // Grille compacte : tout tient sans faire défiler, même sur un petit téléphone ou couché
   var t = function(act, titre, sous){ return '<button class="mt" data-act="' + act + '"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</button>'; };
-  var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "📅 Partie du " + dateGraine(G.seed) : "🎲 Partie libre") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
+  var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : G.ph === "game" ? "🎲 Partie libre" : "") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
@@ -119,8 +119,9 @@ function openGuide(){
       return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + z.pv + ' PV · frappe ' + z.degats[0] + ' à ' + z.degats[1] + ' · ' + (z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + '</p></div>';
     }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
   } else {
-    h += FAMILLE.map(function(f){ var x = { nom:f.nom, icone:f.icone, al:true, hp:100, en:100, faim:100, soif:100 }; return '<div class="gsec"><b>' + iconeMembre(x) + ' ' + f.nom + '</b><p>' + (f.atout || "Aucun atout particulier") + '</p></div>'; }).join("");
-    h += '<div class="gsec"><b>' + ic("sam", "🧑") + ' Les recrues</b><p>Si un membre meurt, une survivante peut frapper à la porte et prendre sa place (famille de ' + FAMILLE.length + ' au maximum).</p></div>';
+    h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';
+    h += Object.keys(TRAITS).map(function(k){ var T = TRAITS[k]; return '<div class="gsec"><b>' + T.icone + ' ' + T.nom + '</b><p><span class="plus">+ ' + T.plus + '</span><br><span class="moins">− ' + T.moins + '</span></p></div>'; }).join("");
+    h += '<div class="gsec"><b>' + ic("sam", "🧑") + ' Les recrues</b><p>Si un membre meurt, une survivante peut frapper à la porte et prendre sa place (famille de ' + FAMILLE.length + ' au maximum). Elle arrive avec un trait au hasard.</p></div>';
     h += '<div class="gsec"><b>' + ic("chien", "🐕") + ' Rex, le chien</b><p>Après l’avoir nourri, il reste : +' + BAL.chien.defense + ' de défense la nuit, mais il mange ' + BAL.chien.rations + ' ration chaque soir et part au bout de ' + BAL.chien.nuitsSansManger + ' nuits sans manger.</p></div>';
   }
   show(h + (guideFiche ? '<div class="row"><button class="btn alt" data-act="gretour">← Tous les objets</button><button class="btn alt" data-act="close">Fermer</button></div>' : BTN_FERMER()));

@@ -43,6 +43,20 @@ function envoyerScore(){
     })
     .catch(function(){ $("msgcl").textContent = MSG_HORS_LIGNE; });
 }
+// Partie classée terminée : envoi automatique (le pseudo a été choisi au départ)
+function envoyerScoreAuto(){
+  var el = function(){ return $("envoiauto"); };
+  fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ id:idAppareil(), pseudo:lirePseudo(), score:dernierEnvoi.score, jours:dernierEnvoi.jours }) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!el()) return;
+      if(!d.ok){ el().textContent = "Score refusé par le serveur."; return; }
+      var place = d.rang ? "tu es " + eme(d.rang) + " sur " + d.total : "hors des " + d.total + " premiers";
+      el().textContent = "🏆 " + (d.record ? "Score envoyé : " + place + " !" : "Ton meilleur score reste " + d.meilleur + " (" + place + ").");
+    })
+    .catch(function(){ if(el()) el().textContent = MSG_HORS_LIGNE; });
+}
 function openClassement(message){
   show('<h2>🏆 Classement général</h2>' + (message ? '<p class="g2 msg">' + message + '</p>' : '') + '<p class="sub" id="listecl">Chargement…</p>' + BTN_FERMER());
   fetch(adresseClassement() + "?id=" + idAppareil()).then(function(r){ return r.json(); }).then(function(d){

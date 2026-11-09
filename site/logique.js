@@ -71,8 +71,9 @@ function demarrer(){
   var moral = 0; for(var k in pack) moral += (OBJETS[k].moral || 0) * pack[k];
   G.moral = Math.min(100, BAL.moralDepart + BAL.moralParObjet * moral);
   var eau = rations("eau"), nour = rations("nour");
-  G.m = FAMILLE.map(function(f){
-    return { icone:f.icone, nom:f.nom, al:true, hp:100, en:100,
+  G.m = FAMILLE.map(function(f, k){
+    var c = (G.famille && G.famille[k]) || {};
+    return { icone:f.icone, nom:c.nom || f.nom, r:f.nom, trait:TRAITS[c.trait] ? c.trait : f.trait, al:true, hp:100, en:100,
              faim:Math.min(100, 50 + Math.round(nour / 2)), soif:Math.min(100, 50 + Math.round(eau / 2)),
              eq:{ arme:null, outil:null, sac:null } };
   });
@@ -99,6 +100,12 @@ function migrerPartie(g){
     g.lieux.push(L.peche ? { butin:melanger(b2, graine(hacher(L.nom))), poissons:BAL.peche.poissons } : { butin:melanger(b2, graine(hacher(L.nom))) });
   }
   if(!g.decouverts) g.decouverts = {};
+  // Avant les traits : chaque membre garde son atout d'origine
+  (g.m || []).forEach(function(x){
+    if(x.r) return;
+    var f = FAMILLE.filter(function(f){ return f.nom === x.nom; })[0];
+    x.r = x.nom; x.trait = f ? f.trait : null;
+  });
   return g;
 }
 function melanger(t, rng){ rng = rng || hasard; for(var i = t.length - 1; i > 0; i--){ var j = Math.floor(rng() * (i + 1)), x = t[i]; t[i] = t[j]; t[j] = x; } return t; }
@@ -166,9 +173,11 @@ function choisirSoin(manque){
   return ok || gros;
 }
 function retirerSoin(){ var k = choisirSoin(0); if(k) retirer(k, 1); return k; }
+// Bonus de soin : un Soigneur en vie dans la famille
+function bonusSoin(){ return vivants().some(function(x){ return x.trait === "soigneur"; }) ? BAL.traits.soin : 0; }
 function soigner(i){
   var x = G.m[i]; if(!x.al || x.hp >= 100) return null;
-  var bonus = x.nom === "Maman" ? BAL.soinBonusMaman : 0;
+  var bonus = bonusSoin();
   var k = choisirSoin(100 - x.hp - bonus); if(!k) return null;
   retirer(k, 1); x.hp = Math.min(100, x.hp + OBJETS[k].soin + bonus);
   return k;
@@ -221,7 +230,19 @@ function rendreAuStock(team){
 
 /* ---------- Canette énergisante ---------- */
 // Boire ou manger une ration quand on veut (bouton ＋ de la carte)
-function peutPrendreRation(x, cat){ var j = cat === "eau" ? x.soif : x.faim; return x.al && j < 100 && rations(cat) > 0; }
+// Une ration rend 30 : au-dessus de 70, une partie serait perdue, donc on ne propose pas
+function seuilRation(cat){ return 100 - (cat === "eau" ? BAL.soifParJour : BAL.faimParJour); }
+function peutPrendreRation(x, cat){ var j = cat === "eau" ? x.soif : x.faim; return x.al && j <= seuilRation(cat) && rations(cat) > 0; }
+// Rations que la famille prendra cette nuit (1 chacun + rattrapage si la jauge est basse)
+function besoinNuit(cat){
+  var v = vivants(), b = v.length, reste = rations(cat) - v.length;
+  v.forEach(function(x){
+    var perte = cat === "eau" ? BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0) : BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
+    var j = (cat === "eau" ? x.soif : x.faim) - perte + (cat === "eau" ? BAL.soifParJour : BAL.faimParJour);
+    if(j > 0 && j < BAL.rattrapage && reste > 0){ b++; reste--; }
+  });
+  return b;
+}
 function prendreRation(i, cat){
   var x = G.m[i]; if(!peutPrendreRation(x, cat)) return false;
   prendreRations(cat, 1);
@@ -239,13 +260,21 @@ function boire(i){
 function vivants(){ return G.m.filter(function(x){ return x.al; }); }
 function changerMoral(d){ G.moral = Math.max(0, Math.min(100, G.moral + d)); }
 var FEMININS = ["Maman", "Emma", "Nora", "Inès"];
-// « Papa est mort de soif », « Emma a été tuée par un coureur (Supermarché) »
-function accorder(nom, texte){ return FEMININS.indexOf(nom) >= 0 ? texte.replace(/^mort/, "morte").replace(/^tué/, "tuée") : texte; }
-function phraseMort(nom, cause){
-  if(!cause) return nom + " est " + accorder(nom, "mort") + ".";
-  if(/^mort/.test(cause)) return nom + " est " + accorder(nom, cause) + ".";
-  if(/^tué/.test(cause)) return nom + " a été " + accorder(nom, cause) + ".";
-  return nom + " est " + accorder(nom, "mort") + " : " + cause + ".";
+// Rôle d'origine (le nom peut avoir été changé au départ) : sert au portrait et aux accords
+function roleDe(x){ return x.r || x.nom; }
+// « Papa est mort de soif », « Emma a été tuée par un coureur (Supermarché) » ; r = rôle (féminin ou non)
+function accorder(r, texte){ return FEMININS.indexOf(r) >= 0 ? texte.replace(/^mort/, "morte").replace(/^tué/, "tuée") : texte; }
+function phraseMort(nom, cause, r){
+  r = r || nom;
+  if(!cause) return nom + " est " + accorder(r, "mort") + ".";
+  if(/^mort/.test(cause)) return nom + " est " + accorder(r, cause) + ".";
+  if(/^tué/.test(cause)) return nom + " a été " + accorder(r, cause) + ".";
+  return nom + " est " + accorder(r, "mort") + " : " + cause + ".";
+}
+// Remplace Papa, Maman, Léo, Emma dans les récits par les prénoms choisis
+function perso(t){
+  if(!G || !G.m) return t;
+  return String(t).replace(/Papa|Maman|Léo|Emma/g, function(r){ var x = parRole(r); return x ? x.nom : r; });
 }
 function blesser(x, d, n, cause){
   if(!x || !x.al) return;
@@ -253,8 +282,8 @@ function blesser(x, d, n, cause){
   if(x.hp <= 0){
     x.hp = 0; x.al = false; changerMoral(-25);
     // Annonce mise en avant dans les textes (classe « mort », avec le nom pour afficher son portrait)
-    n.push(["mort", phraseMort(x.nom, cause), x.nom]);
-    G.dd.push({ n:x.nom, c:cause || "cause inconnue", j:G.day, ic:x.icone });
+    n.push(["mort", phraseMort(x.nom, cause, roleDe(x)), roleDe(x)]);
+    G.dd.push({ n:x.nom, r:roleDe(x), c:cause || "cause inconnue", j:G.day, ic:x.icone });
     rendreAuStock([x]); // son équipement reste à la famille
   }
 }
@@ -287,11 +316,13 @@ function coutMin(){
 }
 function fatigue(x){ return x.en < BAL.fatigueSeuil; }
 // Peut encore sortir aujourd'hui (au moins vers le lieu le plus proche)
-function peutSortir(x){ return x.al && x.en >= coutMin(); }
+function remiseEnergie(x){ return x.trait === "endurant" ? BAL.traits.endurant : 0; }
+function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
+function peutSortir(x){ return x.al && x.en >= coutMin() - remiseEnergie(x); }
 function equipePeutAller(team, i, voiture){
   voiture = voiture || LIEUX[i].voiture;
   if(voiture && !voitureOk(i)) return false;
-  return team.length > 0 && team.every(function(x){ return x.al && x.en >= coutEnergie(i, voiture); });
+  return team.length > 0 && team.every(function(x){ return x.al && x.en >= coutPour(x, i, voiture); });
 }
 
 /* ---------- Voiture ---------- */
@@ -314,11 +345,11 @@ function fairePlein(){
 }
 function forceEquipe(team){
   var f = 0;
-  team.forEach(function(x){ if(!x.al) return; f += 1 + (x.eq.arme ? OBJETS[x.eq.arme.id].def : 0) + (x.nom === "Papa" ? BAL.combatBonusPapa : 0) - (fatigue(x) ? BAL.fatigueForce : 0); });
+  team.forEach(function(x){ if(!x.al) return; f += 1 + (x.eq.arme ? OBJETS[x.eq.arme.id].def : 0) + (x.trait === "costaud" ? BAL.traits.costaud : 0) - (fatigue(x) ? BAL.fatigueForce : 0); });
   return Math.max(0, f);
 }
 function placesEquipe(team){
-  var p = 0; team.forEach(function(x){ if(x.al) p += BAL.mainsParMembre + (x.eq.sac ? OBJETS[x.eq.sac.id].capacite : 0); }); return p;
+  var p = 0; team.forEach(function(x){ if(x.al) p += BAL.mainsParMembre + (x.eq.sac ? OBJETS[x.eq.sac.id].capacite : 0) - (x.trait === "agile" ? BAL.traits.frele : 0); }); return p;
 }
 
 function expedition(i, voiture){
@@ -347,6 +378,8 @@ function expedition(i, voiture){
     else { mult *= BAL.force.fouille; d += BAL.force.danger; n.push(["b2", "🔒 Porte forcée à la brute, ça fait du bruit."]); }
   }
   if(G.moral < BAL.moralBas){ mult *= BAL.moralBasFouille; n.push(["b2", "😟 Moral bas : l’équipe fouille mal."]); }
+  var bruyants = team.filter(function(x){ return x.trait === "fouineur"; });
+  if(bruyants.length) d += BAL.traits.bruit * bruyants.length;
   var fatigues = team.filter(fatigue);
   if(fatigues.length){ mult *= BAL.fatigueFouille; n.push(["b2", "🥱 " + liste(fatigues.map(function(x){ return x.nom; })) + (fatigues.length > 1 ? " sont fatigués" : " est fatigué") + " : fouille et combat moins efficaces."]); }
 
@@ -372,9 +405,9 @@ function suiteExpedition(){
    zone verte, une fois par goupille. Chaque raté casse une épingle. */
 function crocheteur(){
   var eq = G.exp.equipe.map(function(j){ return G.m[j]; });
-  return eq.filter(function(x){ return x.nom === "Emma"; })[0] || eq[0];
+  return eq.filter(function(x){ return x.trait === "agile"; })[0] || eq[0];
 }
-function zoneCrochetage(){ return crocheteur().nom === "Emma" ? BAL.crochetage.zoneEmma : BAL.crochetage.zone; }
+function zoneCrochetage(){ return crocheteur().trait === "agile" ? BAL.crochetage.zoneAgile : BAL.crochetage.zone; }
 function forcerPorte(){
   var E = G.exp; E.mult *= BAL.force.fouille; E.d += BAL.force.danger;
   E.notes.push(["b2", "🔒 Porte forcée à la brute, ça fait du bruit."]);
@@ -409,7 +442,8 @@ function finExpedition(){
   }
   // Fouille : on pioche dans la vraie liste du lieu
   var survivants = team.filter(function(x){ return x.al; });
-  var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.nom === "Léo"; }) ? BAL.bonusLeo : 0);
+  var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.trait === "fouineur"; }) ? BAL.traits.fouine : 0)
+    - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur;
   nb = Math.min(lieu.butin.length, Math.max(survivants.length ? 1 : 0, Math.round(nb * mult)));
   var trouves = lieu.butin.splice(0, nb);
   // Pêche : chaque survivant qui a une canne attrape des poissons (tant qu'il en reste)
@@ -433,8 +467,7 @@ function finExpedition(){
   if(LIEUX[i].peche) lieu.poissons += laisses.filter(function(id){ return id === "poisson"; }).length;
   pris.forEach(function(id){ ajouter(id, 1); });
 
-  var cout = coutEnergie(i, E.voiture);
-  team.forEach(function(x){ x.en = Math.max(0, x.en - cout); });
+  team.forEach(function(x){ x.en = Math.max(0, x.en - coutPour(x, i, E.voiture)); });
   G.exp = null; G.combat = null;
   if(survivants.length){ G.stats.lieux[i] = true; if(LIEUX[i].voiture) G.stats.eloignes++; }
   if(survivants.length && G.mission && G.mission.lieu === i){ var mr = reussirMission(); if(mr) n.push(["g2", mr]); }
@@ -468,11 +501,13 @@ function degatsMembre(x){
     if(compter(mu) > 0){ retirer(mu, 1); tir = true; comment = "tire " + (OBJETS[a.id].g === "f" ? "à la " : "au ") + minus(OBJETS[a.id].nom); }
     else { d = C.crosse; comment = "n’a plus " + (mu === "balle" ? "de balles" : "de cartouches") + ", frappe avec la crosse"; }
   }
-  return { dg:Math.max(1, R(d[0], d[1]) + (x.nom === "Papa" && !tir ? C.bonusPapa : 0) - (fatigue(x) ? C.malusFatigue : 0)), comment:comment, tir:tir };
+  var T = BAL.traits, bonus = (x.trait === "costaud" && !tir ? T.costaud : 0) - (x.trait === "soigneur" ? T.pacifiste : 0)
+    + (x.trait === "tireur" && tir ? T.tireur : 0);
+  return { dg:Math.max(1, R(d[0], d[1]) + bonus - (fatigue(x) ? C.malusFatigue : 0)), comment:comment, tir:tir };
 }
-function bruit(J){
+function bruit(J, x){
   var C = BAL.combat;
-  if(hasard() < C.bruitTir && zombiesDebout().length < C.maxZombies){
+  if(hasard() < C.bruitTir + (x && x.trait === "tireur" ? BAL.traits.nerveux : 0) && zombiesDebout().length < C.maxZombies){
     var t = tirerZombie(); G.combat.zombies.push({ id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats });
     J.push(["b2", "🔊 Le bruit du tir attire un " + minus(t.nom) + " !"]);
   }
@@ -506,7 +541,7 @@ function jouerTour(choix){
     z.pv = Math.max(0, z.pv - r.dg);
     J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + r.dg + (z.pv ? "" : ", à terre !")]);
     userArme(x, J);
-    if(r.tir) bruit(J);
+    if(r.tir) bruit(J, x);
   });
   attaqueZombies(protege, J);
   C.journal = J; C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[0] === "b2" && l[1].indexOf("💀") >= 0 || l[1].indexOf("💥") >= 0; }));
@@ -548,7 +583,8 @@ function finJour(){
   G.score += vivants().length;
   var chaud = possede(function(o){ return o.chaleur; });
   vivants().forEach(function(x){
-    x.faim -= BAL.faimParJour; x.soif -= BAL.soifParJour;
+    x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
+    x.soif -= BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0);
     var repos = (chaud ? BAL.reposNuit : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
     if(x.canette) n.push(["", "🥴 " + x.nom + " dort mal après sa canette (+" + repos + " ⚡ seulement)."]);
     x.en = Math.min(100, x.en + repos); x.canette = false;
@@ -626,7 +662,7 @@ function finJour(){
   nuitMonde(n);
   var moral = 0;
   G.stock.o.concat(equipes()).forEach(function(o){ moral += OBJETS[o.id].moral || 0; });
-  changerMoral(-BAL.moralPerteNuit + BAL.moralBonusObjet * moral);
+  changerMoral(-BAL.moralPerteNuit + BAL.moralBonusObjet * moral + BAL.traits.optimiste * vivants().filter(function(x){ return x.trait === "optimiste"; }).length);
   G.day++; G.ads = 0; G.sel = []; G.nTirage = 0;
   if(G.day % MARCHE.tousLes === 0 && Object.keys(G.charrette).some(function(id){ return G.charrette[id] > 0; })){ genererMarche(); n.push(["g2", ic("marco", MARCHE.icone) + " " + MARCHE.nom + " s’installe au coin de la rue aujourd’hui : allez voir le marché !"]); }
   if(!n.length) n.push(["g2", "Nuit calme."]);
@@ -780,11 +816,14 @@ function evenementDuMatin(){
 }
 function texteEvenement(ev){ return typeof ev.texte === "function" ? ev.texte() : ev.texte; }
 function membre(nom){ return G.m.filter(function(x){ return x.nom === nom; })[0]; }
+// Membre par rôle d'origine (Papa, Maman, Léo, Emma), même renommé
+function parRole(r){ return G.m.filter(function(x){ return x.r === r; })[0]; }
 // Une recrue prend la place d'un membre disparu (famille de 4 au maximum)
 function recruter(nom, ic){
   if(vivants().length >= FAMILLE.length) return false;
   var mort = G.m.filter(function(x){ return !x.al; })[0];
-  var r = { icone:ic, nom:nom, al:true, hp:70, en:50, faim:50, soif:50, eq:{ arme:null, outil:null, sac:null } };
+  var ids = Object.keys(TRAITS);
+  var r = { icone:ic, nom:nom, r:nom, trait:ids[aleaR("trait", 0, ids.length - 1)], al:true, hp:70, en:50, faim:50, soif:50, eq:{ arme:null, outil:null, sac:null } };
   if(mort) G.m[G.m.indexOf(mort)] = r; else G.m.push(r);
   return true;
 }

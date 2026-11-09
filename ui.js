@@ -54,7 +54,7 @@ function rPick(){
   }
   var tabs = MAISONS.map(function(x, j){ return '<button class="tab' + (j === G.h ? " on" : "") + '" data-act="house" data-id="' + j + '"' + (G.seed && j !== G.h ? " disabled" : "") + '>' + ic(ICONE_MAISON[x.nom], x.icone) + ' ' + x.nom + '<small>' + x.cap + ' places</small></button>'; }).join("");
   var tm = Math.max(0, G.tl), pc = Math.min(100, Math.round(tm / BAL.tempsDepart * 100));
-  $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><button class="mode" data-act="mode">' + (G.seed ? "📅 Partie du jour" : "🎲 Partie libre") + '</button><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
+  $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><span class="mode">' + (G.seed ? "🏆 Partie classée" : "🎲 Partie libre") + '</span><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
     + '<div class="pk"><p class="sub" style="grid-area:sub">Ils arrivent ! Choisis ce que la famille emporte avant la fin du compte à rebours.</p>'
     + '<div style="grid-area:bag"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div>'
     + '<div class="stage" style="grid-area:tiles"><div class="tiles">' + tiles + '</div></div>'
@@ -74,19 +74,21 @@ function rGame(){
   var m = G.m.map(function(x, i){
     var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : on ? "✔ Part fouiller" : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
-    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x) + '</span><b>' + x.nom + '</b></div><small>' + st + '</small>'
-      + barre("❤️", x.hp) + barre("⚡", x.en) + barre(ic("conserve", "🥫"), x.faim) + barre(ic("bouteille", "💧"), x.soif)
+    // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
+    var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
+    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (on ? '<span class="coche" aria-hidden="true">✔</span>' : '') + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x) + '</span><b>' + x.nom + '</b></div><small>' + st + '</small>'
+      + barre("❤️", x.hp) + barre("⚡", x.en) + barre(ic("conserve", "🥫"), x.faim) + barre(ic("bouteille", "💧"), x.soif) + porte
       + (x.al ? '<div class="slots">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0; // case vide mais un objet attend au stock
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
   $("app").innerHTML = '<div class="row"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button></div><div class="chips">'
-    + '<span class="chip" title="Rations d’eau">' + ic("bouteille", "💧") + ' ' + rations("eau") + '</span>'
-    + '<span class="chip" title="Rations de nourriture">' + ic("conserve", "🥫") + ' ' + rations("nour") + '</span>'
-    + '<span class="chip" title="Objets de soin">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '</span>'
-    + '<span class="chip" title="Défense de nuit">' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</span>'
-    + '<span class="chip" title="Moral">' + mo + ' ' + Math.round(G.moral) + '</span>'
+    + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '</button>'
+    + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '</button>'
+    + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '</button>'
+    + '<button class="chip" data-act="info" data-id="def" aria-label="Défense de nuit : ' + defenseNuit() + '">' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</button>'
+    + '<button class="chip" data-act="info" data-id="moral" aria-label="Moral : ' + Math.round(G.moral) + '">' + mo + ' ' + Math.round(G.moral) + '</button>'
     + '<button class="chip chipson" data-act="menu" aria-label="Menu et guide">☰</button>'
     + (chien() ? '<button class="chip chipchien" data-act="chien" title="' + chien().nom + ', le chien">' + ic("chien", "🐕") + (chien().faim ? ' ⚠️' : '') + '</button>' : '')
     + '</div></div>'
@@ -142,7 +144,7 @@ function openSerrure(){
     cancelAnimationFrame(animSerrure); show(h); return;
   }
   if(!jeuSerrure){
-    h += '<p>' + iconeMembre(x) + ' ' + x.nom + ' peut essayer de <b>crocheter</b> la serrure (' + BAL.crochetage.goupilles + ' goupilles, ' + icone("epingle") + ' ' + compter("epingle") + ' épingle' + (compter("epingle") > 1 ? "s" : "") + '). Chaque raté casse une épingle.' + (x.nom === "Emma" ? " Emma a des doigts agiles : la zone verte est plus large." : "") + '</p>'
+    h += '<p>' + iconeMembre(x) + ' ' + x.nom + ' peut essayer de <b>crocheter</b> la serrure (' + BAL.crochetage.goupilles + ' goupilles, ' + icone("epingle") + ' ' + compter("epingle") + ' épingle' + (compter("epingle") > 1 ? "s" : "") + '). Chaque raté casse une épingle.' + (x.trait === "agile" ? " " + x.nom + " a des doigts de fée : la zone verte est plus large." : "") + '</p>'
       + '<p class="sub">Forcer la porte fait du bruit : plus de danger et fouille moins efficace.</p>'
       + '<div class="row"><button class="btn" data-act="crocheter">🗝️ Crocheter</button><button class="btn alt" data-act="forcer">💪 Forcer</button></div>';
     show(h); return;
@@ -211,8 +213,8 @@ function openSlot(i, slot){
 /* ---------- Téléphone : barre de famille compacte + fiche du membre ---------- */
 function modeMini(){ return window.matchMedia("(max-width: 559px)").matches; }
 function openMembre(i){
-  var x = G.m[i], on = G.sel.indexOf(i) >= 0, f = FAMILLE.filter(function(m){ return m.nom === x.nom; })[0];
-  var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2><p class="sub">' + (f && f.atout ? f.atout : "Recrue") + (x.al ? "" : " · 💀 mort") + '</p></span></div>';
+  var x = G.m[i], on = G.sel.indexOf(i) >= 0, T = TRAITS[x.trait];
+  var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2><p class="sub">' + (T ? T.icone + " " + T.nom + " · <span class=\"plus\">+ " + T.plus + "</span> · <span class=\"moins\">− " + T.moins + "</span>" : "Recrue") + (x.al ? "" : " · 💀 " + accorder(roleDe(x), "mort")) + '</p></span></div>';
   if(!x.al){ show(h + BTN_FERMER()); return; }
   [["❤️","Vie",x.hp],["⚡","Énergie",x.en],[ic("conserve", "🥫"),"Faim",x.faim],[ic("bouteille", "💧"),"Soif",x.soif]].forEach(function(j){ h += '<div class="jauge">' + barre(j[0], j[2]) + '<small>' + j[1] + ' ' + j[2] + '/100</small></div>'; });
   h += '<p class="sub">Équipement (touche une case) :</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
@@ -249,17 +251,17 @@ function openChapitre(){
   h += '<p class="sub">🎁 Récompense : ' + (rec.length ? rec.join(", ") : "aucune") + '</p>';
   // L'histoire jusqu'ici : les récits des chapitres passés, puis celui en cours
   var passes = CHAPITRES.slice(0, Math.min(G.chap, CHAPITRES.length));
-  h += '<div class="gsec histoire"><b>📜 L’histoire jusqu’ici</b>' + passes.map(function(ch){ return '<p class="fait">' + ch.recit + '</p>'; }).join("")
-    + '<p class="encours">' + c.recit + '</p></div>';
+  h += '<div class="gsec histoire"><b>📜 L’histoire jusqu’ici</b>' + passes.map(function(ch){ return '<p class="fait">' + perso(ch.recit) + '</p>'; }).join("")
+    + '<p class="encours">' + perso(c.recit) + '</p></div>';
   show(h + BTN_FERMER());
 }
 
 /* ---------- Soigner / donner une canette ---------- */
 function openSoins(i){
   var x = G.m[i], h = '<h2>' + iconeMembre(x) + ' ' + x.nom + '</h2><p class="sub">❤️ ' + x.hp + ' PV · ⚡ ' + x.en + ' énergie</p>';
-  var k = x.hp < 100 ? choisirSoin(100 - x.hp - (x.nom === "Maman" ? BAL.soinBonusMaman : 0)) : null;
+  var bs = bonusSoin(), k = x.hp < 100 ? choisirSoin(100 - x.hp - bs) : null;
   h += '<button class="loc craft" data-act="heal" data-id="' + i + '"' + (k ? "" : " disabled") + '><span class="em">' + (k ? icone(k) : "🩹") + '</span><span class="eqt"><b>Soigner</b><small>'
-    + (k ? "Utilise " + nommer(k, 1) + " (+" + OBJETS[k].soin + (x.nom === "Maman" ? " +" + BAL.soinBonusMaman : "") + " PV) · il en reste " + compter(k) : x.hp >= 100 ? "En pleine forme" : "Aucun soin au refuge") + '</small></span></button>';
+    + (k ? "Utilise " + nommer(k, 1) + " (+" + OBJETS[k].soin + (bs ? " +" + bs + " grâce au soigneur" : "") + " PV) · il en reste " + compter(k) : x.hp >= 100 ? "En pleine forme" : "Aucun soin au refuge") + '</small></span></button>';
   var raison = !compter("canette") ? "Aucune canette au refuge" : x.canette ? "Déjà une canette aujourd’hui" : x.en >= 100 ? "Déjà plein d’énergie" : "";
   h += '<button class="loc craft" data-act="boire" data-id="' + i + '"' + (peutBoire(x) ? "" : " disabled") + '><span class="em">' + icone("canette") + '</span><span class="eqt"><b>Boire une canette</b><small>'
     + (raison || "+" + BAL.canetteEnergie + " ⚡ et +" + BAL.canetteSoif + " de soif 💧 tout de suite, mais " + BAL.canetteContrecoup + " ⚡ de repos en moins cette nuit · il en reste " + compter("canette")) + '</small></span></button>';
@@ -267,9 +269,9 @@ function openSoins(i){
   [["eau", "bouteille", "Boire une ration d’eau", "soif", x.soif], ["nour", "conserve", "Manger une ration", "faim", x.faim]].forEach(function(r){
     var ok = peutPrendreRation(x, r[0]), dispo = rations(r[0]);
     h += '<button class="loc craft" data-act="ration" data-id="' + i + ':' + r[0] + '"' + (ok ? "" : " disabled") + '><span class="em">' + icone(r[1]) + '</span><span class="eqt"><b>' + r[2] + '</b><small>'
-      + (!dispo ? "Plus rien au refuge" : r[4] >= 100 ? "Pas besoin pour l’instant" : "+" + (r[0] === "eau" ? BAL.soifParJour : BAL.faimParJour) + " de " + r[3] + " (" + r[3] + " : " + r[4] + " / 100) · il en reste " + dispo) + '</small></span></button>';
+      + (!dispo ? "Plus rien au refuge" : r[4] > seuilRation(r[0]) ? "Pas besoin : " + r[3] + " " + r[4] + " / 100, la ration de la nuit suffit" : "+" + (r[0] === "eau" ? BAL.soifParJour : BAL.faimParJour) + " de " + r[3] + " (" + r[3] + " : " + r[4] + " / 100) · il en reste " + dispo) + '</small></span></button>';
   });
-  h += '<p class="sub">Chaque nuit, chacun boit et mange déjà une ration (et une de plus si sa jauge est sous ' + BAL.rattrapage + ').</p>';
+  h += '<p class="sub">🌙 Chaque nuit, chacun boit et mange déjà <b>1 ration</b> automatiquement, sans gaspillage (et 1 de plus si sa jauge tombe sous ' + BAL.rattrapage + '). Une ration en plus ne sert qu’en cas d’urgence, quand une jauge est basse.</p>';
   show(h + BTN_FERMER());
 }
 
@@ -442,15 +444,21 @@ function over(){
   effacerSauvegarde();
   var d = G.day - 1, nouveau = G.score > RECORD, jour = "";
   if(nouveau){ RECORD = G.score; try{ localStorage.setItem("survival_record", RECORD); }catch(e){} }
+  var auto = false;
   if(G.seed){
     var cle = "survival_jour_" + G.seed, meilleur = 0;
     try{ meilleur = +localStorage.getItem(cle) || 0; if(G.score > meilleur){ localStorage.setItem(cle, G.score); } }catch(e){}
-    jour = '<p class="sub">📅 Partie du ' + dateGraine(G.seed) + ' · ton meilleur score du jour : <b>' + Math.max(meilleur, G.score) + '</b>' + (G.score > meilleur && meilleur ? " (amélioré !)" : "") + '</p><button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>';
-  }
+    // Partie classée : le score part tout seul au classement général si on a un pseudo
+    if(typeof openEnvoiScore === "function"){
+      dernierEnvoi = { score:G.score, jours:d };
+      if(lirePseudo()){ auto = true; jour += '<p class="go-sous" id="envoiauto">🏆 Envoi au classement…</p><button class="btn" style="width:100%;margin-bottom:8px" data-act="classement">🏆 Voir le classement</button>'; }
+      else jour += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement</button>';
+    }
+    jour += '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="partage">📋 Copier mon résultat pour le partager</button>';
+  } else jour += '<p class="go-sous">🎲 Partie libre : pas de classement.</p>';
   var lv = G.ref.barr + G.ref.eau + G.ref.pot;
-  // Classement général en ligne (classement.js), pour toutes les parties
-  if(typeof openEnvoiScore === "function"){ dernierEnvoi = { score:G.score, jours:d }; jour += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="envoiscore">🏆 Envoyer au classement</button>'; }
   ecranGameOver(d, nouveau, jour, lv);
+  if(auto) envoyerScoreAuto();
 }
 // Écran de fin plein écran : les disparus en gris, le score en grand
 function ecranGameOver(d, nouveau, jour, lv){
@@ -458,7 +466,7 @@ function ecranGameOver(d, nouveau, jour, lv){
   if(typeof verifierSucces === "function"){ verifierSucces(); vibrer([300, 150, 300, 150, 600]); }
   var e = $("gameover"); if(!e){ e = document.createElement("div"); e.id = "gameover"; document.body.appendChild(e); }
   e.innerHTML = '<div class="go-boite"><div class="go-gauche"><h1 class="go-titre">GAME OVER</h1><p class="go-sous">Votre famille n’est plus.</p>'
-    + '<div class="go-morts">' + G.dd.map(function(z){ return '<div class="go-mort"><span class="em">' + iconeMembre({ nom:z.n, al:false, hp:0, en:0, faim:0, soif:0, icone:z.ic || "💀" }) + '</span><b>' + z.n + '</b><small>' + accorder(z.n, z.c) + '<br>jour ' + z.j + '</small></div>'; }).join("") + '</div></div>'
+    + '<div class="go-morts">' + G.dd.map(function(z){ return '<div class="go-mort"><span class="em">' + iconeMembre({ nom:z.n, r:z.r, al:false, hp:0, en:0, faim:0, soif:0, icone:z.ic || "💀" }) + '</span><b>' + z.n + '</b><small>' + accorder(z.r || z.n, z.c) + '<br>jour ' + z.j + '</small></div>'; }).join("") + '</div></div>'
     + '<div class="go-droite"><p class="go-jours">Vous avez tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b></p>'
     + '<p class="go-score">⭐ ' + G.score + '</p><p class="go-sous">' + (nouveau ? "🏆 Nouveau record !" : "Record : " + RECORD + " points") + ' · 🔨 refuge niveau ' + lv + '</p>'
     + jour + '<button class="btn" style="width:100%" data-act="again">Nouvelle famille</button></div></div>';
@@ -467,7 +475,7 @@ function ecranGameOver(d, nouveau, jour, lv){
 
 // Texte à coller dans un message pour comparer avec ses amis (en attendant un vrai classement en ligne)
 function copierResultat(bouton){
-  var txt = "SURVIVAL – Partie du " + dateGraine(G.seed) + " : ma famille a tenu " + (G.day - 1) + " jours, ⭐ " + G.score + " points. Tu fais mieux ?";
+  var txt = "SURVIVAL – Partie classée du " + dateGraine(G.seed) + " : ma famille a tenu " + (G.day - 1) + " jours, ⭐ " + G.score + " points. Tu fais mieux ?";
   var ok = function(){ bouton.textContent = "✅ Copié ! Colle-le dans un message."; };
   try{ navigator.clipboard.writeText(txt).then(ok, function(){ bouton.textContent = txt; }); }
   catch(e){ bouton.textContent = txt; }
@@ -505,14 +513,14 @@ function tick(){
 setInterval(tick, 250);
 
 function render(){
-  document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil"); // fond peint du refuge
+  document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille"); // fond peint du refuge
   if(typeof placerPiece === "function") setTimeout(placerPiece, 0); // zones cliquables de la pièce (piece.js)
-  if(G.ph === "accueil") return; if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); if(typeof verifierSucces === "function") verifierSucces(); } }
+  if(G.ph === "accueil") return; if(G.ph === "intro"){ rIntro(); return; } if(G.ph === "famille"){ rFamille(); return; } if(G.ph === "pick") rPick(); else { verifierChapitre(); rGame(); if(typeof verifierSucces === "function") verifierSucces(); } }
 // Ferme la fenêtre, ou montre d'abord un chapitre terminé
 function fermer(){
   var A = G.annonces && G.annonces.shift();
   if(!A || !vivants().length){ hide(); return; }
-  show('<h2>📖 Chapitre ' + A.num + ' terminé</h2><p><b>' + A.titre + '</b></p><p>' + A.texte + '</p><p class="g2 msg">🎁 ' + [A.recompense, A.moral ? "Moral +" + A.moral : ""].filter(Boolean).join(" · ") + '</p><p class="histoire"><i>' + chapitreCourant().recit + '</i></p><p class="sub">Prochain : ' + chapitreCourant().titre + ' — ' + chapitreCourant().objectif + '</p>' + BTN_FERMER("Continuer"));
+  show('<h2>📖 Chapitre ' + A.num + ' terminé</h2><p><b>' + A.titre + '</b></p><p>' + perso(A.texte) + '</p><p class="g2 msg">🎁 ' + [A.recompense, A.moral ? "Moral +" + A.moral : ""].filter(Boolean).join(" · ") + '</p><p class="histoire"><i>' + perso(chapitreCourant().recit) + '</i></p><p class="sub">Prochain : ' + chapitreCourant().titre + ' — ' + chapitreCourant().objectif + '</p>' + BTN_FERMER("Continuer"));
 }
 
 /* ---------- Glisser-déposer des pièces de voiture ----------
@@ -550,13 +558,98 @@ document.addEventListener("pointerup", function(e){
 });
 document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300){ finGlisse = 0; e.stopPropagation(); e.preventDefault(); } }, true);
 
+/* ---------- Avant le départ : l'histoire, puis la famille (noms, traits, pseudo, mode) ---------- */
+function rIntro(){
+  $("app").innerHTML = '<div class="panneau intro"><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p>'
+    + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
+    + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
+    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
+    + '<button class="btn" style="width:100%" data-act="intro">Continuer</button></div>';
+}
+// Noms et traits de la dernière famille (gardés dans le navigateur)
+function familleRetenue(){
+  var f = null; try{ f = JSON.parse(localStorage.getItem("survival_famille")); }catch(e){}
+  return FAMILLE.map(function(m, k){ var c = f && f[k] || {}; return { nom:c.nom || m.nom, trait:TRAITS[c.trait] ? c.trait : m.trait }; });
+}
+function texteTrait(t){ var T = TRAITS[t]; return '<span class="plus">+ ' + T.plus + '</span><span class="moins">− ' + T.moins + '</span>'; }
+function rFamille(){
+  var F = G.famille || (G.famille = familleRetenue());
+  var options = function(choisi){ return Object.keys(TRAITS).map(function(t){ return '<option value="' + t + '"' + (t === choisi ? " selected" : "") + '>' + TRAITS[t].icone + ' ' + TRAITS[t].nom + '</option>'; }).join(""); };
+  $("app").innerHTML = '<div class="panneau famille"><div class="row"><h1>Ta famille</h1>'
+    + '<label class="pseudo"><span>Ton pseudo</span><input id="pseudodep" class="champ" maxlength="16" autocomplete="off" value="' + echapper(lirePseudo()) + '" placeholder="Pour le classement"></label></div>'
+    + '<div class="fam">' + FAMILLE.map(function(m, k){
+        return '<div class="fm"><span class="em">' + iconeMembre({ nom:m.nom, r:m.nom, icone:m.icone, al:true, hp:100, en:100, faim:100, soif:100 }) + '</span><div class="fmc">'
+          + '<div class="fml"><input class="champ" data-nomk="' + k + '" maxlength="10" autocomplete="off" value="' + echapper(F[k].nom) + '" aria-label="Prénom (' + m.nom + ')">'
+          + '<select class="champ" data-traitk="' + k + '" aria-label="Trait de ' + echapper(F[k].nom) + '">' + options(F[k].trait) + '</select></div>'
+          + '<small id="trait' + k + '">' + texteTrait(F[k].trait) + '</small></div></div>';
+      }).join("") + '</div>'
+    + '<div class="tabs modes"><button class="tab' + (G.seed ? " on" : "") + '" data-act="modefam" data-id="classee">🏆 Partie classée<small>La même pour tous aujourd’hui</small></button>'
+    + '<button class="tab' + (G.seed ? "" : " on") + '" data-act="modefam" data-id="libre">🎲 Partie libre<small>Au hasard, sans classement</small></button></div>'
+    + '<p class="msg" id="msgfam"></p><button class="btn" style="width:100%" data-act="famok">Préparer le sac ⏱</button></div>';
+}
+// Nettoie les prénoms ; refuse deux prénoms identiques
+function validerFamille(){
+  var F = G.famille, vus = {};
+  for(var k = 0; k < F.length; k++){
+    F[k].nom = String(F[k].nom || "").replace(/[<>&"]/g, "").trim().slice(0, 10) || FAMILLE[k].nom;
+    var cle = F[k].nom.toLowerCase();
+    if(vus[cle]){ $("msgfam").textContent = "Deux membres s’appellent « " + F[k].nom + " » : choisis des prénoms différents."; return false; }
+    vus[cle] = true;
+  }
+  try{ localStorage.setItem("survival_famille", JSON.stringify(F)); }catch(e){}
+  return true;
+}
+document.addEventListener("input", function(e){
+  var t = e.target;
+  if(t.id === "pseudodep"){ try{ localStorage.setItem("survival_pseudo", t.value.trim().slice(0, 16)); }catch(er){} }
+  else if(t.hasAttribute && t.hasAttribute("data-nomk") && G.famille) G.famille[+t.getAttribute("data-nomk")].nom = t.value;
+});
+document.addEventListener("change", function(e){
+  var t = e.target;
+  if(t.hasAttribute && t.hasAttribute("data-traitk") && G.famille){ var k = +t.getAttribute("data-traitk"); G.famille[k].trait = t.value; var s = $("trait" + k); if(s) s.innerHTML = texteTrait(t.value); }
+});
+
+/* ---------- Pastilles du haut : ce qu'elles veulent dire ---------- */
+function openInfo(id){
+  var h = "";
+  if(id === "eau" || id === "nour"){
+    var eau = id === "eau", r = rations(id), b = besoinNuit(id), nuits = b ? Math.floor(r / Math.max(1, vivants().length)) : 0;
+    h = '<h2>' + ic(eau ? "bouteille" : "conserve", eau ? "💧" : "🥫") + ' ' + (eau ? "Rations d’eau" : "Rations de nourriture") + ' : ' + r + '</h2>'
+      + '<p>Chaque nuit, chaque membre ' + (eau ? "boit" : "mange") + ' <b>1 ration</b> tout seul. Si sa jauge ' + (eau ? "de soif" : "de faim") + ' est basse (sous ' + BAL.rattrapage + '), il en prend une de plus quand il en reste assez pour les autres.</p>'
+      + '<p class="g2 msg">🌙 Cette nuit : <b>' + Math.min(b, r) + ' ration' + (Math.min(b, r) > 1 ? "s" : "") + '</b> · réserve pour environ <b>' + nuits + ' nuit' + (nuits > 1 ? "s" : "") + '</b></p>'
+      + (r < vivants().length ? '<p class="msg">⚠️ Pas assez pour tout le monde ce soir : ' + (eau ? "la soif" : "la faim") + ' va faire des dégâts.</p>' : '')
+      + '<p class="sub">Une ration de plus dans la journée (bouton ＋ d’un membre) ne sert qu’en urgence, quand une jauge est basse. ' + (eau ? "Le récupérateur d’eau, la bâche et la pluie remplissent la réserve." : "Le potager, la pêche, les poules et le collet remplissent la réserve.") + '</p>';
+  } else if(id === "soin"){
+    var l = []; for(var k in G.stock.n) if(OBJETS[k].soin) l.push(icone(k) + " " + nommer(k, G.stock.n[k]) + " (+" + OBJETS[k].soin + " PV)");
+    h = '<h2>' + ic("bandage", "🩹") + ' Objets de soin : ' + soinsDispo() + '</h2><p>' + (l.length ? l.join("<br>") : "Aucun soin au refuge.") + '</p>'
+      + '<p class="sub">Pour soigner quelqu’un, touche le ＋ de sa carte. Le meilleur soin adapté est choisi tout seul.' + (bonusSoin() ? " Grâce au soigneur, chaque soin rend " + bonusSoin() + " PV de plus." : "") + ' La nuit, un membre bien nourri regagne ' + BAL.regenPV + ' PV.</p>';
+  } else if(id === "def"){
+    var p = [];
+    if(G.ref.barr) p.push(ic("ref_barr", "🧱") + " Barricade niveau " + G.ref.barr + " : +" + G.ref.barr * BAL.defenseBarricade);
+    equipes().forEach(function(o){ if(OBJETS[o.id].def) p.push(icone(o.id) + " " + OBJETS[o.id].nom + " en main : +" + OBJETS[o.id].def); });
+    if(compter("piege") > 0) p.push(icone("piege") + " Piège à zombies : +" + BAL.piegeDef + " (un seul usage)");
+    if(chien()) p.push(ic("chien", "🐕") + " " + chien().nom + " monte la garde : +" + BAL.chien.defense);
+    var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce);
+    h = '<h2>' + ic("bouclier", "🛡️") + ' Défense de nuit : ' + defenseNuit() + '</h2><p>' + (p.length ? p.join("<br>") : "Rien pour l’instant : construis la barricade et garde des armes au refuge.") + '</p>'
+      + '<p class="msg">🧟 Cette nuit : environ <b>' + ch + ' %</b> de risque d’attaque, d’une force de <b>' + f + ' à ' + (f + 2) + '</b>. Si votre défense est plus faible, ils blessent quelqu’un, volent de la nourriture et abîment la barricade.</p>';
+  } else if(id === "moral"){
+    h = '<h2>😀 Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt.</p>'
+      + '<p>' + (G.moral < BAL.moralBas ? '<span class="moins">⚠️ Sous ' + BAL.moralBas + ', l’équipe fouille moins bien.</span>' : 'Sous ' + BAL.moralBas + ', l’équipe fouillerait moins bien.') + '</p>'
+      + '<p class="sub">Pour le remonter : les objets de confort (peluche, photo, cartes…) au refuge, les bons choix le matin, les chapitres réussis, un chien' + (vivants().some(function(x){ return x.trait === "optimiste"; }) ? ", et votre optimiste" : "") + '.</p>';
+  }
+  show(h + BTN_FERMER());
+}
+
 /* ---------- Clics ---------- */
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act"), id = b.getAttribute("data-id"), i = +id;
   if(a === "add"){ var c = G.pack[id] || 0; if(c < MAISONS[G.h].objets[id] && capSac() - placesUtilisees() >= OBJETS[id].place) G.pack[id] = c + 1; G.info = icone(id) + " " + OBJETS[id].nom + " : " + OBJETS[id].desc; }
   else if(a === "rem"){ G.pack[id]--; if(!G.pack[id]) delete G.pack[id]; }
-  else if(a === "mode"){ modeJour = !modeJour; try{ localStorage.setItem("survival_mode", modeJour ? "jour" : "libre"); }catch(e){} nouvellePartie(modeJour ? graineDuJour() : null); if(modeJour) G.info = "📅 Partie du jour : même maison, mêmes lieux et mêmes nuits pour tous les joueurs aujourd’hui. Compare ton score !"; }
+  else if(a === "intro"){ G.ph = "famille"; }
+  else if(a === "modefam"){ var fam = G.famille; modeJour = id === "classee"; try{ localStorage.setItem("survival_mode", modeJour ? "jour" : "libre"); }catch(e){} nouvellePartie(modeJour ? graineDuJour() : null); G.famille = fam; G.ph = "famille"; }
+  else if(a === "famok"){ if(!validerFamille()) return; G.ph = "pick"; if(G.seed) G.info = "🏆 Partie classée : même maison, mêmes lieux et mêmes nuits pour tous les joueurs aujourd’hui. Ton score ira au classement."; }
+  else if(a === "info"){ openInfo(id); return; }
   else if(a === "house"){ if(G.seed) return; if(i !== G.h){ G.h = i; G.pack = {}; G.info = "Tu as changé de maison : le sac est vidé."; } }
   else if(a === "start") demarrer();
   else if(a === "sel" && modeMini()){ openMembre(i); return; }
@@ -682,7 +775,7 @@ try{ modeJour = localStorage.getItem("survival_mode") !== "libre"; }catch(e){}
 function nouvelleFamille(){
   effacerSauvegarde(); hide();
   nouvellePartie(modeJour ? graineDuJour() : null);
-  if(modeJour) G.info = "📅 Partie du jour : même maison, mêmes lieux et mêmes nuits pour tous les joueurs aujourd’hui. Compare ton score !";
+  G.ph = "intro"; G.famille = familleRetenue();
   render();
 }
 var enCours = lireSauvegarde();
@@ -691,7 +784,7 @@ if(enCours){
   nouvellePartie(null); G.ph = "accueil";
   document.body.classList.add("fond");
   $("app").innerHTML = '<div class="accueil"><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p></div>';
-  show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "📅 Partie du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
+  show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
     + enCours.m.filter(function(x){ return x.al; }).map(function(x){ return iconeMembre(x); }).join(" ") + '</p>'
     + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="continuer">▶️ Continuer</button>'
     + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guide">📖 Guide du survivant</button>'

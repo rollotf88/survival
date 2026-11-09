@@ -19,9 +19,11 @@ var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Portraits peints (images faites avec ChatGPT par Fabien, découpées dans images/)
 var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-maman.webp", "Léo":"images/portrait-leo.webp", "Emma":"images/portrait-emma.webp" };
+// x.r = rôle d'origine (Papa, Maman, Léo, Emma ou le nom d'une recrue) : il garde le bon portrait même renommé
 function iconeMembre(x){
-  if(PORTRAITS[x.nom] && typeof ICONES_SVG !== "undefined") return portraitMembre(x);
-  var k = ICONE_MEMBRE[x.nom]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
+  var r = x.r || x.nom;
+  if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x);
+  var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 function iconeZombie(z){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
@@ -30,10 +32,23 @@ var BAL = {
   tempsDepart: 60,          // secondes pour remplir le sac au départ
   membresParExpedition: 2,  // nombre max de membres envoyés en même temps
   fouilleParMembre: 4,      // objets trouvés par membre (si tout va bien)
-  bonusLeo: 2,              // Léo trouve 2 objets de plus
   mainsParMembre: 3,        // places de transport sans sac (dans les bras)
-  soinBonusMaman: 20,       // Maman soigne mieux (+20 PV)
-  combatBonusPapa: 1,       // Papa se bat mieux
+  // Traits de caractère (voir TRAITS plus bas) : un atout et un défaut chacun
+  traits: {
+    costaud: 1,             // Costaud : +1 dégât au corps à corps et +1 de force
+    costaudFaim: 5,         //   mais perd 5 de faim de plus par jour
+    soin: 20,               // Soigneur : chaque soin rend 20 PV de plus tant qu'il est en vie
+    pacifiste: 1,           //   mais −1 dégât en combat
+    fouine: 2,              // Fouineur : +2 objets par fouille
+    bruit: 0.05,            //   mais +5 % de danger
+    frele: 1,               // Doigts de fée : crochète mieux, mais porte 1 objet de moins
+    endurant: 10,           // Endurant : expéditions −10 ⚡
+    endurantSoif: 5,        //   mais perd 5 de soif de plus par jour
+    tireur: 2,              // Tireur : +2 dégâts à l'arme à feu
+    nerveux: 0.2,           //   mais ses tirs attirent plus souvent un zombie (+20 %)
+    optimiste: 2,           // Optimiste : moral +2 chaque nuit
+    reveur: 1               //   mais 1 objet de moins par fouille
+  },
   dangerParJour: 0.01,      // le danger des lieux augmente chaque jour...
   dangerMaxAjoute: 0.3,     // ...jusqu'à +30 % au maximum
   noir:   { fouille: 0.5,  danger: 0.25 }, // lieu sombre sans lumière
@@ -82,10 +97,10 @@ var BAL = {
   crochetage: {
     goupilles: 3,            // nombre de goupilles à mettre en place
     zone: 0.18,              // largeur de la zone verte (18 % de la barre)
-    zoneEmma: 0.28,          // Emma a des doigts agiles : zone plus large
+    zoneAgile: 0.28,         // trait « Doigts de fée » : zone plus large
     vitesse: 0.9,            // allers-retours du curseur par seconde
     chanceRobot: 0.65,       // réussite par goupille pour les robots de simulation
-    chanceRobotEmma: 0.8
+    chanceRobotAgile: 0.8
   },
   // Pêche à l'étang : il faut une canne à pêche équipée (case outil)
   peche: {
@@ -118,7 +133,6 @@ var BAL = {
   // Combat au tour par tour (en expédition)
   combat: {
     poings: [1, 2],          // dégâts sans arme
-    bonusPapa: 1,            // Papa frappe plus fort
     malusFatigue: 1,         // un membre fatigué frappe moins fort
     protection: 0.5,         // « Se protéger » divise les dégâts reçus par 2
     fuite: 0.6,              // chance de réussir à fuir
@@ -274,12 +288,24 @@ var MAISONS = [
 ];
 
 /* ---------- La famille ---------- */
+// trait : celui proposé par défaut (le joueur peut le changer au départ, et renommer chacun)
 var FAMILLE = [
-  { icone:"👨", nom:"Papa",  atout:"Se bat mieux" },
-  { icone:"👩", nom:"Maman", atout:"Soigne mieux" },
-  { icone:"👦", nom:"Léo",   atout:"Trouve plus d’objets" },
-  { icone:"👧", nom:"Emma",  atout:"Crochète mieux" }
+  { icone:"👨", nom:"Papa",  trait:"costaud" },
+  { icone:"👩", nom:"Maman", trait:"soigneur" },
+  { icone:"👦", nom:"Léo",   trait:"fouineur" },
+  { icone:"👧", nom:"Emma",  trait:"agile" }
 ];
+/* Traits de caractère : chacun a un atout ET un défaut (chiffres dans BAL.traits).
+   Les recrues en reçoivent un au hasard. */
+var TRAITS = {
+  costaud:   { nom:"Costaud",       icone:"💪", plus:"frappe plus fort (+1 dégât au corps à corps, +1 de force)", moins:"gros appétit (−5 de faim de plus par jour)" },
+  soigneur:  { nom:"Soigneur",      icone:"🩺", plus:"chaque soin rend 20 PV de plus (tant qu’il est en vie)", moins:"pacifiste (−1 dégât en combat)" },
+  fouineur:  { nom:"Fouineur",      icone:"🔍", plus:"trouve 2 objets de plus en fouille", moins:"bruyant (+5 % de danger quand il sort)" },
+  agile:     { nom:"Doigts de fée", icone:"🗝️", plus:"crochète mieux les serrures (zone verte plus large)", moins:"frêle (porte 1 objet de moins)" },
+  endurant:  { nom:"Endurant",      icone:"🏃", plus:"les expéditions lui coûtent 10 ⚡ de moins", moins:"assoiffé (−5 de soif de plus par jour)" },
+  tireur:    { nom:"Tireur",        icone:"🎯", plus:"vise juste (+2 dégâts avec une arme à feu)", moins:"nerveux (ses tirs attirent plus souvent un zombie)" },
+  optimiste: { nom:"Optimiste",     icone:"😊", plus:"moral +2 chaque nuit (tant qu’il est en vie)", moins:"rêveur (1 objet de moins en fouille)" }
+};
 
 /* ---------- Lieux à fouiller ----------
    butin : la VRAIE liste des objets présents (rien ne repousse).
@@ -444,7 +470,7 @@ var EVENEMENTS = [
       return "Marché conclu : −6 rations de nourriture, +1 trousse de soins, +2 bandages. ⛑️"; }],
     ["Refuser", function(){ return "Il hausse les épaules et disparaît dans la nuit."; }]
   ]},
-  { titre:"🧸 Emma a peur", si:function(){ var e = membre("Emma"); return e && e.al; }, texte:"Elle n’arrive pas à dormir et réclame une part en plus.", choix:[
+  { titre:"🧸 Cauchemars", si:function(){ var e = parRole("Emma"); return e && e.al; }, texte:function(){ return parRole("Emma").nom + " n’arrive pas à dormir et réclame une part en plus."; }, choix:[
     ["Lui donner une ration (−1 nourriture)", function(){
       if(rations("nour") < 1) return "Il ne reste rien à donner.";
       prendreRations("nour", 1); changerMoral(10); return "Elle s’endort enfin. Moral +10."; }],
@@ -528,7 +554,7 @@ var EVENEMENTS = [
     ["Arroser les murs (−4 eau)", function(){ if(rations("eau") < 4){ return incendie(); } prendreRations("eau", 4); return "Vous arrosez tout. Le feu passe à côté. 💧 −4 rations d’eau."; }],
     ["Prier pour que le vent tourne", function(){ return hasard() < 0.5 ? "Le vent tourne. Ouf." : incendie(); }]
   ]},
-  { titre:"🍽️ Dispute à table", si:function(){ return ["Papa","Maman"].every(function(n){ var x = membre(n); return x && x.al; }); }, texte:"Papa et Maman se disputent : faut-il se rationner ou garder des forces ?", choix:[
+  { titre:"🍽️ Dispute à table", si:function(){ return ["Papa","Maman"].every(function(n){ var x = parRole(n); return x && x.al; }); }, texte:function(){ return parRole("Papa").nom + " et " + parRole("Maman").nom + " se disputent : faut-il se rationner ou garder des forces ?"; }, choix:[
     ["Se rationner aujourd’hui", function(){ G.reste.nour += 2; changerMoral(-8); return "Tout le monde mange un peu moins : +2 rations économisées. Moral −8."; }],
     ["Repas de fête (−4 rations)", function(){ if(rations("nour") < 4) return "Il n’y a pas de quoi faire la fête…"; prendreRations("nour", 4); changerMoral(15); return "Un vrai repas, des rires. Moral +15."; }]
   ]},

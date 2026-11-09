@@ -26,7 +26,7 @@ function partir(bot, i){
   var r = expedition(i), garde = 0;
   if(r.serrure){
     if(bot.crocheter()){
-      var p = crocheteur().nom === "Emma" ? BAL.crochetage.chanceRobotEmma : BAL.crochetage.chanceRobot;
+      var p = crocheteur().trait === "agile" ? BAL.crochetage.chanceRobotAgile : BAL.crochetage.chanceRobot;
       while(G.exp.serrure && !G.exp.serrure.fin && garde++ < 20) tentativeGoupille(Math.random() < p);
     } else forcerPorte();
     r = suiteExpedition(); garde = 0;
@@ -116,7 +116,7 @@ var MALIN = {
     var t = ev.titre, nb = vivants().length;
     if(t.indexOf("blessé") >= 0) return soinsDispo() > 2 ? 0 : 1;
     if(t.indexOf("marchand") >= 0) return rations("nour") > 6 + 4 * nb && soinsDispo() < 3 ? 0 : 1;
-    if(t.indexOf("Emma") >= 0) return rations("nour") > 10 ? 0 : 1;
+    if(t.indexOf("Cauchemars") >= 0) return rations("nour") > 10 ? 0 : 1;
     if(t.indexOf("Voisins") >= 0) return rations("eau") > 12 ? 0 : 1;
     if(t.indexOf("poule") >= 0) return MALIN.poules !== false && rations("eau") > 12 ? 1 : 2;
     return 0;

@@ -52,9 +52,13 @@ async function toutControler(){
   var q = function(s){ return document.querySelector(s); }, att = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }, res = {};
   if(q("[data-act=nouvelle]")) q("[data-act=nouvelle]").click();
   if(typeof fermerAstuce === "function") fermerAstuce(true);
+  nouvellePartie(graineDuJour()); G.ph = "intro"; render(); await att(150); res.intro = controleAffichage();
+  G.ph = "famille"; G.famille = familleRetenue(); render(); await att(150); res.famille = controleAffichage();
   nouvellePartie(graineDuJour()); render(); await att(150); res.depart = controleAffichage();
   G.pack = { bidon:2, conserves:1, couteau:1, lampe:1 }; demarrer(); G.day = 12; G.chap = 4; G.chien = { nom:"Rex", faim:1 }; G.ref.barr = 1;
   render(); await att(300); var p = document.getElementById("piece"); if(p) p.classList.add("montrer"); res.principal = controleAffichage();
+  G.sel = [0]; render(); await att(150); res.selection = controleAffichage(); G.sel = []; render();
+  openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();
   q("[data-act=refuge]").click(); await att(100); res.refuge = controleAffichage(); hide();
