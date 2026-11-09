@@ -546,3 +546,10 @@ body.fond{touch-action:pan-y}
 .bouchon.rate{animation:none;opacity:.55}
 @media (prefers-reduced-motion:reduce){.bouchon{animation:none}}
 @media (orientation:landscape) and (max-height:500px){.etangjeu{height:80px}}
+/* Barre des pièces discrète : visible 3 s au changement de pièce, au toucher, ou au survol (PC) */
+#piece .navpieces{opacity:0;transition:opacity .4s}
+#piece.navvue .navpieces,#piece .navpieces:hover,#piece .navpieces:focus-within{opacity:1}
+/* Bouton du bas lié à la pièce affichée */
+.acts .btn.ici{outline:3px solid var(--acc);outline-offset:1px}
+#piece .navpieces{pointer-events:none}
+#piece.navvue .navpieces{pointer-events:auto}

@@ -62,6 +62,16 @@ var PIECES = [
   ]}
 ];
 var pieceIdx = 0;
+var BOUTON_PIECE = { chambre:"endday", reserve:"stock", atelier:"refuge", garage:"fouille", cour:"refuge" };
+// La barre des pièces (flèches + points) s'efface après 3 s ; elle revient au changement de pièce ou quand on touche la pièce
+var minuteurNav = null, dernierePieceNav = null;
+function montrerNav(force){
+  var c = $("piece"); if(!c) return;
+  if(!force && dernierePieceNav === pieceIdx + ":" + G.day) return; // déjà montrée pour cette pièce aujourd'hui
+  dernierePieceNav = pieceIdx + ":" + G.day;
+  c.classList.add("navvue"); clearTimeout(minuteurNav);
+  minuteurNav = setTimeout(function(){ var c2 = $("piece"); if(c2) c2.classList.remove("navvue"); }, 3000);
+}
 function allerPiece(k){
   pieceIdx = (k + PIECES.length) % PIECES.length;
   dernierJourEtiquettes = null; // on montre les étiquettes de la nouvelle pièce
@@ -112,6 +122,10 @@ function placerPiece(){
     + PIECES.map(function(p, k){ return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
     + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>';
   ajusterEtiquettes(cont, vw);
+  // Le bouton du bas qui correspond à la pièce est mis en avant (Réserve → Stock, Chambre → Dormir…)
+  var lien = BOUTON_PIECE[P.id];
+  document.querySelectorAll(".acts .btn").forEach(function(bt){ bt.classList.toggle("ici", bt.getAttribute("data-act") === lien); });
+  montrerNav();
   // Étiquettes visibles 3 secondes au début de chaque journée, puis elles s'effacent (image plus propre)
   if(dernierJourEtiquettes !== G.day){
     dernierJourEtiquettes = G.day; cont.classList.add("montrer");
@@ -194,6 +208,7 @@ var departGlisse = null;
 document.addEventListener("pointerdown", function(e){
   if(!G || G.ph !== "game" || $("modal").style.display === "flex" || $("astuce")) { departGlisse = null; return; }
   departGlisse = { x:e.clientX, y:e.clientY, t:Date.now() };
+  if(!e.target.closest(".acts, .mc, .sheet")) montrerNav(true); // toucher la pièce fait réapparaître la barre
 });
 document.addEventListener("pointerup", function(e){
   var d = departGlisse; departGlisse = null;
@@ -294,3 +309,35 @@ function openFeu(){
   else h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="feu"' + (br && pl >= BAL.feu.planches ? "" : " disabled") + '>' + (!br ? "❌ Il faut un briquet pour l’allumer" : pl < BAL.feu.planches ? "❌ Plus de planches à brûler" : "🔥 Allumer le feu") + '</button>';
   show(h + BTN_FERMER());
 }
+
+/* ---------- Fermer une fenêtre en la faisant glisser vers le bas (comme sur mobile) ----------
+   Seulement les fenêtres qui ont un bouton Fermer / Annuler (pas les combats, événements…),
+   et seulement quand la fenêtre est tout en haut de son défilement. */
+var tireFeuille = null;
+function debutTire(x, y, cible){
+  var sh = $("sheet");
+  if($("modal").style.display !== "flex" || !cible.closest("#sheet") || sh.scrollTop > 0) return;
+  if(cible.closest("input, select, textarea, .part, .serrure, .etangjeu")) return;
+  if(!sh.querySelector('[data-act="close"]')) return;
+  tireFeuille = { x:x, y:y, dy:0 };
+}
+function suiteTire(x, y){
+  if(!tireFeuille) return;
+  var dy = y - tireFeuille.y, dx = x - tireFeuille.x, sh = $("sheet");
+  if(dy < 0 || Math.abs(dx) > Math.abs(dy) * 1.5){ sh.style.transform = ""; tireFeuille.dy = 0; return; }
+  tireFeuille.dy = dy; sh.style.transition = "none"; sh.style.transform = "translateY(" + dy + "px)";
+}
+function finTire(){
+  if(!tireFeuille) return;
+  var dy = tireFeuille.dy, sh = $("sheet"); tireFeuille = null;
+  sh.style.transition = "transform .2s"; sh.style.transform = "";
+  if(dy > 90){ finGlisse = Date.now(); fermer(); }
+}
+document.addEventListener("touchstart", function(e){ var t = e.touches[0]; if(e.touches.length === 1) debutTire(t.clientX, t.clientY, e.target); }, { passive:true });
+document.addEventListener("touchmove", function(e){ var t = e.touches[0]; suiteTire(t.clientX, t.clientY); }, { passive:true });
+document.addEventListener("touchend", finTire);
+document.addEventListener("touchcancel", function(){ if(tireFeuille){ $("sheet").style.transform = ""; tireFeuille = null; } });
+// À la souris (PC) aussi
+document.addEventListener("pointerdown", function(e){ if(e.pointerType === "mouse") debutTire(e.clientX, e.clientY, e.target); });
+document.addEventListener("pointermove", function(e){ if(e.pointerType === "mouse") suiteTire(e.clientX, e.clientY); });
+document.addEventListener("pointerup", function(e){ if(e.pointerType === "mouse") finTire(); });

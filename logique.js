@@ -378,6 +378,7 @@ function expedition(i, voiture){
     else { mult *= BAL.force.fouille; d += BAL.force.danger; n.push(["b2", "🔒 Porte forcée à la brute, ça fait du bruit."]); }
   }
   if(G.moral < BAL.moralBas){ mult *= BAL.moralBasFouille; n.push(["b2", "😟 Moral bas : l’équipe fouille mal."]); }
+  else if(G.moral >= BAL.moralHaut) n.push(["g2", "😀 Bon moral : l’équipe fouille avec entrain (+" + BAL.moralHautFouille + " objet)."]);
   var bruyants = team.filter(function(x){ return x.trait === "fouineur"; });
   if(bruyants.length) d += BAL.traits.bruit * bruyants.length;
   var fatigues = team.filter(fatigue);
@@ -460,7 +461,8 @@ function finExpedition(){
   // Fouille : on pioche dans la vraie liste du lieu
   var survivants = team.filter(function(x){ return x.al; });
   var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.trait === "fouineur"; }) ? BAL.traits.fouine : 0)
-    - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur;
+    - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur
+    + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0);
   nb = Math.min(lieu.butin.length, Math.max(survivants.length ? 1 : 0, Math.round(nb * mult)));
   var trouves = lieu.butin.splice(0, nb);
   // Pêche : chaque survivant qui a une canne attrape des poissons (tant qu'il en reste)

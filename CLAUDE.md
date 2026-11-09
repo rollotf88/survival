@@ -162,6 +162,13 @@ Mini-jeu de pêche (2026-11-09, idée validée par Fabien) : à l'étang, avec a
 
 Le froid et le feu (2026-11-09, idée de Fabien) : toucher la cheminée (salon ou chambre) ouvre `openFeu()` (piece.js) : allumer / éteindre `G.feu`. Il faut un briquet (`allume:true`, il ne chauffe plus tout seul) ; 1 planche brûle 2 nuits (`G.braises`). Feu : toute la famille au chaud, +10 ⚡ de repos, moral +3. Sans feu : 1 couverture pour 2 personnes, les autres ont froid (repos 55 au lieu de 70, −5 PV). Le feu s'éteint seul sans planches ou sans briquet (message dans le bilan). Réglages `BAL.feu`, `BAL.reposFroid` ; +24 planches ajoutées (maisons, rue, village, camping, zone indus, entrepôt, quincaillerie, école). Robot Malin : allume le feu s'il a 3 planches et un briquet. Simulation : Malin 319 avec le feu, 305 sans (310 avant), Naïf 28. Images : `refuge-fond-eteint.webp` (salon sans feu) et `piece-chambre-feu.webp` (chambre avec feu), choisies selon `G.feu` (en début de partie le feu est éteint)
 
+Retours de Fabien du 2026-11-09 (après-midi) :
+- Écran du sac : le bloc « ce qu'il faut emporter » est retiré (trop facile, demande de Fabien) ; `BESOINS_SAC` n'est plus affiché
+- Barre des pièces : s'efface après 3 s (classe `navvue`, `montrerNav`) ; revient au changement de pièce ou en touchant la pièce ; cachée = pas touchable. Le bouton du bas lié à la pièce est encadré (`BOUTON_PIECE` : chambre → Dormir, réserve → Stock, atelier et cour → Refuge, garage → Fouiller)
+- Fermer une fenêtre en la faisant glisser vers le bas (doigt ou souris), seulement si elle a un bouton `data-act="close"` et qu'elle est en haut de son défilement (piece.js, `debutTire`)
+- Moral : à 70 ou plus, +1 objet par fouille (`BAL.moralHaut`, `moralHautFouille`). Simulation : peluche prise en premier = +34 points (+15 sans ce bonus) ; le robot Malin ne prend pas les objets de confort (sac plein avant), d'où 323 de base
+- À faire (images Gemini demandées) : objets de confort visibles dans les pièces seulement si on les a (peluche, cartes, radio, photo) ; illustrations des événements ; inventaire en cases façon jeu mobile (plus tard)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

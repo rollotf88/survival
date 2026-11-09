@@ -82,7 +82,7 @@ function rPick(){
   var tm = Math.max(0, G.tl), pc = Math.min(100, Math.round(tm / BAL.tempsDepart * 100));
   document.body.classList.toggle("urgence", tm <= 10);
   $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><span class="mode">' + (G.seed ? "🏆 Partie classée" : "🎲 Partie libre") + '</span><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
-    + '<div class="pk"><div class="besoins" style="grid-area:sub" aria-label="Ce qu’il faut emporter">' + BESOINS_SAC.map(function(b){ var ok = Object.keys(G.pack).some(function(k){ return b[2](OBJETS[k]); }); return '<span class="' + (ok ? "ok" : "") + '" title="' + b[1] + '">' + b[0] + ' ' + (ok ? "✅" : "❌") + '<small>' + b[1] + '</small></span>'; }).join("") + '</div>'
+    + '<div class="pk"><p class="sub" style="grid-area:sub">Ils arrivent ! Choisis ce que la famille emporte avant la fin du compte à rebours.</p>'
     + '<div class="sacbloc" style="grid-area:bag"><img class="sacimg' + (sautSac ? " saute" : "") + '" src="images/sac-dos.webp" alt=""><div class="sacdroite"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div></div>'
     + '<div class="stage" style="grid-area:tiles"><div class="tiles">' + tiles + '</div></div>'
     + '<div class="sub" style="grid-area:info;min-height:34px"><b>' + G.info + '</b></div>'
@@ -688,7 +688,7 @@ function openInfo(id){
     h = '<h2>' + ic("bouclier", "🛡️") + ' Défense de nuit : ' + defenseNuit() + '</h2><p>' + (p.length ? p.join("<br>") : "Rien pour l’instant : construis la barricade et garde des armes au refuge.") + '</p>'
       + '<p class="msg">🧟 Cette nuit : environ <b>' + ch + ' %</b> de risque d’attaque, d’une force de <b>' + f + ' à ' + (f + 2) + '</b>. Si votre défense est plus faible, ils blessent quelqu’un, volent de la nourriture et abîment la barricade.</p>';
   } else if(id === "moral"){
-    h = '<h2>😀 Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt.</p>'
+    h = '<h2>😀 Moral : ' + Math.round(G.moral) + ' / 100</h2><p>C’est l’envie de tenir de la famille. Il baisse un peu chaque nuit (−' + BAL.moralPerteNuit + ') et beaucoup quand quelqu’un meurt. <b>À ' + BAL.moralHaut + ' ou plus, l’équipe trouve 1 objet de plus en fouille.</b></p>'
       + '<p>' + (G.moral < BAL.moralBas ? '<span class="moins">⚠️ Sous ' + BAL.moralBas + ', l’équipe fouille moins bien.</span>' : 'Sous ' + BAL.moralBas + ', l’équipe fouillerait moins bien.') + '</p>'
       + '<p class="sub">Pour le remonter : les objets de confort (peluche, photo, cartes…) au refuge, les bons choix le matin, les chapitres réussis, un chien' + (vivants().some(function(x){ return x.trait === "optimiste"; }) ? ", et votre optimiste" : "") + '.</p>';
   }

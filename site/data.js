@@ -70,6 +70,8 @@ var BAL = {
   force:  { fouille: 0.5,  danger: 0.15 }, // porte forcée sans outil
   moralBas: 25,             // en dessous, l'équipe fouille moins bien
   moralBasFouille: 0.75,
+  moralHaut: 70,            // au-dessus, l'équipe fouille avec entrain…
+  moralHautFouille: 1,      // …et trouve 1 objet de plus
   faimParJour: 30, soifParJour: 30, // perte de jauge par jour (une ration rend autant)
   rattrapage: 50,           // la nuit, sous 50 de faim ou de soif, on prend une ration de plus si le stock le permet
   degatsFaimSoif: 20,       // PV perdus si la jauge est à zéro
