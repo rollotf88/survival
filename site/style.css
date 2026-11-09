@@ -508,3 +508,6 @@ body.fond .accueil{justify-content:flex-start;padding-top:3vh}
 .z.mort .portrait img{filter:grayscale(1) brightness(.8)}
 @media (max-height:640px){.z .em{font-size:34px}}
 @media (orientation:landscape) and (max-height:500px){.z .em{font-size:28px}}
+/* Éléments posés sur la pièce (Rex, planches) : sous les cartes et les zones cliquables */
+#decor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#decor img{position:absolute;filter:brightness(.92) drop-shadow(0 3px 3px rgba(20,10,4,.35))}

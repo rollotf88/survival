@@ -18,17 +18,31 @@ var ZONES_PIECE = [
   ["pCheminee",  155, 355, 320, 530, function(){ return ic("ref_barr", "🧱"); }, "Refuge", .5],
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
-  ["pTable",     365, 570, 660, 678, function(){ return ic("marteau", "🛠️"); }, "Atelier", .55]
+  ["pTable",     365, 570, 660, 678, function(){ return ic("marteau", "🛠️"); }, "Atelier", .55],
+  ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .5, function(){ return !!chien(); }]
 ];
+// Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
+// [image, x0, y0, x1, y1, condition]
+var DECOR_PIECE = [
+  ["images/planches.webp", 904, 262, 1022, 454, function(){ return G.ref && G.ref.barr >= 1; }], // barricade construite : planches sur la porte
+  ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }]                   // Rex adopté : couché devant le canapé
+];
+function placerDecor(dx, dy, s){
+  var d = $("decor"); if(!d){ d = document.createElement("div"); d.id = "decor"; document.body.appendChild(d); }
+  if(s === null){ d.innerHTML = ""; return; }
+  d.innerHTML = DECOR_PIECE.filter(function(e){ return e[5](); }).map(function(e){
+    return '<img src="' + e[0] + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
+  }).join("");
+}
 
 function placerPiece(){
   var cont = $("piece");
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
   var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
   var corps = document.body.style;
-  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; return; }
+  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; }
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
-  if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; return; } // pas assez de place
+  if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
   var vw = window.innerWidth, F = CADRE_PIECE;
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
@@ -37,12 +51,14 @@ function placerPiece(){
   var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
   corps.backgroundSize = (IMAGE_PIECE.l * s) + "px auto";
   corps.backgroundPosition = dx + "px " + dy + "px";
+  placerDecor(dx, dy, s);
   // Fondu sur le bas de l'image pour qu'elle se mêle au plancher (au lieu de s'arrêter net)
   var f = $("fondu"); if(!f){ f = document.createElement("div"); f.id = "fondu"; document.body.appendChild(f); }
   f.style.display = "block"; f.style.top = (dy + IMAGE_PIECE.h * s - 88) + "px";
   cont.classList.toggle("compact", s < 0.32);
   cont.style.display = "block"; cont.style.top = haut + "px"; cont.style.height = (fin - haut) + "px";
   cont.innerHTML = ZONES_PIECE.map(function(z){
+    if(z[8] && !z[8]()) return "";
     var x = dx + z[1] * s, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
