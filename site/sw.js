@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261109-2036";
+var VERSION = "survival-20261109-2040";
 var FICHIERS = [
   "./",
   "index.html",
@@ -54,6 +54,10 @@ var FICHIERS = [
   "images/portrait-soldat.webp",
   "images/piece-cuisine.webp",
   "images/piece-cuisine-feu.webp",
+  "images/portrait-fillette.webp",
+  "images/portrait-precheur.webp",
+  "images/portrait-mere.webp",
+  "images/portrait-chefcamp.webp",
   "images/lieux/maison.webp",
   "images/lieux/rue.webp",
   "images/lieux/super.webp",
