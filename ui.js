@@ -32,7 +32,7 @@ function puces(n){
   if(morts.length) setTimeout(function(){ son("glas"); if(typeof vibrer === "function") vibrer([200, 100, 400]); }, 150);
   return morts.map(function(a){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
-  }).join("") + (autres.length ? '<ul>' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
+  }).join("") + (autres.length ? '<ul class="fil">' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
 }
 function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
@@ -262,18 +262,21 @@ function openCombat(){
         + '<div class="cmb"><button class="mini' + (c === "frapper" ? " on" : "") + '" data-act="cact" data-id="' + j + ':frapper">⚔️ Frapper</button><button class="mini' + (c === "proteger" ? " on" : "") + '" data-act="cact" data-id="' + j + ':proteger">🛡️ Protéger</button></div></div>';
     }).join("");
   }
-  if(C.journal.length) h += puces(C.journal);
+  if(C.journal.length) h += '<div class="journal" id="journal">' + puces(C.journal) + '</div>';
   h += fini ? '<button class="btn" style="width:100%" data-act="cfin">Continuer</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 Fuir ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h);
   dernierPV = { c:C, z:C.zombies.map(function(z){ return z.pv; }), m:G.m.map(function(x){ return x.hp; }) };
+  var jn = $("journal"); if(jn) jn.scrollTop = jn.scrollHeight;
 }
 
 function openResultat(r){
   var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
-  h += '<p><b>' + (r.pris.length ? "Vous trouvez " + nommerListe(r.pris) + "." : "Vous rentrez les mains vides.") + '</b></p>';
-  if(r.pris.length) h += '<div class="loot">' + r.pris.map(function(g){ return '<span>' + icone(g.id) + (g.n > 1 ? "×" + g.n : "") + '</span>'; }).join("") + '</div>';
-  if(r.laisses.length) h += '<p class="sub">🎒 Plus de place : vous laissez sur place ' + nommerListe(r.laisses) + '. Un sac permet de rapporter plus.</p>';
+  if(r.pris.length){
+    h += '<p class="titre-butin">🎒 Butin rapporté</p>' + etageres(r.pris.map(function(g){ return caseObjet(g.id, { act:"aucun", cle:g.id, n:g.n, fixe:true }); }), 5)
+      + '<p class="sub butin-noms">' + nommerListe(r.pris).replace(/^./, function(c){ return c.toUpperCase(); }) + '.</p>';
+  } else h += '<p><b>Vous rentrez les mains vides.</b></p>';
+  if(r.laisses.length) h += '<div class="laisses"><span class="sub">Laissé sur place (plus de place) :</span>' + r.laisses.map(function(g){ return '<span class="mini-case">' + icone(g.id) + (g.n > 1 ? '<b>' + g.n + '</b>' : '') + '</span>'; }).join("") + '</div><p class="sub">Un sac permet de rapporter plus.</p>';
   if(r.vide) h += '<p class="sub">📭 Vous avez vidé les lieux : il n’y a plus rien à trouver ici.</p>';
   show(h + '<button class="btn" style="width:100%" data-act="close">Retour au refuge</button>');
 }
@@ -396,7 +399,7 @@ function ligneObjet(id, n, inst){
    etageres : range les cases par 5 sur des planches en bois, avec des cases vides jusqu'à « mini ». */
 function caseObjet(id, opt){
   opt = opt || {};
-  return '<button class="islot f-' + (id ? famillePick(id) : "outil") + (opt.sel ? " sel" : "") + (opt.terne ? " terne" : "") + '" data-act="' + opt.act + '" data-id="' + opt.cle + '" aria-label="' + (opt.nom || OBJETS[id].nom) + (opt.n > 1 ? " ×" + opt.n : "") + '">' + (opt.icone || icone(id))
+  return '<button class="islot f-' + (id ? famillePick(id) : "outil") + (opt.sel ? " sel" : "") + (opt.terne ? " terne" : "") + (opt.fixe ? " fixe" : "") + '" data-act="' + opt.act + '" data-id="' + opt.cle + '" aria-label="' + (opt.nom || OBJETS[id].nom) + (opt.n > 1 ? " ×" + opt.n : "") + '">' + (opt.icone || icone(id))
     + (opt.n > 1 ? '<span class="nb">' + opt.n + '</span>' : '')
     + (opt.badge ? '<span class="nb">' + opt.badge + '</span>' : '')
     + (opt.pret ? '<span class="pret" aria-hidden="true">✔</span>' : '')

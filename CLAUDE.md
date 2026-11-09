@@ -183,6 +183,8 @@ Personnage qui parle (2026-11-09, idée de Fabien « comme les MMO ») : `parle(
 
 « Ce qu'il faut » (2026-11-09, retour de Fabien : les pastilles rouges ne collaient pas) : `ingredients()` affiche de petites cases en bois (`.ings2`, `.ing2`) avec l'objet, un compteur « a/n » vert ou rouge et le nom court (`NOM_COURT`, complété : clous, adhésif, chiffon…) ; l'outil nécessaire (non consommé) a la case dorée. Le bouton d'un travail d'atelier (`boutonTravail`) porte le verbe et, dessous, le mini-portrait de celui qui travaille et « −10 ⚡ » ; grisé avec la raison s'il manque quelque chose (remplace la ligne « ✅ Prêt (…) » et la phrase « Chaque travail coûte… »)
 
+Récits et butin (2026-11-09) : les lignes de `puces()` sont de petites cartes colorées (`ul.fil` : bord vert = bon, rouge = mauvais) pour la nuit, la fouille et le combat ; le journal de combat est dans une boîte qui défile jusqu'au plus récent (`#journal`) ; le résultat d'une fouille montre le butin sur une étagère de cases non cliquables (`caseObjet(..., {fixe:true})`) avec la liste des noms dessous, et ce qui est laissé sur place en mini-cases estompées
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT
