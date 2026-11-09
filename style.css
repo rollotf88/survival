@@ -511,3 +511,11 @@ body.fond .accueil{justify-content:flex-start;padding-top:3vh}
 /* Éléments posés sur la pièce (Rex, planches) : sous les cartes et les zones cliquables */
 #decor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 #decor img{position:absolute;filter:brightness(.92) drop-shadow(0 3px 3px rgba(20,10,4,.35))}
+/* Onglet Voiture : le dessin et ses emplacements de pièces */
+.voitimg{position:relative;max-width:440px;margin:0 auto}
+.voitimg img{width:100%;height:auto;display:block}
+.voitimg .pslot{position:absolute;width:13%;min-width:40px;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;padding:0;display:grid;place-items:center;border-width:2.5px;background:color-mix(in srgb,var(--card) 82%,transparent)}
+.voitimg .pslot .em{font-size:20px;line-height:1}
+.voitimg .pslot.fait{background:var(--card)}
+.pleg{margin:4px 0 0;text-align:center;font-size:12px;font-weight:700;color:var(--mut)}
+.pleg .ico{font-size:14px}

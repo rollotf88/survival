@@ -355,14 +355,18 @@ function openStock(){
 /* ---------- Refuge : construire et atelier (onglets) ---------- */
 var ONGLETS = [ ["construire","🔨","Construire"], ["fabriquer","🛠️","Fabriquer"], ["reparer","🔧","Réparer"], ["demonter","♻️","Démonter"], ["voiture","🚗","Voiture"] ];
 var enVoiture = false, pieceChoisie = null;
+// Place des emplacements sur le dessin de la voiture en panne, en % de l'image (gauche, haut)
+var POS_PIECES = { batterie:[17, 50], roue:[27, 79], courroie:[7, 71] };
 // Onglet Voiture : glisser une pièce du stock sur son emplacement (ou toucher la pièce puis l'emplacement)
 function ongletVoiture(){
   var V = G.voiture, ok = voitureReparee(), x = artisan();
   var h = '<p class="sub">' + VOITURE.nom + ' : ' + (ok ? "✅ en état de rouler." : "en panne. Glisse chaque pièce sur son emplacement (" + BAL.energieCraft + " ⚡ au plus reposé" + (x ? "" : " : 😴 tout le monde est trop fatigué") + ").") + '</p>';
-  h += '<div class="garage"><div class="auto">🚙</div><div class="pslots">' + VOITURE.pieces.map(function(p){
-    var fait = V.installees[p];
-    return '<button class="pslot' + (fait ? " fait" : "") + (pieceChoisie && !fait ? " attend" : "") + '" data-slot="' + p + '" data-act="pslot" data-id="' + p + '"' + (fait ? " disabled" : "") + '><span class="em">' + (fait ? icone(p) : '<span class="vide">' + icone(p) + '</span>') + '</span><small>' + OBJETS[p].nom + (fait ? " ✔" : "") + '</small></button>';
-  }).join("") + '</div></div>';
+  // Dessin de la voiture (Gemini) avec les emplacements posés à leur place : batterie dans le moteur, roue sur l'essieu, courroie à l'avant
+  h += '<div class="garage"><div class="voitimg"><img src="images/voiture-' + (ok ? "ok" : "panne") + '.webp" alt="' + VOITURE.nom + (ok ? " réparée" : " en panne") + '">' + (ok ? "" : VOITURE.pieces.map(function(p){
+    var fait = V.installees[p], pos = POS_PIECES[p] || [50, 50];
+    return '<button class="pslot' + (fait ? " fait" : "") + (pieceChoisie && !fait ? " attend" : "") + '" style="left:' + pos[0] + '%;top:' + pos[1] + '%" data-slot="' + p + '" data-act="pslot" data-id="' + p + '"' + (fait ? " disabled" : "") + ' aria-label="' + OBJETS[p].nom + (fait ? " : installée" : " : emplacement vide") + '" title="' + OBJETS[p].nom + '"><span class="em">' + (fait ? icone(p) : '<span class="vide">' + icone(p) + '</span>') + '</span></button>';
+  }).join("")) + '</div>'
+    + '<p class="pleg">' + VOITURE.pieces.map(function(p){ return icone(p) + ' ' + OBJETS[p].nom + (V.installees[p] ? " ✔" : ""); }).join(" · ") + '</p></div>';
   var dispo = VOITURE.pieces.filter(function(p){ return !V.installees[p] && compter(p) > 0; });
   if(!ok) h += '<p class="sub">Pièces au refuge :</p><div class="parts">' + (dispo.length ? dispo.map(function(p){ return '<button class="part' + (pieceChoisie === p ? " on" : "") + '" data-piece="' + p + '" data-act="piece" data-id="' + p + '"' + (x ? "" : " disabled") + '>' + icone(p) + '<small>' + OBJETS[p].nom + '</small></button>'; }).join("") : '<small>Aucune pour l’instant. Cherche au Garage auto et à la Zone industrielle.</small>') + '</div>';
   h += '<p class="sub">⛽ Essence : ' + V.essence + ' / ' + VOITURE.reservoir + ' L</p>' + barre("⛽", Math.round(V.essence / VOITURE.reservoir * 100));

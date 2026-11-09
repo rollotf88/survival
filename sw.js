@@ -22,6 +22,8 @@ var FICHIERS = [
   "images/entree-fond.webp",
   "images/sac-dos.webp",
   "images/logo.webp",
+  "images/voiture-panne.webp",
+  "images/voiture-ok.webp",
   "images/rex.webp",
   "images/planches.webp",
   "images/portrait-rodeur.webp",

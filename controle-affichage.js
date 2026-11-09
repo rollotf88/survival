@@ -66,6 +66,7 @@ async function toutControler(){
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();
   q("[data-act=refuge]").click(); await att(100); res.refuge = controleAffichage(); hide();
+  ajouter("batterie", 1); ajouter("roue", 1); openRef("voiture"); await att(150); res.voiture = controleAffichage(); hide();
   openMenu(); await att(50); res.menu = controleAffichage(); q("[data-act=guide]").click(); await att(100); res.guide = controleAffichage(); hide();
   q(".chapcourt").click(); await att(100); res.chapitre = controleAffichage(); hide();
   Object.keys(localStorage).filter(function(k){ return k.indexOf("survival") === 0; }).forEach(function(k){ localStorage.removeItem(k); });
