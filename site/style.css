@@ -893,3 +893,11 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 .accueil:has(.vitrine){justify-content:flex-start;padding-top:12px}
 .accueil:has(.vitrine) .logo.grand{width:min(30vw,130px)}
 @media (max-height:820px){.accueil:has(.vitrine) .logo.grand{display:none}}
+/* Vitrine : flèches et glisser au doigt */
+.vitrine{touch-action:pan-y;user-select:none;-webkit-user-select:none;padding-left:26px;padding-right:26px}
+.vt-fl{position:absolute;top:calc(50% - 22px);width:24px;height:36px;padding:0;border:0;border-radius:8px;background:rgba(255,246,230,.12);color:#ffcf4a;font-size:24px;line-height:32px;font-weight:800;cursor:pointer}
+.vt-fl:hover,.vt-fl:focus-visible{background:rgba(255,246,230,.25)}
+.vt-fl.g{left:3px}.vt-fl.d{right:3px}
+/* Accueil : le voile de la fenêtre « Partie en cours » laisse passer les doigts vers la vitrine */
+body.accueil-ouvert #modal{pointer-events:none}
+body.accueil-ouvert #modal .sheet{pointer-events:auto}

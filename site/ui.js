@@ -807,6 +807,7 @@ setInterval(tick, 250);
 
 function render(){
   if(G.ph !== "pick") document.body.classList.remove("urgence");
+  if(G.ph !== "accueil") document.body.classList.remove("accueil-ouvert");
   document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille" || G.ph === "pick"); // fond peint
   document.body.classList.toggle("maison", G.ph === "intro" || G.ph === "famille" || G.ph === "pick"); // avant la fuite : l'entrée de la maison
   if(typeof placerPiece === "function") setTimeout(placerPiece, 0); // zones cliquables de la pièce (piece.js)
@@ -872,6 +873,7 @@ function vitrine(){
   return '<div class="vitrine" id="vitrine" aria-label="Ce qui t’attend">' + VITRINE.map(function(v, k){
       return '<div class="vt' + (k ? "" : " on") + '"><span class="vt-img"><img src="' + v[0] + '" alt="" loading="lazy"></span><span class="vt-txt"><b>' + v[1] + '</b><small>' + v[2] + '</small></span></div>';
     }).join("")
+    + '<button class="vt-fl g" data-act="vitrineprec" aria-label="Carte précédente">‹</button><button class="vt-fl d" data-act="vitrinesuiv" aria-label="Carte suivante">›</button>'
     + '<div class="vt-points">' + VITRINE.map(function(v, k){ return '<button class="vt-pt' + (k ? "" : " on") + '" data-act="vitrine" data-id="' + k + '" aria-label="Voir : ' + v[1].replace(/^\S+ /, "") + '"></button>'; }).join("") + '</div></div>';
 }
 function montrerVitrine(k){
@@ -880,7 +882,31 @@ function montrerVitrine(k){
   if(k === undefined){ k = 0; cartes.forEach(function(c, j){ if(c.classList.contains("on")) k = (j + 1) % cartes.length; }); }
   cartes.forEach(function(c, j){ c.classList.toggle("on", j === k); }); pts.forEach(function(p, j){ p.classList.toggle("on", j === k); });
 }
-function lancerVitrine(){ clearInterval(minuteurVitrine); if(!document.getElementById("vitrine")) return; if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; minuteurVitrine = setInterval(function(){ montrerVitrine(); }, 4500); }
+// Défilement tout seul, lent (9 s) ; dès que le joueur touche la vitrine, elle attend 25 s avant de repartir
+function lancerVitrine(pause){
+  clearInterval(minuteurVitrine); clearTimeout(lancerVitrine.t);
+  var v = document.getElementById("vitrine"); if(!v) return;
+  if(!v.dataset.glisse){ v.dataset.glisse = "1"; brancherGlisseVitrine(v); }
+  if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  lancerVitrine.t = setTimeout(function(){ minuteurVitrine = setInterval(function(){ montrerVitrine(); }, 9000); }, pause ? 25000 : 0);
+}
+function decalerVitrine(d){
+  var v = document.getElementById("vitrine"); if(!v) return;
+  var cartes = v.querySelectorAll(".vt"), k = 0; cartes.forEach(function(c, j){ if(c.classList.contains("on")) k = j; });
+  montrerVitrine((k + d + cartes.length) % cartes.length); lancerVitrine(true);
+}
+// Glisser au doigt (ou à la souris) vers la gauche / la droite
+function brancherGlisseVitrine(v){
+  var x0 = null, y0 = 0;
+  v.addEventListener("pointerdown", function(e){ if(e.target.closest("button")) return; x0 = e.clientX; y0 = e.clientY; });
+  v.addEventListener("pointerup", function(e){ if(x0 === null) return; var dx = e.clientX - x0, dy = e.clientY - y0; x0 = null; if(Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) decalerVitrine(dx < 0 ? 1 : -1); });
+  v.addEventListener("pointercancel", function(){ x0 = null; });
+}
+// Flèches du clavier sur PC (seulement quand la vitrine est affichée et qu'aucun champ n'est en cours de saisie)
+document.addEventListener("keydown", function(e){
+  if(!document.getElementById("vitrine") || /INPUT|TEXTAREA/.test((e.target || {}).tagName || "")) return;
+  if(e.key === "ArrowRight") decalerVitrine(1); else if(e.key === "ArrowLeft") decalerVitrine(-1);
+});
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
     + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
@@ -1027,7 +1053,8 @@ document.addEventListener("click", function(e){
   else if(a === "boire"){ boire(i); hide(); }
   else if(a === "rchoix"){ choisirRencontre(i); render(); openRencontre(); return; }
   else if(a === "rfin"){ var rf = finirRencontre(); render(); if(rf){ openResultat(rf); finiSiMorts(); } else hide(); return; }
-  else if(a === "vitrine"){ montrerVitrine(i); lancerVitrine(); return; }
+  else if(a === "vitrine"){ montrerVitrine(i); lancerVitrine(true); return; }
+  else if(a === "vitrineprec" || a === "vitrinesuiv"){ decalerVitrine(a === "vitrinesuiv" ? 1 : -1); return; }
   else if(a === "cuire"){ var mc = cuisiner(i); if(mc) msgAtelier = mc; openRef("cuisine"); render(); return; }
   else if(a === "plat"){ var qp = id.split(":"); var xp = G.m[+qp[0]]; mangerPlat(xp, qp[1]); openSoins(+qp[0]); render(); return; }
   else if(a === "ration"){ var qr = id.split(":"); prendreRation(+qr[0], qr[1]); openSoins(+qr[0]); render(); return; }
@@ -1163,6 +1190,7 @@ var enCours = lireSauvegarde();
 if(enCours){
   // Écran d'accueil : continuer ou recommencer
   nouvellePartie(null); G.ph = "accueil";
+  document.body.classList.add("accueil-ouvert"); // la fenêtre « Partie en cours » laisse toucher la vitrine derrière elle
   document.body.classList.add("fond");
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
   lancerVitrine();
