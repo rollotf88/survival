@@ -943,6 +943,7 @@ function rFamille(){
     + '<p class="msg" id="msgfam"></p><button class="btn" style="width:100%" data-act="famok">Préparer le sac ⏱</button></div>';
 }
 // Fenêtre pour taper un prénom (k = 0 à 3) ou le pseudo (k = "p")
+var apresPseudo = null; // fenêtre à rouvrir après avoir choisi son pseudo
 function openSaisie(k){
   var p = k === "p", v = p ? lirePseudo() : G.famille[+k].nom;
   show('<h2>✏️ ' + (p ? "Ton pseudo" : "Prénom de " + FAMILLE[+k].nom) + '</h2><p class="sub">' + (p ? "Il s’affichera dans le classement (pas ton vrai nom). 16 lettres au plus." : "10 lettres au plus.") + '</p>'
@@ -952,7 +953,13 @@ function openSaisie(k){
 }
 function validerSaisie(k){
   var v = ($("saisie").value || "").replace(/[<>&"]/g, "").trim();
-  if(k === "p"){ try{ localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){} hide(); render(); return; }
+  if(k === "p"){
+    try{ localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){}
+    // Pseudo demandé par une autre fenêtre (ex. fonder un clan) : on y revient au lieu de tout fermer
+    var retour = apresPseudo; apresPseudo = null;
+    if(retour === "clan" && typeof openCreerClan === "function"){ render(); openCreerClan(); return; }
+    hide(); render(); return;
+  }
   k = +k; v = v.slice(0, 10) || FAMILLE[k].nom;
   if(G.famille.some(function(f, j){ return j !== k && f.nom.toLowerCase() === v.toLowerCase(); })){ $("msgsaisie").textContent = "Un autre membre s’appelle déjà « " + v + " »."; return; }
   G.famille[k].nom = v; hide(); render();
@@ -1010,6 +1017,7 @@ function openInfo(id){
     equipes().forEach(function(o){ if(OBJETS[o.id].def) L.push(["g2", icone(o.id) + " " + OBJETS[o.id].nom + " en main : +" + OBJETS[o.id].def]); });
     if(compter("piege") > 0) L.push(["g2", icone("piege") + " Piège à zombies : +" + BAL.piegeDef + " (un seul usage)"]);
     if(chien()) L.push(["g2", ic("chien", "🐕") + " " + chien().nom + " monte la garde : +" + BAL.chien.defense]);
+    if(typeof BONUS_CLAN_DEF !== "undefined" && BONUS_CLAN_DEF) L.push(["g2", "🗼 Tours de guet du bastion de ton clan : +" + BONUS_CLAN_DEF]);
     if(!L.length) L.push(["b2", "🧱 Rien pour l’instant : construis la barricade et garde des armes en main."]);
     L.push(["b2", "🧟 Attaque perdue : un blessé, de la nourriture volée et un niveau de barricade détruit."]);
     h += puces(L);
@@ -1040,7 +1048,7 @@ document.addEventListener("click", function(e){
   else if(a === "modefam"){ var fam = G.famille; modeJour = id === "classee"; try{ localStorage.setItem("survival_mode", modeJour ? "jour" : "libre"); }catch(e){} nouvellePartie(modeJour ? graineDuJour() : null); G.famille = fam; G.ph = "famille"; }
   else if(a === "famok"){ if(!validerFamille()) return; G.ph = "pick"; if(G.seed) G.info = "🏆 Partie classée : même maison, mêmes lieux et mêmes nuits pour tous les joueurs aujourd’hui. Ton score ira au classement."; }
   else if(a === "info"){ openInfo(id); return; }
-  else if(a === "saisie"){ openSaisie(id); return; }
+  else if(a === "saisie"){ apresPseudo = b.getAttribute("data-retour") || null; openSaisie(id); return; }
   else if(a === "saisieok"){ validerSaisie(id); return; }
   else if(a === "trait"){ var qt = id.split(":"); changerTrait(+qt[0], +qt[1]); }
   else if(a === "house"){ if(G.seed) return; if(i !== G.h){ G.h = i; G.pack = {}; G.info = "Tu as changé de maison : le sac est vidé."; } }

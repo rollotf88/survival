@@ -920,3 +920,6 @@ button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}
 .blasons .bl{padding:3px;line-height:0}
 .blasons .bl img{width:100%;max-width:44px;aspect-ratio:1;object-fit:contain}
 .clan-tete .blason{flex-basis:56px;width:56px;height:56px}
+/* ---------- Bastion ---------- */
+.bast-def{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 8px;margin-bottom:8px}
+.bast-def .invfiche{margin:0 0 4px}

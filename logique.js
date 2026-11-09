@@ -930,6 +930,7 @@ function defenseNuit(){
   equipes().forEach(function(o){ d += OBJETS[o.id].def || 0; });
   if(compter("piege") > 0) d += BAL.piegeDef;
   if(chien()) d += BAL.chien.defense; // le chien monte la garde
+  if(typeof BONUS_CLAN_DEF !== "undefined") d += BONUS_CLAN_DEF; // tours de guet du bastion de son clan (classement.js)
   return d;
 }
 
