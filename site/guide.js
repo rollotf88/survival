@@ -17,6 +17,9 @@ function reglesGuide(){
       "Une expédition coûte " + (B.energieBase + B.energieParDistance) + " ⚡ (près), " + (B.energieBase + 2 * B.energieParDistance) + " ⚡ (moyen) ou " + (B.energieBase + 3 * B.energieParDistance) + " ⚡ (loin). " +
       "En voiture, seule la fouille coûte (" + B.energieBase + " ⚡). Sous " + B.fatigueSeuil + " ⚡ au départ, on est fatigué : fouille et combat moins bons. " +
       "Dormir rend " + B.reposNuit + " ⚡ (" + B.reposFroid + " si la nuit est glaciale). Une canette donne +" + B.canetteEnergie + " ⚡ et +" + (B.canetteSoif || 0) + " de soif, mais on dort moins bien."],
+    ["Le froid et le feu", "🔥",
+      "La nuit, il fait froid. Un feu de cheminée (touche la cheminée du salon ou de la chambre) réchauffe toute la famille : il faut un briquet au refuge, et il brûle " + B.feu.planches + " planche par nuit. Avec le feu, on dort mieux (+" + B.feu.repos + " ⚡) et le moral monte (+" + B.feu.moral + "). " +
+      "Sans feu, une couverture tient chaud " + B.feu.couvrePar + " personnes. Ceux qui ont froid récupèrent moins (" + B.reposFroid + " ⚡ au lieu de " + B.reposNuit + ") et perdent " + B.degatsFroid + " PV. Quand il n’y a plus de planches, le feu s’éteint."],
     ["Les expéditions", ic("loupe", "🔍"),
       "Choisis 1 ou 2 membres, équipe-les (arme, outil, sac), puis touche Fouiller. Chaque lieu a une vraie liste d’objets qui ne revient jamais : quand il est « Vidé », c’est fini. " +
       "Lieu sombre : il faut une lampe (et des piles) ou au moins un briquet. Porte verrouillée : une boîte à outils, un pied-de-biche, ou des épingles pour crocheter. " +
@@ -67,7 +70,8 @@ function caracteristiques(o){
   if(o.capacite) t.push("+" + o.capacite + " places de butin");
   if(o.lumiere) t.push(o.lumiere === 2 ? "éclaire bien (1 pile par fouille)" : "lueur faible");
   if(o.ouvre) t.push("ouvre les portes verrouillées");
-  if(o.chaleur) t.push("tient chaud la nuit");
+  if(o.chaleur) t.push("tient chaud 2 personnes la nuit");
+  if(o.allume) t.push("allume le feu de cheminée");
   if(o.moral) t.push("moral +" + o.moral);
   if(o.radio) t.push("révèle le danger des lieux");
   if(o.emplacement) t.push("se porte : " + { arme:"arme", outil:"outil / éclairage", sac:"sac" }[o.emplacement]);

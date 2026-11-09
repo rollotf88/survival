@@ -42,11 +42,14 @@ function lieuxPossibles(){ return LIEUX.map(function(L, i){ return i; }).filter(
 var MALIN = {
   nom: "Malin",
   canettes: true,
+  reserveBois: 3,
   sac: ["bidon","riz","conserves","lampe","pile","hache","batte","couteau","pdb","outils","sacados","sacoche","couverture","trousse","antibio","biscuits","briquet","radio","peluche","photo","cartes"],
   matin: function(){
     G.m.forEach(function(x, i){ if(x.al && x.hp < 60) soigner(i); });
     ["eau","pot","barr"].forEach(function(k){ ameliorer(k); });
     if(G.ref.eau && G.ref.pot) ameliorer("barr");
+    // Feu : allumé s'il reste assez de planches et un briquet (sinon les couvertures)
+    if(MALIN.feu !== false) G.feu = compter("planche") >= MALIN.reserveBois && possede(function(o){ return o.allume; });
   },
   expeditions: function(){
     for(var tour = 0; tour < 8; tour++){

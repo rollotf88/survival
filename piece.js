@@ -15,7 +15,7 @@ var CADRE_PIECE = { x0:150, x1:1024, y0:150, y1:690 };
 var ZONES_PIECE = [
   ["pPortraits", 328, 210, 692, 338, function(){ return ic("papa", "👪"); }, "Famille", .5],
   ["pCanape",    318, 392, 730, 575, function(){ return ic("lune", "🌙"); }, "Dormir", .45],
-  ["pCheminee",  155, 355, 320, 530, function(){ return ic("ref_barr", "🧱"); }, "Refuge", .5],
+  ["pCheminee",  155, 355, 320, 530, function(){ return "🔥"; }, "Feu", .5],
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
   ["chapitre",   365, 570, 660, 678, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
@@ -32,6 +32,7 @@ var DECOR_PIECE = [
 var PIECES = [
   { id:"salon", nom:"Salon", img:"images/refuge-fond.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
   { id:"chambre", nom:"Chambre", img:"images/piece-chambre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 }, decor:[], zones:[
+    ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
     ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],
     ["pPorte",      900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85]
@@ -169,7 +170,8 @@ document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act");
   if(a === "pTable") openRef("fabriquer");
-  else if(a === "pCheminee") openRef("construire");
+  else if(a === "pCheminee") openFeu();
+  else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("construire"); render(); openFeu(); }
   else if(a === "pSac") openStock();
   else if(a === "pReparer") openRef("reparer");
   else if(a === "pDemonter") openRef("demonter");
@@ -278,3 +280,16 @@ document.addEventListener("click", function(e){
   }
   else if(a === "pechefin"){ clearTimeout(minPeche); phasePeche = null; msgPeche = ""; apresEtape(finExpedition()); }
 });
+
+/* ---------- Le feu de cheminée (salon ou chambre) ---------- */
+function openFeu(){
+  var br = possede(function(o){ return o.allume; }), pl = compter("planche"), on = !!G.feu, v = vivants().length;
+  var couv = compter("couverture"), couverts = Math.min(v, couv * BAL.feu.couvrePar);
+  var h = '<div class="rt"><span class="em" style="font-size:52px">🔥</span><span class="eqt"><h2>Le feu de cheminée</h2><p class="sub">' + (on ? "Allumé" : "Éteint") + '</p></span></div>';
+  h += on ? '<p>Il réchauffe toute la famille la nuit : <b>+' + BAL.feu.repos + ' ⚡</b> de repos et <b>moral +' + BAL.feu.moral + '</b>. Il brûle <b>' + nommer("planche", BAL.feu.planches) + '</b> chaque nuit.</p>'
+    : '<p>Sans feu, seules les couvertures tiennent chaud : <b>' + couv + ' couverture' + (couv > 1 ? "s" : "") + '</b> pour ' + couverts + ' personne' + (couverts > 1 ? "s" : "") + ' sur ' + v + '.' + (couverts < v ? ' <span class="moins">Les autres auront froid (' + BAL.reposFroid + ' ⚡ au lieu de ' + BAL.reposNuit + ', −' + BAL.degatsFroid + ' PV).</span>' : '') + '</p>';
+  h += '<p class="sub">' + ic("planche", "🪵") + ' ' + pl + ' planche' + (pl > 1 ? "s" : "") + ' au refuge' + (on ? ' : de quoi tenir ' + Math.floor(pl / BAL.feu.planches) + ' nuit' + (pl / BAL.feu.planches >= 2 ? "s" : "") : '') + ' · elles servent aussi à construire et à fabriquer.</p>';
+  if(on) h += '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="feu">Éteindre le feu (garder les planches)</button>';
+  else h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="feu"' + (br && pl >= BAL.feu.planches ? "" : " disabled") + '>' + (!br ? "❌ Il faut un briquet pour l’allumer" : pl < BAL.feu.planches ? "❌ Plus de planches à brûler" : "🔥 Allumer le feu") + '</button>';
+  show(h + BTN_FERMER());
+}

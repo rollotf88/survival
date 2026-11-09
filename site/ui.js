@@ -61,7 +61,7 @@ var BESOINS_SAC = [
   ["🩹", "Soins", function(o){ return o.cat === "soin"; }],
   ["🛡️", "Défense", function(o){ return o.emplacement === "arme"; }],
   ["🔦", "Lumière", function(o){ return !!o.lumiere; }],
-  ["🔥", "Chaleur", function(o){ return !!o.chaleur; }]
+  ["🔥", "Chaleur", function(o){ return !!o.chaleur || !!o.allume; }]
 ];
 var sautSac = false; // le sac dessiné « saute » quand on vient d'y mettre un objet
 function rPick(){

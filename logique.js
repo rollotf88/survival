@@ -606,11 +606,22 @@ function fuir(){
 function finJour(){
   var n = [];
   G.score += vivants().length;
-  var chaud = possede(function(o){ return o.chaleur; });
-  vivants().forEach(function(x){
+  // Chaleur : le feu de cheminée (1 planche par nuit, il faut un briquet) réchauffe tout le monde ;
+  // sinon une couverture tient chaud 2 personnes, les autres ont froid
+  var feu = false;
+  if(G.feu){
+    if(G.braises > 0){ G.braises--; feu = true; n.push(["g2", "🔥 Le feu de cheminée a brûlé toute la nuit (la planche d’hier a suffi)."]); }
+    else if(compter("planche") >= BAL.feu.planches && possede(function(o){ return o.allume; })){
+      retirer("planche", BAL.feu.planches); feu = true; G.braises = BAL.feu.nuitsParPlanche - 1; // une planche brûle plusieurs nuits
+      n.push(["g2", "🔥 Le feu de cheminée a brûlé toute la nuit (−" + BAL.feu.planches + " planche" + (BAL.feu.planches > 1 ? "s" : "") + (BAL.feu.nuitsParPlanche > 1 ? ", elle durera " + BAL.feu.nuitsParPlanche + " nuits" : "") + ")."]);
+    } else { G.feu = false; n.push(["b2", "🔥 Le feu s’est éteint : " + (possede(function(o){ return o.allume; }) ? "plus de planches à brûler." : "plus de briquet pour le rallumer.")]); }
+  }
+  var auChaud = feu ? 99 : compter("couverture") * BAL.feu.couvrePar, froids = [];
+  vivants().forEach(function(x, kx){
+    var chaud = kx < auChaud; if(!chaud) froids.push(x.nom);
     x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
     x.soif -= BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0);
-    var repos = (chaud ? BAL.reposNuit : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
+    var repos = (chaud ? BAL.reposNuit + (feu ? BAL.feu.repos : 0) : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
     if(x.canette) n.push(["", "🥴 " + x.nom + " dort mal après sa canette (+" + repos + " ⚡ seulement)."]);
     x.en = Math.min(100, x.en + repos); x.canette = false;
     if(prendreRations("nour", 1)) x.faim += BAL.faimParJour; else n.push(["b2", x.nom + " n’a rien à manger."]);
@@ -651,7 +662,8 @@ function finJour(){
   G.lieux.forEach(function(l, k){
     if(LIEUX[k].peche && l.poissons >= BAL.peche.seuil && l.poissons < BAL.peche.poissons && G.day % BAL.peche.nuitsParNaissance === 0) l.poissons++;
   });
-  if(!chaud) n.push(["b2", "🥶 Nuit glaciale : ni couverture ni briquet. On dort mal (+" + BAL.reposFroid + " ⚡ au lieu de +" + BAL.reposNuit + ")."]);
+  if(froids.length) n.push(["b2", "🥶 Nuit glaciale pour " + liste(froids) + " : pas de feu ni assez de couvertures (+" + BAL.reposFroid + " ⚡ au lieu de +" + BAL.reposNuit + ", −" + BAL.degatsFroid + " PV)."]);
+  if(feu) changerMoral(BAL.feu.moral);
 
   var A = BAL.attaqueNuit;
   if(alea("attaque") < Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque)){

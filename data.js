@@ -89,7 +89,9 @@ var BAL = {
   fatigueFouille: 0.75,     //   on fouille moins bien
   fatigueForce: 1,          //   et on se bat moins bien (-1 de force par membre fatigué)
   reposNuit: 70,            // énergie regagnée en dormant
-  reposFroid: 40,           // seulement 40 si la nuit est glaciale
+  reposFroid: 55,           // seulement 55 si on a froid (ni feu ni couverture)
+  // Feu de cheminée (à allumer au salon ou dans la chambre) : il faut un briquet, il brûle 1 planche par nuit
+  feu: { planches:1, nuitsParPlanche:2, repos:10, moral:3, couvrePar:2 }, // 1 planche = 2 nuits de feu ; +10 ⚡ de repos et moral +3 ; sans feu, une couverture tient chaud 2 personnes
   energiePub: 40,           // pub « Second souffle » : +40 d'énergie pour toute la famille
   // Atelier (craft)
   energieCraft: 10,         // fabriquer, réparer ou démonter coûte 10 d'énergie au plus reposé
@@ -231,7 +233,7 @@ var OBJETS = {
   jerrican:   { nom:"Jerrican d’essence", pl:"Jerricans d’essence", g:"m", icone:"⛽", cat:"voiture", place:2, empile:true, desc:"10 litres d’essence pour la voiture" },
   // Outils et éclairage (emplacement « outil »)
   lampe:      { nom:"Lampe torche", pl:"Lampes torches", g:"f", icone:"🔦", cat:"outil", place:1, emplacement:"outil", lumiere:2, desc:"Éclaire les lieux sombres (1 pile par fouille)" },
-  briquet:    { nom:"Briquet", pl:"Briquets", g:"m", icone:"🔥", cat:"outil", place:1, emplacement:"outil", lumiere:1, chaleur:true, desc:"Lueur faible dans le noir, chaleur la nuit" },
+  briquet:    { nom:"Briquet", pl:"Briquets", g:"m", icone:"🔥", cat:"outil", place:1, emplacement:"outil", lumiere:1, allume:true, desc:"Lueur faible dans le noir, permet d’allumer le feu de cheminée" },
   outils:     { nom:"Boîte à outils", pl:"Boîtes à outils", g:"f", icone:"🧰", cat:"outil", place:2, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées sans bruit" },
   canne:      { nom:"Canne à pêche", pl:"Cannes à pêche", g:"f", icone:"🎣", cat:"outil", place:2, emplacement:"outil", peche:true, sol:8, desc:"Pour pêcher à l’étang (s’use à chaque sortie, 8 fois)" },
   pdb:        { nom:"Pied-de-biche", pl:"Pieds-de-biche", g:"m", icone:"⛏️", cat:"outil", place:1, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées" },
@@ -240,7 +242,7 @@ var OBJETS = {
   sacados:    { nom:"Sac à dos", pl:"Sacs à dos", g:"m", icone:"🎒", cat:"sac", place:1, emplacement:"sac", capacite:4, desc:"+4 places pour rapporter du butin" },
   randonnee:  { nom:"Sac de randonnée", pl:"Sacs de randonnée", g:"m", icone:"🏕️", cat:"sac", place:2, emplacement:"sac", capacite:6, desc:"+6 places pour rapporter du butin" },
   // Confort : fonctionnent tant qu'ils sont au refuge
-  couverture: { nom:"Couverture", pl:"Couvertures", g:"f", icone:"🧣", cat:"confort", place:1, chaleur:true, desc:"Nuits supportables" },
+  couverture: { nom:"Couverture", pl:"Couvertures", g:"f", icone:"🧣", cat:"confort", place:1, chaleur:true, desc:"Tient chaud 2 personnes la nuit (sans feu)" },
   radio:      { nom:"Radio", pl:"Radios", g:"f", icone:"📻", cat:"confort", place:1, radio:true, desc:"Révèle le danger des lieux" },
   peluche:    { nom:"Peluche d’Emma", pl:"Peluches", g:"f", icone:"🧸", cat:"confort", place:1, moral:2, desc:"Moral +2" },
   photo:      { nom:"Photo de famille", pl:"Photos de famille", g:"f", icone:"🖼️", cat:"confort", place:1, moral:1, desc:"Moral +1" },
@@ -331,15 +333,15 @@ var TRAITS = {
    4 et 5 : zones éloignées, seulement en voiture (voiture:true). */
 var LIEUX = [
   { nom:"Maison voisine", icone:"🏠", danger:0.20, distance:1,
-    butin:{ conserve:3, bouteille:3, biscuits:1, planche:4, bandage:1, couteau:1, couverture:1, sacoche:1, chiffon:3, clous:1, epingle:3 } },
+    butin:{ conserve:3, bouteille:3, biscuits:1, planche:7, bandage:1, couteau:1, couverture:1, sacoche:1, chiffon:3, clous:1, epingle:3 } },
   { nom:"Rue des pavillons", icone:"🏘️", danger:0.30, distance:1,
-    butin:{ conserve:4, bouteille:4, pates:2, planche:6, bandage:2, pile:2, batte:1, sacados:1, cartes:1, chiffon:4, clous:2, alcool:1, ruban:1, canette:1, epingle:4 } },
+    butin:{ conserve:4, bouteille:4, pates:2, planche:9, bandage:2, pile:2, batte:1, sacados:1, cartes:1, chiffon:4, clous:2, alcool:1, ruban:1, canette:1, epingle:4 } },
   { nom:"Supermarché", icone:"🛒", sombre:true, danger:0.40, distance:2,
     butin:{ conserve:8, bouteille:8, pates:4, barre:4, biscuits:2, pile:3, planche:4, briquet:1, alcool:3, ruban:2, chiffon:2, canette:3 } },
   { nom:"Hôpital", icone:"🏥", sombre:true, danger:0.60, distance:2,
     butin:{ bandage:4, trousse:3, antibio:3, bouteille:3, barre:2, lampe:1, alcool:3, chiffon:4, epingle:2 } },
   { nom:"Quincaillerie", icone:"🔧", verrou:true, danger:0.35, distance:2,
-    butin:{ planche:10, pile:4, hache:1, pdb:1, outils:1, barrefer:1, lampe:1, clous:5, ruban:3, ferraille:3 } },
+    butin:{ planche:11, pile:4, hache:1, pdb:1, outils:1, barrefer:1, lampe:1, clous:5, ruban:3, ferraille:3 } },
   { nom:"Station-service", icone:"⛽", danger:0.45, distance:1, jour:2,
     butin:{ jerrican:2, canette:2, barre:4, bouteille:4, chiffon:2, biscuits:2 } },
   // L'étang : on y pêche avec une canne. Les poissons se reproduisent lentement... tant qu'il en reste assez
@@ -350,20 +352,20 @@ var LIEUX = [
   { nom:"Commissariat", icone:"🚓", sombre:true, verrou:true, danger:0.65, distance:2, jour:6,
     butin:{ pistolet:1, boiteBalles:3, trousse:1, lampe:1, pile:2, canette:1, bandage:2 } },
   { nom:"Zone industrielle", icone:"🏭", sombre:true, verrou:true, danger:0.55, distance:3, jour:4,
-    butin:{ conserve:5, bouteille:4, planche:14, trousse:1, barrefer:1, randonnee:1, pile:2, machette:1, ferraille:8, clous:4, ruban:2, canette:1, courroie:1 } },
+    butin:{ conserve:5, bouteille:4, planche:17, trousse:1, barrefer:1, randonnee:1, pile:2, machette:1, ferraille:8, clous:4, ruban:2, canette:1, courroie:1 } },
   { nom:"Centre commercial", icone:"🏬", sombre:true, danger:0.70, distance:3, jour:8,
     butin:{ conserve:10, bouteille:10, pates:5, barre:5, trousse:2, pile:4, planche:6, randonnee:1, batte:1, machette:1, radio:1, chiffon:5, ruban:3, alcool:2, ferraille:3, canette:3, fusil:1, boiteCart:2 } },
   // Zones éloignées : riches mais dangereuses, seulement en voiture
   { nom:"Village voisin", icone:"🏡", danger:0.50, distance:4, voiture:true,
-    butin:{ epingle:3, conserve:12, bouteille:12, pates:6, riz:1, bandage:3, couverture:2, chiffon:4, planche:10, jerrican:1, canette:2, boiteBalles:1, sacados:1, poule:3 } },
+    butin:{ epingle:3, conserve:12, bouteille:12, pates:6, riz:1, bandage:3, couverture:2, chiffon:4, planche:14, jerrican:1, canette:2, boiteBalles:1, sacados:1, poule:3 } },
   { nom:"Entrepôt logistique", icone:"📦", verrou:true, danger:0.60, distance:4, voiture:true,
-    butin:{ bouteille:20, conserve:15, riz:3, planche:12, clous:6, ruban:4, pile:4, barre:6 } },
+    butin:{ bouteille:20, conserve:15, riz:3, planche:16, clous:6, ruban:4, pile:4, barre:6 } },
   { nom:"Base militaire", icone:"🪖", sombre:true, verrou:true, danger:0.85, distance:5, voiture:true,
     butin:{ ration:10, bouteille:8, trousse:4, antibio:2, fusil:1, pistolet:1, boiteBalles:4, boiteCart:3, jerrican:2, randonnee:1, barrefer:1, canette:2 } },
   // Lieux secrets : invisibles au début, découverts vers le jour indiqué (secret)
   { nom:"École Jules-Ferry", icone:"🏫", danger:0.35, distance:1, secret:10,
     indice:"Une flèche dessinée à la craie mène vers l’école : la cantine n’a peut-être pas été pillée.",
-    butin:{ biscuits:3, barre:4, bouteille:4, conserve:3, chiffon:4, ruban:2, bandage:2, alcool:1, cartes:1 } },
+    butin:{ planche:1, biscuits:3, barre:4, bouteille:4, conserve:3, chiffon:4, ruban:2, bandage:2, alcool:1, cartes:1 } },
   { nom:"Caserne des pompiers", icone:"🚒", verrou:true, danger:0.5, distance:2, secret:15,
     indice:"📻 Un message tourne en boucle : « Caserne nord… il reste du matériel… ». Puis plus rien.",
     butin:{ hache:1, trousse:3, bandage:3, bouteille:6, randonnee:1, ruban:2, ferraille:3, alcool:2, pile:2 } },
@@ -372,7 +374,7 @@ var LIEUX = [
     butin:{ conserve:6, riz:1, bouteille:6, canne:1, couverture:1, chiffon:3, jerrican:1, poisson:3 } },
   { nom:"Camping des Pins", icone:"🏕️", danger:0.55, distance:3, secret:26,
     indice:"Une carte routière tombée d’une voiture : le camping des Pins est entouré au feutre rouge.",
-    butin:{ conserves:2, bouteille:8, pates:4, sacados:1, briquet:1, couverture:2, canette:2, planche:6, collet:1 } },
+    butin:{ conserves:2, bouteille:8, pates:4, sacados:1, briquet:1, couverture:2, canette:2, planche:11, collet:1 } },
   { nom:"Clinique vétérinaire", icone:"🐾", sombre:true, danger:0.6, distance:2, secret:32,
     indice:"Rex (ou un chien du quartier) revient avec un collier marqué « Clinique vétérinaire des Acacias ».",
     butin:{ antibio:3, bandage:4, trousse:2, alcool:3, chiffon:3, barre:3, ferraille:2 } },
@@ -517,7 +519,7 @@ var EVENEMENTS = [
   { titre:"🌧️ L’orage", texte:"Une pluie violente s’abat sur le quartier toute la nuit.", choix:[
     ["Sortir des récipients", function(){
       G.reste.eau += 5; var x = vivants()[R(0, vivants().length - 1)], n = [];
-      if(!possede(function(o){ return o.chaleur; })){ blesser(x, 10, n, "mort de froid sous l’orage"); return "+5 rations d’eau. Mais " + x.nom + " a pris froid (−10 PV)." + (n.length ? " " + n[0][1] : ""); }
+      if(!G.feu && !possede(function(o){ return o.chaleur; })){ blesser(x, 10, n, "mort de froid sous l’orage"); return "+5 rations d’eau. Mais " + x.nom + " a pris froid (−10 PV)." + (n.length ? " " + n[0][1] : ""); }
       return "+5 rations d’eau de pluie. 💧"; }],
     ["Rester à l’abri", function(){ return "Vous écoutez la pluie tomber. Rien ne se passe."; }]
   ]},
