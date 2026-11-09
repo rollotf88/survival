@@ -30,8 +30,9 @@ var DECOR_PIECE = [
 /* ---------- Les pièces de la maison, qu'on fait défiler (glisser du doigt, flèches ou points) ----------
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
 var PIECES = [
-  { id:"salon", nom:"Salon", img:"images/refuge-fond.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
-  { id:"chambre", nom:"Chambre", img:"images/piece-chambre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 }, decor:[], zones:[
+  // Salon et chambre : la cheminée montre le feu allumé ou éteint (G.feu)
+  { id:"salon", nom:"Salon", img:function(){ return G.feu ? "images/refuge-fond.webp" : "images/refuge-fond-eteint.webp"; }, l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"chambre", nom:"Chambre", img:function(){ return G.feu ? "images/piece-chambre-feu.webp" : "images/piece-chambre.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 }, decor:[], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
     ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],

@@ -24,6 +24,8 @@ var FICHIERS = [
   "images/piece-garage-ok.webp",
   "images/piece-reserve.webp",
   "images/piece-chambre.webp",
+  "images/piece-chambre-feu.webp",
+  "images/refuge-fond-eteint.webp",
   "images/piece-cour.webp",
   "images/piece-cour-pot.webp",
   "images/piece-cour-eau.webp",
