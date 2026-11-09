@@ -71,6 +71,7 @@ async function toutControler(){
   if(typeof openFeu === "function"){ openFeu(); await att(80); res.feu = controleAffichage(); hide(); }
   var evp = EVENEMENTS.find(function(e){ return e.titre.indexOf("pillards") >= 0; }); G.day = Math.max(G.day, 8); openEvent(evp); await att(100); res.evenement = controleAffichage(); hide(); G.ev = null; G.evIdx = null;
   if(typeof openStock === "function"){ ajouter("couteau", 1); ajouter("planche", 5); var cou = G.stock.o.filter(function(o){ return o.id === "couteau"; })[0]; filtreStock = "tout"; selStock = "o:" + cou.uid; openStock(); await att(100); res.stock = controleAffichage(); selStock = null; hide(); }
+  if(typeof selRef !== "undefined"){ ajouter("chiffon", 4); selRef = "c:0"; openRef("fabriquer"); await att(100); res.fabriquer = controleAffichage(); selRef = "b:barr"; openRef("construire"); await att(100); res.construire = controleAffichage(); selRef = null; hide(); }
   openInfo("def"); await att(50); res.infoDefense = controleAffichage(); openInfo("eau"); await att(50); res.infoEau = controleAffichage(); hide();
   q("[data-act=sel][data-id='1']").click(); await att(100); res.ficheOuSelection = controleAffichage(); hide(); G.sel = []; render(); await att(100);
   q("[data-act=fouille]").click(); await att(100); res.quiPart = controleAffichage(); hide();

@@ -588,3 +588,16 @@ body.fond{touch-action:pan-y}
 .islot .nb{right:11%;bottom:13%}
 .islot .usure{left:17%;right:17%;top:13%}
 .islot .ico,.islot > svg{width:58%;height:58%}
+/* ---------- Étagères en bois sous les cases (stock, refuge) ---------- */
+.etageres{border:3px solid var(--bois);border-radius:12px;padding:6px 8px 2px;margin:2px 0 8px;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 2px,transparent 2px 44px),linear-gradient(180deg,#4a3221,#3a2718)}
+.rangee{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:4px 2px 12px}
+.rangee::after{content:"";position:absolute;left:-8px;right:-8px;bottom:2px;height:9px;border-radius:2px;
+  background:linear-gradient(180deg,#a8774c,#7a4e2d 60%,#5a3a22);box-shadow:0 3px 3px rgba(0,0,0,.45)}
+.etageres .islot{z-index:1}
+.etageres .islot.vide{opacity:.35}
+.islot.terne{filter:saturate(.35) brightness(.85)}
+.islot .pret{position:absolute;left:10%;bottom:11%;width:15px;height:15px;border-radius:50%;background:var(--ok);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;line-height:1}
+.resume{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:2px 0 6px;font-weight:800;font-size:14px}
+.resume span{display:inline-flex;align-items:center;gap:3px}
+.resume .lien{margin-left:auto;font-size:12px}

@@ -340,6 +340,27 @@ function ligneObjet(id, n, inst){
   var extra = inst && inst.sol ? barre("🔧", Math.round(inst.sol / o.sol * 100)) + '<small>' + (unite ? inst.sol + unite : 'Solidité ' + inst.sol + ' / ' + o.sol) + '</small>' : '<small>' + o.desc + '</small>';
   return '<div class="eq"><span class="em">' + icone(id) + '</span><span class="eqt"><b>' + o.nom + (n > 1 ? " ×" + n : "") + '</b>' + extra + '</span></div>';
 }
+/* ---------- Cases et étagères (stock, refuge) ----------
+   caseObjet : une case dessinée (icône, quantité, usure, liseré de famille) ;
+   etageres : range les cases par 5 sur des planches en bois, avec des cases vides jusqu'à « mini ». */
+function caseObjet(id, opt){
+  opt = opt || {};
+  return '<button class="islot f-' + (id ? famillePick(id) : "outil") + (opt.sel ? " sel" : "") + (opt.terne ? " terne" : "") + '" data-act="' + opt.act + '" data-id="' + opt.cle + '" aria-label="' + (opt.nom || OBJETS[id].nom) + (opt.n > 1 ? " ×" + opt.n : "") + '">' + (opt.icone || icone(id))
+    + (opt.n > 1 ? '<span class="nb">' + opt.n + '</span>' : '')
+    + (opt.badge ? '<span class="nb">' + opt.badge + '</span>' : '')
+    + (opt.pret ? '<span class="pret" aria-hidden="true">✔</span>' : '')
+    + (opt.usure != null ? '<span class="usure"><i class="' + niveau(opt.usure) + '" style="width:' + opt.usure + '%"></i></span>' : '') + '</button>';
+}
+function etageres(cases, mini){
+  var n = Math.max(mini || 0, Math.ceil(cases.length / 5) * 5), h = '<div class="etageres">';
+  for(var k = 0; k < n; k += 5){
+    h += '<div class="rangee">';
+    for(var j = k; j < k + 5; j++) h += cases[j] || '<span class="islot vide"></span>';
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
 /* Stock en cases, façon jeu mobile : onglets par famille, une case par objet (quantité, usure),
    et la fiche de l'objet touché en dessous (avec « Équiper sur… » pour les armes, outils et sacs). */
 var FAMILLES_STOCK = [
@@ -371,17 +392,10 @@ function openStock(){
     return '<button class="invtab' + (f[0] === filtreStock ? " on" : "") + '" data-act="invf" data-id="' + f[0] + '"' + (nb || f[0] === "tout" ? "" : " disabled") + '>' + f[1] + '<small>' + f[2] + '</small></button>';
   }).join("") + '</div>';
   // La grille : les objets, puis des cases vides pour garder un vrai « sac de jeu »
-  var nbCases = Math.max(15, Math.ceil(vis.length / 5) * 5);
-  h += '<div class="inv">';
-  for(var k = 0; k < nbCases; k++){
-    var c = vis[k];
-    if(!c){ h += '<span class="islot vide"></span>'; continue; }
+  h += etageres(vis.map(function(c){
     var o = OBJETS[c.id], us = c.inst && c.inst.sol ? Math.round(c.inst.sol / o.sol * 100) : null;
-    h += '<button class="islot f-' + famillePick(c.id) + (c.cle === selStock ? " sel" : "") + '" data-act="invsel" data-id="' + c.cle + '" aria-label="' + o.nom + (c.n > 1 ? " ×" + c.n : "") + '">' + icone(c.id)
-      + (c.n > 1 ? '<span class="nb">' + c.n + '</span>' : '')
-      + (us !== null ? '<span class="usure"><i class="' + niveau(us) + '" style="width:' + us + '%"></i></span>' : '') + '</button>';
-  }
-  h += '</div>';
+    return caseObjet(c.id, { act:"invsel", cle:c.cle, sel:c.cle === selStock, n:c.n, usure:us });
+  }), 15);
   // Fiche de l'objet touché
   var sel = tout.filter(function(c){ return c.cle === selStock; })[0];
   if(sel){
@@ -466,47 +480,69 @@ function bilanRefuge(){
     + 'Défense de nuit : ' + defenseNuit() + ' (dont ' + armes + ' grâce aux armes en main).</p></div>';
   return h;
 }
+var selRef = null, bilanOuvert = false;
+// Une ligne courte au lieu du grand bilan (le bilan complet s'ouvre à la demande)
+function resumeRefuge(){
+  var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour;
+  return '<p class="resume"><span>' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</span><span>' + ic("bouteille", "💧") + ' +' + pe + '/nuit</span><span>' + ic("conserve", "🥫") + ' +' + pn + '/nuit</span><span>' + ic("planche", "🪵") + ' ' + compter("planche") + '</span>'
+    + '<button class="lien" data-act="bilanref">' + (bilanOuvert ? "Masquer le bilan" : "Bilan détaillé") + '</button></p>' + (bilanOuvert ? bilanRefuge() : "");
+}
 function openRef(onglet){
   astuce("atelier");
-  if(onglet) ongletRef = onglet;
+  if(onglet && onglet !== ongletRef){ ongletRef = onglet; selRef = null; }
   var x = artisan();
   var h = '<h2>🏠 Le refuge</h2><div class="tabs onglets">' + ONGLETS.map(function(o){ return '<button class="tab' + (o[0] === ongletRef ? " on" : "") + '" data-act="onglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(msgAtelier){ h += '<p class="g2 msg">' + msgAtelier + '</p>'; msgAtelier = ""; }
+  var fiche = "";
   if(ongletRef === "voiture") h += ongletVoiture();
   else if(ongletRef === "construire"){
-    h += bilanRefuge();
-    h += '<p class="sub">' + ic("planche", "🪵") + ' ' + compter("planche") + ' planches · ' + ic("bouclier", "🛡️") + ' défense de nuit ' + defenseNuit() + '</p>';
-    for(var k in REFUGE){
-      var r = REFUGE[k], l = G.ref[k], c = coutAmelioration(k), mx = l >= r.max;
-      var cout = {}; cout.planche = c;
-      h += '<button class="loc recette" data-act="build" data-id="' + k + '"' + (mx || compter("planche") < c ? " disabled" : "") + '><div class="rt"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + ' · niveau ' + l + ' / ' + r.max + '</b><small>' + r.desc + '</small></span></div>'
-        + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : ingredients(cout) + (compter("planche") < c ? '<p class="etat ko">❌ Il manque ' + nommer("planche", c - compter("planche")) + '</p>' : '<p class="etat ok">✅ Prêt : touche pour construire</p>')) + '</button>';
-    }
+    h += resumeRefuge();
+    h += etageres(Object.keys(REFUGE).map(function(k){
+      var r = REFUGE[k], l = G.ref[k], mx = l >= r.max, peut = !mx && compter("planche") >= coutAmelioration(k);
+      if(selRef === "b:" + k){
+        var cout = { planche:coutAmelioration(k) };
+        fiche = '<div class="invfiche"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + ' · niveau ' + l + ' / ' + r.max + '</b><small>' + r.desc + '</small></span></div>'
+          + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : ingredients(cout) + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="build" data-id="' + k + '"' + (peut ? "" : " disabled") + '>' + (peut ? "🔨 " + (l ? "Améliorer" : "Construire") : "❌ Il manque " + nommer("planche", coutAmelioration(k) - compter("planche"))) + '</button>');
+      }
+      return caseObjet(null, { act:"refsel", cle:"b:" + k, sel:selRef === "b:" + k, icone:ic("ref_" + k, r.icone), nom:r.nom, badge:l + "/" + r.max, pret:peut, terne:mx });
+    }), 5);
   } else {
     h += '<p class="sub">Chaque travail coûte ' + BAL.energieCraft + ' ⚡ au plus reposé' + (x ? ' (' + iconeMembre(x) + ' ' + x.nom + ' ⚡' + x.en + ')' : ' : 😴 tout le monde est trop fatigué') + '.</p>';
     if(ongletRef === "fabriquer"){
-      // Ce qu'on peut fabriquer tout de suite en premier
-      RECETTES.map(function(rec, i){ return { rec:rec, i:i, e:empechement(rec.ingredients, rec.besoin) }; })
+      // Ce qu'on peut fabriquer tout de suite en premier, marqué d'une coche
+      h += etageres(RECETTES.map(function(rec, i){ return { rec:rec, i:i, e:empechement(rec.ingredients, rec.besoin) }; })
         .sort(function(a, b){ return (a.e ? 1 : 0) - (b.e ? 1 : 0); })
-        .forEach(function(r){
-          var o = OBJETS[r.rec.id];
-          h += '<button class="loc recette" data-act="craft" data-id="' + r.i + '"' + (r.e ? " disabled" : "") + '><div class="rt"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + '</b><small>' + o.desc + '</small></span></div>'
-            + ingredients(r.rec.ingredients, r.rec.besoin) + etatTravail(r.rec.ingredients, r.rec.besoin) + '</button>';
-        });
+        .map(function(r){
+          if(selRef === "c:" + r.i){
+            var o = OBJETS[r.rec.id];
+            fiche = '<div class="invfiche"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + '</b><small>' + o.desc + '</small></span></div>'
+              + ingredients(r.rec.ingredients, r.rec.besoin) + etatTravail(r.rec.ingredients, r.rec.besoin, "Prêt")
+              + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="craft" data-id="' + r.i + '"' + (r.e ? " disabled" : "") + '>🛠️ Fabriquer</button>';
+          }
+          return caseObjet(r.rec.id, { act:"refsel", cle:"c:" + r.i, sel:selRef === "c:" + r.i, pret:!r.e, terne:!!r.e });
+        }), 10);
     } else if(ongletRef === "reparer"){
       var ab = armesAbimees(), e = empechement(REPARATION);
-      h += '<p class="sub">Une réparation rend ' + Math.round(BAL.reparation * 100) + ' % de la solidité. Il faut :</p>' + ingredients(REPARATION) + (ab.length ? etatTravail(REPARATION, null, "Prêt : touche l’arme à réparer") : '');
-      h += ab.length ? ab.map(function(o){ return '<button class="loc pick" data-act="repair" data-id="' + o.uid + '"' + (e ? " disabled" : "") + '>' + ligneObjet(o.id, 1, o) + '</button>'; }).join("") : '<p>Aucune arme abîmée.</p>';
+      h += ab.length ? etageres(ab.map(function(o){
+        if(selRef === "r:" + o.uid) fiche = ligneObjet(o.id, 1, o) + '<p class="sub">Une réparation rend ' + Math.round(BAL.reparation * 100) + ' % de la solidité. Il faut :</p>' + ingredients(REPARATION) + etatTravail(REPARATION, null, "Prêt")
+          + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="repair" data-id="' + o.uid + '"' + (e ? " disabled" : "") + '>🔧 Réparer</button>';
+        return caseObjet(o.id, { act:"refsel", cle:"r:" + o.uid, sel:selRef === "r:" + o.uid, usure:Math.round(o.sol / OBJETS[o.id].sol * 100), pret:!e });
+      }), 5) : '<p>Aucune arme abîmée.</p>';
     } else {
       var dm = demontables();
-      h += '<p class="sub">Démonter un objet rangé dans le stock pour récupérer des matériaux (les objets équipés ne sont pas proposés).</p>';
-      h += dm.length ? dm.map(function(o){
-        var rec = []; for(var k in DEMONTAGE[o.id]) rec.push(icone(k) + " " + nommer(k, DEMONTAGE[o.id][k]));
-        return '<button class="loc pick" data-act="salvage" data-id="' + o.uid + '"' + (x ? "" : " disabled") + '><div class="eq"><span class="em">' + icone(o.id) + '</span><span class="eqt"><b>' + OBJETS[o.id].nom + '</b><small>Tu récupères : ' + rec.join(", ") + '</small></span></div></button>';
-      }).join("") : '<p>Rien à démonter dans le stock.</p>';
+      h += dm.length ? etageres(dm.map(function(o){
+        if(selRef === "d:" + o.uid){
+          var rec = []; for(var k in DEMONTAGE[o.id]) rec.push(icone(k) + " " + nommer(k, DEMONTAGE[o.id][k]));
+          fiche = '<div class="invfiche"><span class="em">' + icone(o.id) + '</span><span class="eqt"><b>' + OBJETS[o.id].nom + '</b><small>Tu récupères : ' + rec.join(", ") + '</small></span></div>'
+            + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="salvage" data-id="' + o.uid + '"' + (x ? "" : " disabled") + '>♻️ Démonter</button>';
+        }
+        return caseObjet(o.id, { act:"refsel", cle:"d:" + o.uid, sel:selRef === "d:" + o.uid, usure:o.sol ? Math.round(o.sol / OBJETS[o.id].sol * 100) : null });
+      }), 5) : '<p>Rien à démonter dans le stock (les objets équipés ne sont pas proposés).</p>';
     }
   }
+  if(ongletRef !== "voiture") h += fiche || '<p class="sub">Touche une case pour voir le détail.</p>';
   show(h + BTN_FERMER());
+  if(fiche){ var fi = document.querySelector("#sheet .invfiche, #sheet .ings"); if(fi) fi.scrollIntoView({ block:"nearest" }); }
 }
 
 /* ---------- Nuit, événements, mort ---------- */
@@ -821,8 +857,10 @@ document.addEventListener("click", function(e){
     return;
   }
   else if(a === "adr"){ if(id === "cap") G.cb++; else G.tl += 20; hide(); render(); return; }
-  else if(a === "build"){ ameliorer(id); render(); openRef(); return; }
+  else if(a === "build"){ if(ameliorer(id)) msgAtelier = "✅ " + REFUGE[id].nom + " : niveau " + G.ref[id] + " !"; render(); openRef(); return; }
   else if(a === "onglet"){ pieceChoisie = null; openRef(id); return; }
+  else if(a === "refsel"){ selRef = selRef === id ? null : id; openRef(); return; }
+  else if(a === "bilanref"){ bilanOuvert = !bilanOuvert; openRef(); return; }
   else if(a === "piece"){ pieceChoisie = pieceChoisie === id ? null : id; openRef(); return; }
   else if(a === "pslot"){ if(pieceChoisie) poserPiece(pieceChoisie, id); return; }
   else if(a === "plein"){ msgAtelier = fairePlein() || ""; render(); openRef(); return; }
