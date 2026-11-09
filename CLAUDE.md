@@ -240,6 +240,8 @@ Panneau d'administration (2026-11-09) :
 - `admin.html` (page à part, noindex) → `/api/admin` (worker/index.js, POST). Mot de passe = secret Cloudflare `ADMIN_MDP` (10 caractères au moins), créé par Fabien dans le tableau de bord Cloudflare (Workers → survival-refuge → Paramètres → Variables et secrets → Ajouter → type Secret). Claude ne le voit jamais. Envoyé dans l'en-tête Authorization (HTTPS), comparé par empreinte SHA-256 ; 5 mauvais essais = adresse bloquée 15 min (clé KV `admin_echecs_<ip>`) ; pas d'en-tête CORS sur ces routes ; mot de passe gardé dans l'onglet (sessionStorage) jusqu'à la déconnexion
 - Onglets : Résumé (joueurs, actifs 24 h / 7 j, familles et survivants en vie, parties, morts, zombies, classement, codes, parrainages, dernières familles tombées), Joueurs (500 derniers vus, supprimer = retiré du monde et du classement), Classement (retirer un score), Codes (créer, activer / désactiver, supprimer les codes spéciaux comme « 18-25 »)
 
+Vitrine du jeu (2026-11-09, demande de Fabien « présenter toutes les features sur l'accueil pour donner envie ») : `VITRINE` + `vitrine()` / `montrerVitrine` / `lancerVitrine` (ui.js) : une carte illustrée à la fois (image, titre ambre, phrase), qui change toutes les 4,5 s, points pour choisir. 9 cartes : refuge et pièces, 21 lieux, combats tactiques, rencontres et choix, famille et traits, forêt / étang / potager / poules, voiture, nuits (attaques, froid, folie), classement / partie du jour / invitations. Sur l'écran d'histoire (au-dessus du panneau « En ce moment ») et sur l'accueil « Partie en cours » (contenu calé en haut ; logo caché sous 820 px de haut ; vitrine cachée en paysage bas)
+
 ## Prochaines étapes demandées par Fabien (2026-11-09, à faire petit à petit, dans cet ordre)
 1. Cuisine — FAITE (voir plus haut)
 2. Dernier recours et folie — FAIT (voir plus haut)
@@ -247,7 +249,7 @@ Panneau d'administration (2026-11-09) :
 4. Parrainage — FAIT (voir plus haut). Idée d'origine : code d'invitation (ex. « BL615 ») ou lien, champ « Code d'invitation » à l'écran de début, bouton « Inviter » dans le menu ; récompenses exclusives pour les deux joueurs (nouveau survivant si un est mort, caisse de rations…), utilisables une fois par partie, gardées pour une autre partie si non utilisées, 3 avantages max ; mini-jeu pour tirer la récompense ; message mis en avant quand son code a été utilisé ; code spécial « 18-25 » pour les bêta-testeurs (désactivable depuis l'admin)
 5. Panneau d'administration — FAIT (voir plus haut)
 6. Plus tard : guerres de clans (après 100 jours, bastion de 5 joueurs max avec pièces différentes, lobby, chef qui peut exclure, attaques sur 24 h, guerre de quelques jours, butin limité, mines et barricades, avatar du clan)
-7. Accueil : présenter toutes les fonctionnalités du jeu pour donner envie
+7. Accueil : vitrine des fonctionnalités — FAIT (voir plus haut)
 
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu

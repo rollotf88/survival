@@ -855,13 +855,41 @@ document.addEventListener("pointerup", function(e){
 document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300){ finGlisse = 0; e.stopPropagation(); e.preventDefault(); } }, true);
 
 /* ---------- Avant le départ : l'histoire, puis la famille (noms, traits, pseudo, mode) ---------- */
+/* ---------- Vitrine : ce qui attend le joueur (cartes illustrées qui défilent toutes seules) ---------- */
+var VITRINE = [
+  ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
+  ["images/lieux/super.webp", "🗺️ 21 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
+  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… 7 sortes de zombies, chacun son piège."],
+  ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
+  ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits : costaud, soigneur, cuisinier… La mort est définitive."],
+  ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
+  ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
+  ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
+  ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des succès, et un code pour inviter tes amis."]
+];
+var minuteurVitrine = null;
+function vitrine(){
+  return '<div class="vitrine" id="vitrine" aria-label="Ce qui t’attend">' + VITRINE.map(function(v, k){
+      return '<div class="vt' + (k ? "" : " on") + '"><span class="vt-img"><img src="' + v[0] + '" alt="" loading="lazy"></span><span class="vt-txt"><b>' + v[1] + '</b><small>' + v[2] + '</small></span></div>';
+    }).join("")
+    + '<div class="vt-points">' + VITRINE.map(function(v, k){ return '<button class="vt-pt' + (k ? "" : " on") + '" data-act="vitrine" data-id="' + k + '" aria-label="Voir : ' + v[1].replace(/^\S+ /, "") + '"></button>'; }).join("") + '</div></div>';
+}
+function montrerVitrine(k){
+  var v = document.getElementById("vitrine"); if(!v){ clearInterval(minuteurVitrine); return; }
+  var cartes = v.querySelectorAll(".vt"), pts = v.querySelectorAll(".vt-pt");
+  if(k === undefined){ k = 0; cartes.forEach(function(c, j){ if(c.classList.contains("on")) k = (j + 1) % cartes.length; }); }
+  cartes.forEach(function(c, j){ c.classList.toggle("on", j === k); }); pts.forEach(function(p, j){ p.classList.toggle("on", j === k); });
+}
+function lancerVitrine(){ clearInterval(minuteurVitrine); if(!document.getElementById("vitrine")) return; if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; minuteurVitrine = setInterval(function(){ montrerVitrine(); }, 4500); }
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
     + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
+    + vitrine()
     + '<div class="monde-place" data-compact="1"></div>'
     + '<button class="btn" style="width:100%" data-act="intro">Continuer</button></div>';
+  lancerVitrine();
   if(typeof poserMonde === "function") poserMonde();
 }
 // Noms et traits de la dernière famille (gardés dans le navigateur)
@@ -999,6 +1027,7 @@ document.addEventListener("click", function(e){
   else if(a === "boire"){ boire(i); hide(); }
   else if(a === "rchoix"){ choisirRencontre(i); render(); openRencontre(); return; }
   else if(a === "rfin"){ var rf = finirRencontre(); render(); if(rf){ openResultat(rf); finiSiMorts(); } else hide(); return; }
+  else if(a === "vitrine"){ montrerVitrine(i); lancerVitrine(); return; }
   else if(a === "cuire"){ var mc = cuisiner(i); if(mc) msgAtelier = mc; openRef("cuisine"); render(); return; }
   else if(a === "plat"){ var qp = id.split(":"); var xp = G.m[+qp[0]]; mangerPlat(xp, qp[1]); openSoins(+qp[0]); render(); return; }
   else if(a === "ration"){ var qr = id.split(":"); prendreRation(+qr[0], qr[1]); openSoins(+qr[0]); render(); return; }
@@ -1135,7 +1164,8 @@ if(enCours){
   // Écran d'accueil : continuer ou recommencer
   nouvellePartie(null); G.ph = "accueil";
   document.body.classList.add("fond");
-  $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p></div>';
+  $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
+  lancerVitrine();
   show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
     + enCours.m.filter(function(x){ return x.al; }).map(function(x){ return iconeMembre(x); }).join(" ") + '</p>'
     + '<div class="monde-place" data-compact="1"></div>'

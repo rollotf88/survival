@@ -872,3 +872,24 @@ body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.
 @keyframes ouvre{0%{transform:scale(1)}50%{transform:scale(1.4) rotate(-8deg)}100%{transform:scale(1.25)}}
 @media (prefers-reduced-motion:reduce){.caisse,.caisse .para,.caisse.ouverte .boite{animation:none}}
 @media (orientation:landscape) and (max-height:500px){ .menugrille{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:4px 0 6px} .menugrille .mt{padding:5px 7px} .menugrille .mt b{font-size:13px} }
+/* ---------- Vitrine des fonctionnalités (accueil et histoire) ---------- */
+.vitrine{position:relative;width:100%;max-width:440px;margin:8px auto 4px;background:rgba(29,20,14,.86);border:3px solid var(--bois);border-radius:16px;padding:8px 8px 4px;box-shadow:0 6px 14px rgba(0,0,0,.4);color:#fff6e6;text-align:left}
+.vt{display:none;gap:10px;align-items:center;min-height:74px;animation:vtEntre .5s ease-out}
+.vt.on{display:flex}
+.vt-img{flex:0 0 92px;width:92px;height:70px;border-radius:10px;overflow:hidden;border:2px solid #5a3a22;background:#3a2a1e}
+.vt-img img{width:100%;height:100%;object-fit:cover;display:block}
+.vt-txt b{display:block;font-size:14.5px;line-height:1.2;color:#ffcf4a}
+.vt-txt small{display:block;font-size:12px;line-height:1.3;color:#f3e6cf;margin-top:2px}
+.vt-points{display:flex;justify-content:center;gap:5px;margin-top:5px}
+.vt-pt{width:8px;height:8px;padding:0;border-radius:50%;border:0;background:rgba(255,246,230,.3);cursor:pointer}
+.vt-pt.on{background:#ffcf4a;width:18px;border-radius:5px}
+@keyframes vtEntre{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+.intro .vitrine{margin:6px 0 2px;max-width:none}
+@media (max-height:700px){.vt{min-height:60px}.vt-img{flex-basis:76px;width:76px;height:58px}.vt-txt small{font-size:11.5px}}
+@media (max-height:640px){.intro .vt-txt small{display:none}.intro .vt{min-height:46px}.intro .vt-img{height:44px;flex-basis:64px;width:64px}}
+@media (orientation:landscape) and (max-height:500px){.accueil .vitrine{display:none}.intro .vt-txt small{display:none}.intro .vt{min-height:40px}.intro .vt-img{height:38px;flex-basis:56px;width:56px}}
+@media (prefers-reduced-motion:reduce){.vt{animation:none}}
+/* Accueil avec vitrine : contenu calé en haut pour rester au-dessus de la fenêtre « Partie en cours » */
+.accueil:has(.vitrine){justify-content:flex-start;padding-top:12px}
+.accueil:has(.vitrine) .logo.grand{width:min(30vw,130px)}
+@media (max-height:820px){.accueil:has(.vitrine) .logo.grand{display:none}}
