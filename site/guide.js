@@ -25,8 +25,10 @@ function reglesGuide(){
       "Lieu sombre : il faut une lampe (et des piles) ou au moins un briquet. Porte verrouillée : une boîte à outils, un pied-de-biche, ou des épingles pour crocheter. " +
       "Chacun porte " + B.mainsParMembre + " objets dans les bras, plus son sac : ce qui ne rentre pas reste sur place."],
     ["Les combats", ic("rodeur", "🧟"),
-      "Pour chaque membre : Frapper (dégâts selon l’arme) ou Se protéger (dégâts reçus ÷2). Fuir réussit " + Math.round(B.combat.fuite * 100) + " % du temps, mais on rapporte moitié moins. " +
-      "Les armes s’usent à chaque coup et finissent par casser. Une arme à feu frappe fort mais utilise une munition et attire parfois un zombie de plus. Le bouton 🤖 Auto joue pour toi."],
+      "Au début de chaque tour, une bulle au-dessus de chaque zombie dit ce qu’il va faire : qui il va mordre (et combien ça peut faire mal), ou s’il va hurler. Touche un zombie pour le viser, puis choisis l’action de chacun : " +
+      "⚔️ Frapper ; 🎯 Viser la tête (" + Math.round(B.combat.tete * 100) + " % de chances, dégâts ×" + B.combat.teteMult + ", l’armure ne compte pas) ; ✋ Pousser (" + Math.round(B.combat.pousser * 100) + " % de chances que le zombie perde son attaque, " + Math.round(B.combat.pousserLourd * 100) + " % contre un Costaud) ; " +
+      "🛡️ Se protéger (dégâts reçus ÷2) ; 🩹 Soigner (un objet de soin sur le plus blessé) ; 🔥 Cocktail (1 alcool + 1 chiffon, avec un briquet dans la famille : " + B.combat.cocktail[0] + " à " + B.combat.cocktail[1] + " dégâts à tous les zombies). " +
+      "Fuir réussit " + Math.round(B.combat.fuite * 100) + " % du temps, mais on rapporte moitié moins. Les armes s’usent à chaque coup ; une arme à feu utilise une munition et attire parfois un zombie de plus. Le bouton 🤖 Auto joue pour toi."],
     ["Pêche et poules", ic("poule", "🐔"),
       "L’étang (à partir du jour " + LIEUX.filter(function(L){ return L.peche; })[0].jour + ") : avec une canne à pêche dans la case outil, chaque pêcheur a " + B.peche.lancers + " lancers : quand le bouchon s’enfonce, touche « Ferrer » à temps pour attraper un poisson (2 rations chacun). La canne s’use à chaque sortie, on peut la fabriquer. " +
       "Les poissons se reproduisent lentement (+1 toutes les " + B.peche.nuitsParNaissance + " nuits), mais seulement s’il en reste au moins " + B.peche.seuil + " : vide l’étang et il ne donnera plus rien. " +
@@ -123,7 +125,7 @@ function openGuide(){
     }).join("");
   } else if(guideOnglet === "zombies"){
     h += ZOMBIES.map(function(z){
-      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + z.pv + ' PV · frappe ' + z.degats[0] + ' à ' + z.degats[1] + ' · ' + (z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + '</p></div>';
+      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + z.pv + ' PV · frappe ' + z.degats[0] + ' à ' + z.degats[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
     }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
   } else {
     h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';

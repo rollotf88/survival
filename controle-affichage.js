@@ -61,8 +61,8 @@ async function toutControler(){
   G.sel = [0]; render(); await att(150); res.selection = controleAffichage(); G.sel = []; render();
   // Combat avec 3 zombies (portraits peints) et 2 membres
   G.sel = [0, 1]; G.exp = { lieu:0, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false }; G.sel = [];
-  G.combat = { zombies:ZOMBIES.map(function(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }), tour:1, journal:[], resume:[], fin:null };
-  openCombat(); await att(100); res.combat = controleAffichage(); hide(); G.combat = null; G.exp = null;
+  G.combat = { zombies:[0, 3, 4, 5, 6].map(function(k){ return ZOMBIES[k]; }).map(function(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }), tour:1, journal:[], resume:[], fin:null };
+  openCombat(); await att(100); res.combat = controleAffichage(); jouerTour({ 0:{ a:"tete", cible:0 }, 1:{ a:"pousser", cible:1 } }); openCombat(); await att(100); res.combatTour = controleAffichage(); hide(); G.combat = null; G.exp = null;
   openNuit([["g2", "🧟 Attaque de nuit repoussée (force 4 contre votre défense 5)."], ["", "🐕 Rex a mangé sa ration."], ["g2", "🥕 Le potager a donné 1 ration de nourriture."], ["b2", "🥶 Nuit glaciale : on dort mal."]]); await att(100); res.nuit = controleAffichage(); hide();
   G.sel = [0]; openLoc(); await att(100); res.lieux = controleAffichage(); hide(); G.sel = [];
   openResultat({ lieu:2, notes:[["g2", "🔦 Papa éclaire les lieux avec la lampe torche."]], pris:[{ id:"conserve", n:2 }, { id:"bandage", n:1 }], laisses:[], vide:false }); await att(100); res.resultat = controleAffichage(); hide();

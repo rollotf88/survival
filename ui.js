@@ -45,7 +45,7 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
    Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
    À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
@@ -262,23 +262,52 @@ function openCombat(){
   astuce("combat");
   var C = G.combat, L = LIEUX[G.exp.lieu], fini = !!C.fin;
   if(dernierPV && dernierPV.c !== C) dernierPV = null; // nouveau combat
+  if(!fini && zombiesDebout().some(function(z){ return !z.int; })) preparerIntentions(); // ancienne sauvegarde
   var debout = zombiesDebout();
   if(!C.zombies[cibleCombat] || C.zombies[cibleCombat].pv <= 0) cibleCombat = debout.length ? C.zombies.indexOf(debout[0]) : 0;
-  var h = '<h2>🧟 Combat : ' + iconeLieu(L) + ' ' + L.nom + '</h2><p class="sub">Tour ' + Math.min(C.tour, 99) + (fini ? "" : " · touche un zombie pour le viser") + '</p>';
-  h += '<div class="zs">' + C.zombies.map(function(z, k){
-    return '<button class="z' + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (dernierPV && dernierPV.z[k] > z.pv ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + '><span class="em">' + iconeZombie(z) + '</span><b>' + z.nom + '</b>' + barre("❤️", Math.round(z.pv / z.pvMax * 100)) + '<small>' + z.pv + ' / ' + z.pvMax + ' PV · frappe ' + z.degats[0] + '-' + z.degats[1] + '</small></button>';
-  }).join("") + '</div>';
+  var touche = false;
+  // La scène : le décor du lieu, les zombies debout dessus, la bulle de ce que chacun va faire
+  var zs = C.zombies.map(function(z, k){
+    var T = typeZombie(z), avant = dernierPV && dernierPV.z[k] !== undefined ? dernierPV.z[k] : z.pv, perte = avant - z.pv;
+    var bulle = "";
+    if(z.pv && !fini && z.int){
+      var cib = G.m[z.int.c];
+      bulle = z.int.t === "hurle" ? '<span class="zint hurle">📢 Va hurler</span>'
+        : '<span class="zint">' + (T.premier ? "⚡" : "🦷") + (T.coups ? "×" + T.coups : "") + " " + (cib ? cib.nom : "?") + '<small>' + z.degats[0] + "-" + z.degats[1] + '</small></span>';
+    }
+    return '<button class="zc' + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (perte > 0 ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + ' aria-label="' + z.nom + ', ' + z.pv + ' PV">'
+      + bulle + '<span class="zp">' + iconeZombie(z) + '</span>'
+      + '<span class="zn">' + z.nom + (T.armure ? " 🦺" : "") + '</span>'
+      + '<span class="zpv"><i style="width:' + Math.round(z.pv / z.pvMax * 100) + '%"></i></span>'
+      + (perte > 0 ? '<span class="flot">−' + perte + '</span>' : '') + '</button>';
+  }).join("");
+  var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
+  var h = '<h2 class="ctitre">🧟 ' + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
+    + '<div class="arene" style="background-image:url(\'' + fondCombat(L) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div></div>'
+    + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
+    + (C.journal.length ? '<div class="journal" id="journal">' + puces(C.journal) + '</div>' : '') + '</div><div class="cdroite">';
   if(!fini){
+    var soinOk = soinsDispo() > 0 && equipeCombat().some(function(y){ return y.hp < 100; }), feuOk = peutCocktail();
     h += equipeCombat().map(function(x){
-      var j = G.m.indexOf(x), c = (choixCombat[j] || "frapper"), a = x.eq.arme, d = a ? OBJETS[a.id].degats : BAL.combat.poings;
-      return '<div class="cm' + (dernierPV && dernierPV.m[j] > x.hp ? " blesse" : "") + '"><div class="cmt"><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + x.nom + '</b>' + barre("❤️", x.hp) + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + (OBJETS[a.id].munition ? " · " + icone(OBJETS[a.id].munition) + " " + compter(OBJETS[a.id].munition) : "") : "✊ À mains nues") + ' · dégâts ' + d[0] + '-' + d[1] + (fatigue(x) ? " · 🥱" : "") + '</small></span></div>'
-        + '<div class="cmb"><button class="mini' + (c === "frapper" ? " on" : "") + '" data-act="cact" data-id="' + j + ':frapper">⚔️ Frapper</button><button class="mini' + (c === "proteger" ? " on" : "") + '" data-act="cact" data-id="' + j + ':proteger">🛡️ Protéger</button></div></div>';
+      var j = G.m.indexOf(x), c = choixCombat[j] || "frapper", a = x.eq.arme, d = a ? OBJETS[a.id].degats : BAL.combat.poings;
+      var avant = dernierPV ? dernierPV.m[j] : x.hp, perte = avant - x.hp; if(perte > 0) touche = true;
+      var tete = Math.round((BAL.combat.tete + (x.trait === "tireur" && a && OBJETS[a.id].munition ? BAL.combat.teteTireur : 0)) * 100);
+      var acts = [["frapper", "⚔️", "Frapper"], ["tete", "🎯", "Tête " + tete + "%"], ["pousser", "✋", "Pousser " + Math.round(((vz && typeZombie(vz).lourd) ? BAL.combat.pousserLourd : BAL.combat.pousser) * 100) + "%"], ["proteger", "🛡️", "Protéger"]];
+      if(soinOk) acts.push(["soigner", "🩹", "Soigner"]);
+      if(feuOk) acts.push(["cocktail", "🔥", "Cocktail"]);
+      if(acts.every(function(t){ return t[0] !== c; })) c = choixCombat[j] = "frapper";
+      return '<div class="cmc' + (perte > 0 ? " blesse" : "") + '"><div class="cmh"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + '</b>' + barre("❤️", x.hp)
+        + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + (OBJETS[a.id].munition ? " · " + icone(OBJETS[a.id].munition) + " " + compter(OBJETS[a.id].munition) : "") : "✊ Mains nues") + ' · ' + d[0] + '-' + d[1] + (fatigue(x) ? " · 🥱" : "") + '</small></span>'
+        + (perte > 0 ? '<span class="flot">−' + perte + '</span>' : '') + '</div>'
+        + '<div class="acts">' + acts.map(function(t){ return '<button class="act' + (c === t[0] ? " on" : "") + '" data-act="cact" data-id="' + j + ':' + t[0] + '"><span>' + t[1] + '</span><small>' + t[2] + '</small></button>'; }).join("") + '</div></div>';
     }).join("");
   }
-  if(C.journal.length) h += '<div class="journal" id="journal">' + puces(C.journal) + '</div>';
   h += fini ? '<button class="btn" style="width:100%" data-act="cfin">Continuer</button>'
-    : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 Fuir ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
-  show(h);
+    : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
+  show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
+  if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
+  // L'écran tremble quand quelqu'un de la famille est touché
+  if(touche && !matchMedia("(prefers-reduced-motion: reduce)").matches){ var sh = $("sheet"); sh.classList.remove("secoue"); void sh.offsetWidth; sh.classList.add("secoue"); setTimeout(function(){ sh.classList.remove("secoue"); }, 450); }
   dernierPV = { c:C, z:C.zombies.map(function(z){ return z.pv; }), m:G.m.map(function(x){ return x.hp; }) };
   var jn = $("journal"); if(jn) jn.scrollTop = jn.scrollHeight;
 }
@@ -1146,7 +1175,8 @@ document.addEventListener("click", function(e){
     if(a === "start") son("depart");
     else if(a === "loc"){ son("pas"); if(G.combat) son("zombie", 350); else if(G.exp && G.exp.serrure) son("porte", 250); else if(feuille.indexOf("Vous trouvez") >= 0) son("butin", 300); }
     else if(a === "ctour" || a === "cauto" || a === "cfuir"){
-      if(J.indexOf("🔫") >= 0) sonTir(); else if(J.indexOf("⚔️") >= 0) son("coup");
+      if(J.indexOf("🔫") >= 0) sonTir(); else if(/⚔️|🎯|✋|🔥/.test(J)) son("coup");
+      if(J.indexOf("📢") >= 0) son("zombie", 120);
       if(/frappe .* \(−/.test(J)){ son("zombie", 220); if(typeof vibrer === "function") vibrer(70); } // un zombie touche un membre
     }
     else if(a === "cfin" || a === "forcer" || a === "suiteporte"){ if(a === "forcer") son("construire"); if(feuille.indexOf("Vous trouvez") >= 0) son("butin", a === "forcer" ? 250 : 0); else if(G.combat) son("zombie", 200); }

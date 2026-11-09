@@ -12,7 +12,12 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 // Icône dessinée k si elle existe, sinon l'emoji donné
 function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
-var PORTRAITS_PNJ = { rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp" };
+var PORTRAITS_PNJ = { rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
+  rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
+// Décor du combat selon le lieu (images/combat/*.webp)
+var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
+  usine:["Zone industrielle", "Garage auto", "Entrepôt logistique", "Base militaire", "Caserne des pompiers", "Péniche du canal"] };
+function fondCombat(L){ for(var k in FONDS_COMBAT) if(FONDS_COMBAT[k].indexOf(L.nom) >= 0) return "images/combat/" + k + ".webp"; return "images/combat/rue.webp"; }
 function portraitPNJ(k){ return '<span class="portrait pnj"><img src="' + PORTRAITS_PNJ[k] + '" alt=""></span>'; }
 var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue", "Supermarché":"lieuSuper", "Hôpital":"lieuHopital",
   "Quincaillerie":"lieuQuinc", "Station-service":"lieuStation", "Garage auto":"lieuGarage", "Commissariat":"lieuPolice",
@@ -164,11 +169,19 @@ var BAL = {
     protection: 0.5,         // « Se protéger » divise les dégâts reçus par 2
     fuite: 0.6,              // chance de réussir à fuir
     butinFuite: 0.5,         // en fuyant, on rapporte 2 fois moins de butin
-    zombieEnPlus: 0.03,      // chance par jour d'avoir un zombie de plus (max +2)
-    maxEnPlus: 2,
+    zombieEnPlus: 0.025,     // chance par jour d'avoir un zombie de plus (max +3) ; réglé avec le combat tactique (2026-11-09)
+    maxEnPlus: 3,
     crosse: [2, 3],          // arme à feu sans munition : on frappe avec la crosse
     bruitTir: 0.3,           // chaque tir a 30 % de chances d'attirer un zombie de plus...
-    maxZombies: 5            // ...jusqu'à 5 zombies debout
+    maxZombies: 5,           // ...jusqu'à 5 zombies debout
+    tete: 0.5,               // « Viser la tête » : touche 1 fois sur 2...
+    teteTireur: 0.15,        // ...+15 % pour un tireur avec une arme à feu
+    teteMult: 2,             // ...mais fait 2 fois plus mal et ignore l'armure
+    pousser: 0.65,           // « Pousser » : 65 % de chances que le zombie perde son attaque...
+    pousserLourd: 0.3,       // ...seulement 30 % contre un Costaud
+    ecrase: 0.75,            // contre un Costaud, se protéger ne retire qu'un quart des dégâts
+    cocktail: [3, 5],        // cocktail incendiaire (1 alcool + 1 chiffon + un briquet) : dégâts à TOUS les zombies
+    soinCombat: true         // « Soigner » utilise un objet de soin sur le membre le plus blessé
   }
 };
 
@@ -188,10 +201,16 @@ var VOITURE = {
 /* ---------- Zombies (combat en expédition) ----------
    jour : apparaît à partir de ce jour ; poids : plus il est grand, plus il est fréquent */
 var ZOMBIES = [
-  { id:"rodeur",  nom:"Rôdeur",  icone:"🧟",   pv:6,  degats:[3, 7],  jour:1,  poids:6 },
-  { id:"coureur", nom:"Coureur", icone:"🧟‍♀️", pv:4,  degats:[5, 9],  jour:5,  poids:3 },
-  { id:"costaud", nom:"Costaud", icone:"🧟‍♂️", pv:14, degats:[8, 13], jour:12, poids:2 }
+  { id:"rodeur",  nom:"Rôdeur",  icone:"🧟",   pv:6,  degats:[3, 7],  jour:1,  poids:6, desc:"Lent et maladroit, mais il ne lâche jamais." },
+  { id:"coureur", nom:"Coureur", icone:"🧟‍♀️", pv:4,  degats:[3, 5],  jour:5,  poids:3, coups:2, desc:"Fragile mais rapide : il frappe 2 fois par tour." },
+  { id:"costaud", nom:"Costaud", icone:"🧟‍♂️", pv:14, degats:[8, 13], jour:12, poids:2, lourd:true, desc:"Énorme : il écrase la protection (−25 % seulement) et recule rarement quand on le pousse." },
+  // Nouveaux zombies (2026-11-09) : ajoutés à la fin pour ne pas décaler les anciennes parties
+  { id:"rampant", nom:"Rampant", icone:"🧟", pv:4,  degats:[3, 6],  jour:6,  poids:2, premier:true, desc:"Il se traîne au sol sans qu’on le voie : il frappe avant tout le monde." },
+  { id:"hurleur", nom:"Hurleur", icone:"🧟", pv:5,  degats:[2, 4],  jour:8,  poids:2, hurle:true, desc:"Un tour sur deux, il hurle et appelle un autre zombie. À abattre en premier !" },
+  { id:"gonfle",  nom:"Gonflé",  icone:"🧟", pv:10, degats:[2, 4],  jour:10, poids:1, explose:[4, 7], desc:"Quand il meurt, il explose et blesse toute l’équipe (moitié moins pour qui se protège)." },
+  { id:"soldat",  nom:"Soldat",  icone:"🪖", pv:12, degats:[6, 10], jour:15, poids:1, armure:3, desc:"Son gilet retire 3 dégâts à chaque coup. Vise la tête : l’armure ne protège pas." }
 ];
+function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }
 var DISTANCES = ["", "🚶 Près", "🚶 Moyen", "🚶 Loin", "🚗 Éloigné", "🚗 Très éloigné"];
 
 /* ---------- Objets ----------
@@ -622,7 +641,7 @@ var ASTUCES = {
   famille:    "👨‍👩‍👧‍👦 Voici ta famille. Touche 1 ou 2 membres, puis 🔍 Fouiller pour les envoyer chercher des objets. Raccourci : les objets de la pièce sont cliquables (porte, table, canapé…).",
   equipement: "🗡️ Sous chaque membre, 3 cases : arme, outil (lampe, boîte à outils…) et sac. Une case orange avec un « + » : un objet t’attend au stock, touche-la pour l’équiper.",
   lieux:      "🗺️ Chaque lieu contient une vraie liste d’objets qui ne revient jamais. Lieu sombre : prends une lampe. Porte verrouillée : une boîte à outils.",
-  combat:     "⚔️ Pour chacun : Frapper ou Se protéger. Touche un zombie pour le viser. 🤖 Auto joue le combat à ta place.",
+  combat:     "⚔️ Touche un zombie pour le viser, puis choisis l’action de chacun : frapper, viser la tête, pousser, se protéger… La bulle au-dessus d’un zombie dit ce qu’il va faire. 🤖 Auto joue à ta place.",
   dormir:     "🌙 Plus personne n’a assez d’énergie : appuie sur Dormir (ou touche le canapé). Chacun mange et boit une ration (touche ＋ sur une carte pour boire ou manger en plus)… et la nuit, ils peuvent attaquer.",
   score:      "⭐ Ton score : 1 point par jour et par membre en vie. Garde toute la famille en vie le plus longtemps possible !",
   atelier:    "🛠️ Le refuge : construis des défenses, fabrique (soins, armes, bâche pour l’eau de pluie…), répare et démonte. Et plus tard, répare la voiture.",
