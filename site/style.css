@@ -459,3 +459,4 @@ body.fond .panneau h1{color:var(--ink);text-shadow:none}
 .scene .grid2{padding:9px 4px 6px}
 .famille > .btn{margin-top:10px}
 @media (min-width:700px) and (max-height:500px){ .famille > .btn{margin-top:6px} }
+.btn.partir{white-space:nowrap}

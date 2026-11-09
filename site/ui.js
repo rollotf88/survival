@@ -59,7 +59,7 @@ function rPick(){
     + '<div style="grid-area:bag"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div>'
     + '<div class="stage" style="grid-area:tiles"><div class="tiles">' + tiles + '</div></div>'
     + '<div class="sub" style="grid-area:info;min-height:34px"><b>' + G.info + '</b></div>'
-    + '<div class="row" style="grid-area:go"><button class="btn alt" style="flex:0 0 auto" data-act="adstart"' + (G.adS ? " disabled" : "") + '>📺 Bonus (pub)</button><button class="btn" data-act="start">Fermer la porte et partir</button></div></div>';
+    + '<div class="row" style="grid-area:go"><button class="btn alt" style="flex:0 0 auto" data-act="adstart"' + (G.adS ? " disabled" : "") + '>📺 Bonus (pub)</button><button class="btn partir" data-act="start">🚪 Partir !</button></div></div>';
 }
 
 /* ---------- Écran principal : le refuge et la famille ---------- */
