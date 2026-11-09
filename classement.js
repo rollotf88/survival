@@ -5,7 +5,7 @@
    Sans connexion (ou sur une page qui bloque internet), on l'explique
    simplement et le jeu continue normalement.
    ===================================================================== */
-var SITE_JEU = "https://unique-moxie-1ab990.netlify.app";
+var SITE_JEU = "https://survival-refuge.rollotf88.workers.dev";
 function adresseClassement(){ return (/(netlify\.app|workers\.dev|pages\.dev)$/.test(location.hostname) ? "" : SITE_JEU) + "/api/classement"; }
 var MSG_HORS_LIGNE = "Impossible de joindre le classement (pas de connexion, ou cette page bloque internet). Il marche dans le jeu installé : " + SITE_JEU.replace("https://", "");
 
