@@ -698,3 +698,7 @@ body.fond{touch-action:pan-y}
 .journal .lj-ico{flex-basis:24px;width:24px;height:24px;font-size:13px;border-width:2px}
 .journal .lj-txt{font-size:13px}
 .journal .fil{gap:4px;margin:4px 0}
+/* Équipement presque cassé : liseré rouge et petit « ! » */
+.slot.use{box-shadow:0 0 0 2px var(--bad) !important}
+.slot.use::before{content:"!";position:absolute;left:-5px;top:-6px;width:14px;height:14px;border-radius:50%;background:var(--bad);color:#fff;font-size:10px;font-weight:800;line-height:14px;text-align:center;z-index:1}
+body.fond .scene .mc .porte span.use{border-color:var(--bad);box-shadow:0 0 0 1.5px var(--bad);background:color-mix(in srgb,var(--bad) 18%,var(--bg))}

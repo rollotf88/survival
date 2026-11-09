@@ -288,10 +288,17 @@ function blesser(x, d, n, cause){
   }
 }
 // Usure d’une arme : perd 1 de solidité, se casse à 0
+// Prévenir quand un objet porté n'a presque plus de solidité (2 utilisations ou moins)
+function avertirUsure(x, o, n, unite){
+  if(!o.sol || o.sol > 2) return;
+  var d = OBJETS[o.id];
+  n.push(["b2", "⚠️ " + (d.g === "f" ? "La " : "Le ") + minus(d.nom) + " " + de(x.nom) + " est presque " + (d.g === "f" ? "cassée" : "cassé") + " : encore " + o.sol + " " + unite + (o.sol > 1 ? "s" : "") + ". Répare-" + (d.g === "f" ? "la" : "le") + " à l’atelier ou change-" + (d.g === "f" ? "la" : "le") + "."]);
+}
 function userArme(x, n){
   var a = x.eq.arme; if(!a) return;
   a.sol--;
   if(a.sol <= 0){ x.eq.arme = null; n.push(["b2", "💥 " + (OBJETS[a.id].g === "f" ? "La " : "Le ") + minus(OBJETS[a.id].nom) + " " + de(x.nom) + " se brise !"]); }
+  else avertirUsure(x, a, n, "coup");
 }
 
 /* ---------- Expédition (fouille d'un lieu) ---------- */
@@ -365,7 +372,7 @@ function expedition(i, voiture){
       if(briquet){
         var feu = briquet.eq.outil;
         mult *= BAL.lueur.fouille; d += BAL.lueur.danger; n.push(["", "🔥 " + (OBJETS[feu.id].g === "f" ? "La " : "Le ") + minus(OBJETS[feu.id].nom) + " " + de(briquet.nom) + " donne une lueur faible."]);
-        if(feu.sol){ feu.sol--; if(feu.sol <= 0){ briquet.eq.outil = null; n.push(["b2", "🕯️ La torche " + de(briquet.nom) + " s’est consumée."]); } }
+        if(feu.sol){ feu.sol--; if(feu.sol <= 0){ briquet.eq.outil = null; n.push(["b2", "🕯️ La torche " + de(briquet.nom) + " s’est consumée."]); } else avertirUsure(briquet, feu, n, "fouille"); }
       }
       else { mult *= BAL.noir.fouille; d += BAL.noir.danger; n.push(["b2", "🌑 Fouille à tâtons dans le noir."]); }
     }
@@ -473,7 +480,7 @@ function finExpedition(){
     lieu.poissons -= peches; G.stats.poissons = (G.stats.poissons || 0) + peches;
     for(var pp = 0; pp < peches; pp++) trouves.unshift("poisson");
     n.push([peches ? "g2" : "b2", "🎣 " + (peches ? "Vous pêchez " + nommer("poisson", peches) + " (" + peches + " touche" + (peches > 1 ? "s" : "") + " sur " + E.peche.lancers + ")." : "Aucun poisson cette fois : ils ont tous filé.")]);
-    survivants.forEach(function(x){ var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return; c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); } });
+    survivants.forEach(function(x){ var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return; c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); } else avertirUsure(x, c, n, "sortie"); });
   }
   else if(LIEUX[i].peche) survivants.forEach(function(x){
     var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return;

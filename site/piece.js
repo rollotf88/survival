@@ -71,7 +71,7 @@ var PIECES = [
   ]}
 ];
 var pieceIdx = 0;
-var BOUTON_PIECE = { chambre:"endday", reserve:"stock", atelier:"refuge", garage:"fouille", cour:"refuge" };
+var BOUTON_PIECE = { chambre:"dormir", reserve:"stock", atelier:"refuge", garage:"fouille", cour:"refuge" };
 // La barre des pièces (flèches + points) s'efface après 3 s ; elle revient au changement de pièce ou quand on touche la pièce
 var minuteurNav = null, dernierePieceNav = null;
 function montrerNav(force){
@@ -172,7 +172,7 @@ function openQuiPart(){
     h += '<div class="qprow' + (on ? " choisi" : "") + '"><button class="qpqui" data-act="qpsel" data-id="' + i + '"' + (ok ? "" : " disabled") + '><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + (on ? "✔ " : "") + x.nom + '</b><small>⚡ ' + x.en + (ok ? "" : " · trop fatigué") + '</small></span></button>'
       + '<div class="qpeq">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
-          return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + '" data-act="slot" data-retour="quipart" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : "vide") + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
+          return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-retour="quipart" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : "vide") + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + '</div></div>';
   });
   h += offrePub("quipart") + '<div class="row"><button class="btn" data-act="fouille"' + (G.sel.length ? "" : " disabled") + '>🗺️ Choisir le lieu</button><button class="btn alt" data-act="close">Annuler</button></div>';
@@ -188,7 +188,20 @@ document.addEventListener("click", function(e){
 });
 // Confirmation avant de dormir (le canapé) ; propose la pub si elle peut éviter de finir la journée trop tôt
 function openDormir(){
-  show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2><p>La journée se termine : chacun mange, boit et se repose. Des zombies peuvent attaquer pendant la nuit.</p><div class="row"><button class="btn" data-act="endday">Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
+  // Ce que la nuit va faire, avant de confirmer (mêmes médaillons que le journal)
+  var v = vivants().length, be = besoinNuit("eau"), bn = besoinNuit("nour"), re = rations("eau"), rn = rations("nour");
+  var couv = compter("couverture") * BAL.feu.couvrePar, froids = G.feu ? 0 : Math.max(0, v - couv);
+  var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce);
+  var L = [];
+  L.push([froids ? "b2" : "g2", "😴 Chacun récupère +" + (G.feu ? BAL.reposNuit + BAL.feu.repos : BAL.reposNuit) + " ⚡" + (froids ? " (sauf " + froids + " qui " + (froids > 1 ? "auront" : "aura") + " froid : +" + BAL.reposFroid + " ⚡, −" + BAL.degatsFroid + " PV)" : "") + "."]);
+  L.push([re >= be ? "" : "b2", ic("bouteille", "💧") + " La famille boira " + Math.min(be, re) + " ration" + (Math.min(be, re) > 1 ? "s" : "") + " d’eau (il en reste " + re + ")" + (re < v ? " : pas assez pour tout le monde !" : ".")]);
+  L.push([rn >= bn ? "" : "b2", ic("conserve", "🥫") + " Elle mangera " + Math.min(bn, rn) + " ration" + (Math.min(bn, rn) > 1 ? "s" : "") + " (il en reste " + rn + ")" + (rn < v ? " : pas assez pour tout le monde !" : ".")]);
+  if(G.feu) L.push(["g2", "🔥 Le feu brûle toute la nuit" + (G.braises > 0 ? " (la planche d’hier suffit)." : " (1 planche pour 2 nuits).")]);
+  if(chien()) L.push(["", ic("chien", "🐕") + " " + chien().nom + " mange 1 ration et monte la garde."]);
+  if(compter("poule")) L.push(["", ic("poule", "🐔") + " Les poules boivent " + Math.ceil(compter("poule") / BAL.poules.eauPour) + " ration(s) d’eau et pondent peut-être."]);
+  L.push([defenseNuit() >= f + 2 ? "g2" : defenseNuit() >= f ? "" : "b2", "🧟 Environ " + ch + " % de risque d’attaque, force " + f + " à " + (f + 2) + " · votre défense : " + defenseNuit() + "."]);
+  show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2><p class="sub">La journée se termine. Cette nuit :</p>' + puces(L)
+    + '<div class="row"><button class="btn" data-act="endday">🌙 Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;

@@ -185,6 +185,10 @@ Personnage qui parle (2026-11-09, idée de Fabien « comme les MMO ») : `parle(
 
 Récits et butin (2026-11-09) : les lignes de `puces()` sont un journal façon jeu (`ligneJournal` : l'icône du début de la phrase sort dans un médaillon rond `.lj-ico`, bordé de vert = bon, rouge = mauvais ; texte à côté, plus de puces ni de barres ; retour de Fabien « ça fait site web ») pour la nuit, la fouille et le combat ; le journal de combat est dans une boîte qui défile jusqu'au plus récent (`#journal`) ; le résultat d'une fouille montre le butin sur une étagère de cases non cliquables (`caseObjet(..., {fixe:true})`) avec la liste des noms dessous, et ce qui est laissé sur place en mini-cases estompées
 
+Usure et sommeil (2026-11-09, idées de Fabien) :
+- `avertirUsure` (logique.js) : quand une arme, une torche ou une canne portée n'a plus que 2 utilisations ou moins, une ligne « ⚠️ … est presque cassé(e) : encore N coups/fouilles/sorties » apparaît dans le récit ; `classeUsure(o)` (ui.js) met un liseré rouge et un « ! » sur sa case (cartes, petites cases du téléphone, fiche, « Qui part ? ») sous un quart de solidité
+- Le bouton 🌙 Dormir (act `dormir`) ouvre `openDormir()` : résumé de la nuit (énergie récupérée et qui aura froid, rations bues et mangées / restantes, feu, Rex, poules, risque d'attaque contre la défense) puis « Dormir » / « Pas encore »
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT
