@@ -594,7 +594,7 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 
 /* ---------- Avant le départ : l'histoire, puis la famille (noms, traits, pseudo, mode) ---------- */
 function rIntro(){
-  $("app").innerHTML = '<div class="panneau intro"><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p>'
+  $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
     + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
@@ -834,7 +834,7 @@ if(enCours){
   // Écran d'accueil : continuer ou recommencer
   nouvellePartie(null); G.ph = "accueil";
   document.body.classList.add("fond");
-  $("app").innerHTML = '<div class="accueil"><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p></div>';
+  $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p></div>';
   show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
     + enCours.m.filter(function(x){ return x.al; }).map(function(x){ return iconeMembre(x); }).join(" ") + '</p>'
     + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="continuer">▶️ Continuer</button>'

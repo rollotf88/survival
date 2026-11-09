@@ -21,6 +21,8 @@ var FICHIERS = [
   "images/refuge-fond.webp",
   "images/entree-fond.webp",
   "images/sac-dos.webp",
+  "images/logo.webp",
+  "images/icone-maskable.png",
   "images/portrait-sam.webp",
   "images/portrait-nora.webp",
   "images/portrait-ines.webp",

@@ -494,3 +494,12 @@ body.maison .mode{border-radius:16px;padding:1px 8px;font-weight:800;font-size:1
 @media (max-height:640px){.sacimg{height:68px}}
 @media (orientation:landscape) and (max-height:500px){.sacimg{height:64px}}
 .evportrait{float:left;font-size:52px;line-height:1;margin:2px 10px 4px 0}
+/* Logo (Gemini, 2026-11-09) : écran d'histoire et accueil */
+.tetejeu{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px}
+.tetejeu .logo{width:84px;height:84px;flex:0 0 auto;filter:drop-shadow(0 3px 3px rgba(20,10,4,.4))}
+.tetejeu .titrejeu{text-align:left}.tetejeu .sub{text-align:left;margin:0}
+.intro > .sub{display:none}
+.accueil .logo.grand{width:min(46vw,190px);height:auto;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));margin-bottom:6px}
+@media (max-height:640px){.tetejeu .logo{width:68px;height:68px}}
+@media (orientation:landscape) and (max-height:500px){.tetejeu .logo{width:56px;height:56px}.accueil .logo.grand{width:110px}}
+body.fond .accueil{justify-content:flex-start;padding-top:3vh}
