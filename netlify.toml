@@ -1,8 +1,9 @@
-# Netlify publie le dossier « site » (refait par preparer-site.py)
-# et le serveur du classement (netlify/functions)
+# Le jeu déménage sur Cloudflare Pages (2026-11-09) : Netlify ne refait plus le site à chaque envoi
+# (chaque mise à jour coûtait 15 de ses 300 crédits gratuits par mois). « exit 0 » = on saute.
 [build]
   publish = "site"
   command = ""
+  ignore = "exit 0"
 
 [functions]
   directory = "netlify/functions"
