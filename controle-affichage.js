@@ -57,6 +57,7 @@ async function toutControler(){
   nouvellePartie(graineDuJour()); render(); await att(150); res.depart = controleAffichage();
   G.pack = { bidon:2, conserves:1, couteau:1, lampe:1 }; demarrer(); G.day = 12; G.chap = 4; G.chien = { nom:"Rex", faim:1 }; G.ref.barr = 1;
   render(); await att(300); var p = document.getElementById("piece"); if(p) p.classList.add("montrer"); res.principal = controleAffichage();
+  if(typeof allerPiece === "function"){ allerPiece(1); await att(200); res.atelier = controleAffichage(); allerPiece(2); await att(200); res.garage = controleAffichage(); allerPiece(0); await att(150); }
   G.sel = [0]; render(); await att(150); res.selection = controleAffichage(); G.sel = []; render();
   // Combat avec 3 zombies (portraits peints) et 2 membres
   G.sel = [0, 1]; G.exp = { lieu:0, equipe:[0, 1], notes:[], mult:1, d:0, voiture:false }; G.sel = [];

@@ -525,3 +525,12 @@ body.fond .accueil{justify-content:flex-start;padding-top:3vh}
 @media (orientation:landscape) and (max-height:500px){.banniere{height:70px}}
 /* Vignette d'un lieu dans la liste « Où envoyer l'équipe ? » */
 .vign{width:46px;height:26px;object-fit:cover;border-radius:6px;border:1.5px solid var(--bois);vertical-align:-7px;margin-right:2px}
+/* ---------- Pièces de la maison qu'on fait défiler ---------- */
+body.fond{touch-action:pan-y}
+#piece .navpieces{position:absolute;top:4px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:2px;pointer-events:auto;background:rgba(29,20,14,.55);border:1.5px solid rgba(255,246,230,.35);border-radius:999px;padding:2px 6px;z-index:2}
+#piece .navfl{border:0;background:none;color:#fff6e6;font-size:13px;width:30px;height:28px;padding:0;cursor:pointer}
+#piece .navpt{border:0;background:none;width:18px;height:28px;padding:0;display:grid;place-items:center;cursor:pointer}
+#piece .navpt span{width:8px;height:8px;border-radius:50%;background:rgba(255,246,230,.45)}
+#piece .navpt.on span{background:var(--acc);box-shadow:0 0 0 2px rgba(232,163,61,.35)}
+#piece .navnom{color:#fff6e6;font-size:11px;font-weight:800;margin:0 4px 0 2px;white-space:nowrap}
+#piece.compact .navpieces{left:6px;transform:none}

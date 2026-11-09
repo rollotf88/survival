@@ -94,6 +94,7 @@ function rGame(){
   setTimeout(function(){
     astuce("famille"); astuce("equipement");
     if(G.day >= 2) astuce("score");
+    astuce("pieces");
     if(!G.m.some(peutSortir)) astuce("dormir");
     if(mission()) astuce("mission");
   }, 0);

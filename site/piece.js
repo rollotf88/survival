@@ -27,10 +27,32 @@ var DECOR_PIECE = [
   ["images/planches.webp", 904, 262, 1022, 454, function(){ return G.ref && G.ref.barr >= 1; }], // barricade construite : planches sur la porte
   ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }]                   // Rex adopté : couché devant le canapé
 ];
+/* ---------- Les pièces de la maison, qu'on fait défiler (glisser du doigt, flèches ou points) ----------
+   Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
+var PIECES = [
+  { id:"salon", nom:"Salon", img:"images/refuge-fond.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"atelier", nom:"Atelier", img:"images/piece-atelier.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:700 }, decor:[], zones:[
+    ["pReparer",    340, 210, 720, 435, function(){ return "🔧"; }, "Réparer", .5],
+    ["pConstruire",   0, 340, 290, 710, function(){ return ic("ref_barr", "🧱"); }, "Construire", .4],
+    ["pDemonter",   715, 225, 1022, 660, function(){ return "♻️"; }, "Démonter", .3],
+    ["pTable",      290, 465, 745, 680, function(){ return ic("marteau", "🛠️"); }, "Fabriquer", .55]
+  ]},
+  { id:"garage", nom:"Garage", img:"images/piece-garage.webp", l:768, h:1376, cadre:{ x0:0, x1:768, y0:250, y1:900 }, decor:[], zones:[
+    ["pPorte",   200, 370, 570, 555, function(){ return ic("loupe", "🔍"); }, "Partir", .5],
+    ["pVoiture", 150, 555, 590, 890, function(){ return "🚗"; }, "Voiture", .5]
+  ]}
+];
+var pieceIdx = 0;
+function allerPiece(k){
+  pieceIdx = (k + PIECES.length) % PIECES.length;
+  dernierJourEtiquettes = null; // on montre les étiquettes de la nouvelle pièce
+  if(typeof son === "function") son("pas");
+  placerPiece();
+}
 function placerDecor(dx, dy, s){
   var d = $("decor"); if(!d){ d = document.createElement("div"); d.id = "decor"; document.body.appendChild(d); }
   if(s === null){ d.innerHTML = ""; return; }
-  d.innerHTML = DECOR_PIECE.filter(function(e){ return e[5](); }).map(function(e){
+  d.innerHTML = PIECES[pieceIdx].decor.filter(function(e){ return e[5](); }).map(function(e){
     return '<img src="' + e[0] + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
   }).join("");
 }
@@ -40,31 +62,36 @@ function placerPiece(){
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
   var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
   var corps = document.body.style;
-  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; }
+  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; }
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
-  if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
-  var vw = window.innerWidth, F = CADRE_PIECE;
+  if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
+  var vw = window.innerWidth, P = PIECES[pieceIdx], F = P.cadre;
+  corps.backgroundImage = 'url("' + P.img + '")';
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
   var dx = (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
   // L'image est collée en haut de l'espace libre (le plafond remplit le haut), tant que la partie utile reste visible
   var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
-  corps.backgroundSize = (IMAGE_PIECE.l * s) + "px auto";
+  corps.backgroundSize = (P.l * s) + "px auto";
   corps.backgroundPosition = dx + "px " + dy + "px";
   placerDecor(dx, dy, s);
   // Fondu sur le bas de l'image pour qu'elle se mêle au plancher (au lieu de s'arrêter net)
   var f = $("fondu"); if(!f){ f = document.createElement("div"); f.id = "fondu"; document.body.appendChild(f); }
-  f.style.display = "block"; f.style.top = (dy + IMAGE_PIECE.h * s - 88) + "px";
+  f.style.display = "block"; f.style.top = (dy + P.h * s - 88) + "px";
   cont.classList.toggle("compact", s < 0.32);
   cont.style.display = "block"; cont.style.top = haut + "px"; cont.style.height = (fin - haut) + "px";
-  cont.innerHTML = ZONES_PIECE.map(function(z){
+  cont.innerHTML = P.zones.map(function(z){
     if(z[8] && !z[8]()) return "";
     var x = dx + z[1] * s, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
     var invite = z[0] === "pCanape" && !G.m.some(peutSortir); // plus personne ne peut sortir : on invite à dormir
     return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
-  }).join("");
+  }).join("")
+    // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
+    + '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
+    + PIECES.map(function(p, k){ return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
+    + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>';
   ajusterEtiquettes(cont, vw);
   // Étiquettes visibles 3 secondes au début de chaque journée, puis elles s'effacent (image plus propre)
   if(dernierJourEtiquettes !== G.day){
@@ -75,7 +102,7 @@ function placerPiece(){
 var dernierJourEtiquettes = null, minuteurEtiquettes = null;
 // Les étiquettes restent dans l'écran et ne se chevauchent pas (on décale vers le bas celle qui gêne)
 function ajusterEtiquettes(cont, vw){
-  var et = Array.prototype.slice.call(cont.querySelectorAll(".etiq"));
+  var et = Array.prototype.slice.call(cont.querySelectorAll(".zone .etiq"));
   et.forEach(function(e){
     var r = e.getBoundingClientRect(), d = 0;
     if(r.left < 4) d = 4 - r.left; else if(r.right > vw - 4) d = vw - 4 - r.right;
@@ -127,6 +154,30 @@ document.addEventListener("click", function(e){
   if(a === "pTable") openRef("fabriquer");
   else if(a === "pCheminee") openRef("construire");
   else if(a === "pSac") openStock();
+  else if(a === "pReparer") openRef("reparer");
+  else if(a === "pDemonter") openRef("demonter");
+  else if(a === "pConstruire") openRef("construire");
+  else if(a === "pVoiture") openRef("voiture");
+  else if(a === "piecePrec") allerPiece(pieceIdx - 1);
+  else if(a === "pieceSuiv") allerPiece(pieceIdx + 1);
+  else if(a === "pieceVa") allerPiece(+b.getAttribute("data-id"));
   else if(a === "pEtagere"){ guideOnglet = "regles"; guideFiche = null; openGuide(); }
   else if(a === "pPortraits"){ guideOnglet = "famille"; guideFiche = null; openGuide(); }
 });
+
+// Glisser le doigt (ou la souris) de gauche à droite sur l'écran principal pour changer de pièce
+var departGlisse = null;
+document.addEventListener("pointerdown", function(e){
+  if(!G || G.ph !== "game" || $("modal").style.display === "flex" || $("astuce")) { departGlisse = null; return; }
+  departGlisse = { x:e.clientX, y:e.clientY, t:Date.now() };
+});
+document.addEventListener("pointerup", function(e){
+  var d = departGlisse; departGlisse = null;
+  if(!d || !G || G.ph !== "game" || $("modal").style.display === "flex") return;
+  var dx = e.clientX - d.x, dy = e.clientY - d.y;
+  if(Math.abs(dx) > 60 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - d.t < 900){
+    finGlisse = Date.now(); // le clic qui suit est ignoré (ui.js)
+    allerPiece(pieceIdx + (dx < 0 ? 1 : -1));
+  }
+});
+document.addEventListener("pointercancel", function(){ departGlisse = null; });
