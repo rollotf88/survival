@@ -27,12 +27,21 @@ document.addEventListener("click", function(e){
 
 function niveau(v){ return v < 35 ? "lo" : v < 70 ? "mid" : ""; }
 function barre(l, v){ v = Math.max(0, Math.min(100, v)); return '<div class="b"><span>' + l + '</span><div class="bar"><i class="' + niveau(v) + '" style="width:' + v + '%"></i></div></div>'; }
+// Une ligne de récit façon jeu : l'icône du début dans un médaillon rond (vert = bon, rouge = mauvais), le texte à côté
+function ligneJournal(a){
+  var t = String(a[1]), ico = "", m;
+  if(t.indexOf("<svg") === 0){ var f = t.indexOf("</svg>") + 6; ico = t.slice(0, f); t = t.slice(f); }
+  else if(t.indexOf('<span class="portrait') === 0){ var f2 = t.indexOf("</span></span>"); f2 = f2 >= 0 ? f2 + 14 : t.indexOf("</span>") + 7; ico = t.slice(0, f2); t = t.slice(f2); }
+  else if((m = t.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u))){ ico = m[1]; t = t.slice(m[0].length); }
+  if(!ico) ico = a[0] === "g2" ? "✔" : a[0] === "b2" ? "!" : "•";
+  return '<div class="lj ' + (a[0] || "") + '"><span class="lj-ico">' + ico + '</span><span class="lj-txt">' + t.replace(/^\s+/, "") + '</span></div>';
+}
 function puces(n){
   var morts = n.filter(function(a){ return a[0] === "mort"; }), autres = n.filter(function(a){ return a[0] !== "mort"; });
   if(morts.length) setTimeout(function(){ son("glas"); if(typeof vibrer === "function") vibrer([200, 100, 400]); }, 150);
   return morts.map(function(a){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
-  }).join("") + (autres.length ? '<ul class="fil">' + autres.map(function(a){ return '<li class="' + a[0] + '">' + a[1] + '</li>'; }).join("") + '</ul>' : '');
+  }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
 function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
