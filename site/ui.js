@@ -63,7 +63,9 @@ var BESOINS_SAC = [
   ["🔦", "Lumière", function(o){ return !!o.lumiere; }],
   ["🔥", "Chaleur", function(o){ return !!o.chaleur; }]
 ];
+var sautSac = false; // le sac dessiné « saute » quand on vient d'y mettre un objet
 function rPick(){
+  setTimeout(function(){ sautSac = false; }, 0);
   setTimeout(function(){ astuce("depart"); }, 0);
   var H = MAISONS[G.h], u = placesUtilisees(), libre = capSac() - u, cells = "", tiles = "";
   for(var k in G.pack) for(var i = 0; i < G.pack[k]; i++){
@@ -81,7 +83,7 @@ function rPick(){
   document.body.classList.toggle("urgence", tm <= 10);
   $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><span class="mode">' + (G.seed ? "🏆 Partie classée" : "🎲 Partie libre") + '</span><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
     + '<div class="pk"><div class="besoins" style="grid-area:sub" aria-label="Ce qu’il faut emporter">' + BESOINS_SAC.map(function(b){ var ok = Object.keys(G.pack).some(function(k){ return b[2](OBJETS[k]); }); return '<span class="' + (ok ? "ok" : "") + '" title="' + b[1] + '">' + b[0] + ' ' + (ok ? "✅" : "❌") + '<small>' + b[1] + '</small></span>'; }).join("") + '</div>'
-    + '<div style="grid-area:bag"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div>'
+    + '<div class="sacbloc" style="grid-area:bag"><img class="sacimg' + (sautSac ? " saute" : "") + '" src="images/sac-dos.webp" alt=""><div class="sacdroite"><div class="row"><b>Le sac</b><span class="pill">' + u + ' / ' + capSac() + '</span></div><div class="bag">' + cells + '</div></div></div>'
     + '<div class="stage" style="grid-area:tiles"><div class="tiles">' + tiles + '</div></div>'
     + '<div class="sub" style="grid-area:info;min-height:34px"><b>' + G.info + '</b></div>'
     + '<div class="row" style="grid-area:go"><button class="btn alt" style="flex:0 0 auto" data-act="adstart"' + (G.adS ? " disabled" : "") + '>📺 Bonus (pub)</button><button class="btn partir" data-act="start">🚪 Partir !</button></div></div>';
@@ -689,7 +691,7 @@ function openInfo(id){
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act"), id = b.getAttribute("data-id"), i = +id;
-  if(a === "add"){ var c = G.pack[id] || 0; if(c < MAISONS[G.h].objets[id] && capSac() - placesUtilisees() >= OBJETS[id].place) G.pack[id] = c + 1; G.info = icone(id) + " " + OBJETS[id].nom + " : " + OBJETS[id].desc; }
+  if(a === "add"){ var c = G.pack[id] || 0; if(c < MAISONS[G.h].objets[id] && capSac() - placesUtilisees() >= OBJETS[id].place){ G.pack[id] = c + 1; sautSac = true; } G.info = icone(id) + " " + OBJETS[id].nom + " : " + OBJETS[id].desc; }
   else if(a === "rem"){ G.pack[id]--; if(!G.pack[id]) delete G.pack[id]; }
   else if(a === "intro"){ G.ph = "famille"; }
   else if(a === "modefam"){ var fam = G.famille; modeJour = id === "classee"; try{ localStorage.setItem("survival_mode", modeJour ? "jour" : "libre"); }catch(e){} nouvellePartie(modeJour ? graineDuJour() : null); G.famille = fam; G.ph = "famille"; }

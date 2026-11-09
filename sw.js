@@ -20,6 +20,7 @@ var FICHIERS = [
   "manifest.json",
   "images/refuge-fond.webp",
   "images/entree-fond.webp",
+  "images/sac-dos.webp",
   "images/portrait-papa.webp",
   "images/portrait-maman.webp",
   "images/portrait-leo.webp",
