@@ -46,7 +46,9 @@ var PIECES = [
     ["pPorte",   200, 370, 570, 555, function(){ return ic("loupe", "🔍"); }, "Partir", .5],
     ["pVoiture", 150, 555, 590, 890, function(){ return "🚗"; }, "Voiture", .5]
   ]},
-  { id:"cour", nom:"Cour", img:"images/piece-cour.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[], zones:[
+  // La cour change selon ce qui est construit : potager (légumes ou bacs vides), récupérateur (tonneau ou non), poules
+  { id:"cour", nom:"Cour", img:function(){ var pot = G.ref && G.ref.pot >= 1, eau = G.ref && G.ref.eau >= 1; return "images/piece-cour" + (pot && eau ? "" : pot ? "-pot" : eau ? "-eau" : "-rien") + ".webp"; },
+    l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[ ["images/poules.webp", 600, 637, 810, 800, function(){ return compter("poule") > 0; }] ], zones:[
     ["pConstruire",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
     ["pConstruire", 430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
     ["stock",       790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
