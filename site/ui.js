@@ -790,7 +790,8 @@ var modeJour = true;
 try{ modeJour = localStorage.getItem("survival_mode") !== "libre"; }catch(e){}
 function nouvelleFamille(){
   effacerSauvegarde(); hide();
-  nouvellePartie(modeJour ? graineDuJour() : null);
+  modeJour = true; // une nouvelle famille commence toujours en partie classée (on peut choisir « libre » sur l'écran de la famille)
+  nouvellePartie(graineDuJour());
   G.ph = "intro"; G.famille = familleRetenue();
   render();
 }

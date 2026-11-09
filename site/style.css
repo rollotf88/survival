@@ -457,3 +457,5 @@ body.fond .panneau h1{color:var(--ink);text-shadow:none}
 @media (min-width:700px) and (max-height:500px){ .fm .em{font-size:34px} .fmnom{font-size:18px} .fmc small{font-size:10.5px} }
 /* Cartes de la famille : place pour le contour lumineux et la coche (sinon coupés par la scène) */
 .scene .grid2{padding:9px 4px 6px}
+.famille > .btn{margin-top:10px}
+@media (min-width:700px) and (max-height:500px){ .famille > .btn{margin-top:6px} }
