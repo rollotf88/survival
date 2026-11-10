@@ -1428,3 +1428,12 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 /* Messages rapides : un dégradé sur le bord droit montre qu'on peut faire glisser */
 .chat-rapides-boite{position:relative}
 .chat-rapides-boite::after{content:"";position:absolute;top:0;right:0;bottom:6px;width:34px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--card))}
+
+/* Marges (retour de Fabien 2026-11-11) : un seul cadre pour les fiches du bastion, cases centrées, icône à côté du titre, boutons qui ne se collent pas */
+.bast-def{padding:8px 10px}
+.bast-def .invfiche{border:0;background:none;padding:0;margin:0 0 6px}
+.bast-def .ings2{justify-content:center;margin:4px 0 8px}
+.op-ligne{display:block}
+.op-ligne b{display:inline}
+.op-ligne small{display:block;margin-top:1px}
+#sheet .btn[style*="width:100%"] + .row,#sheet .btn[style*="width:100%"] + .btn,#sheet .row + .btn[style*="width:100%"]{margin-top:8px}
