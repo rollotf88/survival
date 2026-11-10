@@ -518,18 +518,19 @@ function openSlot(i, slot){
 
 /* ---------- Téléphone : barre de famille compacte + fiche du membre ---------- */
 function modeMini(){ return window.matchMedia("(max-width: 559px)").matches; }
+function majuscule(t){ t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 function openMembre(i){
   var x = G.m[i], on = G.sel.indexOf(i) >= 0, T = TRAITS[x.trait];
-  var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2><p class="sub">' + (T ? T.icone + " " + T.nom + " · <span class=\"plus\">+ " + T.plus + "</span> · <span class=\"moins\">− " + T.moins + "</span>" : "Recrue") + (x.al ? "" : " · 💀 " + accorder(roleDe(x), "mort")) + '</p></span></div>';
+  var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2>' + (T ? '<p class="m-trait">' + T.icone + ' <b>' + T.nom + '</b></p><p class="m-plus">✅ ' + majuscule(T.plus) + '</p><p class="m-moins">⚠️ ' + majuscule(T.moins).replace(" (", " : ").replace(/\)$/, "") + '</p>' : '<p class="m-trait">Recrue</p>') + (x.al ? "" : '<p class="m-moins">💀 ' + accorder(roleDe(x), "mort") + '</p>') + '</span></div>';
   if(!x.al){ show(h + BTN_FERMER()); return; }
   [["❤️","Vie",x.hp],["⚡","Énergie",x.en],[ic("conserve", "🥫"),"Faim",x.faim],[ic("bouteille", "💧"),"Soif",x.soif]].forEach(function(j){ h += '<div class="jauge">' + barre(j[0], j[2]) + '<small>' + j[1] + ' ' + j[2] + '/100</small></div>'; });
   if(x.folie) h += '<div class="jauge folie">' + barre("🌀", x.folie) + '<small>Folie ' + x.folie + '/100 · ' + (fou(x) ? "fouille moins bien, peut faire des choses terribles la nuit ; à 100, il part pour toujours" : "encore maître de lui") + '</small></div>';
-  h += '<p class="sub">Équipement (touche une case) :</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
+  h += '<p class="sub m-titre">Équipement · touche une case pour changer</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
     return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '<small>' + (o ? OBJETS[o.id].nom : e[2]) + '</small></button>';
   }).join("") + '</div>';
   h += '<button class="loc" data-act="soins" data-id="' + i + '"><b>＋ Soigner, boire, manger</b><small>Soins, rations d’eau et de nourriture, canette</small></button>';
-  h += '<button class="loc' + (on ? " choisi" : "") + '" data-act="msel" data-id="' + i + '"' + (peutSortir(x) || on ? "" : " disabled") + '><b>' + (on ? "✔ Choisi pour partir (toucher pour retirer)" : "🔍 Choisir pour partir fouiller") + '</b><small>' + (peutSortir(x) || on ? "⚡ " + x.en + " · " + (G.sel.length) + " / " + BAL.membresParExpedition + " choisi(s)" : "Trop fatigué pour sortir aujourd’hui") + '</small></button>' + offrePub();
+  h += '<button class="loc' + (on ? " choisi" : "") + '" data-act="msel" data-id="' + i + '"' + (peutSortir(x) || on ? "" : " disabled") + '><b>' + (on ? "✅ Part en fouille" : "🔍 Choisir pour partir") + '</b><small>' + (peutSortir(x) || on ? (on ? "Touche pour " + (estFeminin(x) ? "la" : "le") + " retirer · " : "") + "⚡ " + x.en + " · " + G.sel.length + " / " + BAL.membresParExpedition + " dans l’équipe" : x.raid ? "🏢 Au bastion pour le raid de l’immeuble" : "Trop fatigué" + (estFeminin(x) ? "e" : "") + " pour sortir aujourd’hui") + '</small></button>' + offrePub();
   show(h + BTN_FERMER());
 }
 

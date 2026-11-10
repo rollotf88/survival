@@ -1446,3 +1446,11 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .seg-b.on,.seg-b.on:disabled{background:var(--card);color:var(--ink);opacity:1;cursor:default;box-shadow:inset 0 -3px 0 var(--acc)}
 .seg-b small{font-weight:700;opacity:.85;font-size:12px}
 .trajet-info{display:block;margin:4px 2px 0;color:var(--mut);font-size:12.5px;line-height:1.3}
+
+/* Fiche d'un membre : trait sur trois lignes courtes (retour de Fabien) */
+.rt .eqt .m-trait{margin:2px 0 3px;font-size:15px}
+.rt .eqt .m-plus,.rt .eqt .m-moins{margin:0 0 2px;font-size:13px;line-height:1.3;font-weight:700}
+.rt .eqt .m-plus{color:var(--ok,#3c7a2e)}
+.rt .eqt .m-moins{color:var(--bad,#a33)}
+.rt .eqt .m-plus .ico,.rt .eqt .m-moins .ico{width:1.05em;height:1.05em}
+.m-titre{margin-top:10px}
