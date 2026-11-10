@@ -262,6 +262,17 @@ Finitions des clans — phase 4 (2026-11-09) : classement des clans (`/api/clans
 7. Accueil : vitrine des fonctionnalités — FAIT (voir plus haut)
 8. Décisions du 2026-11-10 : PAS de troc entre joueurs pour l'instant (Fabien a peur que ça rende le jeu trop simple) ; la vérification côté serveur (anti-triche des scores, assauts, dépôts) se fera EN DERNIER. Images reçues le 2026-11-10 : la Forêt (`images/lieux/foret.webp`, `IMAGES_LIEUX`) et les 3 pièces du bastion (`images/piece-bastion-salle|tresor|cour.webp`, sources dans images/sources/). Pièces du bastion ajoutées à la fin de `PIECES` avec `si` (visible seulement si `dansUnClan()` : localStorage `survival_mon_clan`, mis à jour par `noterClan` à chaque lecture des clans) ; `pieceVisible`, `allerPiece` saute les pièces cachées, la barre des pièces ne montre que les visibles, retour au salon si on quitte son clan. Zones : grande salle (cheminée → Feu, blasons → Classement des clans, râtelier → La guerre, table et carte → Mon clan), salle du trésor (grille → Réserve, registre → Journal), cour fortifiée (tour, chevaux de frise → Défenses, porte → La guerre)
 
+Retours de Fabien du 2026-11-10 sur les clans (faits) : vitrine avec une carte « 🏰 Clans et guerres » et chiffres en dizaines (« Plus de 20 lieux », « Des zombies variés » : on en ajoutera) ; rejoindre un clan sans pseudo ouvre la saisie du pseudo puis revient à la liste (`data-retour="clans"`) ; une famille morte quitte automatiquement son clan au game over (`quitter` avec `raison:"mort"` : ligne « 💀 La famille de X est tombée au jour N » dans le journal, le clan passe à 4/5 ; un départ normal note aussi « 🚪 X a quitté le clan ») ; participation à la réserve : chaque membre a `depose` / `pris`, on ne peut prendre que 5 objets de plus que ce qu'on a déposé (`CREDIT_RESERVE`) en plus de la limite de 5 par jour ; affiché dans la réserve et dans la liste des membres (📦 +déposés / −pris).
+Rappel : en clan, chacun GARDE sa maison et sa partie (événements, expéditions, nuits) ; les 3 pièces du bastion s'ajoutent à sa maison.
+
+## Idées de Fabien du 2026-11-10 à faire ensuite (ordre proposé)
+1. Bots de test (créés et supprimés depuis l'admin : clans de bots, compléter son clan, guerre contre un clan de bots qui attaque tout seul)
+2. Succès liés aux clans et aux guerres
+3. Ligues de guerre (appariement par niveau, ligue du dessus / dessous si personne ; images Gemini des insignes)
+4. Équipements spéciaux de guerre à fabriquer (gilet pare-balles, casque… pour que les armes à feu ne gagnent pas tout)
+5. Camion du clan à améliorer (tourelle, pare-buffle, blindage : bonus de combat ; images Gemini)
+6. En dernier : vérification côté serveur (anti-triche)
+
 ## Feuille de route (ordre voulu par Fabien)
 1. Fondation : vrais objets nommés, inventaire partagé, équipement par membre, loot fini par lieu
 2. Fatigue et distance (remplacent « finir le jour »), craft, canettes énergisantes — FAIT

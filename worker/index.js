@@ -169,7 +169,7 @@ function vueGuerre(C, W, mon, id){
 // ---------- Bastion du clan (phase 2) : réserve commune, défenses, journal ----------
 // Objets qu'on peut déposer (empilables uniquement) et coût des défenses (payé avec la réserve)
 const DEPOSABLES = ["bidon", "bouteille", "conserve", "conserves", "riz", "pates", "biscuits", "barre", "ration", "poisson", "bandage", "trousse", "antibio", "balle", "cartouche", "planche", "ferraille", "clous", "ruban", "chiffon", "alcool", "pile", "jerrican", "canette", "epices", "huile", "farine"];
-const RETRAITS_JOUR = 5;
+const RETRAITS_JOUR = 5, CREDIT_RESERVE = 5; // on peut prendre au plus 5 objets de plus que ce qu'on a déposé
 const DEFENSES = {
   remparts: { max: 5, cout: (l) => ({ planche: 6 * (l + 1), ferraille: 2 * (l + 1) }) },
   mines:    { max: 10, cout: () => ({ ferraille: 2, clous: 2, alcool: 1 }) },
@@ -178,9 +178,10 @@ const DEFENSES = {
 function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || { remparts: 0, mines: 0, tours: 0 }; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 function noter(c, qui, txt){ c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
+function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
   const couts = {}; for(const k in DEFENSES) couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]);
-  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, RETRAITS_JOUR - pris), deposables: DEPOSABLES }; }
+  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
 
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
 // {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
@@ -195,7 +196,7 @@ async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAG
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree }; }
-function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", depose: m.depose || 0, pris: m.pris || 0, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -234,6 +235,9 @@ async function clansPost(request, env){
     }
     case "quitter": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon);
+      if(d.raison === "mort") noter(mon, "💀", "La famille de " + (pseudo || "?") + " est tombée" + (jour ? " au jour " + jour : "") + ". Le clan perd une famille.");
+      else noter(mon, "🚪", (pseudo || "?") + " a quitté le clan.");
       mon.membres = mon.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
       if(!mon.membres.length) delete C.clans[mon.id];
       else if(mon.chef === id) mon.chef = mon.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
@@ -246,7 +250,8 @@ async function clansPost(request, env){
     case "deposer": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       bastionDe(mon); const o = d.objets || {}, liste = [];
-      for(const k in o){ const n = Math.floor(+o[k]); if(DEPOSABLES.indexOf(k) < 0 || !(n >= 1 && n <= 500)) continue; mon.reserve[k] = (mon.reserve[k] || 0) + n; liste.push(n + " " + k); }
+      const moi = mon.membres.find((x) => x.id === id);
+      for(const k in o){ const n = Math.floor(+o[k]); if(DEPOSABLES.indexOf(k) < 0 || !(n >= 1 && n <= 500)) continue; mon.reserve[k] = (mon.reserve[k] || 0) + n; liste.push(n + " " + k); if(moi) moi.depose = (moi.depose || 0) + n; }
       if(!liste.length) return reponse({ erreur: "Rien à déposer." });
       noter(mon, pseudo || "?", "a déposé " + liste.join(", ")); await sauver();
       return reponse({ ok: true, bastion: etatBastion(mon, id) });
@@ -257,6 +262,8 @@ async function clansPost(request, env){
       const r = mon.retraits[id] && mon.retraits[id].jour === aujourdhui() ? mon.retraits[id] : { jour: aujourdhui(), n: 0 };
       if(r.n + n > RETRAITS_JOUR) return reponse({ erreur: "Tu as déjà pris " + r.n + " objets aujourd’hui (" + RETRAITS_JOUR + " au maximum par jour)." });
       if(!(mon.reserve[k] >= n)) return reponse({ erreur: "Il n’y en a plus assez dans la réserve." });
+      if(partDe(mon, id).credit < n) return reponse({ erreur: "Tu as déjà pris " + CREDIT_RESERVE + " objets de plus que ce que tu as déposé : dépose d’abord quelque chose dans la réserve." });
+      const moiR = mon.membres.find((x) => x.id === id); if(moiR) moiR.pris = (moiR.pris || 0) + n;
       mon.reserve[k] -= n; if(!mon.reserve[k]) delete mon.reserve[k];
       r.n += n; mon.retraits[id] = r; noter(mon, pseudo || "?", "a pris " + n + " " + k); await sauver();
       return reponse({ ok: true, objet: k, n, bastion: etatBastion(mon, id) });

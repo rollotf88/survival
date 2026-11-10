@@ -400,7 +400,7 @@ function adresseClans(){ return adresseClassement().replace("/api/classement", "
 var etatClans = null, choixBlason = 1;
 function jourPartie(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.cumule ? G.day : (typeof enCours !== "undefined" && enCours ? enCours.day : 0); }
 function appelClans(corps){
-  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = jourPartie(); corps.cadre = cadreActif();
+  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif();
   if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
   return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
 }
@@ -416,7 +416,7 @@ function afficherClans(msg){
     var c = d.monClan;
     h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small></span></div>';
     h += '<div class="clan-membres">' + c.membresListe.map(function(m){
-      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + '</small>'
+      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
     h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
@@ -451,7 +451,10 @@ document.addEventListener("click", function(e){
     var n = ($("nomclan").value || "").trim(); if(n.length < 3){ $("msgclan").textContent = "Le nom doit faire au moins 3 lettres."; return; }
     appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
   }
-  else if(a === "clanrejoindre") appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });
+  else if(a === "clanrejoindre"){
+    if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
+    appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });
+  }
   else if(a === "clanquitter"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Vraiment quitter ?"; return; } appelClans({ action:"quitter" }).then(function(d){ reponse(d, "Tu as quitté le clan."); }); }
   else if(a === "clanexclure"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Confirmer"; return; } appelClans({ action:"exclure", cible:id }).then(function(d){ reponse(d, "Membre exclu."); }); }
 });
@@ -483,7 +486,8 @@ function afficherBastion(){
   var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
   if(ongletBastion === "reserve"){
     var ids = Object.keys(B.reserve);
-    h += '<p class="sub">La réserve commune du clan. Tu peux y prendre <b>' + B.retraitsRestants + ' objet' + (B.retraitsRestants > 1 ? "s" : "") + '</b> encore aujourd’hui.</p>';
+    var P2 = B.part || { depose:0, pris:0 };
+    h += '<p class="sub">La réserve commune du clan. Ta participation : <b>+' + P2.depose + '</b> déposés, <b>−' + P2.pris + '</b> pris. On peut prendre au plus 5 objets de plus que ce qu’on a déposé, et 5 par jour : tu peux encore en prendre <b>' + B.retraitsRestants + '</b>.</p>';
     h += ids.length ? etageres(ids.map(function(k){ return caseObjet(k, { act:enJeu && B.retraitsRestants ? "bastprendre" : "aucun", cle:k, n:B.reserve[k], fixe:!(enJeu && B.retraitsRestants) }); }), 5) : '<p>La réserve est vide : déposez des vivres et des matériaux !</p>';
     if(enJeu && B.retraitsRestants && ids.length) h += '<p class="sub">Touche un objet de la réserve pour en prendre 1.</p>';
     var mes = B.deposables.filter(function(k){ return OBJETS[k] && compter(k) > 0; });

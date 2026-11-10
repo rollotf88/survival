@@ -731,6 +731,8 @@ function finiSiMorts(){ if(!vivants().length){ over(); return true; } return fal
 function over(){
   effacerSauvegarde();
   if(typeof cumulerPartie === "function"){ cumulerPartie(); envoyerMonde(true, { jour:G.day - 1, score:G.score }); }
+  // La famille est tombée : elle quitte son clan (le clan passe à 4/5, une ligne dans son journal)
+  if(typeof dansUnClan === "function" && dansUnClan()){ appelClans({ action:"quitter", raison:"mort", jour:G.day - 1 }).then(function(){ noterClan(false); noterTours(0); }).catch(function(){}); }
   var d = G.day - 1, nouveau = G.score > RECORD, jour = "";
   if(nouveau){ RECORD = G.score; try{ localStorage.setItem("survival_record", RECORD); }catch(e){} }
   var auto = false;
@@ -886,12 +888,13 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 /* ---------- Vitrine : ce qui attend le joueur (cartes illustrées qui défilent toutes seules) ---------- */
 var VITRINE = [
   ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
-  ["images/lieux/super.webp", "🗺️ 21 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
-  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… 7 sortes de zombies, chacun son piège."],
+  ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
+  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège."],
   ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
   ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits : costaud, soigneur, cuisinier… La mort est définitive."],
   ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
+  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 100 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, et guerres de 3 jours contre d’autres clans."],
   ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
   ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des succès, et un code pour inviter tes amis."]
 ];
@@ -985,6 +988,7 @@ function validerSaisie(k){
     // Pseudo demandé par une autre fenêtre (ex. fonder un clan) : on y revient au lieu de tout fermer
     var retour = apresPseudo; apresPseudo = null;
     if(retour === "clan" && typeof openCreerClan === "function"){ render(); openCreerClan(); return; }
+    if(retour === "clans" && typeof openClans === "function"){ render(); openClans("👤 Pseudo enregistré : tu peux rejoindre un clan."); return; }
     hide(); render(); return;
   }
   k = +k; v = v.slice(0, 10) || FAMILLE[k].nom;
