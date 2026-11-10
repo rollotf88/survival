@@ -632,6 +632,14 @@ ICONES_SVG.tarte = '<path d="M4 28 L8 38 Q24 44 40 38 L44 28Z" fill="#c98a3a"/><
   '<circle cx="18" cy="25" r="2" fill="#7b5ab0" stroke="none"/><circle cx="26" cy="27" r="2" fill="' + COUL.rouge + '" stroke="none"/><circle cx="30" cy="24" r="1.8" fill="#7b5ab0" stroke="none"/><circle cx="22" cy="23" r="1.6" fill="' + COUL.rouge + '" stroke="none"/>' +
   '<path d="M12 22 L36 30 M12 30 L36 22" stroke="#e3a85a" stroke-width="2.4"/>';
 
+/* ---------- Équipement de guerre (2026-11-10) ---------- */
+ICONES_SVG.gilet = '<path d="M14 6 L20 6 Q24 12 28 6 L34 6 L42 14 L38 22 L36 20 V42 H12 V20 L10 22 L6 14Z" fill="#5b6b4a"/>' +
+  '<path d="M16 22 H32 V38 H16Z" fill="#46553a"/><path d="M18 26 H30 M18 31 H30" stroke="#2f3a26" stroke-width="2"/><path d="M20 6 Q24 12 28 6" fill="none" stroke-width="2"/>';
+ICONES_SVG.casque = '<path d="M7 30 Q7 10 24 10 Q41 10 41 30Z" fill="#c9a227"/><path d="M4 30 H44 Q44 35 39 35 H9 Q4 35 4 30Z" fill="#a8851c"/>' +
+  '<path d="M24 11 V29" stroke="#8a6c14" stroke-width="2"/><rect x="18" y="16" width="12" height="7" rx="2" fill="' + COUL.blanc + '"/><path d="M24 17 V22 M21.5 19.5 H26.5" stroke="' + COUL.rouge + '" stroke-width="2"/>';
+ICONES_SVG.bouclier = '<rect x="10" y="4" width="28" height="40" rx="6" fill="#9fb4c2"/><rect x="14" y="9" width="20" height="10" rx="2" fill="#d9e6ee"/>' +
+  '<path d="M14 26 H34 M14 31 H34 M14 36 H34" stroke="#6f8796" stroke-width="2"/><path d="M24 22 V40" stroke="#6f8796" stroke-width="2"/>';
+
 function svgIcone(id){
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
 }

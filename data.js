@@ -292,6 +292,10 @@ var OBJETS = {
   briquet:    { nom:"Briquet", pl:"Briquets", g:"m", icone:"🔥", cat:"outil", place:1, emplacement:"outil", lumiere:1, allume:true, desc:"Lueur faible dans le noir, permet d’allumer le feu de cheminée" },
   outils:     { nom:"Boîte à outils", pl:"Boîtes à outils", g:"f", icone:"🧰", cat:"outil", place:2, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées sans bruit" },
   canne:      { nom:"Canne à pêche", pl:"Cannes à pêche", g:"f", icone:"🎣", cat:"outil", place:2, emplacement:"outil", peche:true, sol:8, desc:"Pour pêcher à l’étang (s’use à chaque sortie, 8 fois)" },
+  // Équipement de guerre (2026-11-10) : servent seulement pendant les assauts des guerres de clans, portés tout seuls par l'équipe ; s'usent d'un cran par assaut
+  gilet:      { nom:"Gilet pare-balles", pl:"Gilets pare-balles", g:"m", icone:"🦺", cat:"guerre", place:2, sol:3, guerre:"gilet", desc:"Guerre de clans : retire 3 dégâts à chaque coup reçu pendant un assaut (3 assauts)" },
+  casque:     { nom:"Casque de fortune", pl:"Casques de fortune", g:"m", icone:"⛑️", cat:"guerre", place:1, sol:3, guerre:"casque", desc:"Guerre de clans : les mines et les explosions font moitié moins mal (3 assauts)" },
+  bouclier:   { nom:"Bouclier anti-émeute", pl:"Boucliers anti-émeute", g:"m", icone:"🛡️", cat:"guerre", place:2, sol:4, guerre:"bouclier", desc:"Guerre de clans : « Se protéger » divise les dégâts par 3 au lieu de 2 (4 assauts)" },
   pdb:        { nom:"Pied-de-biche", pl:"Pieds-de-biche", g:"m", icone:"⛏️", cat:"outil", place:1, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées" },
   // Sacs (emplacement « sac ») : places de butin en plus
   sacoche:    { nom:"Sacoche", pl:"Sacoches", g:"f", icone:"👝", cat:"sac", place:1, emplacement:"sac", capacite:2, desc:"+2 places pour rapporter du butin" },
@@ -350,7 +354,11 @@ var RECETTES = [
   { id:"sacoche", ingredients:{ chiffon:3, ruban:1 } },
   { id:"bache",   ingredients:{ chiffon:3, ruban:1, planche:1 } },
   { id:"collet",  ingredients:{ ferraille:1, ruban:1 } },
-  { id:"canne",   ingredients:{ planche:1, ruban:1, clous:1 } }
+  { id:"canne",   ingredients:{ planche:1, ruban:1, clous:1 } },
+  // Équipement de guerre (ajoutés à la fin pour ne pas décaler les recettes)
+  { id:"gilet",    ingredients:{ ferraille:3, chiffon:2, ruban:1 }, besoin:"outils" },
+  { id:"casque",   ingredients:{ ferraille:2, ruban:1 } },
+  { id:"bouclier", ingredients:{ planche:2, ferraille:2, clous:2 }, besoin:"outils" }
 ];
 var REPARATION = { ferraille:1, ruban:1 }; // coût d'une réparation d'arme
 /* ---------- Cuisine : recettes (« eau » = des rations d'eau, pas un objet) ----------
@@ -375,7 +383,7 @@ var DEMONTAGE = {
 /* Ordre et titres des catégories dans l'écran du stock */
 var CATEGORIES = [
   ["eau","Eau"],["nour","Nourriture"],["soin","Soins"],["energie","Énergie"],["arme","Armes"],["munition","Munitions"],
-  ["outil","Outils et éclairage"],["sac","Sacs"],["voiture","Voiture"],["defense","Défense"],["animal","Animaux"],["installation","Installations"],["confort","Confort"],["materiau","Matériaux"],["ingredient","Ingrédients (cuisine)"],["plat","Plats cuisinés"]
+  ["outil","Outils et éclairage"],["sac","Sacs"],["voiture","Voiture"],["defense","Défense"],["animal","Animaux"],["installation","Installations"],["confort","Confort"],["materiau","Matériaux"],["ingredient","Ingrédients (cuisine)"],["plat","Plats cuisinés"],["guerre","Équipement de guerre"]
 ];
 
 /* ---------- Maisons de départ : ce qu'on peut mettre dans le sac ---------- */
@@ -555,6 +563,9 @@ var RENCONTRES = [
     ] } } }
 ];
 // Ingrédients de cuisine ajoutés au butin des lieux (2026-11-09)
+// Équipement de guerre à trouver (2026-11-10)
+var GUERRE_LIEUX = { "Commissariat":{ gilet:1, casque:1 }, "Base militaire":{ gilet:2, casque:1, bouclier:1 }, "Caserne des pompiers":{ casque:1 } };
+LIEUX.forEach(function(L){ var a = GUERRE_LIEUX[L.nom]; if(a) for(var k in a) L.butin[k] = (L.butin[k] || 0) + a[k]; });
 var INGREDIENTS_LIEUX = {
   "Maison voisine":{ epices:1, huile:1 }, "Rue des pavillons":{ epices:2, huile:1, herbes:1 }, "Supermarché":{ epices:3, huile:3, farine:2 },
   "Village voisin":{ epices:2, huile:2, farine:3, herbes:2, baies:1 }, "Entrepôt logistique":{ epices:2, huile:2, farine:3 }, "Centre commercial":{ huile:2, farine:1 },

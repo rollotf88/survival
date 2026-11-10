@@ -210,7 +210,7 @@ function vueGuerre(C, W, mon, id){
   const j = Math.min(DUREE_GUERRE, jourGuerre(W)), finJour = W.debut + j * JOUR_MS;
   const dejaMoi = W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false);
   return { id: W.id, jour: j, fini: !!W.fini, gagnant: W.gagnant === mon.id ? "nous" : W.gagnant ? "eux" : null, finJour, fin: W.debut + DUREE_GUERRE * JOUR_MS,
-    nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp], trophees: mon.trophees || 0, ligue: ligueDe(mon.trophees) }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0, trophees: adv.trophees || 0, ligue: ligueDe(adv.trophees) },
+    nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp], trophees: mon.trophees || 0, ligue: ligueDe(mon.trophees) }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0, armurerie: (adv.def || {}).armurerie || 0, trophees: adv.trophees || 0, ligue: ligueDe(adv.trophees) },
     gainTrophees: W.trophees ? W.trophees[camp] : null,
     cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
     dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ t: s.t || 0, jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
@@ -223,15 +223,16 @@ const RETRAITS_JOUR = 5, CREDIT_RESERVE = 5; // on peut prendre au plus 5 objets
 const DEFENSES = {
   remparts: { max: 5, cout: (l) => ({ planche: 6 * (l + 1), ferraille: 2 * (l + 1) }) },
   mines:    { max: 10, cout: () => ({ ferraille: 2, clous: 2, alcool: 1 }) },
-  tours:    { max: 3, cout: (l) => ({ planche: 8 * (l + 1), clous: 4 * (l + 1) }) }
+  tours:    { max: 3, cout: (l) => ({ planche: 8 * (l + 1), clous: 4 * (l + 1) }) },
+  armurerie:{ max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), ruban: 2 * (l + 1), chiffon: 2 * (l + 1) }) }
 };
-function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || { remparts: 0, mines: 0, tours: 0 }; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
+function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(const k in DEFENSES) c.def[k] = c.def[k] || 0; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 function noter(c, qui, txt){ c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
-  const couts = {}; for(const k in DEFENSES) couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]);
-  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
+  const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
+  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
 
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
 // {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
@@ -383,7 +384,7 @@ async function clansPost(request, env){
       W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
       if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
       await sauver();
-      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, mines });
+      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines });
     }
     case "finAssaut": {
       if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
@@ -481,7 +482,7 @@ async function adminPost(request, env){
         const membres = []; for(let j = 0; j < MAX_CLAN; j++){ const b = nouveauBot(); membres.push(b); C.parJoueur[b.id] = cid; }
         C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, recherche: true, trophees: Math.max(0, Math.floor(+d.trophees) >= 0 && d.trophees !== undefined && d.trophees !== "" ? Math.floor(+d.trophees) : hasardEntier(0, 300)),
           reserve: { planche: hasardEntier(20, 60), conserve: hasardEntier(5, 20), bidon: hasardEntier(1, 5), ferraille: hasardEntier(4, 15), clous: hasardEntier(4, 15), balle: hasardEntier(0, 20) },
-          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2) }, journal: [], retraits: {} };
+          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2), armurerie: hasardEntier(0, 2) }, journal: [], retraits: {} };
         C.file.push(cid); noms.push(nom);
       }
       await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));

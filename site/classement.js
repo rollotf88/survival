@@ -470,6 +470,7 @@ function noterClan(oui){ if(oui) noterStatClan("rejoint", 1, true); var avant = 
 var DEF_BASTION = {
   remparts: { nom:"Remparts", icone:"🧱", effet:function(l){ return "Protègent le bastion pendant les guerres (niveau " + l + " / 5)."; } },
   mines:    { nom:"Mines", icone:"💣", effet:function(l){ return (l ? l + " mine" + (l > 1 ? "s" : "") + " posée" + (l > 1 ? "s" : "") : "Aucune mine posée") + " : chacune blesse un assaillant pendant une guerre, puis disparaît."; } },
+  armurerie:{ nom:"Armurerie", icone:"🦺", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + 3 * l + " dégâts et chaque coup " + l + " (seuls les coups à la tête passent)." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
   tours:    { nom:"Tours de guet", icone:"🗼", effet:function(l){ return "+" + l + " de défense de nuit pour chaque famille du clan (niveau " + l + " / 3)."; } }
 };
 var etatBastion = null, ongletBastion = "reserve", msgBastion = "";
@@ -562,9 +563,11 @@ function afficherGuerre(msg){
 function equipeAssaut(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ var x = G.m[i]; return x.al && x.en >= BAL.energieAssaut && x.hp > 25; })
   .sort(function(a, b){ return (G.m[b].hp + G.m[b].en) - (G.m[a].hp + G.m[a].en); }).slice(0, BAL.membresParExpedition); }
 function openAssaut(cible){
-  var eq = equipeAssaut(), c = etatGuerre.guerre.cibles.find(function(x){ return x.id === cible; }) || {};
+  var eq = equipeAssaut(), c = etatGuerre.guerre.cibles.find(function(x){ return x.id === cible; }) || {}, eg = eq.length ? equipGuerrePour(eq) : {};
+  var porte = eq.map(function(j){ return eg[j] ? G.m[j].nom + " : " + eg[j].map(function(o){ return OBJETS[o.id].icone; }).join(" ") : ""; }).filter(Boolean);
   if(!eq.length){ afficherGuerre("❌ Personne n’a assez d’énergie (" + BAL.energieAssaut + " ⚡) ni de vie pour partir à l’assaut. Reviens après une nuit de repos."); return; }
   show('<h2>⚔️ Assaut sur ' + echapper(c.pseudo || "?") + '</h2><p>Partent à l’assaut : <b>' + liste(eq.map(function(i){ return G.m[i].nom; })) + '</b> (−' + BAL.energieAssaut + ' ⚡ chacun). Ils affronteront les défenseurs du bastion adverse, ses mines et ses remparts.</p>'
+    + '<p class="sub">' + (porte.length ? "🎽 Équipement de guerre porté : " + porte.join(" · ") : "🎽 Aucun équipement de guerre (gilet, casque, bouclier) : fabrique-le à l’atelier.") + (etatGuerre.guerre.eux.armurerie ? " · 🦺 Les défenseurs ont une armurerie niveau " + etatGuerre.guerre.eux.armurerie + " : vise la tête !" : "") + '</p>'
     + '<p class="sub">⚠️ Les blessures et les morts sont réelles. Tu peux fuir pendant le combat, mais sans étoile.</p>'
     + '<div class="row"><button class="btn" data-act="guerrego" data-id="' + echapper(cible) + '">⚔️ À l’assaut !</button><button class="btn alt" data-act="guerre">Retour</button></div>');
 }

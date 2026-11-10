@@ -500,7 +500,7 @@ var FAMILLES_STOCK = [
   ["tout", "📦", "Tout", null],
   ["vivres", "🥫", "Vivres", ["eau", "nour", "energie", "plat", "ingredient"]],
   ["soins", "🩹", "Soins", ["soin"]],
-  ["combat", "🗡️", "Combat", ["arme", "munition", "defense"]],
+  ["combat", "🗡️", "Combat", ["arme", "munition", "defense", "guerre"]],
   ["outils", "🔦", "Outils", ["outil", "sac", "voiture", "installation"]],
   ["materiaux", "🪵", "Matériaux", ["materiau"]],
   ["divers", "🧸", "Divers", ["confort", "animal"]]

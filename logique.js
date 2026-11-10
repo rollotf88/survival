@@ -655,6 +655,16 @@ function nomLieuCombat(){ return G.exp.nomLieu || LIEUX[G.exp.lieu].nom; }
    p = { assaut, clan, cible, jourCible, remparts, mines } (donné par le serveur) ; equipe = index des membres qui partent.
    Défenseurs : 2 + remparts / 2 (au plus 4), plus coriaces avec les remparts et l'ancienneté de la famille adverse.
    Les mines blessent l'équipe avant le combat. */
+// Qui porte quoi pendant un assaut : chaque membre de l'équipe prend un objet de chaque sorte s'il y en a au stock
+function equipGuerrePour(equipe){
+  var r = {};
+  ["gilet", "casque", "bouclier"].forEach(function(id){
+    var dispo = G.stock.o.filter(function(o){ return o.id === id; });
+    equipe.forEach(function(j, k){ if(dispo[k]) (r[j] = r[j] || []).push({ id:id, uid:dispo[k].uid }); });
+  });
+  return r;
+}
+function porteGuerre(x, id){ var g = G.exp && G.exp.equipGuerre && G.exp.equipGuerre[G.m.indexOf(x)]; return !!(g && g.some(function(o){ return o.id === id; })); }
 function creerAssaut(p, equipe){
   G.exp = { guerre:true, assaut:p.assaut, nomLieu:"le bastion « " + p.clan + " »", cible:p.cible, lieu:0, equipe:equipe.slice(), notes:[], mult:1, d:0, voiture:false };
   var T = ZOMBIES.find(function(t){ return t.id === "defenseur"; }), n = Math.min(4, 2 + Math.floor((p.remparts || 0) / 2));
@@ -662,12 +672,16 @@ function creerAssaut(p, equipe){
   for(var k = 0; k < n; k++){
     var z = nouveauZombie(T); z.nom = (k ? "Garde " + (k + 1) : p.cible).slice(0, 12);
     z.pv = z.pvMax = T.pv + 3 * (p.remparts || 0) + 2 * force; z.degats = [T.degats[0] + force, T.degats[1] + force + Math.floor((p.remparts || 0) / 2)];
+    if(p.armurerie) z.armurerie = Math.min(3, p.armurerie); // armurerie du bastion adverse : défenseurs en gilet (surtout contre les tirs)
     zs.push(z);
   }
   var pv0 = {}; equipeCombat().forEach(function(x){ pv0[G.m.indexOf(x)] = x.hp; });
   G.combat = { zombies:zs, tour:1, journal:[], resume:[], fin:null, pv0:pv0, abattus:0 };
   var J = [];
-  for(var m = 0; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(4, 8); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV) !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
+  G.exp.equipGuerre = equipGuerrePour(equipe);
+  equipe.forEach(function(j){ var g = G.exp.equipGuerre[j]; if(g) J.push(["g2", g.map(function(o){ return OBJETS[o.id].icone; }).join(" ") + " " + G.m[j].nom + " porte : " + liste(g.map(function(o){ return OBJETS[o.id].nom.toLowerCase(); })) + "."]); });
+  for(var m = 0; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(4, 8); if(porteGuerre(x, "casque")) dg = Math.ceil(dg / 2); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV)" + (porteGuerre(x, "casque") ? ", son casque l’a protégé" : "") + " !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
+  if(p.armurerie) J.push(["", "🦺 Les défenseurs portent des gilets (armurerie niveau " + p.armurerie + ") : chaque tir perd " + 3 * Math.min(3, p.armurerie) + " dégâts, chaque coup " + Math.min(3, p.armurerie) + ", sauf à la tête."]);
   if(p.remparts) J.push(["", "🧱 Les remparts (niveau " + p.remparts + ") rendent les défenseurs plus coriaces."]);
   G.combat.journal = J; G.combat.resume = J.filter(function(l){ return l[0] === "mort"; });
   if(!equipeCombat().length){ G.combat.fin = "defaite"; G.combat.resume.push(["b2", "💀 L’équipe n’a même pas atteint " + G.exp.nomLieu + "."]); }
@@ -680,7 +694,10 @@ function bilanAssaut(){
   var victoire = C.fin === "victoire", morts = team.filter(function(x){ return !x.al; }).length;
   var etoiles = victoire ? 1 + (morts ? 0 : 1) + (C.tour - 1 <= 3 ? 1 : 0) : 0;
   team.forEach(function(x){ if(x.al) x.en = Math.max(0, x.en - BAL.energieAssaut); });
-  return { victoire:victoire, etoiles:etoiles, assaut:E.assaut, nom:E.nomLieu, resume:C.resume.slice() };
+  // L'équipement de guerre porté s'use d'un cran
+  var uses = [];
+  for(var j in (E.equipGuerre || {})) E.equipGuerre[j].forEach(function(o){ var inst = G.stock.o.find(function(i){ return i.uid === o.uid; }); if(!inst) return; inst.sol--; if(inst.sol <= 0){ retirerInstance(inst.uid); uses.push(["b2", OBJETS[o.id].icone + " " + OBJETS[o.id].nom + " est hors d’usage."]); } });
+  return { victoire:victoire, etoiles:etoiles, assaut:E.assaut, nom:E.nomLieu, resume:C.resume.concat(uses) };
 }
 function finirAssaut(){ G.exp = null; G.combat = null; }
 function zombiesDebout(){ return G.combat.zombies.filter(function(z){ return z.pv > 0; }); }
@@ -722,7 +739,7 @@ function zombieTombe(z, protege, J){
   var T = typeZombie(z); if(!T.explose) return;
   J.push(["b2", "💥 " + z.nom + " explose en tombant !"]);
   equipeCombat().forEach(function(x){
-    var dg = R(T.explose[0], T.explose[1]); if(protege[G.m.indexOf(x)]) dg = Math.round(dg * BAL.combat.protection);
+    var dg = R(T.explose[0], T.explose[1]); if(protege[G.m.indexOf(x)]) dg = Math.round(dg * BAL.combat.protection); if(G.exp.guerre && porteGuerre(x, "casque")) dg = Math.ceil(dg / 2);
     J.push(["b2", "🤢 " + x.nom + " est éclaboussé" + (estFeminin(x) ? "e" : "") + " (−" + dg + " PV)."]);
     blesser(x, dg, J, "tué par l’explosion d’un gonflé (" + nomLieuCombat() + ")");
   });
@@ -740,7 +757,8 @@ function actionZombie(z, protege, J){
   var x = z.int && G.m[z.int.c] && eq.indexOf(G.m[z.int.c]) >= 0 ? G.m[z.int.c] : eq[R(0, eq.length - 1)];
   for(var k = 0; k < (T.coups || 1) && x.al; k++){
     var dg = R(z.degats[0], z.degats[1]);
-    if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : C.protection)));
+    if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? 1 / 3 : C.protection)));
+    if(G.exp.guerre && porteGuerre(x, "gilet")) dg = Math.max(1, dg - 3);
     J.push(["b2", iconeZombie(z) + " " + z.nom + " frappe " + x.nom + " (−" + dg + " PV)."]);
     blesser(x, dg, J, "tué par un " + minus(z.nom) + " (" + lieu + ")");
   }
@@ -791,9 +809,10 @@ function jouerTour(choix){
       if(hasard() < ch){ dg = dg * B.teteMult; z.pv = Math.max(0, z.pv - dg); J.push(["g2", "🎯 " + x.nom + (r.tir ? " " + r.comment : "") + " : coup à la tête ! " + z.nom + " −" + dg + (z.pv ? "" : ", à terre !")]); }
       else { J.push(["b2", "🎯 " + x.nom + (r.tir ? " " + r.comment : "") + " vise la tête… et rate " + z.nom + "."]); dg = 0; }
     } else {
-      if(T.armure) dg = Math.max(1, dg - T.armure);
+      var arm = (T.armure || 0) + (z.armurerie || 0) * (r.tir ? 3 : 1);
+      if(arm) dg = Math.max(1, dg - arm);
       z.pv = Math.max(0, z.pv - dg);
-      J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (T.armure ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);
+      J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (arm ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);
     }
     if(dg && !z.pv) zombieTombe(z, protege, J);
     userArme(x, J);
@@ -824,7 +843,7 @@ function tourAuto(){
       var dangereux = zs.filter(function(z){ return z.int && G.m[z.int.c] === x && !typeZombie(z).lourd; })[0];
       ch[j] = dangereux ? { a:"pousser", cible:G.combat.zombies.indexOf(dangereux) } : { a:"proteger" }; return;
     }
-    ch[j] = { a:typeZombie(vise).armure ? "tete" : "frapper", cible:cible };
+    ch[j] = { a:typeZombie(vise).armure || (vise.armurerie || 0) >= 2 ? "tete" : "frapper", cible:cible };
   });
   return jouerTour(ch);
 }
