@@ -185,7 +185,11 @@ function openLoc(){
   var ouvre = porte(function(o){ return o.ouvre; }) ? "🔓 de quoi ouvrir" : "⚠️ porte à forcer";
   h += '<p class="sub">Équipe : ' + team.map(function(x){ return iconeMembre(x) + " " + x.nom + " ⚡" + x.en; }).join(", ") + ' · ⚔️ force ' + forceEquipe(team) + ' · 🎒 ' + placesEquipe(team) + ' places</p>';
   var radio = possede(function(o){ return o.radio; });
-  if(voitureReparee()) h += '<button class="loc toggle' + (enVoiture ? " on" : "") + '" data-act="envoiture"><b>' + (enVoiture ? "🚗 En voiture" : "🚶 À pied") + '</b> <span class="pill">⛽ ' + G.voiture.essence + ' L</span><small>' + (enVoiture ? "Le trajet ne fatigue pas, +" + VOITURE.coffre + " places dans le coffre, mais ça consomme de l’essence et le moteur fait du bruit. Touche pour y aller à pied." : "Touche pour prendre la voiture.") + '</small></button>';
+  // À pied / En voiture : un interrupteur à deux positions (retour de Fabien : le gros bloc orange était trop voyant)
+  if(voitureReparee()) h += '<div class="trajet"><div class="seg">'
+    + '<button class="seg-b' + (enVoiture ? "" : " on") + '" data-act="envoiture"' + (enVoiture ? "" : " disabled") + ' aria-pressed="' + !enVoiture + '">🚶 À pied</button>'
+    + '<button class="seg-b' + (enVoiture ? " on" : "") + '" data-act="envoiture"' + (enVoiture ? " disabled" : "") + ' aria-pressed="' + enVoiture + '">🚗 En voiture <small>⛽ ' + G.voiture.essence + ' L</small></button></div>'
+    + '<small class="trajet-info">' + (enVoiture ? "Trajet sans fatigue et +" + VOITURE.coffre + " places dans le coffre, mais l’essence baisse et le moteur fait du bruit." : "Le trajet fatigue l’équipe. La voiture mène aussi aux zones éloignées.") + '</small></div>';
   // Une carte illustrée par lieu, 2 par ligne : image, ce qu'il reste, danger, énergie, et les conditions en petites icônes
   var cartes = [];
   LIEUX.forEach(function(L, i){
