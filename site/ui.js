@@ -810,6 +810,7 @@ setInterval(tick, 250);
    Le panneau de droite montre un tableau de bord (chapitre, refuge, stock, mission) ; les fenêtres s'y ouvrent
    à la place, sans cacher la pièce. Le combat garde sa grande fenêtre au milieu. */
 var LARGEUR_PANNEAU_PC = 464; // 440 de panneau + les marges (même valeur que dans style.css)
+var LARGEUR_BOITE_PC = 1500;  // sur très grand écran, le jeu reste dans un cadre centré de 1500 px (style.css aussi)
 function modePC(){ return !!(window.matchMedia && matchMedia("(min-width: 1100px) and (min-height: 620px)").matches) && G && G.ph === "game"; }
 function tableauPC(){
   var t = $("tableauPC");

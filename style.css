@@ -953,7 +953,7 @@ button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}
    GRAND ÉCRAN (PC, body.pc : 1100 px de large et 620 de haut au moins, pendant une partie)
    Famille à gauche, pièce au centre, panneau à droite (tableau de bord ou fenêtre ouverte)
    ===================================================================== */
-body.pc #app{max-width:none;width:calc(100vw - 464px);margin:0;padding:12px 18px;box-sizing:border-box}
+body.pc #app{max-width:none;width:calc(min(100vw, 1500px) - 464px);margin:0 0 0 calc((100vw - min(100vw, 1500px)) / 2);padding:12px 18px 12px 12px;box-sizing:border-box}
 body.pc .scene .grid2{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 body.pc .scene > .row.acts .btn{font-size:16px;padding:11px 14px}
 /* Panneau de droite : tableau de bord */
@@ -970,3 +970,9 @@ body.pc #modal:has(.sheet.large){inset:0;width:auto;background:rgba(0,0,0,.55);a
 body.pc #modal .sheet.large{height:auto;max-height:100%;max-width:min(1000px,96vw);border-radius:18px}
 #tableauPC{overflow-x:hidden}
 #tableauPC .lj,#tableauPC .lj-txt{min-width:0;white-space:normal;overflow-wrap:anywhere}
+/* Grand écran « boxed » (2026-11-10) : la scène est une boîte encadrée, le jeu reste dans un cadre de 1500 px centré */
+body.pc{background:#1b130d radial-gradient(ellipse at 50% 40%,#3a2819 0%,#1b130d 75%) fixed}
+#fondScene{position:fixed;z-index:0;border-radius:14px;background-repeat:no-repeat;box-shadow:0 0 0 3px var(--bois),0 10px 26px rgba(0,0,0,.55);pointer-events:none}
+body.pc #fondScene::after{content:"";position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
+body.pc #tableauPC{right:calc((100vw - min(100vw, 1500px)) / 2 + 12px)}
+body.pc #modal:not(:has(.sheet.large)){right:calc((100vw - min(100vw, 1500px)) / 2 + 12px)}

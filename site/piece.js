@@ -114,9 +114,12 @@ function allerPiece(k){
   if(typeof son === "function") son("pas");
   placerPiece();
 }
-function placerDecor(dx, dy, s){
+function placerDecor(dx, dy, s, boite){
   var d = $("decor"); if(!d){ d = document.createElement("div"); d.id = "decor"; document.body.appendChild(d); }
   if(s === null){ d.innerHTML = ""; return; }
+  // Sur PC, les objets posés sont coupés au bord de la boîte de la scène
+  if(boite){ d.style.cssText = "left:" + boite.x + "px;top:" + boite.y + "px;width:" + boite.l + "px;height:" + boite.h + "px;right:auto;bottom:auto;border-radius:12px"; dx -= boite.x; dy -= boite.y; }
+  else d.style.cssText = "";
   d.innerHTML = PIECES[pieceIdx].decor.filter(function(e){ return e[5](); }).map(function(e){
     return '<img src="' + e[0] + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
   }).join("");
@@ -127,26 +130,37 @@ function placerPiece(){
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
   var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
   var corps = document.body.style;
-  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; }
+  if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; if($("fondScene")) $("fondScene").style.display = "none"; placerDecor(0, 0, null); return; }
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
-  // Grand écran (body.pc) : la pièce s'arrête au panneau de droite
+  // Grand écran (body.pc) : le jeu tient dans un cadre centré de 1500 px au plus ; la pièce s'arrête au panneau de droite
   var pc = document.body.classList.contains("pc"), gx = 0, dxMax = window.innerWidth;
-  if(pc) dxMax = window.innerWidth - LARGEUR_PANNEAU_PC;
+  if(pc){ var boite = Math.min(window.innerWidth, LARGEUR_BOITE_PC); gx = (window.innerWidth - boite) / 2 + 12; dxMax = gx - 12 + boite - LARGEUR_PANNEAU_PC; }
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
   if(!pieceVisible(pieceIdx)) pieceIdx = 0; // on a quitté son clan : retour au salon
-  var vw = dxMax - gx, P = PIECES[pieceIdx], F = P.cadre;
-  corps.backgroundImage = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
+  var vw = dxMax - gx, P = PIECES[pieceIdx], F = P.cadre, urlImg = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
+  // Sur PC, la pièce est dans une boîte encadrée qu'elle remplit toujours (quelle que soit la largeur de l'image)
+  if(pc) s = Math.max(s, vw / P.l, (fin - haut) / P.h);
   var dx = gx + (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
   // L'image est collée en haut de l'espace libre (le plafond remplit le haut), tant que la partie utile reste visible
   var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
-  corps.backgroundSize = (P.l * s) + "px auto";
-  corps.backgroundPosition = dx + "px " + dy + "px";
-  placerDecor(dx, dy, s);
+  var fs = $("fondScene");
+  if(pc){
+    dx = Math.min(gx, Math.max(dxMax - P.l * s, dx)); dy = Math.min(haut, Math.max(fin - P.h * s, dy)); // pas de bord vide dans la boîte
+    corps.backgroundImage = corps.backgroundSize = corps.backgroundPosition = "";
+    if(!fs){ fs = document.createElement("div"); fs.id = "fondScene"; document.body.insertBefore(fs, document.body.firstChild); }
+    fs.style.cssText = "display:block;left:" + gx + "px;top:" + haut + "px;width:" + vw + "px;height:" + (fin - haut) + "px;background-image:" + urlImg + ";background-size:" + (P.l * s) + "px auto;background-position:" + (dx - gx) + "px " + (dy - haut) + "px";
+  } else {
+    if(fs) fs.style.display = "none";
+    corps.backgroundImage = urlImg;
+    corps.backgroundSize = (P.l * s) + "px auto";
+    corps.backgroundPosition = dx + "px " + dy + "px";
+  }
+  placerDecor(dx, dy, s, pc ? { x:gx, y:haut, l:vw, h:fin - haut } : null);
   // Fondu sur le bas de l'image pour qu'elle se mêle au plancher (au lieu de s'arrêter net)
   var f = $("fondu"); if(!f){ f = document.createElement("div"); f.id = "fondu"; document.body.appendChild(f); }
-  f.style.display = "block"; f.style.top = (dy + P.h * s - 88) + "px"; f.style.left = gx + "px"; f.style.right = pc ? (window.innerWidth - dxMax) + "px" : "0";
+  f.style.display = pc ? "none" : "block"; f.style.top = (dy + P.h * s - 88) + "px"; f.style.left = gx + "px"; f.style.right = pc ? (window.innerWidth - dxMax) + "px" : "0";
   cont.classList.toggle("compact", s < 0.32);
   cont.style.display = "block"; cont.style.top = haut + "px"; cont.style.height = (fin - haut) + "px";
   cont.style.left = gx + "px"; cont.style.right = pc ? (window.innerWidth - dxMax) + "px" : "0";
