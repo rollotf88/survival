@@ -161,7 +161,7 @@ function rGame(){
     + (chien() ? '<button class="chip chipchien" data-act="chien" title="' + chien().nom + ', le chien">' + ic("chien", "🐕") + (chien().faim ? ' ⚠️' : '') + '</button>' : '')
     + '</div><div class="hd-score" title="Score : chaque jour terminé rapporte 1 point par membre en vie"><span class="hs-ico">⭐</span><b>' + (G.score || 0) + '</b><small>score<br>record ' + Math.max(RECORD, G.score || 0) + '</small></div></div>'
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
-    + '<div class="row">' + (mission() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
+    + '<div class="row">' + (mission() && !modePC() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() && !modePC() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
     + '<div class="row acts"><button class="btn' + (G.sel.length ? "" : " attente") + '" data-act="fouille">' + ic("loupe", "🔍") + ' Fouiller</button><button class="btn alt" data-act="stock">' + ic("caisse", "📦") + ' Stock</button><button class="btn alt" data-act="refuge">' + ic("marteau", "🛠️") + ' Refuge</button><button class="btn' + (G.m.some(peutSortir) ? " alt" : "") + '" data-act="dormir">' + ic("lune", "🌙") + ' Dormir</button></div>';
   tableauPC();
 }
@@ -862,6 +862,14 @@ function tableauPC(){
   var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
   if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
   if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';
+  // Marché du jour : sur PC, une carte avec Marco et ses offres (au lieu du petit bouton sous la scène)
+  if(marcheOuvert()){
+    h += '<div class="tb-marche"><div class="tbm-tete"><span class="tbm-ico">' + ic("marco", MARCHE.icone) + '</span><span><b>' + MARCHE.nom + ' est là aujourd’hui</b><small>Il échange ce qu’il a dans sa charrette. Il repart ce soir.</small></span></div>'
+      + '<div class="tbm-offres">' + G.marche.offres.map(function(o, k){ var ok = peutEchanger(k);
+          var nc = function(id){ return '<em>' + (typeof NOM_COURT !== "undefined" && NOM_COURT[id] || OBJETS[id].nom) + '</em>'; };
+          return '<div class="tbm-o' + (o.fait ? " fait" : ok ? " ok" : "") + '"><span>' + o.donne.n + ' ' + icone(o.donne.id) + nc(o.donne.id) + '</span><span class="tbm-fl">➜</span><span>' + o.recoit.n + ' ' + icone(o.recoit.id) + nc(o.recoit.id) + '</span><small>' + (o.fait ? "échangé" : ok ? "possible" : "il te manque " + nommer(o.donne.id, o.donne.n - compter(o.donne.id))) + '</small></div>'; }).join("") + '</div>'
+      + '<button class="btn" style="width:100%" data-act="marche">' + ic("marco", MARCHE.icone) + ' Voir le marché</button></div>';
+  }
   h += '<p class="titre-butin">🏠 Le refuge</p>' + resumeRefuge();
   var ids = Object.keys(G.stock.n).sort(function(a, b){ return G.stock.n[b] - G.stock.n[a]; }).slice(0, 10);
   var uniq = {}; G.stock.o.forEach(function(o){ uniq[o.id] = (uniq[o.id] || 0) + 1; });
