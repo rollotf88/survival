@@ -6,7 +6,7 @@
    Le chef efface, chacun signale. Partie séparée : à refaire avec une vraie base sur l'hébergeur définitif.
    Chargé après raid.js (utilise appelClans, fileSucces, quand, echapper, pseudoCadre).
    ===================================================================== */
-var CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🎯 Qui lance le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
+var CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un volontaire pour le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
 var chatSignalAttente = null;
 var etatChat = null, chatNonLus = 0, chatMinuterie = null, msgChat = "", chatBandeauFait = false;
 function chatVu(){ try{ return +localStorage.getItem("survival_chat_vu") || 0; }catch(e){ return 0; } }

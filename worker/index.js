@@ -288,7 +288,7 @@ function vueRaid(c, id){
    le chef efface, chacun signale (le message part dans les avis de l'administration).
    Partie bien séparée : sur l'hébergeur définitif, elle sera refaite avec une vraie base de données. */
 const CHAT_MAX = 100, CHAT_LONG = 200, CHAT_DELAI = 3000;
-const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🎯 Qui lance le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
+const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un volontaire pour le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
 async function lireChat(env, cid){ return (await env.CLASSEMENT.get("chat_" + cid, { type: "json" })) || []; }
 function vueChat(liste, mon, id){
   return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef })),
