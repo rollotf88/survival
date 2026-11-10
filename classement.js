@@ -681,5 +681,6 @@ function noterStatClan(k, n, max){ var s = statsClanTout(); s[k] = max ? Math.ma
 /* ---------- Ligues de guerre (2026-11-10) ---------- */
 var LIGUES = [ { nom:"Ferraille", min:0, icone:"🔩" }, { nom:"Bronze", min:100, icone:"🥉" }, { nom:"Argent", min:250, icone:"🥈" }, { nom:"Or", min:450, icone:"🥇" }, { nom:"Légende", min:700, icone:"👑" } ];
 function ligueDe(t){ var k = 0; LIGUES.forEach(function(L, i){ if((t || 0) >= L.min) k = i; }); return k; }
-// Pastille de ligue (insigne peint quand il existera : images/ligues/<n>.webp)
-function badgeLigue(t, court){ var k = ligueDe(t), L = LIGUES[k]; return '<span class="ligue l' + k + '" title="Ligue ' + L.nom + '">' + L.icone + (court ? '' : ' ' + L.nom) + ' · ' + (t || 0) + ' 🏆</span>'; }
+// Pastille de ligue avec l'insigne peint (images/ligues/1..5.webp, Gemini, 2026-11-10)
+function insigneLigue(k){ return '<img class="ligue-ins" src="images/ligues/' + (k + 1) + '.webp" alt="' + LIGUES[k].icone + '">'; }
+function badgeLigue(t, court){ var k = ligueDe(t), L = LIGUES[k]; return '<span class="ligue l' + k + '" title="Ligue ' + L.nom + '">' + insigneLigue(k) + (court ? '' : ' ' + L.nom) + ' · ' + (t || 0) + ' 🏆</span>'; }
