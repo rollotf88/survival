@@ -1329,3 +1329,7 @@ body.pc:not(.scene-petite) .sheet.large .journal-morts{display:none}
 .clan-membres .clan-m .cm-nom{grid-column:1;justify-self:start;max-width:100%;min-width:0}
 .clan-membres .clan-m > small{grid-column:1;min-width:0}
 .clan-membres .clan-m > .mini{grid-column:2;grid-row:1 / span 2;align-self:center;width:auto;white-space:nowrap}
+/* Blasons : l'image reste dans sa case (elle débordait vers le bas et cachait le nom du clan, ex. bandeau de guerre) */
+.blason{grid-template-rows:100%;grid-template-columns:100%;place-items:stretch;overflow:hidden}
+.blason img{min-height:0;min-width:0}
+.gu-camp .blason{flex:0 0 auto;width:58px;height:58px;margin-bottom:3px}
