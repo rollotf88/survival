@@ -285,7 +285,7 @@ function openCombat(){
   }).join("");
   var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
   var h = '<h2 class="ctitre">🧟 ' + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
-    + '<div class="arene" style="background-image:url(\'' + fondCombat(L) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div>'
+    + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div>'
     + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
     + (C.journal.length ? '<div class="journal" id="journal">' + puces(C.journal) + '</div>' : '') + '</div><div class="cdroite">';
