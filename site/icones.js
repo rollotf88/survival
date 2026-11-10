@@ -672,7 +672,19 @@ ICONES_SVG.blindage = '<path d="M8 7 H40 V29 Q40 40 24 45 Q8 40 8 29Z" fill="#9a
 ICONES_SVG.tourelle = '<rect x="5" y="35" width="38" height="8" rx="2" fill="' + COUL.boisFonce + '"/><path d="M11 35 V27 Q11 16 24 16 Q37 16 37 27 V35Z" fill="#8c9a66"/>' +
   '<rect x="30" y="20" width="16" height="5" rx="2" fill="' + COUL.metalFonce + '"/><rect x="17" y="24" width="10" height="4" rx="1" fill="#2f3a26"/>';
 
+/* Icônes peintes (2026-11-10, Gemini, planches images/sources/icones-1..7-gemini.jpg découpées par Claude) :
+   elles remplacent le dessin en code quand l'image existe (images/icones/<id>.webp, 128 px, fond transparent).
+   Les dessins en code restent en secours (et pour les visages de la famille). */
+var ICONES_IMG = {};
+("couteau hache batte barrefer machette pistolet fusil lance gourdin balle cartouche boiteBalles boiteCart piege bouclier gilet " +
+ "lampe torche briquet pdb outils canne epingle sacados sacoche randonnee batterie roue courroie jerrican pile marteau " +
+ "bidon bouteille conserve conserves riz biscuits pates barre ration canette poisson poule alcool huile farine epices " +
+ "bandage trousse antibio couverture radio peluche photo cartes chiffon clous ferraille ruban planche bache collet champignons " +
+ "baies herbes soupe poissonHerbes ragout galettes rizSaute tarte maisonPavillon maisonFerme maisonAppart ref_barr ref_eau ref_pot chien caisse " +
+ "casque bastion reserveClan journalClan remparts mine tour camionClan parebuffle blindage tourelle couronne medaille1 medaille2 medaille3 loupe " +
+ "lune moralBon moralMoyen moralBas").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
 function svgIcone(id){
+  if(ICONES_IMG[id]) return '<img class="ico ico-img" src="images/icones/' + id + '.webp" alt="" draggable="false" decoding="async">';
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
 }
 
