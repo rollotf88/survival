@@ -1088,7 +1088,7 @@ button.cl-ligne .cm-voir{color:var(--mut)}
   85%{transform:translateY(2%) scale(1.05) rotate(1deg);filter:none}
   100%{opacity:1;transform:none;filter:none}
 }
-@keyframes zInfo{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes zInfo{from{opacity:0}to{opacity:1}} /* opacité seulement : la bulle est centrée par un translateX qu'il ne faut pas écraser */
 @media (prefers-reduced-motion:reduce){.zrang.arrivee .zc,.zrang.arrivee .zc *{animation:none}}
 
 /* Bloc du score, même allure que les pastilles (2026-11-10, retour de Fabien) */
@@ -1102,3 +1102,32 @@ body.pc #app .chips{gap:8px}
 body.pc #app .chip{padding:5px 10px;gap:6px}
 body.pc #app .chip-lbl{font-size:11px;letter-spacing:.02em}
 body.pc #app .hd-score{padding:4px 11px;gap:6px}
+
+/* Combat dans la scène sur PC (2026-11-10, retour de Fabien : tout était tassé en haut) : la fenêtre remplit la boîte de la pièce,
+   la scène du combat prend toute la hauteur à gauche, l'équipe et ses actions à droite, les boutons Jouer / Auto / Fuir en bas */
+body.pc:not(.scene-petite) #modal .sheet.large{display:flex;flex-direction:column;padding:12px 14px}
+body.pc:not(.scene-petite) .sheet.large .ctitre{flex:0 0 auto;margin:0 0 8px}
+body.pc:not(.scene-petite) .sheet.large .combat{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:14px;align-items:stretch}
+body.pc:not(.scene-petite) .sheet.large .cgauche{min-height:0}
+body.pc:not(.scene-petite) .sheet.large .arene{flex:1 1 auto;aspect-ratio:auto;height:auto;min-height:260px}
+body.pc:not(.scene-petite) .sheet.large .zinfo{font-size:13px}
+body.pc:not(.scene-petite) .sheet.large .combat .journal{flex:0 0 auto;max-height:150px;font-size:13px}
+body.pc:not(.scene-petite) .sheet.large .cdroite{min-height:0;overflow-y:auto;gap:10px}
+body.pc:not(.scene-petite) .sheet.large .cdroite > .row:last-child{margin-top:auto}
+body.pc:not(.scene-petite) .sheet.large .cmc{padding:8px 10px}
+body.pc:not(.scene-petite) .sheet.large .cmp,body.pc:not(.scene-petite) .sheet.large .cmp .portrait{flex-basis:52px;width:52px;height:52px}
+body.pc:not(.scene-petite) .sheet.large .cmi b{font-size:16px}
+body.pc:not(.scene-petite) .sheet.large .cmi small{font-size:12.5px}
+body.pc:not(.scene-petite) .sheet.large .act{padding:7px 2px}
+body.pc:not(.scene-petite) .sheet.large .act span{font-size:20px}
+body.pc:not(.scene-petite) .sheet.large .act small{font-size:11px}
+body.pc:not(.scene-petite) .sheet.large .combat .row .btn{padding-top:12px;padding-bottom:12px;font-size:16px}
+body.pc:not(.scene-petite) .sheet.large .zrang{bottom:10px;gap:10px}
+body.pc:not(.scene-petite) .sheet.large .zc{flex-basis:140px;padding-top:30px}
+body.pc:not(.scene-petite) .sheet.large .zc .zp{max-width:130px;border-radius:16px}
+body.pc:not(.scene-petite) .sheet.large .zrang.n4 .zc,body.pc:not(.scene-petite) .sheet.large .zrang.n5 .zc,body.pc:not(.scene-petite) .sheet.large .zrang.n6 .zc{flex-basis:104px}
+body.pc:not(.scene-petite) .sheet.large .zc .zn{font-size:14px}
+body.pc:not(.scene-petite) .sheet.large .zc .zpv{height:8px}
+body.pc:not(.scene-petite) .sheet.large .zint{font-size:13px;padding:2px 8px}
+body.pc:not(.scene-petite) .sheet.large .zint small{font-size:11.5px}
+body.pc:not(.scene-petite) .sheet.large .combat.fini{grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr)}
