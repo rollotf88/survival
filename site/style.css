@@ -976,3 +976,8 @@ body.pc{background:#1b130d radial-gradient(ellipse at 50% 40%,#3a2819 0%,#1b130d
 body.pc #fondScene::after{content:"";position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
 body.pc #tableauPC{right:calc((100vw - min(100vw, 1500px)) / 2 + 12px)}
 body.pc #modal:not(:has(.sheet.large)){right:calc((100vw - min(100vw, 1500px)) / 2 + 12px)}
+/* PC : grandes flèches sur les côtés de la scène, barre des pièces toujours visible */
+#piece .flpc{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:84px;padding:0;border:2px solid rgba(255,246,230,.45);border-radius:14px;background:rgba(29,20,14,.55);color:#ffcf4a;font-size:42px;line-height:76px;font-weight:800;cursor:pointer;pointer-events:auto;z-index:3;transition:background .2s,transform .2s}
+#piece .flpc:hover,#piece .flpc:focus-visible{background:rgba(29,20,14,.85);transform:translateY(-50%) scale(1.06);outline:none}
+#piece .flpc.g{left:10px}#piece .flpc.d{right:10px}
+body.pc #piece .navpieces{opacity:1;pointer-events:auto}

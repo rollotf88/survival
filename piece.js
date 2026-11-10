@@ -175,7 +175,9 @@ function placerPiece(){
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
     + '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
     + PIECES.map(function(p, k){ if(!pieceVisible(k)) return ""; return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
-    + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>';
+    + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>'
+    // Sur PC : de grandes flèches toujours visibles sur les côtés de la scène (pas de glisser à la souris)
+    + (pc ? '<button class="flpc g" data-act="piecePrec" aria-label="Pièce précédente">‹</button><button class="flpc d" data-act="pieceSuiv" aria-label="Pièce suivante">›</button>' : '');
   ajusterEtiquettes(cont, dxMax, gx);
   // Le bouton du bas qui correspond à la pièce est mis en avant (Réserve → Stock, Chambre → Dormir…)
   var lien = BOUTON_PIECE[P.id];
@@ -290,6 +292,7 @@ document.addEventListener("click", function(e){
 var departGlisse = null;
 document.addEventListener("pointerdown", function(e){
   if(!G || G.ph !== "game" || $("modal").style.display === "flex" || $("astuce")) { departGlisse = null; return; }
+  if(document.body.classList.contains("pc") && e.pointerType === "mouse"){ departGlisse = null; return; } // sur PC, on change de pièce avec les flèches
   departGlisse = { x:e.clientX, y:e.clientY, t:Date.now() };
   if(!e.target.closest(".acts, .mc, .sheet")) montrerNav(true); // toucher la pièce fait réapparaître la barre
 });
@@ -441,3 +444,10 @@ function openObjetPiece(id){
   h += '</ul>';
   show(h + BTN_FERMER());
 }
+
+// Sur PC : les flèches du clavier ← → changent aussi de pièce (quand aucune fenêtre ne demande de saisie)
+document.addEventListener("keydown", function(e){
+  if(!G || G.ph !== "game" || !document.body.classList.contains("pc")) return;
+  if(/INPUT|TEXTAREA/.test((e.target || {}).tagName || "") || document.querySelector("#sheet.large")) return;
+  if(e.key === "ArrowLeft") allerPiece(pieceIdx - 1); else if(e.key === "ArrowRight") allerPiece(pieceIdx + 1);
+});
