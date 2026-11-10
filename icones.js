@@ -682,7 +682,10 @@ var ICONES_IMG = {};
  "bandage trousse antibio couverture radio peluche photo cartes chiffon clous ferraille ruban planche bache collet champignons " +
  "baies herbes soupe poissonHerbes ragout galettes rizSaute tarte maisonPavillon maisonFerme maisonAppart ref_barr ref_eau ref_pot chien caisse " +
  "casque bastion reserveClan journalClan remparts mine tour camionClan parebuffle blindage tourelle couronne medaille1 medaille2 medaille3 loupe " +
- "lune moralBon moralMoyen moralBas").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
+ "lune moralBon moralMoyen moralBas " +
+ "energie coeur alerte feu livre calendrier epees trophee cible coche recycler voiture zombie cadenas etoile bougie " +
+ "dent main punaise groupe crayon drapeau cadeau parachute stats stetho ticket poing robot croix crane famille " +
+ "carte silhouette de course sapin sommeil ampoule sonHaut musique vibreur bulle cle porte megaphone froid folie").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
 function svgIcone(id){
   if(ICONES_IMG[id]) return '<img class="ico ico-img" src="images/icones/' + id + '.webp" alt="" draggable="false" decoding="async">';
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
@@ -754,7 +757,14 @@ var EMOJI_ICONE = {
   "😀":"moralBon", "😊":"moralBon", "😐":"moralMoyen", "😟":"moralBas", "😢":"moralBas", "💣":"mine", "🗼":"tour", "🚚":"camionClan", "🥕":"ref_pot", "🪣":"ref_eau",
   "🏠":"maisonPavillon", "🏡":"maisonPavillon", "🔋":"pile", "🛞":"roue", "🍄":"champignons", "🫐":"baies", "🌿":"herbes", "🧂":"epices", "🥧":"tarte", "🍜":"soupe",
   "🍝":"pates", "🫓":"galettes", "🍛":"rizSaute", "🍚":"riz", "🍪":"biscuits", "🍫":"barre", "🍱":"ration", "🥤":"canette", "🛢":"bidon", "🫒":"huile", "🌾":"farine",
-  "🔩":"clous", "⚙":"ferraille", "🪤":"piege", "🍾":"alcool", "🧣":"chiffon", "🪢":"collet", "🏢":"maisonAppart", "🚜":"maisonFerme", "📜":"journalClan", "🖼":"photo", "🃏":"cartes"
+  "🔩":"clous", "⚙":"ferraille", "🪤":"piege", "🍾":"alcool", "🧣":"chiffon", "🪢":"collet", "🏢":"maisonAppart", "🚜":"maisonFerme", "📜":"journalClan", "🖼":"photo", "🃏":"cartes",
+  // symboles (planches 8 à 10)
+  "⚡":"energie", "❤":"coeur", "⚠":"alerte", "🔥":"feu", "📖":"livre", "📅":"calendrier", "🗓":"calendrier", "⚔":"epees", "🏆":"trophee", "🎯":"cible",
+  "✔":"coche", "✅":"coche", "♻":"recycler", "🚗":"voiture", "🚙":"voiture", "🧟":"zombie", "🔒":"cadenas", "🔐":"cadenas", "⭐":"etoile", "🌟":"etoile", "🕯":"bougie",
+  "🦷":"dent", "✋":"main", "📍":"punaise", "👥":"groupe", "✏":"crayon", "🏴":"drapeau", "🎁":"cadeau", "🪂":"parachute", "📊":"stats", "🩺":"stetho", "🎟":"ticket",
+  "✊":"poing", "💪":"poing", "🤖":"robot", "❌":"croix", "✖":"croix", "💀":"crane", "👪":"famille", "🗺":"carte", "👤":"silhouette", "🎲":"de", "🏃":"course",
+  "🌲":"sapin", "😴":"sommeil", "💤":"sommeil", "💡":"ampoule", "🔊":"sonHaut", "🎵":"musique", "📳":"vibreur", "💬":"bulle", "🗝":"cle", "🚪":"porte", "📢":"megaphone",
+  "🥶":"froid", "❄":"froid", "🌀":"folie"
 };
 var REGEX_EMOJI = null;
 function iconesDansTexte(racine){
