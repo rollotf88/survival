@@ -640,6 +640,26 @@ ICONES_SVG.casque = '<path d="M7 30 Q7 10 24 10 Q41 10 41 30Z" fill="#c9a227"/><
 ICONES_SVG.bouclier = '<rect x="10" y="4" width="28" height="40" rx="6" fill="#9fb4c2"/><rect x="14" y="9" width="20" height="10" rx="2" fill="#d9e6ee"/>' +
   '<path d="M14 26 H34 M14 31 H34 M14 36 H34" stroke="#6f8796" stroke-width="2"/><path d="M24 22 V40" stroke="#6f8796" stroke-width="2"/>';
 
+/* ---------- Bastion et camion du clan (2026-11-10) ---------- */
+ICONES_SVG.bastion = '<path d="M10 44 V14 H16 V9 H21 V14 H27 V9 H32 V14 H38 V44Z" fill="#a1887f"/><path d="M20 44 V35 Q24 29 28 35 V44Z" fill="' + COUL.boisFonce + '"/>' +
+  '<path d="M10 22 H38 M10 30 H19 M29 30 H38" stroke-width="2"/><path d="M24 9 V2 L32 5 L24 8" fill="' + COUL.rouge + '"/>';
+ICONES_SVG.reserveClan = '<rect x="6" y="14" width="36" height="28" rx="2" fill="' + COUL.bois + '"/><path d="M6 21 H42 M6 35 H42" stroke-width="2"/><path d="M8 23 L40 33 M40 23 L8 33" stroke-width="2"/><rect x="4" y="10" width="40" height="6" rx="2" fill="' + COUL.boisFonce + '"/>';
+ICONES_SVG.journalClan = '<path d="M12 8 H36 V40 H12Z" fill="#f3e3c0"/><path d="M8 8 Q8 4 12 4 H36 Q40 4 40 8 Q40 12 36 12 H12" fill="#e2c995"/><path d="M8 40 Q8 44 12 44 H36 Q40 44 40 40 Q40 36 36 36 H12" fill="#e2c995"/><path d="M17 18 H31 M17 24 H31 M17 30 H26" stroke-width="2"/>';
+ICONES_SVG.remparts = '<rect x="5" y="31" width="38" height="11" fill="#a3a3a3"/><path d="M5 36.5 H43 M15 31 V36.5 M27 31 V36.5 M39 31 V36.5 M10 36.5 V42 M21 36.5 V42 M33 36.5 V42" stroke-width="2"/>' +
+  '<path d="M7 31 V13 L10 7 L13 13 V31Z" fill="' + COUL.bois + '"/><path d="M14 31 V13 L17 7 L20 13 V31Z" fill="' + COUL.bois + '"/><path d="M21 31 V13 L24 7 L27 13 V31Z" fill="' + COUL.bois + '"/><path d="M28 31 V13 L31 7 L34 13 V31Z" fill="' + COUL.bois + '"/><path d="M35 31 V13 L38 7 L41 13 V31Z" fill="' + COUL.bois + '"/>';
+ICONES_SVG.mine = '<path d="M7 34 V30 Q24 21 41 30 V34 Q24 42 7 34Z" fill="#6f7f57"/><path d="M7 30 Q24 38 41 30" stroke-width="2"/><rect x="20" y="19" width="8" height="6" rx="2" fill="' + COUL.metalFonce + '"/>' +
+  '<path d="M24 19 V13"/><circle cx="24" cy="11" r="2.6" fill="' + COUL.rouge + '"/><path d="M30 8 L33 6 M31 12 L35 12 M17 8 L14 6" stroke="' + COUL.jaune + '" stroke-width="2"/>';
+ICONES_SVG.tour = '<path d="M14 44 L19 21 M34 44 L29 21 M16 36 H32 M15.5 36 L30.5 28 M32.5 36 L17.5 28 M17.5 28 H30.5" stroke-width="2.2"/><rect x="12" y="14" width="24" height="8" fill="' + COUL.bois + '"/>' +
+  '<path d="M10 14 L24 4 L38 14Z" fill="' + COUL.rouge + '"/><path d="M18 14 V22 M30 14 V22" stroke-width="1.8"/>';
+ICONES_SVG.camionClan = '<path d="M4 35 V22 H26 V35Z" fill="#7d8a5a"/><path d="M26 35 V15 H36 L44 25 V35Z" fill="#8c9a66"/><path d="M29 18 H35 L40 25 H29Z" fill="#bfe3ee"/><path d="M4 26 H26" stroke-width="2"/>' +
+  '<circle cx="13" cy="37" r="5" fill="#3b3b3b"/><circle cx="36" cy="37" r="5" fill="#3b3b3b"/><circle cx="13" cy="37" r="1.8" fill="' + COUL.metal + '"/><circle cx="36" cy="37" r="1.8" fill="' + COUL.metal + '"/>';
+ICONES_SVG.parebuffle = '<rect x="7" y="15" width="34" height="21" rx="3" fill="' + COUL.metalFonce + '"/><path d="M13 15 V36 M19 15 V36 M24 15 V36 M29 15 V36 M35 15 V36" stroke-width="2"/>' +
+  '<rect x="3" y="10" width="42" height="7" rx="2.5" fill="' + COUL.metal + '"/><rect x="3" y="34" width="42" height="6" rx="2.5" fill="' + COUL.metal + '"/>';
+ICONES_SVG.blindage = '<path d="M8 7 H40 V29 Q40 40 24 45 Q8 40 8 29Z" fill="#9aa5ab"/><path d="M13 12 H35 V28 Q35 36 24 40 Q13 36 13 28Z" fill="#b8c2c7" stroke-width="2"/>' +
+  '<circle cx="12" cy="11" r="1.6" fill="' + COUL.trait + '"/><circle cx="36" cy="11" r="1.6" fill="' + COUL.trait + '"/><circle cx="12" cy="30" r="1.6" fill="' + COUL.trait + '"/><circle cx="36" cy="30" r="1.6" fill="' + COUL.trait + '"/><path d="M19 20 L29 30" stroke-width="2"/>';
+ICONES_SVG.tourelle = '<rect x="5" y="35" width="38" height="8" rx="2" fill="' + COUL.boisFonce + '"/><path d="M11 35 V27 Q11 16 24 16 Q37 16 37 27 V35Z" fill="#8c9a66"/>' +
+  '<rect x="30" y="20" width="16" height="5" rx="2" fill="' + COUL.metalFonce + '"/><rect x="17" y="24" width="10" height="4" rx="1" fill="#2f3a26"/>';
+
 function svgIcone(id){
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
 }

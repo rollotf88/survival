@@ -17,6 +17,9 @@ function controleAffichage(){
   function q(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
   // 1) pas de défilement horizontal
   if(document.documentElement.scrollWidth > vw + 1) pb.push("Défilement horizontal : page de " + document.documentElement.scrollWidth + " px pour un écran de " + vw);
+  // 1 bis) une fenêtre ne doit pas défiler de côté, et la page ne doit pas recevoir de style d'un autre élément (bug « .pc » du 2026-11-10)
+  q("#modal .sheet").filter(vis).forEach(function(sh){ if(sh.scrollWidth > sh.clientWidth + 2) pb.push("La fenêtre défile de côté (" + sh.scrollWidth + " px pour " + sh.clientWidth + ")"); });
+  var sb = getComputedStyle(document.body); if(parseFloat(sb.borderTopWidth) > 0 || sb.whiteSpace === "nowrap") pb.push("La page a une bordure ou du texte sans retour à la ligne (style d'un autre élément ?)");
   // 2) en-tête : titre, chapitre et pastilles ne se chevauchent pas
   var entete = document.querySelector("#app > .row");
   if(entete){
