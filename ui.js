@@ -57,7 +57,9 @@ function parle(nom, portrait){
   l.innerHTML = '<span class="loc-portrait">' + img + '</span><span class="loc-nom">' + nom + '</span>';
   $("modal").appendChild(l); sh.classList.add("parle");
   // Pas de place au-dessus de la fenêtre (panneau de droite sur PC, collé en haut) : le portrait entre dans la fenêtre et le texte descend
-  var place = function(){ var r = sh.getBoundingClientRect(); sh.classList.toggle("parle-dedans", r.top - 46 < 4); l.style.left = (r.left + 12) + "px"; l.style.top = Math.max(4, r.top - 46) + "px"; };
+  var cible = sh.querySelector(".res-carte") || sh;
+  if(cible !== sh) cible.classList.add("parle");
+  var place = function(){ var r = cible.getBoundingClientRect(); if(cible === sh) sh.classList.toggle("parle-dedans", r.top - 46 < 4); l.style.left = (r.left + 12) + "px"; l.style.top = Math.max(4, r.top - 46) + "px"; };
   place(); requestAnimationFrame(place);
 }
 // Qui parle dans un événement du matin (null = personne en particulier)
@@ -456,7 +458,8 @@ function openCombat(){
 function openRencontre(){
   var R0 = rencontreCourante(); if(!R0){ G.rencontre = null; hide(); return; }
   var Rc = G.rencontre, N = Rc.noeud ? R0.noeuds[Rc.noeud] : null;
-  var h = '<div class="rencontre"><p class="r-lieu">En chemin…</p><h2>' + R0.titre + '</h2>';
+  var Lr = Rc.apres && LIEUX[Rc.apres.lieu];
+  var h = '<div class="rencontre"><p class="r-lieu">Sur le chemin du retour' + (Lr ? (function(d){ return d.indexOf("le ") === 0 ? " du " + d.slice(3) : " de " + d; })(leLieu(Lr.nom)) : "") + '…</p><h2>' + R0.titre + '</h2>';
   if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? "🎲 Réussi ! " : Rc.reussi === false ? "🎲 Raté… " : "") + perso(Rc.texte) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
   if(N){
     h += '<p class="r-texte">' + perso(N.texte) + '</p>';
@@ -466,7 +469,17 @@ function openRencontre(){
     }).join("");
   } else h += '<button class="btn" style="width:100%" data-act="rfin">Continuer</button>';
   show(h + '</div>');
+  poserDansScene(Lr ? imageLieu(Lr) : null);
   if(R0.portrait !== "" && Rc.noeud) parle(R0.nom, R0.portrait);
+}
+// Sur PC, pose la fenêtre en grand sur la scène : image du lieu en fond, contenu dans une carte en bas (résultat d'une fouille, rencontre en chemin)
+function poserDansScene(im){
+  if(!document.body.classList.contains("pc") || document.body.classList.contains("scene-petite")) return false;
+  var sh = $("sheet");
+  sh.innerHTML = '<div class="res-carte">' + sh.innerHTML + '</div>';
+  sh.classList.add("large", "resultat");
+  if(im) sh.style.backgroundImage = 'linear-gradient(180deg, rgba(20,12,6,.15) 0%, rgba(20,12,6,.55) 55%, rgba(20,12,6,.85) 100%), url("' + im + '")';
+  return true;
 }
 function openResultat(r){
   retourPiece = "salon"; // « Retour au refuge » ramène au salon (pas au garage d'où l'équipe est partie)
@@ -481,12 +494,7 @@ function openResultat(r){
   show(h + '<button class="btn" style="width:100%" data-act="close">Retour au refuge</button>');
   // Sur PC : le résultat s'affiche en grand DANS la scène (2026-11-10, retour de Fabien « grosse image vide, pas pro ») :
   // l'image du lieu en fond, une carte avec le récit et le butin qui apparaît objet par objet
-  if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")){
-    var sh = $("sheet");
-    sh.innerHTML = '<div class="res-carte">' + sh.innerHTML + '</div>';
-    sh.classList.add("large", "resultat");
-    if(im) sh.style.backgroundImage = 'linear-gradient(180deg, rgba(20,12,6,.15) 0%, rgba(20,12,6,.55) 55%, rgba(20,12,6,.85) 100%), url("' + im + '")';
-  }
+  poserDansScene(im);
 }
 
 /* ---------- Équiper un membre ---------- */
