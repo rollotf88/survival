@@ -144,12 +144,53 @@ const DUREE_GUERRE = 3, JOUR_MS = 24 * 3600 * 1000;
 const CADRES_OK = ["bois", "bronze", "argent", "or", "legende"];
 const cadreDe = (d) => CADRES_OK.indexOf(String(d.cadre || "")) >= 0 ? String(d.cadre) : "";
 function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
+// ---------- Bots de test (2026-11-10, demande de Fabien) ----------
+// Créés et supprimés depuis l'administration. Un bot est un faux joueur (id commençant par « bot », m.bot = true).
+// Les clans de bots cherchent toujours une guerre ; pendant une guerre, chaque bot (ennemi ou équipier) lance
+// tout seul son assaut de chaque jour, avec des étoiles au hasard.
+const PSEUDOS_BOTS = ["Rex_Ranger", "Lili", "MadMax", "Zoé", "Bertrand", "Kader", "Nina", "Tonton", "Jojo", "Sacha", "Hugo", "Lola", "Marius", "Gaby", "Yoyo", "Capu", "Mamie_Ro", "Brico", "Sniper", "Pépé"];
+const NOMS_CLANS_BOTS = ["Les Rôdeurs du Sud", "La Horde Grise", "Les Corbeaux", "Bastion de Fer", "Les Survivants du Lac", "La Meute"];
+const CADRES_BOTS = ["bois", "bronze", "argent", "or", "legende"];
+const hasardEntier = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const idBot = () => "bot" + Math.random().toString(36).slice(2, 12);
+const estBot = (id) => String(id || "").indexOf("bot") === 0;
+function nouveauBot(){ return { id: idBot(), pseudo: PSEUDOS_BOTS[hasardEntier(0, PSEUDOS_BOTS.length - 1)] + hasardEntier(1, 99), jour: hasardEntier(100, 190), vu: Date.now() - hasardEntier(0, 2) * JOUR_MS, rejoint: Date.now(), cadre: CADRES_BOTS[hasardEntier(0, 4)], bot: true, depose: hasardEntier(0, 30), pris: 0 }; }
+function etoilesBot(){ const r = Math.random(); return r < 0.25 ? 0 : r < 0.6 ? 1 : r < 0.85 ? 2 : 3; }
+// Les bots des deux camps lancent leurs assauts manqués (un par jour écoulé). Renvoie true si quelque chose a changé.
+function botsAttaquent(C, W){
+  let change = false; const jMax = Math.min(DUREE_GUERRE, jourGuerre(W)), now = Date.now();
+  ["a", "b"].forEach((camp) => {
+    const nous = C.clans[W[camp]], eux = C.clans[W[camp === "a" ? "b" : "a"]]; if(!nous || !eux) return;
+    nous.membres.filter((m) => m.bot).forEach((m) => {
+      for(let j = 1; j <= jMax; j++){
+        if(W.assauts.some((s) => s.par === m.id && s.jour === j)) continue;
+        const libres = eux.membres.filter((c) => !W.assauts.some((s) => s.cible === c.id && s.jour === j && s.fini !== false)), cible = libres.length ? libres[hasardEntier(0, libres.length - 1)] : null;
+        if(!cible) continue;
+        const etoiles = etoilesBot(), s = { id: "s" + Math.random().toString(36).slice(2, 9), par: m.id, pseudo: m.pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: true, etoiles, butin: [], t: Math.min(now, W.debut + (j - 1) * JOUR_MS + hasardEntier(1, 20) * 3600 * 1000) };
+        W.assauts.push(s); W.etoiles[camp] += etoiles; nous.etoilesTotal = (nous.etoilesTotal || 0) + etoiles;
+        if(etoiles){
+          bastionDe(eux); const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
+          Object.keys(eux.reserve).filter((k) => eux.reserve[k] > 0).slice(0, 2).forEach((k) => { const n = Math.min(Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0), Math.max(1, Math.floor(eux.reserve[k] * 0.05 * etoiles)));
+            if(n > 0){ eux.reserve[k] -= n; if(!eux.reserve[k]) delete eux.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
+          noter(eux, "⚔️", m.pseudo + " a pillé le bastion (" + etoiles + " ★)");
+        }
+        change = true;
+      }
+    });
+  });
+  return change;
+}
+
 function cloreGuerres(C){
   const now = Date.now();
+  // Les bots jouent leurs assauts dans les guerres en cours
+  for(const wid in C.guerres){ const W = C.guerres[wid]; if(!W.fini && botsAttaquent(C, W)) C._change = true; }
   for(const wid in C.guerres){
     const W = C.guerres[wid]; if(W.fini || now < W.debut + DUREE_GUERRE * JOUR_MS) continue;
     W.fini = true; W.gagnant = W.etoiles.a > W.etoiles.b ? W.a : W.etoiles.b > W.etoiles.a ? W.b : null;
+    C._change = true;
     [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.guerre = null; c.historique = [wid].concat(c.historique || []).slice(0, 10);
+      if(c.bot && c.membres.length >= MAX_CLAN){ c.recherche = true; if(C.file.indexOf(c.id) < 0) C.file.push(c.id); }
       c.bilan = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 }; if(!W.gagnant) c.bilan.nulles++; else if(W.gagnant === cid) c.bilan.gagnees++; else c.bilan.perdues++; });
   }
   // On ne garde que les 30 dernières guerres terminées
@@ -209,7 +250,7 @@ async function clansPost(request, env){
   switch(d.action){
     case "liste": {
       const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);
-      if(mon) await sauver(); // garde la dernière visite du membre (inactivité visible du chef)
+      if(mon || C._change) await sauver(); // garde la dernière visite du membre (inactivité visible du chef) et les assauts des bots
       return reponse({ jourMin: R.jourMinClan, clans: liste, monClan: mon ? detailClan(mon, id) : null });
     }
     case "creer": {
@@ -289,6 +330,7 @@ async function clansPost(request, env){
     case "guerre": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       const W = mon.guerre ? C.guerres[mon.guerre] : null;
+      if(C._change) await sauver();
       return reponse({ ok: true, complet: mon.membres.length >= MAX_CLAN, chef: mon.chef === id, recherche: !!mon.recherche, bilan: mon.bilan || null,
         guerre: W ? vueGuerre(C, W, mon, id) : null,
         derniere: !W && mon.historique && C.guerres[mon.historique[0]] ? vueGuerre(C, C.guerres[mon.historique[0]], mon, id) : null });
@@ -414,7 +456,52 @@ async function adminPost(request, env){
     }
     case "clans": {
       const C = await lireClans(env), R = await lireReglages(env);
-      return repAdmin({ jourMin: R.jourMinClan, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { liste: c.membres.map((m) => m.pseudo + " (j" + m.jour + ")").join(", ") })) });
+      if(C._change) await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      return repAdmin({ jourMin: R.jourMinClan, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { bot: !!c.bot, bots: c.membres.filter((m) => m.bot).length, enGuerre: !!c.guerre, recherche: !!c.recherche, liste: c.membres.map((m) => (m.bot ? "🤖 " : "") + m.pseudo + " (j" + m.jour + ")").join(", ") })) });
+    }
+    case "botsCreer": {
+      const C = await lireClans(env), n = Math.max(1, Math.min(3, Math.floor(+d.clans) || 1)), now2 = Date.now(), noms = [];
+      for(let k = 0; k < n; k++){
+        let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
+        let nom = NOMS_CLANS_BOTS[hasardEntier(0, NOMS_CLANS_BOTS.length - 1)]; while(Object.values(C.clans).some((c) => c.nom === nom)) nom = nom.replace(/ \d+$/, "") + " " + hasardEntier(2, 99);
+        const membres = []; for(let j = 0; j < MAX_CLAN; j++){ const b = nouveauBot(); membres.push(b); C.parJoueur[b.id] = cid; }
+        C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, recherche: true,
+          reserve: { planche: hasardEntier(20, 60), conserve: hasardEntier(5, 20), bidon: hasardEntier(1, 5), ferraille: hasardEntier(4, 15), clous: hasardEntier(4, 15), balle: hasardEntier(0, 20) },
+          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2) }, journal: [], retraits: {} };
+        C.file.push(cid); noms.push(nom);
+      }
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      // Les bots apparaissent aussi au classement général (pour voir leurs cadres)
+      const L = await lireListe(env);
+      Object.values(C.clans).filter((c) => c.bot).forEach((c) => c.membres.forEach((m) => { if(!L.some((e) => e.id === m.id)){ const j = m.jour; L.push({ id: m.id, pseudo: m.pseudo, score: hasardEntier(j, j * 3), jours: j, cadre: m.cadre }); } }));
+      L.sort((a, b) => b.score - a.score || a.jours - b.jours); await env.CLASSEMENT.put(CLE, JSON.stringify(L.slice(0, GARDES)));
+      return repAdmin({ ok: true, noms });
+    }
+    case "botsCompleter": {
+      const C = await lireClans(env), c = C.clans[String(d.clan || "")];
+      if(!c) return repAdmin({ erreur: "introuvable" }, 404);
+      let ajoutes = 0; while(c.membres.length < MAX_CLAN){ const b = nouveauBot(); c.membres.push(b); C.parJoueur[b.id] = c.id; ajoutes++; }
+      bastionDe(c); noter(c, "🤖", ajoutes + " bot" + (ajoutes > 1 ? "s ont" : " a") + " rejoint le clan (test).");
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      return repAdmin({ ok: true, ajoutes });
+    }
+    case "botsSupprimer": {
+      const C = await lireClans(env); let nb = 0;
+      // Guerres avec un clan de bots : effacées, l'autre clan est libéré
+      for(const wid in C.guerres){ const W = C.guerres[wid], A = C.clans[W.a], B = C.clans[W.b];
+        if((A && A.bot) || (B && B.bot)){ [A, B].forEach((c) => { if(c && c.guerre === wid) c.guerre = null; }); delete C.guerres[wid]; } }
+      for(const cid in C.clans){
+        const c = C.clans[cid], bots = c.membres.filter((m) => m.bot || estBot(m.id));
+        bots.forEach((m) => { delete C.parJoueur[m.id]; nb++; });
+        c.membres = c.membres.filter((m) => !(m.bot || estBot(m.id)));
+        if(!c.membres.length || c.bot){ c.membres.forEach((m) => { delete C.parJoueur[m.id]; }); delete C.clans[cid]; continue; }
+        if(!c.membres.some((m) => m.id === c.chef)) c.chef = c.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
+        // une guerre en cours où des bots attaquaient : leurs assauts restent comptés
+      }
+      C.file = C.file.filter((cid) => C.clans[cid]);
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      const L = await lireListe(env), L2 = L.filter((e) => !estBot(e.id)); if(L2.length !== L.length) await env.CLASSEMENT.put(CLE, JSON.stringify(L2));
+      return repAdmin({ ok: true, supprimes: nb });
     }
     case "reglageJourClan": {
       const R = await lireReglages(env), j = Math.floor(+d.jour);

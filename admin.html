@@ -130,8 +130,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     if(onglet === "clans"){
       h = '<div class="carte"><form id="formJour" class="row"><label for="jourMin" style="font-weight:700">Jours de survie pour accéder aux clans</label><input id="jourMin" type="number" min="1" max="1000" value="' + d.jourMin + '" style="width:110px"><button type="submit">Enregistrer</button></form>'
         + '<p class="sub" style="margin-top:8px">100 par défaut. Baisse-le (ex. 1) pour tester les clans avec tes amis, puis remets 100.</p></div>'
+        + '<div class="carte"><b>🤖 Bots de test</b><p class="sub" style="margin:4px 0 8px">Des faux joueurs pour tester les clans, les guerres, les cadres et le classement. Les clans de bots cherchent toujours une guerre ; pendant une guerre, les bots (ennemis et équipiers) lancent leur assaut chaque jour tout seuls.</p>'
+        + '<div class="row"><button data-botscreer="1">Créer 1 clan de bots</button><button data-botscreer="2">Créer 2 clans de bots</button><button class="danger" data-botssuppr="1">Supprimer tous les bots</button></div></div>'
         + '<div class="carte tableau"><table><tr><th>Clan</th><th>Chef</th><th>Familles</th><th>Jours</th><th>Membres</th><th></th></tr>'
-        + d.clans.map(function(c){ return '<tr><td><b>' + esc(c.nom) + '</b></td><td>' + esc(c.chef) + '</td><td class="num">' + c.membres + ' / 5</td><td class="num">' + c.jours + '</td><td>' + esc(c.liste) + '</td><td><button class="danger" data-clansuppr="' + esc(c.id) + '" data-nom="' + esc(c.nom) + '">Dissoudre</button></td></tr>'; }).join("") + '</table></div>';
+        + d.clans.map(function(c){ return '<tr><td><b>' + (c.bot ? "🤖 " : "") + esc(c.nom) + '</b><br><small>' + (c.enGuerre ? "⚔️ en guerre" : c.recherche ? "🔎 cherche une guerre" : "") + '</small></td><td>' + esc(c.chef) + '</td><td class="num">' + c.membres + ' / 5' + (c.bots && !c.bot ? "<br><small>dont " + c.bots + " 🤖</small>" : "") + '</td><td class="num">' + c.jours + '</td><td style="white-space:normal;min-width:180px">' + esc(c.liste) + '</td><td class="row">' + (c.membres < 5 ? '<button class="alt" data-botscompleter="' + esc(c.id) + '">➕ Bots</button>' : '') + '<button class="danger" data-clansuppr="' + esc(c.id) + '" data-nom="' + esc(c.nom) + '">Dissoudre</button></td></tr>'; }).join("") + '</table></div>';
     }
     $("contenu").innerHTML = h;
     var fj = $("formJour"); if(fj) fj.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourClan", { jour:$("jourMin").value }, "Réglage enregistré."); });
@@ -143,6 +145,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     if(b.dataset.suppr && confirm("Supprimer « " + (b.dataset.nom || "ce joueur") + " » des chiffres du monde et du classement ?")) action("supprimerJoueur", { id:b.dataset.suppr }, "Joueur supprimé.");
     else if(b.dataset.score && confirm("Retirer « " + b.dataset.nom + " » du classement ?")) action("supprimerScore", { id:b.dataset.score }, "Score retiré.");
     else if(b.dataset.basculer) action("codeBasculer", { code:b.dataset.basculer }, "Code modifié.");
+    else if(b.dataset.botscreer) action("botsCreer", { clans:+b.dataset.botscreer }, "Bots créés.");
+    else if(b.dataset.botscompleter) action("botsCompleter", { clan:b.dataset.botscompleter }, "Clan complété avec des bots.");
+    else if(b.dataset.botssuppr && confirm("Supprimer TOUS les bots (clans de bots, bots dans les clans, au classement, guerres contre des bots) ?")) action("botsSupprimer", {}, "Bots supprimés.");
     else if(b.dataset.clansuppr && confirm("Dissoudre le clan « " + b.dataset.nom + " » ? Ses membres redeviennent sans clan.")) action("clanSupprimer", { clan:b.dataset.clansuppr }, "Clan dissous.");
     else if(b.dataset.codesuppr && confirm("Supprimer le code « " + b.dataset.codesuppr + " » ?")) action("codeSupprimer", { code:b.dataset.codesuppr }, "Code supprimé.");
   });

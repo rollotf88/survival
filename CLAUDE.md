@@ -266,7 +266,7 @@ Retours de Fabien du 2026-11-10 sur les clans (faits) : vitrine avec une carte �
 Rappel : en clan, chacun GARDE sa maison et sa partie (événements, expéditions, nuits) ; les 3 pièces du bastion s'ajoutent à sa maison.
 
 ## Idées de Fabien du 2026-11-10 à faire ensuite (ordre proposé)
-1. Bots de test (créés et supprimés depuis l'admin : clans de bots, compléter son clan, guerre contre un clan de bots qui attaque tout seul)
+1. Bots de test — FAIT (2026-11-10) : admin onglet 🏰 Clans → « Créer 1 / 2 clans de bots » (`botsCreer` : 5 bots par clan, ids `bot…`, `m.bot`, pseudos et cadres au hasard, réserve et défenses au hasard, toujours en recherche de guerre, ajoutés au classement général), « ➕ Bots » sur un clan incomplet (`botsCompleter`), « Supprimer tous les bots » (`botsSupprimer` : clans de bots, bots dans les clans, guerres contre des bots, classement). `botsAttaquent` (dans `cloreGuerres`) : pendant une guerre, chaque bot des deux camps lance tout seul son assaut de chaque jour écoulé (étoiles au hasard, butin) ; les lectures `liste` / `guerre` / admin sauvegardent si des bots ont joué (`C._change`). Testé dans le navigateur avec le vrai code du serveur et un faux stockage
 2. Succès liés aux clans et aux guerres
 3. Ligues de guerre (appariement par niveau, ligue du dessus / dessous si personne ; images Gemini des insignes)
 4. Équipements spéciaux de guerre à fabriquer (gilet pare-balles, casque… pour que les armes à feu ne gagnent pas tout)
