@@ -449,7 +449,7 @@ document.addEventListener("click", function(e){
   else if(a === "clanblason"){ var nom = ($("nomclan") || {}).value || ""; choixBlason = +id; openCreerClan(); $("nomclan").value = nom; }
   else if(a === "clancreerok"){
     var n = ($("nomclan").value || "").trim(); if(n.length < 3){ $("msgclan").textContent = "Le nom doit faire au moins 3 lettres."; return; }
-    appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
+    appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } noterStatClan("fonde", 1, true); openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
   }
   else if(a === "clanrejoindre"){
     if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
@@ -466,7 +466,7 @@ try{ BONUS_CLAN_DEF = +localStorage.getItem("survival_clan_tours") || 0; }catch(
 function noterTours(t){ BONUS_CLAN_DEF = t || 0; try{ localStorage.setItem("survival_clan_tours", BONUS_CLAN_DEF); }catch(e){} }
 // Fait-on partie d'un clan ? (retenu à chaque lecture des clans : sert aux pièces du bastion dans la maison)
 function dansUnClan(){ try{ return localStorage.getItem("survival_mon_clan") === "1"; }catch(e){ return false; } }
-function noterClan(oui){ var avant = dansUnClan(); try{ localStorage.setItem("survival_mon_clan", oui ? "1" : ""); }catch(e){} if(avant !== !!oui && typeof G !== "undefined" && G && G.ph === "game" && typeof placerPiece === "function") placerPiece(); }
+function noterClan(oui){ if(oui) noterStatClan("rejoint", 1, true); var avant = dansUnClan(); try{ localStorage.setItem("survival_mon_clan", oui ? "1" : ""); }catch(e){} if(avant !== !!oui && typeof G !== "undefined" && G && G.ph === "game" && typeof placerPiece === "function") placerPiece(); }
 var DEF_BASTION = {
   remparts: { nom:"Remparts", icone:"🧱", effet:function(l){ return "Protègent le bastion pendant les guerres (niveau " + l + " / 5)."; } },
   mines:    { nom:"Mines", icone:"💣", effet:function(l){ return (l ? l + " mine" + (l > 1 ? "s" : "") + " posée" + (l > 1 ? "s" : "") : "Aucune mine posée") + " : chacune blesse un assaillant pendant une guerre, puis disparaît."; } },
@@ -514,12 +514,12 @@ document.addEventListener("click", function(e){
   else if(a === "bastdeposer"){
     if(!G || compter(id) < 1) return;
     var o = {}; o[id] = 1;
-    appelClans({ action:"deposer", objets:o }).then(function(d){ if(!d.erreur) retirer(id, 1); apres(d, "📦 Tu as déposé " + nommer(id, 1) + " dans la réserve."); }).catch(function(){ msgBastion = "❌ " + MSG_HORS_LIGNE; afficherBastion(); });
+    appelClans({ action:"deposer", objets:o }).then(function(d){ if(!d.erreur){ retirer(id, 1); noterStatClan("depots"); } apres(d, "📦 Tu as déposé " + nommer(id, 1) + " dans la réserve."); }).catch(function(){ msgBastion = "❌ " + MSG_HORS_LIGNE; afficherBastion(); });
   }
   else if(a === "bastprendre"){
     appelClans({ action:"retirer", objet:id, n:1 }).then(function(d){ if(!d.erreur) ajouter(id, 1); apres(d, "🎒 Tu as pris " + nommer(id, 1) + " dans la réserve."); }).catch(function(){ msgBastion = "❌ " + MSG_HORS_LIGNE; afficherBastion(); });
   }
-  else if(a === "bastconstruire") appelClans({ action:"construire", def:id }).then(function(d){ apres(d, "🔨 " + DEF_BASTION[id].nom + " : niveau supérieur construit !"); });
+  else if(a === "bastconstruire") appelClans({ action:"construire", def:id }).then(function(d){ if(!d.erreur) noterStatClan("defenses"); apres(d, "🔨 " + DEF_BASTION[id].nom + " : niveau supérieur construit !"); });
 });
 // Au lancement : bonus des tours de guet de mon clan (lu une fois)
 (function(){ if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; setTimeout(function(){ appelClans({ action:"liste" }).then(function(d){ noterTours(d && d.monClan ? d.monClan.tours : 0); noterClan(!!(d && d.monClan)); }).catch(function(){}); }, 4000); })();
@@ -537,6 +537,7 @@ function bandeauGuerre(W){
     + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b><span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
 }
 function afficherGuerre(msg){
+  if(etatGuerre && etatGuerre.bilan && etatGuerre.bilan.gagnees) noterStatClan("victoires", etatGuerre.bilan.gagnees, true);
   var d = etatGuerre, W = d.guerre, h = '<h2>⚔️ La guerre</h2>' + (msg ? '<p class="msg ' + (msg.charAt(0) === "❌" ? "" : "g2") + '">' + msg + '</p>' : '');
   if(d.bilan) h += '<p class="sub">Bilan du clan : ' + d.bilan.gagnees + ' victoire' + (d.bilan.gagnees > 1 ? "s" : "") + ', ' + d.bilan.perdues + ' défaite' + (d.bilan.perdues > 1 ? "s" : "") + ', ' + d.bilan.nulles + ' nulle' + (d.bilan.nulles > 1 ? "s" : "") + '.</p>';
   if(!W){
@@ -579,6 +580,7 @@ function terminerAssaut(){
   var b = bilanAssaut();
   appelClans({ action:"finAssaut", assaut:b.assaut, victoire:b.victoire, etoiles:b.etoiles }).then(function(d){
     finirAssaut(); var butin = [];
+    if(!d.erreur && b.etoiles){ noterStatClan("etoiles", b.etoiles); if(b.etoiles >= 3) noterStatClan("assauts3"); }
     if(!d.erreur) (d.butin || []).forEach(function(p){ if(OBJETS[p[0]]){ ajouter(p[0], p[1]); butin.push(nommer(p[0], p[1])); } });
     render(); if(typeof sauver === "function") sauver();
     show('<h2>' + (b.victoire ? "⭐ Assaut réussi !" : "🛡️ Assaut repoussé") + '</h2><p class="gu-etoiles">' + (b.etoiles ? "★".repeat(b.etoiles) + "☆".repeat(3 - b.etoiles) : "☆☆☆") + '</p>'
@@ -655,3 +657,8 @@ document.addEventListener("click", function(e){
     }).catch(function(){});
   }, 6000);
 })();
+
+/* ---------- Compteurs des clans pour les succès (gardés d'une partie à l'autre) ---------- */
+function statsClanTout(){ try{ return JSON.parse(localStorage.getItem("survival_stats_clan")) || {}; }catch(e){ return {}; } }
+function statClan(k){ return statsClanTout()[k] || 0; }
+function noterStatClan(k, n, max){ var s = statsClanTout(); s[k] = max ? Math.max(s[k] || 0, n) : (s[k] || 0) + (n || 1); try{ localStorage.setItem("survival_stats_clan", JSON.stringify(s)); }catch(e){} if(typeof verifierSucces === "function") verifierSucces(); }

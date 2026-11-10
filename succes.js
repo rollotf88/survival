@@ -23,7 +23,15 @@ var SUCCES = [
   { id:"missions",   icone:"🎯", nom:"Héros du quartier",      desc:"Réussir 5 missions",                             test:function(){ return (G.stats.missions || 0) >= 5; } },
   { id:"explorateur",icone:"🗺️", nom:"Explorateur",            desc:"Découvrir tous les lieux secrets",               test:function(){ return LIEUX.every(function(L, i){ return !L.secret || (G.decouverts && G.decouverts[i]); }); } },
   { id:"bunker",     icone:"🛢️", nom:"Le trésor du bunker",    desc:"Revenir vivant du Bunker du survivaliste",       test:function(){ return !!G.stats.lieux[lieuNomme("Bunker du survivaliste")]; } },
-  { id:"base",       icone:"🪖", nom:"Commando",               desc:"Revenir vivant de la Base militaire",            test:function(){ return !!G.stats.lieux[lieuNomme("Base militaire")]; } }
+  { id:"base",       icone:"🪖", nom:"Commando",               desc:"Revenir vivant de la Base militaire",            test:function(){ return !!G.stats.lieux[lieuNomme("Base militaire")]; } },
+  // Clans et guerres (2026-11-10) : compteurs gardés d'une partie à l'autre (statsClan, classement.js)
+  { id:"clan",       icone:"🤝", nom:"Plus jamais seuls",      desc:"Rejoindre ou fonder un clan",                    test:function(){ return statClan("rejoint") >= 1; } },
+  { id:"chefclan",   icone:"👑", nom:"Chef de meute",          desc:"Fonder un clan",                                 test:function(){ return statClan("fonde") >= 1; } },
+  { id:"genereux",   icone:"📦", nom:"Le cœur sur la main",    desc:"Déposer 20 objets dans la réserve du clan",      test:function(){ return statClan("depots") >= 20; } },
+  { id:"batisseur",  icone:"🗼", nom:"Bâtisseur du bastion",   desc:"Construire une défense du bastion",              test:function(){ return statClan("defenses") >= 1; } },
+  { id:"etoile",     icone:"⭐", nom:"Première étoile",        desc:"Gagner une étoile pendant une guerre de clans",  test:function(){ return statClan("etoiles") >= 1; } },
+  { id:"parfait",    icone:"🌟", nom:"Assaut parfait",         desc:"Réussir un assaut à 3 étoiles",                  test:function(){ return statClan("assauts3") >= 1; } },
+  { id:"victoire",   icone:"🏆", nom:"Vainqueurs",             desc:"Gagner une guerre de clans",                     test:function(){ return statClan("victoires") >= 1; } }
 ];
 
 function lireSucces(){ try{ return JSON.parse(localStorage.getItem("survival_succes")) || {}; }catch(e){ return {}; } }
