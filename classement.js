@@ -414,7 +414,7 @@ function afficherClans(msg){
   var d = etatClans, j = jourPartie(), ok = j >= d.jourMin, h = '<h2>⚔️ Clans</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '');
   if(d.monClan){
     var c = d.monClan;
-    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small></span></div>';
+    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
     h += '<div class="clan-membres">' + c.membresListe.map(function(m){
       return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
@@ -427,7 +427,7 @@ function afficherClans(msg){
   h += '<p class="sub">' + (ok ? "Tu as tenu " + j + " jours : tu peux fonder un clan ou en rejoindre un (5 familles maximum)." : "🔒 Les clans s’ouvrent quand ta famille a tenu <b>" + d.jourMin + " jours</b> (tu en es au jour " + j + "). Voici ceux qui t’attendent :") + '</p>';
   h += d.clans.length ? '<div class="clan-liste">' + d.clans.map(function(c){
     var plein = c.membres >= 5;
-    return '<div class="clan-l">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + '</b><small>👑 ' + echapper(c.chef) + ' · ' + c.membres + ' / 5 · ' + c.jours + ' j</small></span>'
+    return '<div class="clan-l">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + '</b><small>👑 ' + echapper(c.chef) + ' · ' + c.membres + ' / 5 · ' + badgeLigue(c.trophees, true) + '</small></span>'
       + (ok ? '<button class="mini" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '</div>';
   }).join("") + '</div>' : '<p>Aucun clan pour l’instant. Sois le premier à en fonder un !</p>';
   h += (ok ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="clancreer">🏴 Fonder un clan</button>' : '') + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>' + BTN_FERMER();
@@ -533,18 +533,18 @@ function openGuerre(msg){
     .catch(function(){ show('<h2>⚔️ La guerre</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "la guerre") + '</p>' + BTN_FERMER()); });
 }
 function bandeauGuerre(W){
-  return '<div class="gu-tete"><span class="gu-camp">' + blason(W.nous.blason) + '<b>' + echapper(W.nous.nom) + '</b><span class="gu-et">' + W.nous.etoiles + ' ★</span></span><span class="gu-vs">VS</span>'
-    + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b><span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
+  return '<div class="gu-tete"><span class="gu-camp">' + blason(W.nous.blason) + '<b>' + echapper(W.nous.nom) + '</b>' + (W.nous.trophees !== undefined ? badgeLigue(W.nous.trophees, true) : '') + '<span class="gu-et">' + W.nous.etoiles + ' ★</span></span><span class="gu-vs">VS</span>'
+    + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b>' + (W.eux.trophees !== undefined ? badgeLigue(W.eux.trophees, true) : '') + '<span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
 }
 function afficherGuerre(msg){
   if(etatGuerre && etatGuerre.bilan && etatGuerre.bilan.gagnees) noterStatClan("victoires", etatGuerre.bilan.gagnees, true);
   var d = etatGuerre, W = d.guerre, h = '<h2>⚔️ La guerre</h2>' + (msg ? '<p class="msg ' + (msg.charAt(0) === "❌" ? "" : "g2") + '">' + msg + '</p>' : '');
   if(d.bilan) h += '<p class="sub">Bilan du clan : ' + d.bilan.gagnees + ' victoire' + (d.bilan.gagnees > 1 ? "s" : "") + ', ' + d.bilan.perdues + ' défaite' + (d.bilan.perdues > 1 ? "s" : "") + ', ' + d.bilan.nulles + ' nulle' + (d.bilan.nulles > 1 ? "s" : "") + '.</p>';
   if(!W){
-    if(d.derniere) h += '<div class="carte-guerre">' + bandeauGuerre(d.derniere) + '<p class="etat ' + (d.derniere.gagnant === "nous" ? "ok" : d.derniere.gagnant ? "ko" : "") + '">' + (d.derniere.gagnant === "nous" ? "🏆 Dernière guerre gagnée !" : d.derniere.gagnant ? "Dernière guerre perdue." : "Dernière guerre : match nul.") + '</p></div>';
+    if(d.derniere) h += '<div class="carte-guerre">' + bandeauGuerre(d.derniere) + '<p class="etat ' + (d.derniere.gagnant === "nous" ? "ok" : d.derniere.gagnant ? "ko" : "") + '">' + (d.derniere.gagnant === "nous" ? "🏆 Dernière guerre gagnée !" : d.derniere.gagnant ? "Dernière guerre perdue." : "Dernière guerre : match nul.") + (d.derniere.gainTrophees ? " (" + (d.derniere.gainTrophees > 0 ? "+" : "") + d.derniere.gainTrophees + " 🏆)" : "") + '</p></div>';
     if(!d.complet) h += '<p>🔒 Il faut <b>5 familles</b> dans le clan pour partir en guerre. Les clans incomplets ne peuvent ni attaquer ni être attaqués.</p>';
     else if(d.recherche) h += '<p>🔎 Le clan cherche un adversaire de sa taille… La guerre commencera dès qu’un autre clan complet sera prêt.</p>' + (d.chef ? '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guerreannuler">Annuler la recherche</button>' : '');
-    else h += '<p>Une guerre dure <b>3 jours</b>. Chaque jour, chaque membre peut lancer <b>un assaut</b> contre une famille adverse : un combat tactique contre ses défenseurs, ses mines et ses remparts. Les étoiles décident du vainqueur, et chaque victoire rapporte une part de la réserve adverse.</p>'
+    else h += '<p>Une guerre dure <b>3 jours</b>. Chaque jour, chaque membre peut lancer <b>un assaut</b> contre une famille adverse : un combat tactique contre ses défenseurs, ses mines et ses remparts. Les étoiles décident du vainqueur, et chaque victoire rapporte une part de la réserve adverse.</p><p class="sub">🏆 Ligues : une guerre gagnée rapporte +30 trophées, perdue −20, nulle +5. Tu n’affrontes qu’un clan de ta ligue (ou de la ligue voisine si personne d’autre n’attend) : Ferraille, Bronze (100), Argent (250), Or (450), Légende (700).</p>'
       + (d.chef ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="guerrechercher">⚔️ Chercher une guerre</button>' : '<p class="sub">Seul le chef peut lancer la recherche d’un adversaire.</p>');
     show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>'); return;
   }
@@ -630,8 +630,8 @@ function openClassementClans(){
     var el = $("listeclans"); if(!el) return;
     if(!d.clans || !d.clans.length){ el.textContent = "Aucun clan pour l’instant."; return; }
     el.outerHTML = '<ol class="classement clans">' + d.clans.map(function(c, k){
-      return '<li class="' + (c.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + '</b><span class="pts">🏆 ' + c.gagnees + ' · ★ ' + c.etoiles + '</span></li>';
-    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · 🏆 guerres gagnées · ★ étoiles gagnées en tout' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
+      return '<li class="' + (c.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + '</b><span class="pts">' + badgeLigue(c.trophees, true) + '</span></li>';
+    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · rangés par trophées de ligue (🔩 Ferraille, 🥉 Bronze, 🥈 Argent, 🥇 Or, 👑 Légende)' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
   }).catch(function(){ var el = $("listeclans"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
 document.addEventListener("click", function(e){
@@ -662,3 +662,9 @@ document.addEventListener("click", function(e){
 function statsClanTout(){ try{ return JSON.parse(localStorage.getItem("survival_stats_clan")) || {}; }catch(e){ return {}; } }
 function statClan(k){ return statsClanTout()[k] || 0; }
 function noterStatClan(k, n, max){ var s = statsClanTout(); s[k] = max ? Math.max(s[k] || 0, n) : (s[k] || 0) + (n || 1); try{ localStorage.setItem("survival_stats_clan", JSON.stringify(s)); }catch(e){} if(typeof verifierSucces === "function") verifierSucces(); }
+
+/* ---------- Ligues de guerre (2026-11-10) ---------- */
+var LIGUES = [ { nom:"Ferraille", min:0, icone:"🔩" }, { nom:"Bronze", min:100, icone:"🥉" }, { nom:"Argent", min:250, icone:"🥈" }, { nom:"Or", min:450, icone:"🥇" }, { nom:"Légende", min:700, icone:"👑" } ];
+function ligueDe(t){ var k = 0; LIGUES.forEach(function(L, i){ if((t || 0) >= L.min) k = i; }); return k; }
+// Pastille de ligue (insigne peint quand il existera : images/ligues/<n>.webp)
+function badgeLigue(t, court){ var k = ligueDe(t), L = LIGUES[k]; return '<span class="ligue l' + k + '" title="Ligue ' + L.nom + '">' + L.icone + (court ? '' : ' ' + L.nom) + ' · ' + (t || 0) + ' 🏆</span>'; }

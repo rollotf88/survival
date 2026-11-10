@@ -981,3 +981,8 @@ body.pc #modal:not(:has(.sheet.large)){right:calc((100vw - min(100vw, 1500px)) /
 #piece .flpc:hover,#piece .flpc:focus-visible{background:rgba(29,20,14,.85);transform:translateY(-50%) scale(1.06);outline:none}
 #piece .flpc.g{left:10px}#piece .flpc.d{right:10px}
 body.pc #piece .navpieces{opacity:1;pointer-events:auto}
+/* Ligues de guerre */
+.ligue{display:inline-block;font-size:11px;font-weight:800;border-radius:9px;padding:0 6px;border:1.5px solid currentColor;white-space:nowrap;line-height:1.5}
+.ligue.l0{color:#8a6a55}.ligue.l1{color:#b8733b}.ligue.l2{color:#7f939f}.ligue.l3{color:#c9921b}.ligue.l4{color:#a63bc0}
+.clan-tete .ligue{margin-top:3px}
+.gu-camp .ligue{margin:1px 0}
