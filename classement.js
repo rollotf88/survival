@@ -489,12 +489,14 @@ document.addEventListener("click", function(e){
   else if(a === "clanblason"){ var nom = ($("nomclan") || {}).value || ""; choixBlason = +id; openCreerClan(); $("nomclan").value = nom; }
   else if(a === "clancreerok"){
     var n = ($("nomclan").value || "").trim(); if(n.length < 3){ $("msgclan").textContent = "Le nom doit faire au moins 3 lettres."; return; }
+    if(texteInterdit(n)){ $("msgclan").textContent = MSG_NOM_INTERDIT; return; }
     appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } noterStatClan("fonde", 1, true); openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
   }
   else if(a === "profilmembre") openProfilMembre(+id);
   else if(a === "clanfiche") openFicheClan(+id);
   else if(a === "clanfichec") openFicheClan(+id, true);
   else if(a === "clandesc") openDescClan();
+  else if(a === "clandescok" && document.getElementById("descClan") && texteInterdit(document.getElementById("descClan").value)){ var rs = document.getElementById("descReste"); if(rs){ rs.textContent = "❌ " + MSG_NOM_INTERDIT.replace("Ce nom", "Cette description").replace("Choisis-en un autre", "Change-la"); rs.style.color = "var(--bad)"; } }
   else if(a === "clandescok"){ var tx = document.getElementById("descClan"); appelClans({ action:"description", desc:tx ? tx.value : "" }).then(function(r){ if(r.erreur){ openClans("❌ " + r.erreur); return; } openClans("✏️ Description enregistrée."); }).catch(function(){ openClans("❌ " + MSG_HORS_LIGNE); }); }
   else if(a === "clanrejoindre"){
     if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }

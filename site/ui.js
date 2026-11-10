@@ -1159,6 +1159,7 @@ function openSaisie(k){
 }
 function validerSaisie(k){
   var v = ($("saisie").value || "").replace(/[<>&"]/g, "").trim();
+  if(typeof texteInterdit === "function" && texteInterdit(v)){ $("msgsaisie").textContent = MSG_NOM_INTERDIT; return; }
   if(k === "p"){
     try{ localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){}
     // Pseudo demandé par une autre fenêtre (ex. fonder un clan) : on y revient au lieu de tout fermer

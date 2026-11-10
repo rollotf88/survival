@@ -14,6 +14,7 @@ var FICHIERS = [
   "logique.js",
   "ui.js",
   "guide.js",
+  "moderation.js",
   "classement.js",
   "succes.js",
   "piece.js",

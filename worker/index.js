@@ -29,7 +29,7 @@ async function onRequestPost({ request, env }){
   if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const score = Math.floor(+d.score), jours = Math.floor(+d.jours);
-  const pseudo = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16);
+  const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
   // Vérifications simples : un score impossible est refusé (au plus 4 points par jour tenu)
   if(!pseudo || id.length < 8 || !(jours >= 0 && jours <= 400) || !(score >= 0 && score <= jours * 4))
@@ -69,7 +69,7 @@ async function mondePost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
   if(id.length < 8) return reponse({ erreur: "id" }, 400);
-  const pseudo = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16);
+  const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
   const m = await lireMonde(env), now = Date.now();
   m.j[id] = { v: entier(d.vivants, 4), d: entier(d.jour, 400), n: pseudo, m: entier(d.morts, 100000), z: entier(d.zombies, 1000000), p: entier(d.parties, 10000), t: now };
   if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 400), s: entier(d.fin.score, 1600), t: now }].concat(m.tombes || []).slice(0, 10); }
@@ -108,7 +108,7 @@ async function parrainagePost(request, env){
     return reponse({ code, n: p.codes[code].n });
   }
   if(d.action === "utiliser"){
-    const code = normCode(d.code), pseudo = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16) || "Un nouveau joueur";
+    const code = normCode(d.code), pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16)) || "Un nouveau joueur";
     const sp = p.speciaux[code];
     if(sp){
       if(!sp.actif) return reponse({ erreur: "Ce code n’est plus actif." });
@@ -267,7 +267,7 @@ async function clansPost(request, env){
   if(id.length < 8) return reponse({ erreur: "id" }, 400);
   const C = await lireClans(env), R = await lireReglages(env), now = Date.now();
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
-  const pseudo = nomPropre(d.pseudo, 16), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
+  const pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(nomPropre(d.pseudo, 16)), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
   if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; const pf = profilDe(d); if(pf) m.profil = pf; } }
   switch(d.action){
@@ -281,6 +281,7 @@ async function clansPost(request, env){
       if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour fonder un clan." });
       if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
       const nom = nomPropre(d.nom, 20); if(nom.length < 3) return reponse({ erreur: "Le nom du clan doit faire au moins 3 lettres." });
+      if(texteInterdit(nom)) return reponse({ erreur: MSG_NOM_INTERDIT });
       if(Object.values(C.clans).some((c) => c.nom.toLowerCase() === nom.toLowerCase())) return reponse({ erreur: "Ce nom de clan est déjà pris." });
       const blason = Math.max(1, Math.min(BLASONS_OK, Math.floor(+d.blason) || 1));
       let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
@@ -420,6 +421,7 @@ async function clansPost(request, env){
     }
     case "description": {
       if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut changer la description." });
+      if(texteInterdit(d.desc)) return reponse({ erreur: "Cette description n’est pas autorisée (insulte ou mot blessant)." });
       mon.desc = descPropre(d.desc); await sauver(); return reponse({ ok: true, monClan: detailClan(mon, id) });
     }
     case "exclure": {
@@ -587,6 +589,37 @@ async function avisPost(request, env){
   await env.CLASSEMENT.put(cleLim, String(n + 1), { expirationTtl: 86400 });
   return reponse({ ok: true });
 }
+
+/* ---------- Modération des noms : copie de moderation.js (garder les deux listes identiques) ---------- */
+const MOTS_INTERDITS = {
+  // cherchés n'importe où (assez longs pour ne pas se cacher dans des mots normaux)
+  partout: ["connard", "connasse", "salope", "salopard", "salaud", "enculé", "enculer", "enculeur", "putain", "pétasse", "pouffiasse", "grognasse", "bâtard", "batard",
+    "niquer", "nique ta", "niquetamere", "fils de pute", "filsdepute", "branleur", "branlette", "suceur", "suceuse", "enfoiré", "emmerdeur", "trouduc", "trou du cul",
+    "tapette", "tarlouze", "pédale", "gouine", "nègre", "négro", "bougnoule", "youpin", "chinetoque", "bamboula", "sale arabe", "sale noir", "sale juif",
+    "pédophile", "pedophile", "violeur", "zoophile", "nécrophile", "inceste", "hitler", "terroriste", "daech", "jihad", "djihad",
+    "fuck", "motherfucker", "bitch", "faggot", "whore", "pussy", "asshole", "cocksucker", "rapist", "porno"],
+  // seulement comme mot entier
+  mot: ["con", "conne", "cul", "pute", "putes", "bite", "zob", "chatte", "couille", "couilles", "merde", "chier", "nique", "ntm", "fdp", "pd", "pédé", "pede",
+    "salop", "naze", "nazi", "nazis", "kkk", "ss", "viol", "sexe", "sex", "porn", "shit", "cunt", "dick", "cock", "slut", "fag", "ass", "rape", "negro", "nigger", "nigga", "niger", "heil"]
+};
+function normaliserMod(t){
+  return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/7/g, "t").replace(/8/g, "b").replace(/@/g, "a").replace(/\$/g, "s").replace(/[!|]/g, "i");
+}
+let listeModPrete = null;
+function preparerListeMod(){
+  var serre = function(w){ return normaliserMod(w).replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1"); };
+  listeModPrete = { partout: MOTS_INTERDITS.partout.map(serre).filter(function(w){ return w.length >= 3; }), mot: MOTS_INTERDITS.mot.map(serre) };
+}
+// true si le texte contient un mot interdit
+function texteInterdit(t){
+  if(!listeModPrete) preparerListeMod();
+  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), colle = n.replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1");
+  var mots = n.split(/[^a-z]+/).filter(Boolean).map(function(w){ return w.replace(/(.)\1+/g, "$1"); });
+  if(listeModPrete.partout.some(function(w){ return colle.indexOf(w) >= 0; })) return true;
+  return listeModPrete.mot.some(function(w){ return mots.indexOf(w) >= 0 || colle === w; });
+}
+const MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";
 
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {
