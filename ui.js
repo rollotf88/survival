@@ -789,7 +789,23 @@ function openRef(onglet){
 }
 
 /* ---------- Nuit, événements, mort ---------- */
+// Bilan de la nuit plus lisible (2026-11-10, retour de Fabien) : « Papa n'a rien à manger », « Maman n'a rien à manger »…
+// deviennent une seule ligne par besoin, avec son icône (au lieu de 4 lignes rouges avec « ! »)
+function regrouperNuit(n){
+  var faim = [], soif = [], out = [], posF = -1, posS = -1;
+  n.forEach(function(l){
+    var t = String(l[1]), m;
+    if((m = t.match(/^(.+) n’a rien à manger\.$/))){ if(posF < 0){ posF = out.length; out.push(null); } faim.push(m[1]); }
+    else if((m = t.match(/^(.+) n’a rien à boire\.$/))){ if(posS < 0){ posS = out.length; out.push(null); } soif.push(m[1]); }
+    else out.push(l);
+  });
+  var tous = function(noms){ return vivants().length > 1 && noms.length >= vivants().length; };
+  if(posF >= 0) out[posF] = ["b2", "🥫 " + (tous(faim) ? "Personne n’a mangé ce soir" : "Rien à manger pour " + liste(faim)) + " : la faim baisse."];
+  if(posS >= 0) out[posS] = ["b2", "💧 " + (tous(soif) ? "Personne n’a bu ce soir" : "Rien à boire pour " + liste(soif)) + " : la soif baisse."];
+  return out;
+}
 function openNuit(n){
+  n = regrouperNuit(n);
   // Bandeau : le refuge assiégé s'il y a eu une attaque cette nuit, sinon l'aube calme (griffures sur les planches)
   var attaque = n.some(function(l){ return String(l[1]).indexOf("Attaque de nuit") >= 0; });
   show('<div class="banniere"><img src="images/' + (attaque ? "nuit" : "aube") + '.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
@@ -912,7 +928,7 @@ function tableauPC(){
     .concat(Object.keys(uniq).slice(0, Math.max(0, 15 - ids.length)).map(function(k){ return caseObjet(k, { act:"stock", cle:k, n:uniq[k], fixe:true }); }));
   h += '<p class="titre-butin">📦 Le stock</p>' + (cases.length ? etageres(cases, 5) : '<p class="sub">Le stock est vide.</p>')
     + '<div class="row"><button class="btn alt" data-act="stock">📦 Tout le stock</button><button class="btn alt" data-act="refuge">🛠️ Refuge</button></div>'
-    + (G.derniereNuit && G.derniereNuit.length ? '<p class="titre-butin">🌙 La nuit dernière</p>' + puces(G.derniereNuit) : '')
+    + (G.derniereNuit && G.derniereNuit.length ? '<p class="titre-butin">🌙 La nuit dernière</p><div class="tb-nuit">' + puces(regrouperNuit(G.derniereNuit)) + '</div>' : '')
     + '<p class="sub tb-aide">Les fenêtres s’ouvrent ici, à droite : la pièce reste visible.</p>';
   t.innerHTML = h;
 }
@@ -1221,7 +1237,7 @@ document.addEventListener("click", function(e){
   else if(a === "troc"){ msgMarche = echanger(i) || ""; render(); openMarche(); return; }
   else if(a === "refuge"){ if(typeof allerPieceId === "function") allerPieceId("atelier"); openRef(); return; }
   else if(a === "dormir"){ if(typeof allerPieceId === "function") allerPieceId("chambre"); openDormir(); return; }
-  else if(a === "endday"){ var n = finJour(); G.derniereNuit = n.filter(function(l){ return l[0] !== "mort"; }).slice(0, 8); render(); openNuit(n);
+  else if(a === "endday"){ var n = finJour(); G.derniereNuit = regrouperNuit(n.filter(function(l){ return l[0] !== "mort"; })).slice(0, 8); render(); openNuit(n);
     if(typeof envoyerMonde === "function" && vivants().length) envoyerMonde(n.some(function(l){ return l[0] === "mort"; }));
     if(typeof vibrer === "function" && n.some(function(x){ return x[0] === "b2" && x[1].indexOf("🧟 Attaque de nuit (") === 0; })) vibrer([150, 80, 150]); // attaque perdue
     finiSiMorts(); return; }
