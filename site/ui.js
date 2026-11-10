@@ -1072,7 +1072,8 @@ var VITRINE = [
   ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits : costaud, soigneur, cuisinier… La mort est définitive."],
   ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
-  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, et guerres de 3 jours contre d’autres clans."],
+  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
+  ["images/lieux/centre.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
   ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des succès, et un code pour inviter tes amis."]
 ];

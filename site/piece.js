@@ -212,7 +212,7 @@ function placerPiece(){
     var x = dx + z[1] * s - gx, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
-    var invite = (z[0] === "pCanape" && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
+    var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
     return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
