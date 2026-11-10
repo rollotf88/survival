@@ -224,7 +224,11 @@ const DEFENSES = {
   remparts: { max: 5, cout: (l) => ({ planche: 6 * (l + 1), ferraille: 2 * (l + 1) }) },
   mines:    { max: 10, cout: () => ({ ferraille: 2, clous: 2, alcool: 1 }) },
   tours:    { max: 3, cout: (l) => ({ planche: 8 * (l + 1), clous: 4 * (l + 1) }) },
-  armurerie:{ max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), ruban: 2 * (l + 1), chiffon: 2 * (l + 1) }) }
+  armurerie:{ max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), ruban: 2 * (l + 1), chiffon: 2 * (l + 1) }) },
+  // Camion du clan (2026-11-10) : servent aux assauts de chaque membre
+  parebuffle:{ max: 3, cout: (l) => ({ ferraille: 3 * (l + 1), clous: 3 * (l + 1) }) },
+  blindage:  { max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), planche: 3 * (l + 1), ruban: l + 1 }) },
+  tourelle:  { max: 3, cout: (l) => ({ ferraille: 5 * (l + 1), clous: 2 * (l + 1), ruban: 2 * (l + 1) }) }
 };
 function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(const k in DEFENSES) c.def[k] = c.def[k] || 0; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
@@ -232,7 +236,7 @@ function noter(c, qui, txt){ c.journal.unshift({ t: Date.now(), qui, txt }); c.j
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
   const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
-  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
+  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3, parebuffle: 3, blindage: 3, tourelle: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
 
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
 // {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
@@ -378,13 +382,13 @@ async function clansPost(request, env){
       if(W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Tu as déjà lancé ton assaut aujourd’hui. Reviens demain !" });
       const cible = adv.membres.find((m) => m.id === String(d.cible || "")); if(!cible) return reponse({ erreur: "Cette famille n’est plus dans le clan adverse." });
       if(W.assauts.some((s) => s.cible === cible.id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Cette famille a déjà été attaquée aujourd’hui." });
-      bastionDe(adv); const mines = Math.min(3, adv.def.mines || 0); adv.def.mines -= mines;
+      bastionDe(mon); bastionDe(adv); const mines = Math.min(3, adv.def.mines || 0); adv.def.mines -= mines;
       W.assauts = W.assauts.filter((s) => !(s.par === id && s.fini === false)); // un assaut abandonné ne compte pas
       const sid = "s" + Math.random().toString(36).slice(2, 9);
       W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
       if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
       await sauver();
-      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines });
+      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines, camion: { parebuffle: mon.def.parebuffle || 0, blindage: mon.def.blindage || 0, tourelle: mon.def.tourelle || 0 } });
     }
     case "finAssaut": {
       if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
@@ -482,7 +486,7 @@ async function adminPost(request, env){
         const membres = []; for(let j = 0; j < MAX_CLAN; j++){ const b = nouveauBot(); membres.push(b); C.parJoueur[b.id] = cid; }
         C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, recherche: true, trophees: Math.max(0, Math.floor(+d.trophees) >= 0 && d.trophees !== undefined && d.trophees !== "" ? Math.floor(+d.trophees) : hasardEntier(0, 300)),
           reserve: { planche: hasardEntier(20, 60), conserve: hasardEntier(5, 20), bidon: hasardEntier(1, 5), ferraille: hasardEntier(4, 15), clous: hasardEntier(4, 15), balle: hasardEntier(0, 20) },
-          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2), armurerie: hasardEntier(0, 2) }, journal: [], retraits: {} };
+          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2), armurerie: hasardEntier(0, 2), parebuffle: hasardEntier(0, 2), blindage: hasardEntier(0, 2), tourelle: hasardEntier(0, 2) }, journal: [], retraits: {} };
         C.file.push(cid); noms.push(nom);
       }
       await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));

@@ -680,9 +680,14 @@ function creerAssaut(p, equipe){
   var J = [];
   G.exp.equipGuerre = equipGuerrePour(equipe);
   equipe.forEach(function(j){ var g = G.exp.equipGuerre[j]; if(g) J.push(["g2", g.map(function(o){ return OBJETS[o.id].icone; }).join(" ") + " " + G.m[j].nom + " porte : " + liste(g.map(function(o){ return OBJETS[o.id].nom.toLowerCase(); })) + "."]); });
-  for(var m = 0; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(4, 8); if(porteGuerre(x, "casque")) dg = Math.ceil(dg / 2); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV)" + (porteGuerre(x, "casque") ? ", son casque l’a protégé" : "") + " !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
+  var cam = p.camion || {}; G.exp.camion = { parebuffle:cam.parebuffle || 0, blindage:cam.blindage || 0, tourelle:cam.tourelle || 0 };
+  var absorbe = Math.min(p.mines || 0, G.exp.camion.blindage);
+  if(absorbe) J.push(["g2", "🚚 Le blindage du camion encaisse " + absorbe + " mine" + (absorbe > 1 ? "s" : "") + " sans dégâts."]);
+  for(var m = absorbe; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(4, 8); if(porteGuerre(x, "casque")) dg = Math.ceil(dg / 2); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV)" + (porteGuerre(x, "casque") ? ", son casque l’a protégé" : "") + " !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
   if(p.armurerie) J.push(["", "🦺 Les défenseurs portent des gilets (armurerie niveau " + p.armurerie + ") : chaque tir perd " + 3 * Math.min(3, p.armurerie) + " dégâts, chaque coup " + Math.min(3, p.armurerie) + ", sauf à la tête."]);
   if(p.remparts) J.push(["", "🧱 Les remparts (niveau " + p.remparts + ") rendent les défenseurs plus coriaces."]);
+  if(G.exp.camion.parebuffle){ var choc = 2 * G.exp.camion.parebuffle; zs.forEach(function(z){ z.pv = Math.max(1, z.pv - choc); }); J.push(["g2", "🚚 Le camion enfonce l’entrée avec son pare-buffle : chaque défenseur perd " + choc + " PV !"]); }
+  if(G.exp.camion.tourelle) J.push(["g2", "🚚 La tourelle du camion tirera à chaque tour (niveau " + G.exp.camion.tourelle + ")."]);
   G.combat.journal = J; G.combat.resume = J.filter(function(l){ return l[0] === "mort"; });
   if(!equipeCombat().length){ G.combat.fin = "defaite"; G.combat.resume.push(["b2", "💀 L’équipe n’a même pas atteint " + G.exp.nomLieu + "."]); }
   else preparerIntentions();
@@ -781,6 +786,14 @@ function jouerTour(choix){
   equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if((choix[j] || {}).a === "proteger") protege[j] = true; });
   // 1. Les Rampants frappent avant tout le monde
   zombiesDebout().forEach(function(z){ if(typeZombie(z).premier) actionZombie(z, protege, J); });
+  // 1 bis. La tourelle du camion (assauts de guerre) tire sur le défenseur le plus faible ; les gilets de l'armurerie la freinent
+  var tl = G.exp && G.exp.guerre && G.exp.camion ? G.exp.camion.tourelle : 0;
+  if(tl && zombiesDebout().length){
+    var zt = zombiesDebout().sort(function(a, b){ return a.pv - b.pv; })[0], dt = Math.max(0, 2 * tl + R(0, 2) - 3 * (zt.armurerie || 0));
+    zt.pv = Math.max(0, zt.pv - dt);
+    J.push([dt ? "g2" : "", "🚚 La tourelle tire sur " + zt.nom + (dt ? " : −" + dt + (zt.pv ? "" : ", à terre !") : " : la balle ricoche sur son gilet.")]);
+    if(!zt.pv) zombieTombe(zt, protege, J);
+  }
   // 2. L'équipe agit
   equipeCombat().forEach(function(x){
     var j = G.m.indexOf(x), c = choix[j] || { a:"frapper" };

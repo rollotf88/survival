@@ -473,6 +473,13 @@ var DEF_BASTION = {
   armurerie:{ nom:"Armurerie", icone:"🦺", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + 3 * l + " dégâts et chaque coup " + l + " (seuls les coups à la tête passent)." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
   tours:    { nom:"Tours de guet", icone:"🗼", effet:function(l){ return "+" + l + " de défense de nuit pour chaque famille du clan (niveau " + l + " / 3)."; } }
 };
+// Camion du clan (2026-11-10) : améliorations payées par la réserve, utiles à chaque assaut des membres
+var CAMION_BASTION = {
+  parebuffle:{ nom:"Pare-buffle", icone:"🐂", effet:function(l){ return l ? "Le camion enfonce l’entrée : chaque défenseur perd " + 2 * l + " PV au début de l’assaut." : "Le camion arrive sans rien pour enfoncer l’entrée."; } },
+  blindage:  { nom:"Blindage", icone:"🔩", effet:function(l){ return l ? "Le camion encaisse les " + l + " première" + (l > 1 ? "s" : "") + " mine" + (l > 1 ? "s" : "") + " de chaque assaut, sans blessé." : "Les mines adverses blessent directement l’équipe."; } },
+  tourelle:  { nom:"Tourelle", icone:"🎯", effet:function(l){ return l ? "À chaque tour, la tourelle tire sur le défenseur le plus faible (" + 2 * l + " à " + (2 * l + 2) + " dégâts ; les gilets de l’armurerie adverse la freinent)." : "Pas de tourelle : toute l’attaque repose sur l’équipe."; } }
+};
+function defBastion(k){ return DEF_BASTION[k] || CAMION_BASTION[k]; }
 var etatBastion = null, ongletBastion = "reserve", msgBastion = "";
 function openBastion(onglet){
   if(onglet) ongletBastion = onglet;
@@ -482,7 +489,7 @@ function openBastion(onglet){
 }
 function afficherBastion(){
   var B = etatBastion, h = '<h2>🏰 Le bastion</h2><div class="tabs onglets">'
-    + [["reserve", "📦", "Réserve"], ["defenses", "🛡️", "Défenses"], ["journal", "📜", "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
+    + [["reserve", "📦", "Réserve"], ["defenses", "🛡️", "Défenses"], ["camion", "🚚", "Camion"], ["journal", "📜", "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(msgBastion){ h += '<p class="msg ' + (msgBastion.charAt(0) === "❌" ? "" : "g2") + '">' + msgBastion + '</p>'; msgBastion = ""; }
   var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
   if(ongletBastion === "reserve"){
@@ -493,16 +500,21 @@ function afficherBastion(){
     if(enJeu && B.retraitsRestants && ids.length) h += '<p class="sub">Touche un objet de la réserve pour en prendre 1.</p>';
     var mes = B.deposables.filter(function(k){ return OBJETS[k] && compter(k) > 0; });
     h += '<p class="titre-butin">🎒 Déposer depuis ton stock</p>' + (!enJeu ? '<p class="sub">Pendant une partie.</p>' : mes.length ? etageres(mes.map(function(k){ return caseObjet(k, { act:"bastdeposer", cle:k, n:compter(k) }); }), 5) + '<p class="sub">Touche un objet de ton stock pour en déposer 1.</p>' : '<p class="sub">Rien à déposer (vivres, soins, munitions, matériaux).</p>');
-  } else if(ongletBastion === "defenses"){
-    h += Object.keys(DEF_BASTION).map(function(k){
-      var D = DEF_BASTION[k], l = B.def[k] || 0, c = B.couts[k];
+  } else if(ongletBastion === "defenses" || ongletBastion === "camion"){
+    var LISTE = ongletBastion === "camion" ? CAMION_BASTION : DEF_BASTION;
+    if(ongletBastion === "camion"){
+      var tot = (B.def.parebuffle || 0) + (B.def.blindage || 0) + (B.def.tourelle || 0);
+      h += '<img class="camion-img" src="images/camion' + ((B.def.parebuffle && B.def.blindage && B.def.tourelle) ? "-plein" : "") + '.webp" alt="" onerror="this.remove()"><p class="sub">Le camion du clan conduit chaque équipe à l’assaut. Ses améliorations servent à tous les membres.' + (tot ? "" : " Il est encore nu : améliore-le avec la réserve.") + '</p>';
+    }
+    h += Object.keys(LISTE).map(function(k){
+      var D = LISTE[k], l = B.def[k] || 0, c = B.couts[k];
       var manque = c ? Object.keys(c).filter(function(m){ return !((B.reserve[m] || 0) >= c[m]); }) : [];
       var ing = c ? '<div class="ings2">' + Object.keys(c).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= c[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + c[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>' : '';
       return '<div class="bast-def"><div class="invfiche"><span class="em">' + D.icone + '</span><span class="eqt"><b>' + D.nom + ' · ' + l + ' / ' + B.max[k] + '</b><small>' + D.effet(l) + '</small></span></div>'
         + (c ? ing + '<button class="btn" style="width:100%" data-act="bastconstruire" data-id="' + k + '"' + (manque.length ? " disabled" : "") + '>' + (manque.length ? "❌ Il manque des matériaux dans la réserve" : "🔨 Construire avec la réserve") + '</button>' : '<p class="etat ok">⭐ Niveau maximum</p>') + '</div>';
     }).join("");
   } else {
-    h += B.journal.length ? '<div class="fil">' + B.journal.map(function(j){ return '<div class="lj"><span class="lj-ico">📜</span><span class="lj-txt"><b>' + echapper(j.qui) + '</b> ' + echapper(j.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (DEF_BASTION[k] ? DEF_BASTION[k].nom.toLowerCase() : k) + " ("; })) + ' <small>' + quand(j.t) + '</small></span></div>'; }).join("") + '</div>' : '<p>Rien pour l’instant.</p>';
+    h += B.journal.length ? '<div class="fil">' + B.journal.map(function(j){ return '<div class="lj"><span class="lj-ico">📜</span><span class="lj-txt"><b>' + echapper(j.qui) + '</b> ' + echapper(j.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; })) + ' <small>' + quand(j.t) + '</small></span></div>'; }).join("") + '</div>' : '<p>Rien pour l’instant.</p>';
   }
   show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
 }
@@ -520,7 +532,7 @@ document.addEventListener("click", function(e){
   else if(a === "bastprendre"){
     appelClans({ action:"retirer", objet:id, n:1 }).then(function(d){ if(!d.erreur) ajouter(id, 1); apres(d, "🎒 Tu as pris " + nommer(id, 1) + " dans la réserve."); }).catch(function(){ msgBastion = "❌ " + MSG_HORS_LIGNE; afficherBastion(); });
   }
-  else if(a === "bastconstruire") appelClans({ action:"construire", def:id }).then(function(d){ if(!d.erreur) noterStatClan("defenses"); apres(d, "🔨 " + DEF_BASTION[id].nom + " : niveau supérieur construit !"); });
+  else if(a === "bastconstruire") appelClans({ action:"construire", def:id }).then(function(d){ if(!d.erreur) noterStatClan("defenses"); apres(d, "🔨 " + defBastion(id).nom + " : niveau supérieur construit !"); });
 });
 // Au lancement : bonus des tours de guet de mon clan (lu une fois)
 (function(){ if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; setTimeout(function(){ appelClans({ action:"liste" }).then(function(d){ noterTours(d && d.monClan ? d.monClan.tours : 0); noterClan(!!(d && d.monClan)); }).catch(function(){}); }, 4000); })();

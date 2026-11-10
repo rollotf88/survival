@@ -986,3 +986,6 @@ body.pc #piece .navpieces{opacity:1;pointer-events:auto}
 .ligue.l0{color:#8a6a55}.ligue.l1{color:#b8733b}.ligue.l2{color:#7f939f}.ligue.l3{color:#c9921b}.ligue.l4{color:#a63bc0}
 .clan-tete .ligue{margin-top:3px}
 .gu-camp .ligue{margin:1px 0}
+
+/* Camion du clan (onglet du bastion) */
+.camion-img{ display:block; width:100%; max-height:22vh; object-fit:contain; margin:4px auto 2px; }
