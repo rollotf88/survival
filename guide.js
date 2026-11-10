@@ -155,10 +155,16 @@ function openGuide(){
       var tags = [DISTANCES[L.distance], "danger " + niveauDanger(L.danger)];
       if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.secret) tags.push("secret : découvert vers le jour " + L.secret); if(L.jour) tags.push("à partir du jour " + L.jour);
       return '<div class="gsec"><b>' + iconeLieu(L) + ' ' + L.nom + '</b><p class="sub">' + tags.join(" · ") + '</p><div class="gmini">' + Object.keys(L.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>';
-    }).join("");
+    }).join("")
+      // L'immeuble du raid (opération de clan) : ses étages, leurs zombies et leur butin
+      + '<div class="gsec"><b>' + ic("cible", "🎯") + ' L’immeuble abandonné <small>· opération de clan</small></b><p class="sub">' + BAL.immeuble.etages.length + ' étages · ' + 4 + ' volontaires du clan · une seule fois par clan · le chef mène le raid</p>'
+      + BAL.immeuble.etages.map(function(E, n){ return '<p class="g-etage"><b>' + (n + 1) + '. ' + E.nom + '</b> ' + E.z.map(function(id){ var T = ZOMBIES.find(function(t){ return t.id === id; }); return '<span class="g-z" title="' + T.nom + '">' + iconeZombie(T) + '</span>'; }).join("")
+        + '</p><div class="gmini">' + Object.keys(E.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div>'; }).join("")
+      + '<p class="sub">Zombies renforcés étage après étage. Butin : ' + BAL.immeuble.sac + ' objets par volontaire debout, ' + BAL.immeuble.remorque + ' de plus avec la remorque du bastion.</p></div>';
   } else if(guideOnglet === "zombies"){
     h += ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse"; }).map(function(z){
-      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + z.pv + ' PV · frappe ' + z.degats[0] + ' à ' + z.degats[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.id === "colosse" ? "seulement sur le toit de l’immeuble (opération de clan)" : z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
+      var Et = z.id === "colosse" ? BAL.immeuble.etages[BAL.immeuble.etages.length - 1] : null, pvG = Et ? Math.round(z.pv * Et.pv) : z.pv, dgG = Et ? [z.degats[0] + Et.degats, z.degats[1] + Et.degats] : z.degats;
+      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + pvG + ' PV · frappe ' + dgG[0] + ' à ' + dgG[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.id === "colosse" ? "seulement sur le toit de l’immeuble (opération de clan)" : z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
     }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
   } else {
     h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';

@@ -24,3 +24,6 @@ Même style : le toit de l'immeuble au coucher du soleil, ville en ruine à l'ho
 
 ## 7. Le panneau des opérations (petit élément posé dans la grande salle du bastion)
 Même style cartoon peint, un panneau d'affichage en liège dans un cadre en bois, vu de face, sur FOND VERT UNI (#00FF00) pour être détouré : des avis punaisés (une photo de l'immeuble abandonné, un plan griffonné, une liste de noms rayés, des punaises rouges reliées par une ficelle). Aucun texte lisible (gribouillis seulement). Format carré, le panneau occupe 80 % de l'image, aucune ombre sur le fond vert.
+
+## 8. Le Colosse (le monstre du toit) — à faire avec la planche de référence des zombies
+Joindre `images/sources/reference-zombies.jpg`. Même style que les zombies en pied du jeu : un zombie gigantesque et massif, deux fois plus large qu'un homme, chair gris-vert boursouflée, restes d'un uniforme de chantier (gilet orange déchiré), barres de fer plantées dans le dos, une main énorme qui traîne au sol, regard vide. Vu en pied, de face légèrement de trois quarts, debout, sur FOND VERT UNI (#00FF00) sans ombre ni sol. Format vertical 3:4, le zombie occupe 90 % de la hauteur. Puis, dans un deuxième message : son portrait (tête et épaules) dans le même cadre que les portraits de la planche.

@@ -1454,3 +1454,8 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .rt .eqt .m-moins{color:var(--bad,#a33)}
 .rt .eqt .m-plus .ico,.rt .eqt .m-moins .ico{width:1.05em;height:1.05em}
 .m-titre{margin-top:10px}
+
+/* Guide : les étages de l'immeuble */
+.g-etage{margin:6px 0 2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.g-etage b{margin-right:4px}
+.g-z .portrait{width:28px;height:28px}
