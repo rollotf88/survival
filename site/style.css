@@ -1218,3 +1218,59 @@ body.pc:not(.scene-petite) .sheet.large .combat .journal{display:none}
 #tableauPC .tbm-fl{color:var(--mut)}
 #tableauPC .tbm-o em{font-style:normal;font-weight:700;font-size:11.5px;color:var(--mut);margin-left:3px}
 #tableauPC .tbm-o span{white-space:nowrap}
+
+/* ---------- Écrans « Ta famille » et « Le sac » sur PC (2026-11-10, retour de Fabien : mise en page mobile) ---------- */
+@media (min-width:1100px) and (min-height:620px){
+  /* Ta famille : grand panneau, les 4 membres côte à côte en grandes cartes */
+  #app:has(> .panneau.famille){max-width:none}
+  .panneau.famille{max-width:1180px;width:min(92vw,1180px);padding:26px 34px;border-width:4px;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+  .panneau.famille .famtete h1{font-size:52px}
+  .panneau.famille .pseudobtn small{font-size:13px}
+  .panneau.famille .pseudobtn b{font-size:19px;padding:6px 16px}
+  .panneau.famille .fam{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:18px 0}
+  .panneau.famille .fm{flex-direction:column;align-items:stretch;text-align:center;padding:16px 14px;gap:10px;border-radius:16px}
+  .panneau.famille .fm .em{font-size:118px;align-self:center}
+  .panneau.famille .fmnom{font-size:30px;margin:0 auto}
+  .panneau.famille .fmtrait{margin-top:6px}
+  .panneau.famille .tnom{font-size:16px;padding:4px 6px}
+  .panneau.famille .fmc small{font-size:13.5px;line-height:1.4;margin-top:8px;text-align:left}
+  .panneau.famille .modes{gap:12px}
+  .panneau.famille .modes .tab{font-size:17px;padding:10px}
+  .panneau.famille .modes .tab small{font-size:13px}
+  .panneau.famille .lien-code{font-size:15px;margin:10px 0 4px}
+  .panneau.famille > .btn{font-size:20px;padding:15px;border-radius:14px;margin-top:6px}
+
+  /* Le sac : grand panneau, le sac à gauche (grand dessin, grandes cases), les objets de la maison à droite en grandes tuiles */
+  #app:has(> .pk){max-width:1240px}
+  #app:has(> .pk) > .row h1{font-size:40px}
+  #app:has(> .pk) .mode,#app:has(> .pk) #tsec{font-size:16px;padding:3px 12px}
+  #app:has(> .pk) .timer{height:16px;margin:6px 0 12px}
+  body.maison .pk{grid-template-columns:minmax(0,40%) minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"sub tiles" "bag tiles" "info tiles" "go tiles";gap:14px 26px;padding:22px 26px;border-width:4px;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+  .pk .sub{font-size:16px}
+  .pk .sacbloc{gap:16px}
+  .pk .sacimg{height:170px}
+  .pk .sacdroite .row b{font-size:20px}
+  .pk .bag{gap:8px}
+  .pk .cell{height:58px;font-size:30px;border-radius:12px}
+  .pk .tiles{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-content:start}
+  .pk .tile{font-size:46px;padding:12px 4px 8px;border-radius:14px}
+  .pk .tile small{font-size:13px;margin-top:4px}
+  .pk .tile .pl{font-size:11px;top:4px;left:6px}
+  .pk .tile .n{font-size:14px;padding:1px 8px}
+  .pk .partir{font-size:22px;padding:16px}
+  .pk [data-act="adstart"]{font-size:15px}
+}
+@media (min-width:1100px) and (min-height:620px) and (max-height:780px){
+  .panneau.famille{padding:16px 26px}
+  .panneau.famille .famtete h1{font-size:40px}
+  .panneau.famille .fam{margin:10px 0;gap:12px}
+  .panneau.famille .fm{padding:10px 12px;gap:6px}
+  .panneau.famille .fm .em{font-size:86px}
+  .panneau.famille .fmnom{font-size:25px}
+  .panneau.famille .fmc small{font-size:12.5px;margin-top:5px}
+  .panneau.famille .modes .tab{padding:7px}
+  .panneau.famille > .btn{padding:12px;font-size:18px}
+  .pk .sacimg{height:130px}
+  .pk .cell{height:48px;font-size:26px}
+  .pk .tile{font-size:38px;padding:9px 4px 6px}
+}

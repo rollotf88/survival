@@ -993,7 +993,7 @@ function rIntro(){
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
-    + '<button class="btn" style="width:100%" data-act="intro">Continuer</button></div>';
+    + '<button class="btn" style="width:100%" data-act="intro">▶ Commencer</button></div>';
   lancerVitrine();
   if(typeof poserMonde === "function") poserMonde();
 }
