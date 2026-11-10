@@ -163,6 +163,7 @@ function rGame(){
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
     + '<div class="row">' + (mission() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
     + '<div class="row acts"><button class="btn' + (G.sel.length ? "" : " attente") + '" data-act="fouille">' + ic("loupe", "🔍") + ' Fouiller</button><button class="btn alt" data-act="stock">' + ic("caisse", "📦") + ' Stock</button><button class="btn alt" data-act="refuge">' + ic("marteau", "🛠️") + ' Refuge</button><button class="btn' + (G.m.some(peutSortir) ? " alt" : "") + '" data-act="dormir">' + ic("lune", "🌙") + ' Dormir</button></div>';
+  tableauPC();
 }
 
 /* ---------- Choix du lieu ---------- */
@@ -805,7 +806,32 @@ function tick(){
 var derniereSeconde = null;
 setInterval(tick, 250);
 
+/* ---------- Grand écran (PC) : famille à gauche, pièce au centre, panneau à droite ----------
+   Le panneau de droite montre un tableau de bord (chapitre, refuge, stock, mission) ; les fenêtres s'y ouvrent
+   à la place, sans cacher la pièce. Le combat garde sa grande fenêtre au milieu. */
+var LARGEUR_PANNEAU_PC = 464; // 440 de panneau + les marges (même valeur que dans style.css)
+function modePC(){ return !!(window.matchMedia && matchMedia("(min-width: 1100px) and (min-height: 620px)").matches) && G && G.ph === "game"; }
+function tableauPC(){
+  var t = $("tableauPC");
+  if(!document.body.classList.contains("pc")){ if(t) t.remove(); return; }
+  if(!t){ t = document.createElement("aside"); t.id = "tableauPC"; document.body.appendChild(t); }
+  var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
+  if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
+  if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';
+  h += '<p class="titre-butin">🏠 Le refuge</p>' + resumeRefuge();
+  var ids = Object.keys(G.stock.n).sort(function(a, b){ return G.stock.n[b] - G.stock.n[a]; }).slice(0, 10);
+  var uniq = {}; G.stock.o.forEach(function(o){ uniq[o.id] = (uniq[o.id] || 0) + 1; });
+  var cases = ids.map(function(k){ return caseObjet(k, { act:"stock", cle:k, n:G.stock.n[k], fixe:true }); })
+    .concat(Object.keys(uniq).slice(0, Math.max(0, 15 - ids.length)).map(function(k){ return caseObjet(k, { act:"stock", cle:k, n:uniq[k], fixe:true }); }));
+  h += '<p class="titre-butin">📦 Le stock</p>' + (cases.length ? etageres(cases, 5) : '<p class="sub">Le stock est vide.</p>')
+    + '<div class="row"><button class="btn alt" data-act="stock">📦 Tout le stock</button><button class="btn alt" data-act="refuge">🛠️ Refuge</button></div>'
+    + (G.derniereNuit && G.derniereNuit.length ? '<p class="titre-butin">🌙 La nuit dernière</p>' + puces(G.derniereNuit) : '')
+    + '<p class="sub tb-aide">Les fenêtres s’ouvrent ici, à droite : la pièce reste visible.</p>';
+  t.innerHTML = h;
+}
 function render(){
+  document.body.classList.toggle("pc", modePC());
+  if(!modePC() && $("tableauPC")) $("tableauPC").remove();
   if(G.ph !== "pick") document.body.classList.remove("urgence");
   if(G.ph !== "accueil") document.body.classList.remove("accueil-ouvert");
   document.body.classList.toggle("fond", G.ph === "game" || G.ph === "accueil" || G.ph === "intro" || G.ph === "famille" || G.ph === "pick"); // fond peint
@@ -1106,7 +1132,7 @@ document.addEventListener("click", function(e){
   else if(a === "troc"){ msgMarche = echanger(i) || ""; render(); openMarche(); return; }
   else if(a === "refuge"){ openRef(); return; }
   else if(a === "dormir"){ openDormir(); return; }
-  else if(a === "endday"){ var n = finJour(); render(); openNuit(n);
+  else if(a === "endday"){ var n = finJour(); G.derniereNuit = n.filter(function(l){ return l[0] !== "mort"; }).slice(0, 8); render(); openNuit(n);
     if(typeof envoyerMonde === "function" && vivants().length) envoyerMonde(n.some(function(l){ return l[0] === "mort"; }));
     if(typeof vibrer === "function" && n.some(function(x){ return x[0] === "b2" && x[1].indexOf("🧟 Attaque de nuit (") === 0; })) vibrer([150, 80, 150]); // attaque perdue
     finiSiMorts(); return; }

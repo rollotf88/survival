@@ -949,3 +949,24 @@ button.confirme{background:var(--bad);color:#fff;border-color:var(--bad)}
 .classement.clans li{display:flex;align-items:center;gap:6px}
 .classement.clans .blason{flex-basis:30px;width:30px;height:30px}
 @media (prefers-reduced-motion:reduce){.pc.cadre-legende{animation:none}}
+/* =====================================================================
+   GRAND ÉCRAN (PC, body.pc : 1100 px de large et 620 de haut au moins, pendant une partie)
+   Famille à gauche, pièce au centre, panneau à droite (tableau de bord ou fenêtre ouverte)
+   ===================================================================== */
+body.pc #app{max-width:none;width:calc(100vw - 464px);margin:0;padding:12px 18px;box-sizing:border-box}
+body.pc .scene .grid2{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+body.pc .scene > .row.acts .btn{font-size:16px;padding:11px 14px}
+/* Panneau de droite : tableau de bord */
+#tableauPC{position:fixed;top:12px;right:12px;bottom:12px;width:440px;z-index:3;overflow:auto;background:var(--card);border:3px solid var(--bois);border-radius:16px;padding:12px 14px;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+#tableauPC h2{margin:0 0 6px}
+#tableauPC .tb-bloc{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 10px;margin-bottom:8px}
+#tableauPC .tb-bloc b{display:block}#tableauPC .tb-bloc small{color:var(--mut)}
+#tableauPC .tb-aide{margin-top:10px}
+/* Les fenêtres s'ouvrent dans le panneau de droite (sans voile sur la pièce) */
+body.pc #modal{inset:12px 12px 12px auto;width:440px;background:none;align-items:stretch;justify-content:stretch;padding:0}
+body.pc #modal .sheet{max-width:none;width:100%;height:100%;max-height:none;border-radius:16px;border:3px solid var(--bois);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+/* Le combat garde sa grande fenêtre au milieu de l'écran */
+body.pc #modal:has(.sheet.large){inset:0;width:auto;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px}
+body.pc #modal .sheet.large{height:auto;max-height:100%;max-width:min(1000px,96vw);border-radius:18px}
+#tableauPC{overflow-x:hidden}
+#tableauPC .lj,#tableauPC .lj-txt{min-width:0;white-space:normal;overflow-wrap:anywhere}

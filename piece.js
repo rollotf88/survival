@@ -108,12 +108,15 @@ function placerPiece(){
   var corps = document.body.style;
   if(!G || G.ph !== "game" || !chap || !bas){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; }
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
+  // Grand écran (body.pc) : la pièce s'arrête au panneau de droite
+  var pc = document.body.classList.contains("pc"), gx = 0, dxMax = window.innerWidth;
+  if(pc) dxMax = window.innerWidth - LARGEUR_PANNEAU_PC;
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
-  var vw = window.innerWidth, P = PIECES[pieceIdx], F = P.cadre;
+  var vw = dxMax - gx, P = PIECES[pieceIdx], F = P.cadre;
   corps.backgroundImage = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
-  var dx = (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
+  var dx = gx + (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
   // L'image est collée en haut de l'espace libre (le plafond remplit le haut), tant que la partie utile reste visible
   var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
   corps.backgroundSize = (P.l * s) + "px auto";
@@ -121,12 +124,13 @@ function placerPiece(){
   placerDecor(dx, dy, s);
   // Fondu sur le bas de l'image pour qu'elle se mêle au plancher (au lieu de s'arrêter net)
   var f = $("fondu"); if(!f){ f = document.createElement("div"); f.id = "fondu"; document.body.appendChild(f); }
-  f.style.display = "block"; f.style.top = (dy + P.h * s - 88) + "px";
+  f.style.display = "block"; f.style.top = (dy + P.h * s - 88) + "px"; f.style.left = gx + "px"; f.style.right = pc ? (window.innerWidth - dxMax) + "px" : "0";
   cont.classList.toggle("compact", s < 0.32);
   cont.style.display = "block"; cont.style.top = haut + "px"; cont.style.height = (fin - haut) + "px";
+  cont.style.left = gx + "px"; cont.style.right = pc ? (window.innerWidth - dxMax) + "px" : "0";
   cont.innerHTML = P.zones.map(function(z){
     if(z[8] && !z[8]()) return "";
-    var x = dx + z[1] * s, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
+    var x = dx + z[1] * s - gx, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
     var invite = z[0] === "pCanape" && !G.m.some(peutSortir); // plus personne ne peut sortir : on invite à dormir
@@ -136,7 +140,7 @@ function placerPiece(){
     + '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
     + PIECES.map(function(p, k){ return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
     + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>';
-  ajusterEtiquettes(cont, vw);
+  ajusterEtiquettes(cont, dxMax, gx);
   // Le bouton du bas qui correspond à la pièce est mis en avant (Réserve → Stock, Chambre → Dormir…)
   var lien = BOUTON_PIECE[P.id];
   document.querySelectorAll(".acts .btn").forEach(function(bt){ bt.classList.toggle("ici", bt.getAttribute("data-act") === lien); });
@@ -149,11 +153,12 @@ function placerPiece(){
 }
 var dernierJourEtiquettes = null, minuteurEtiquettes = null;
 // Les étiquettes restent dans l'écran et ne se chevauchent pas (on décale vers le bas celle qui gêne)
-function ajusterEtiquettes(cont, vw){
+function ajusterEtiquettes(cont, vw, gauche){
+  gauche = gauche || 0;
   var et = Array.prototype.slice.call(cont.querySelectorAll(".zone .etiq"));
   et.forEach(function(e){
     var r = e.getBoundingClientRect(), d = 0;
-    if(r.left < 4) d = 4 - r.left; else if(r.right > vw - 4) d = vw - 4 - r.right;
+    if(r.left < gauche + 4) d = gauche + 4 - r.left; else if(r.right > vw - 4) d = vw - 4 - r.right;
     if(d) e.style.marginLeft = d + "px";
   });
   var boites = et.map(function(e){ return { e:e, r:e.getBoundingClientRect() }; }).sort(function(a, b){ return a.r.top - b.r.top; });
@@ -166,7 +171,7 @@ function ajusterEtiquettes(cont, vw){
     }
   }
 }
-window.addEventListener("resize", function(){ if(G && G.ph === "game") placerPiece(); });
+window.addEventListener("resize", function(){ if(!G || G.ph !== "game") return; var avant = document.body.classList.contains("pc"); if(avant !== modePC()) render(); else placerPiece(); });
 
 // « Qui part ? » quand on touche la porte sans avoir choisi de membres
 function openQuiPart(){
