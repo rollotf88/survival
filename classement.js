@@ -524,6 +524,7 @@ var DEF_BASTION = {
 var CAMION_BASTION = {
   parebuffle:{ nom:"Pare-buffle", icone:"🐂", ico:"parebuffle", effet:function(l){ return l ? "Le camion enfonce l’entrée : chaque défenseur perd " + Math.round(BAL.assaut.parebuffle * l) + " PV au début de l’assaut." : "Le camion arrive sans rien pour enfoncer l’entrée."; } },
   blindage:  { nom:"Blindage", icone:"🔩", ico:"blindage", effet:function(l){ return l ? "Le camion encaisse les " + l + " première" + (l > 1 ? "s" : "") + " mine" + (l > 1 ? "s" : "") + " de chaque assaut, sans blessé." : "Les mines adverses blessent directement l’équipe."; } },
+  remorque:  { nom:"Remorque artisanale", icone:"🛞", ico:"roue", effet:function(l){ return l ? "Accrochée au camion pour le raid de l’immeuble : " + BAL.immeuble.remorque + " objets de plus ramenés." : "Pour le raid de l’immeuble : sans elle, chaque volontaire ne ramène que " + BAL.immeuble.sac + " objets."; } },
   tourelle:  { nom:"Tourelle", icone:"🎯", ico:"tourelle", effet:function(l){ return l ? "À chaque tour, la tourelle tire sur le défenseur le plus faible (" + Math.round(BAL.assaut.tourelle * l) + " à " + (Math.round(BAL.assaut.tourelle * l) + 2) + " dégâts ; les gilets de l’armurerie adverse la freinent)." : "Pas de tourelle : toute l’attaque repose sur l’équipe."; } }
 };
 function defBastion(k){ return DEF_BASTION[k] || CAMION_BASTION[k]; }
@@ -536,7 +537,7 @@ function openBastion(onglet){
 }
 function afficherBastion(){
   var B = etatBastion, h = '<h2>' + ic("bastion", "🏰") + ' Le bastion</h2><div class="tabs onglets">'
-    + [["reserve", ic("reserveClan", "📦"), "Réserve"], ["defenses", ic("bouclier", "🛡️"), "Défenses"], ["camion", ic("camionClan", "🚚"), "Camion"], ["journal", ic("journalClan", "📜"), "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
+    + [["reserve", ic("reserveClan", "📦"), "Réserve"], ["defenses", ic("bouclier", "🛡️"), "Défenses"], ["camion", ic("camionClan", "🚚"), "Camion"], ["immeuble", ic("bastion", "🏢"), "Immeuble"], ["journal", ic("journalClan", "📜"), "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(msgBastion){ h += '<p class="msg ' + (msgBastion.charAt(0) === "❌" ? "" : "g2") + '">' + msgBastion + '</p>'; msgBastion = ""; }
   var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
   if(ongletBastion === "reserve"){
@@ -547,6 +548,8 @@ function afficherBastion(){
     if(enJeu && B.retraitsRestants && ids.length) h += '<p class="sub">Touche un objet de la réserve pour en prendre 1.</p>';
     var mes = B.deposables.filter(function(k){ return OBJETS[k] && compter(k) > 0; });
     h += '<p class="titre-butin">🎒 Déposer depuis ton stock</p>' + (!enJeu ? '<p class="sub">Pendant une partie.</p>' : mes.length ? etageres(mes.map(function(k){ return caseObjet(k, { act:"bastdeposer", cle:k, n:compter(k), badge:compter(k) === 1 ? 1 : null }); }), 5) + '<p class="sub">Touche un objet de ton stock pour en déposer 1.</p>' : '<p class="sub">Rien à déposer (vivres, soins, munitions, matériaux).</p>');
+  } else if(ongletBastion === "immeuble"){
+    h += typeof contenuRaid === "function" ? contenuRaid(B) : "";
   } else if(ongletBastion === "defenses" || ongletBastion === "camion"){
     var LISTE = ongletBastion === "camion" ? CAMION_BASTION : DEF_BASTION;
     if(ongletBastion === "camion"){
@@ -619,7 +622,7 @@ function afficherGuerre(msg){
   show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
 }
 // Qui part à l'assaut : les 2 membres en état de sortir avec le plus de vie et d'énergie
-function equipeAssaut(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ var x = G.m[i]; return x.al && x.en >= BAL.energieAssaut && x.hp > 25; })
+function equipeAssaut(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ var x = G.m[i]; return x.al && !x.raid && x.en >= BAL.energieAssaut && x.hp > 25; })
   .sort(function(a, b){ return (G.m[b].hp + G.m[b].en) - (G.m[a].hp + G.m[a].en); }).slice(0, BAL.membresParExpedition); }
 function openAssaut(cible){
   var eq = equipeAssaut(), c = etatGuerre.guerre.cibles.find(function(x){ return x.id === cible; }) || {}, eg = eq.length ? equipGuerrePour(eq) : {};

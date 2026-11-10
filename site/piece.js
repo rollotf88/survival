@@ -150,6 +150,7 @@ var lieuResultat = null;
 function sceneLieu(){
   if(!G || G.ph !== "game") return null;
   var i = null;
+  if(G.exp && G.exp.raid && typeof fondEtage === "function") return { img:fondEtage(G.exp.etage), l:1376, h:768, nom:BAL.immeuble.etages[G.exp.etage] ? BAL.immeuble.etages[G.exp.etage].nom : "L’immeuble" };
   if(G.exp) i = G.exp.guerre ? "bastion" : G.exp.lieu;
   else if(G.rencontre && G.rencontre.apres) i = G.rencontre.apres.lieu;
   else if(lieuResultat !== null) i = lieuResultat;

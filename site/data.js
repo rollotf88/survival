@@ -12,7 +12,7 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 // Icône dessinée k si elle existe, sinon l'emoji donné
 function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
-var PORTRAITS_PNJ = { rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
+var PORTRAITS_PNJ = { colosse:"images/portrait-costaud.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
   defenseur:"images/portrait-pillard.webp", rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
 // Décor du combat selon le lieu (images/combat/*.webp)
 var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
@@ -45,8 +45,8 @@ function iconeMembre(x){
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
-var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1 };
-function spriteZombie(z){ return typeof ICONES_SVG !== "undefined" && SPRITES_ZOMBIES[z.id] ? "images/zombies/" + z.id + ".webp" : null; }
+var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:"images/zombies/costaud.webp" };
+function spriteZombie(z){ var s = SPRITES_ZOMBIES[z.id]; return typeof ICONES_SVG !== "undefined" && s ? (typeof s === "string" ? s : "images/zombies/" + z.id + ".webp") : null; }
 function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
 /* ---------- Équilibrage : les chiffres faciles à modifier ---------- */
@@ -246,6 +246,35 @@ var VOITURE = {
   bruit: 0.10             // le moteur attire les zombies : +10 % de danger
 };
 
+/* ---------- Raid de l'immeuble (2026-11-10, idée de Fabien) ----------
+   Organisé au bastion : 4 ou 5 volontaires (un survivant par famille du clan), le chef joue le raid étage par étage.
+   Entre deux étages, on choisit de monter ou de redescendre avec le butin. Une seule fois par clan.
+   z = zombies de l'étage ; pv / degats = renfort par rapport au zombie normal ; butin = [min, max] de chaque objet trouvé à l'étage
+   img = décor de l'étage (images/immeuble/, en attente de Gemini) ; secours = image utilisée tant qu'il manque */
+BAL.immeuble = {
+  sac:6,            // places par volontaire encore debout pour ramener le butin
+  remorque:40,      // places en plus avec la remorque artisanale du bastion
+  energieEtage:8,   // énergie dépensée par chaque volontaire à chaque étage
+  // Aperçu de l'équipe (forceVolontaire dans raid.js), réglé par simulation (sim-raid.js, 2026-11-10, robot Auto qui ne monte que si l'étage suivant
+  // se passe sans perte au moins une fois sur deux) : équipe bien préparée (2 fusils, 2 pistolets, 15 munitions, gilet + casque + bouclier, 2 trousses
+  // et 2 bandages chacun, force ~930) : toit 72 %, un mort dans 16 % des raids ; armes à feu sans gilets (~790) : toit 39 % ; mêlée bien équipée (~720) :
+  // 4 étages ; équipe moyenne (mêlée, 1 trousse, ~430) : 3 étages puis redescend, sans perte ; mal préparée (~270) : 1 ou 2 étages, un mort dans 37 % des raids
+  seuils:{ prete:880, risquee:400 },
+  etages:[
+    { nom:"Le hall", img:"images/immeuble/hall.webp", secours:"images/lieux/centre.webp", z:["rodeur", "rodeur", "coureur", "rampant"], pv:1.4, degats:1,
+      butin:{ conserve:[3, 5], bouteille:[3, 5], bandage:[1, 3], planche:[2, 4], clous:[1, 3] } },
+    { nom:"Les appartements", img:"images/immeuble/appartements.webp", secours:"images/lieux/maison.webp", z:["coureur", "rodeur", "gonfle", "rampant", "hurleur"], pv:1.7, degats:2,
+      butin:{ conserves:[1, 2], bidon:[1, 2], trousse:[1, 2], chiffon:[2, 3], ruban:[1, 2], balle:[4, 8] } },
+    { nom:"Les bureaux", img:"images/immeuble/bureaux.webp", secours:"images/lieux/hopital.webp", z:["costaud", "coureur", "hurleur", "gonfle", "rodeur"], pv:2.0, degats:2,
+      butin:{ ration:[2, 3], antibio:[1, 2], ferraille:[3, 5], pile:[2, 3], cartouche:[4, 8], canette:[1, 2] } },
+    { nom:"Le dernier étage", img:"images/immeuble/dernier.webp", secours:"images/lieux/police.webp", z:["soldat", "soldat", "costaud", "costaud", "coureur", "gonfle"], pv:3.0, degats:5,
+      butin:{ boiteBalles:[1, 2], boiteCart:[1, 1], gilet:[1, 1], casque:[1, 1], trousse:[1, 2], jerrican:[1, 2] } },
+    { nom:"Le toit", img:"images/immeuble/toit.webp", secours:"images/lieux/base.webp", z:["colosse", "soldat", "soldat", "soldat", "hurleur"], pv:3.0, degats:5,
+      butin:{ fusil:[1, 1], pistolet:[1, 1], bouclier:[1, 1], ration:[3, 4], trousse:[2, 2], boiteBalles:[1, 2] } }
+  ],
+  exterieur:"images/immeuble/exterieur.webp", exterieurSecours:"images/lieux/centre.webp"
+};
+
 /* ---------- Zombies (combat en expédition) ----------
    jour : apparaît à partir de ce jour ; poids : plus il est grand, plus il est fréquent */
 var ZOMBIES = [
@@ -258,7 +287,9 @@ var ZOMBIES = [
   { id:"gonfle",  nom:"Gonflé",  icone:"🧟", pv:10, degats:[2, 4],  jour:10, poids:1, explose:[4, 7], desc:"Quand il meurt, il explose et blesse toute l’équipe (moitié moins pour qui se protège)." },
   { id:"soldat",  nom:"Soldat",  icone:"🪖", pv:12, degats:[6, 10], jour:15, poids:1, armure:3, desc:"Son gilet retire 3 dégâts à chaque coup. Vise la tête : l’armure ne protège pas." },
   // Guerres de clans : les défenseurs d'un bastion adverse (jamais tirés au hasard : jour 99999)
-  { id:"defenseur", nom:"Défenseur", icone:"🧔", pv:12, degats:[4, 8], jour:99999, poids:0, desc:"Un survivant d’un autre clan qui défend son bastion. Les remparts le rendent plus coriace." }
+  { id:"defenseur", nom:"Défenseur", icone:"🧔", pv:12, degats:[4, 8], jour:99999, poids:0, desc:"Un survivant d’un autre clan qui défend son bastion. Les remparts le rendent plus coriace." },
+  // Raid de l'immeuble (2026-11-10) : le monstre du toit (jamais tiré au hasard)
+  { id:"colosse", nom:"Colosse", icone:"🧟‍♂️", pv:45, degats:[9, 15], jour:99999, poids:0, lourd:true, armure:1, desc:"Le monstre du toit de l’immeuble : énorme, il écrase la protection et encaisse énormément. Visez la tête !" }
 ];
 function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }
 var DISTANCES = ["", "🚶 Près", "🚶 Moyen", "🚶 Loin", "🚗 Éloigné", "🚗 Très éloigné"];

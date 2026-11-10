@@ -24,16 +24,26 @@ function normaliserMod(t){
     .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/7/g, "t").replace(/8/g, "b").replace(/@/g, "a").replace(/\$/g, "s").replace(/[!|]/g, "i");
 }
 var listeModPrete = null;
+// Lettres répétées : « reduit1 » les ramène à une seule (connnnard -> conard), « reduit2 » à deux au plus (boooob -> boob).
+// Un mot court qui contient une lettre doublée (boob, ass, kkk, ss) n'est cherché qu'avec reduit2 : sinon « bob » ou « as » seraient refusés.
+function reduit1(w){ return w.replace(/(.)\1+/g, "$1"); }
+function reduit2(w){ return w.replace(/(.)\1{2,}/g, "$1$1"); }
 function preparerListeMod(){
-  var serre = function(w){ return normaliserMod(w).replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1"); };
-  listeModPrete = { partout: MOTS_INTERDITS.partout.map(serre).filter(function(w){ return w.length >= 3; }), mot: MOTS_INTERDITS.mot.map(serre) };
+  var lettres = function(w){ return normaliserMod(w).replace(/[^a-z]/g, ""); };
+  listeModPrete = {
+    partout: MOTS_INTERDITS.partout.map(function(w){ return reduit1(lettres(w)); }).filter(function(w){ return w.length >= 3; }),
+    mot: MOTS_INTERDITS.mot.map(function(w){ var b = lettres(w), dbl = /(.)\1/.test(b); return { dbl:dbl, f:dbl ? reduit2(b) : reduit1(b) }; })
+  };
 }
 // true si le texte contient un mot interdit
 function texteInterdit(t){
   if(!listeModPrete) preparerListeMod();
-  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), colle = n.replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1");
-  var mots = n.split(/[^a-z]+/).filter(Boolean).map(function(w){ return w.replace(/(.)\1+/g, "$1"); });
+  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), tout = n.replace(/[^a-z]/g, ""), colle = reduit1(tout);
+  var mots = n.split(/[^a-z]+/).filter(Boolean);
   if(listeModPrete.partout.some(function(w){ return colle.indexOf(w) >= 0; })) return true;
-  return listeModPrete.mot.some(function(w){ return mots.indexOf(w) >= 0 || colle === w; });
+  return listeModPrete.mot.some(function(w){
+    var red = w.dbl ? reduit2 : reduit1;
+    return mots.some(function(m){ return red(m) === w.f; }) || red(tout) === w.f;
+  });
 }
 var MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";

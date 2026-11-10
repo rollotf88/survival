@@ -372,7 +372,7 @@ function fatigue(x){ return x.en < BAL.fatigueSeuil; }
 // Peut encore sortir aujourd'hui (au moins vers le lieu le plus proche)
 function remiseEnergie(x){ return x.trait === "endurant" ? BAL.traits.endurant : 0; }
 function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
-function peutSortir(x){ return x.al && x.en >= coutMin() - remiseEnergie(x); }
+function peutSortir(x){ return x.al && !x.raid && x.en >= coutMin() - remiseEnergie(x); } // x.raid : volontaire parti au bastion pour le raid de l'immeuble
 function equipePeutAller(team, i, voiture){
   voiture = voiture || LIEUX[i].voiture;
   if(voiture && !voitureOk(i)) return false;
@@ -783,7 +783,7 @@ function attaqueZombies(protege, J){
 function verifierFin(J){
   var C = G.combat;
   if(!equipeCombat().length){ C.fin = "defaite"; C.resume.push(["b2", "💀 Personne n’est revenu de " + nomLieuCombat() + "."]); }
-  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", (G.exp && G.exp.guerre ? "⚔️ Assaut gagné en " : "🧟 Combat gagné en ") + C.tour + " tour" + (C.tour > 1 ? "s" : "") + " !"]); }
+  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", (G.exp && G.exp.raid ? "🏢 Étage nettoyé en " : G.exp && G.exp.guerre ? "⚔️ Assaut gagné en " : "🧟 Combat gagné en ") + C.tour + " tour" + (C.tour > 1 ? "s" : "") + " !"]); }
   C.tour++;
   if(!C.fin) preparerIntentions();
 }
@@ -843,6 +843,7 @@ function jouerTour(choix){
   zombiesDebout().forEach(function(z){ if(!typeZombie(z).premier && !sonne[C.zombies.indexOf(z)]) actionZombie(z, protege, J); });
   C.journal = J; C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[0] === "b2" && l[1].indexOf("💀") >= 0 || l[1].indexOf("💥") >= 0; }));
   verifierFin(J);
+  if(G.exp && G.exp.raid && typeof noterTourRaid === "function") noterTourRaid(J); // replay du raid de l'immeuble
   return J;
 }
 // Combat automatique « raisonnable » (bouton 🤖 Auto, et robot Malin)
@@ -851,7 +852,7 @@ function tourAuto(){
   if(zs.some(function(z){ return !z.int; })) preparerIntentions();
   var menace = function(x){ var m = 0; zs.forEach(function(z){ if(z.int && G.m[z.int.c] === x) m += menaceZombie(z) * (typeZombie(z).lourd ? 1 : 1); }); return m; };
   var pire = 0; zs.forEach(function(z){ pire += menaceZombie(z); });
-  if(eq.some(function(x){ return x.hp <= pire; }) && zs.length > 1 && !(zs.length >= 3 && peutCocktail())) return fuir();
+  if(!(G.exp && G.exp.raid) && eq.some(function(x){ return x.hp <= pire; }) && zs.length > 1 && !(zs.length >= 3 && peutCocktail())) return fuir(); // raid : le bouton Auto ne fuit pas tout seul (le chef décide)
   // Cible : le Hurleur qui va hurler, sinon le plus faible
   var vise = zs.filter(function(z){ return z.int && z.int.t === "hurle"; })[0] || zs.slice().sort(function(a, b){ return a.pv - b.pv; })[0];
   var cible = G.combat.zombies.indexOf(vise), ch = {}, soin = false, feu = false;
@@ -872,14 +873,15 @@ function fuir(){
   var C = G.combat, J = [];
   if(hasard() < BAL.combat.fuite){
     C.fin = "fuite"; J.push(["", "🏃 L’équipe prend la fuite !"]);
-    C.resume.push(["b2", G.exp && G.exp.guerre ? "🏃 Vous battez en retraite : l’assaut est un échec." : "🏃 Fuite devant les zombies : on rapporte moins de butin."]);
+    C.resume.push(["b2", G.exp && G.exp.raid ? "🏃 Retraite par l’escalier : l’équipe quitte l’immeuble avec ce qu’elle a déjà trouvé." : G.exp && G.exp.guerre ? "🏃 Vous battez en retraite : l’assaut est un échec." : "🏃 Fuite devant les zombies : on rapporte moins de butin."]);
   } else {
-    J.push(["b2", G.exp && G.exp.guerre ? "🏃 La retraite échoue, les défenseurs vous rattrapent !" : "🏃 La fuite échoue, les zombies vous rattrapent !"]);
+    J.push(["b2", G.exp && G.exp.guerre && !G.exp.raid ? "🏃 La retraite échoue, les défenseurs vous rattrapent !" : "🏃 La fuite échoue, les zombies vous rattrapent !"]);
     attaqueZombies({}, J);
     C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[1].indexOf("💀") >= 0; }));
     if(!equipeCombat().length) verifierFin(J); else { C.tour++; preparerIntentions(); }
   }
   C.journal = J;
+  if(G.exp && G.exp.raid && typeof noterTourRaid === "function") noterTourRaid(J);
   return J;
 }
 

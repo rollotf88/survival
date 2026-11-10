@@ -144,7 +144,7 @@ function rGame(){
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
-    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
+    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : x.raid ? "🏢 Au bastion" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
     var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + classeUsure(o) + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
@@ -299,7 +299,7 @@ function panneauCombat(){
   var L = G.exp && !G.exp.guerre ? LIEUX[G.exp.lieu] : null;
   if(C.fin){ t.innerHTML = panneauApresCombat(C, L); t.scrollTop = 0; return; }
   var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
-  h += '<p class="titre-butin">' + (G.exp && G.exp.guerre ? "🛡️ Les défenseurs" : "🧟 En face") + '</p><div class="pz-liste">' + C.zombies.map(function(z){
+  h += '<p class="titre-butin">' + (G.exp && G.exp.guerre && !G.exp.raid ? "🛡️ Les défenseurs" : "🧟 En face") + '</p><div class="pz-liste">' + C.zombies.map(function(z){
     var T = typeZombie(z), cib = z.int && G.m[z.int.c];
     var fait = !z.pv ? "À terre" : C.fin ? "" : z.int && z.int.t === "hurle" ? "📢 va hurler pour appeler du renfort" : cib ? "🦷 va attaquer " + cib.nom + " (" + z.degats[0] + "-" + z.degats[1] + ")" : "";
     return '<div class="pz' + (z.pv ? "" : " mort") + '"><span class="pz-ico">' + iconeZombie(z) + '</span><span class="pz-txt"><b>' + z.nom + '</b> <small>' + z.pv + '/' + z.pvMax + ' PV</small>'
@@ -370,7 +370,7 @@ function couluresGameOver(hote){
 var combatVu = null; // le combat déjà affiché (pour ne jouer l'arrivée des zombies qu'une fois)
 function openCombat(){
   astuce("combat");
-  var C = G.combat, L = G.exp.guerre ? { nom:G.exp.nomLieu.replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); }) } : LIEUX[G.exp.lieu], fini = !!C.fin;
+  var C = G.combat, L = G.exp.raid ? { nom:BAL.immeuble.etages[G.exp.etage].nom } : G.exp.guerre ? { nom:G.exp.nomLieu.replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); }) } : LIEUX[G.exp.lieu], fini = !!C.fin;
   if(dernierPV && dernierPV.c !== C) dernierPV = null; // nouveau combat
   var arrivee = combatVu !== C && C.tour === 1 && !fini; combatVu = C; // première vue du combat : les zombies arrivent du fond
   if(!fini && zombiesDebout().some(function(z){ return !z.int; })) preparerIntentions(); // ancienne sauvegarde
@@ -394,8 +394,8 @@ function openCombat(){
       + (perte > 0 ? '<span class="flot">−' + perte + '</span>' : '') + '</button>';
   }).join("");
   var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
-  var h = '<h2 class="ctitre">' + (G.exp && G.exp.guerre ? "⚔️ " : "🧟 ") + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
-    + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : imageLieu(L) || fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + (arrivee ? " arrivee" : "") + '">' + zs + '</div>'
+  var h = '<h2 class="ctitre">' + (G.exp && G.exp.raid ? "🏢 " : G.exp && G.exp.guerre ? "⚔️ " : "🧟 ") + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
+    + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.raid ? fondEtage(G.exp.etage) : G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : imageLieu(L) || fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + (arrivee ? " arrivee" : "") + '">' + zs + '</div>'
     + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
     // Les morts s'affichent en dehors de la boîte qui défile (sinon la carte de deuil était coupée en haut sur téléphone)
@@ -421,7 +421,7 @@ function openCombat(){
     // Bilan : tours, zombies abattus, vie perdue, puis l'état de chacun (vie, arme)
     var perdu = 0; for(var jj in (C.pv0 || {})) perdu += Math.max(0, C.pv0[jj] - (G.m[jj].al ? G.m[jj].hp : 0));
     var ab = C.abattus !== undefined ? C.abattus : C.zombies.filter(function(z){ return !z.pv; }).length, nt = Math.max(1, C.tour - 1);
-    h += tuiles([["tour" + (nt > 1 ? "s" : ""), nt, ""], ["abattu" + (ab > 1 ? "s" : ""), (G.exp && G.exp.guerre ? "⚔️ " : "🧟 ") + ab, ab ? "ok" : ""], ["vie perdue", perdu ? "−" + perdu : "0", perdu >= 30 ? "ko" : perdu ? "moy" : "ok"]]);
+    h += tuiles([["tour" + (nt > 1 ? "s" : ""), nt, ""], ["abattu" + (ab > 1 ? "s" : ""), (G.exp && G.exp.guerre && !G.exp.raid ? "⚔️ " : "🧟 ") + ab, ab ? "ok" : ""], ["vie perdue", perdu ? "−" + perdu : "0", perdu >= 30 ? "ko" : perdu ? "moy" : "ok"]]);
     h += G.exp.equipe.map(function(j){
       var x = G.m[j], a = x.eq.arme;
       return '<div class="bilan-m' + (x.al ? "" : " mort") + '"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + (x.al ? "" : " · " + accorder(roleDe(x), "mort")) + '</b>' + (x.al ? barre("❤️", x.hp) : "")
@@ -431,19 +431,21 @@ function openCombat(){
   // Fin du combat : ce qui attend l'équipe (le lieu à fouiller, avec son image), puis le bouton en bas
   if(fini){
     var Ls = G.exp.guerre ? null : LIEUX[G.exp.lieu], imS = Ls ? (imageLieu(Ls) || fondCombat(Ls)) : "images/piece-bastion-cour.webp", resteS = Ls ? resteLieu(G.exp.lieu) : 0;
-    var txtS = G.exp.guerre ? (C.fin === "victoire" ? "Le bastion est tombé : à vous le butin et les étoiles." : "L’assaut a échoué.")
+    var etR = G.exp.raid ? G.exp.etage + 1 : 0, nR = BAL.immeuble.etages.length;
+    var txtS = G.exp.raid ? (C.fin === "victoire" ? (etR >= nR ? "Le toit est à vous : l’immeuble est pillé !" : "Étage " + etR + " / " + nR + " nettoyé : fouillez-le, puis choisissez de monter ou de redescendre.") : C.fin === "fuite" ? "L’équipe quitte l’immeuble avec ce qu’elle a déjà trouvé." : "Personne n’est revenu de l’immeuble : tout le butin est perdu.")
+      : G.exp.guerre ? (C.fin === "victoire" ? "Le bastion est tombé : à vous le butin et les étoiles." : "L’assaut a échoué.")
       : C.fin === "victoire" ? "La voie est libre : il reste <b>" + resteS + "</b> objet" + (resteS > 1 ? "s" : "") + " à fouiller ici."
       : C.fin === "fuite" ? "Vous avez fui : vous ne ramènerez que la moitié de ce que vous trouverez."
       : "Personne n’est revenu de " + nomLieuCombat() + ".";
     // Plus d'image ici (elle est déjà dans la scène à gauche) : le lieu en une ligne, puis sur PC le récit du combat tour par tour
-    h += '<div class="fin-suite ' + C.fin + '"><span class="fs-txt"><b>' + (G.exp.guerre ? "🏰 " : "📍 ") + (Ls ? Ls.nom : nomLieuCombat()) + '</b><small>' + txtS + '</small></span></div>';
+    h += '<div class="fin-suite ' + C.fin + '"><span class="fs-txt"><b>' + (G.exp.raid ? "🏢 " + L.nom : (G.exp.guerre ? "🏰 " : "📍 ") + (Ls ? Ls.nom : nomLieuCombat())) + '</b><small>' + txtS + '</small></span></div>';
     if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")){
       noterHistoCombat(C);
       h += '<div class="fin-recit"><p class="titre-butin">📜 Ce qui s’est passé</p>' + (C.resume && C.resume.length ? '<div class="pj-tour fin">' + puces(C.resume) + '</div>' : '')
         + histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") + '</div>';
     }
   }
-  h += fini ? '<button class="btn fin-bouton" style="width:100%" data-act="cfin">' + (G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
+  h += fini ? '<button class="btn fin-bouton" style="width:100%" data-act="cfin">' + (G.exp.raid ? (C.fin === "victoire" ? "📦 Fouiller l’étage" : "🏢 Fin du raid") : G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
   if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
@@ -1300,7 +1302,7 @@ document.addEventListener("click", function(e){
     while(!G.combat.fin && g++ < 50) tout = tout.concat(tourAuto());
     G.combat.journal = tout; render(); openCombat(); return;
   }
-  else if(a === "cfin"){ if(G.exp && G.exp.guerre && typeof terminerAssaut === "function"){ terminerAssaut(); return; } apresEtape(avantFouille()); return; }
+  else if(a === "cfin"){ if(G.exp && G.exp.raid && typeof finEtageRaid === "function"){ finEtageRaid(); return; } if(G.exp && G.exp.guerre && typeof terminerAssaut === "function"){ terminerAssaut(); return; } apresEtape(avantFouille()); return; }
   else if(a === "son"){ basculerSon(); return; }
   else if(a === "stock"){ if(typeof allerPieceId === "function") allerPieceId("reserve"); selStock = null; openStock(); return; }
   else if(a === "invf"){ filtreStock = id; openStock(); return; }
@@ -1363,7 +1365,7 @@ try{ RECORD = +localStorage.getItem("survival_record") || 0; }catch(e){}
    anciennes sauvegardes seront alors ignorées au lieu de planter. */
 var VERSION_SAUVEGARDE = 1, CLE_SAUVEGARDE = "survival_partie";
 function sauver(){
-  if(!G || G.ph !== "game" || !vivants().length) return;
+  if(!G || G.ph !== "game" || !vivants().length || G.bacASable) return; // pendant un raid de l'immeuble, la vraie partie est à l'abri (G_MAISON)
   try{
     // G.ev contient des fonctions : on garde seulement son numéro (G.evIdx)
     localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify({ v:VERSION_SAUVEGARDE, G:G }, function(k, v){ return k === "ev" ? undefined : v; }));

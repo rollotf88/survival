@@ -232,15 +232,54 @@ const DEFENSES = {
   // Camion du clan (2026-11-10) : servent aux assauts de chaque membre
   parebuffle:{ max: 3, cout: (l) => ({ ferraille: 3 * (l + 1), clous: 3 * (l + 1) }) },
   blindage:  { max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), planche: 3 * (l + 1), ruban: l + 1 }) },
-  tourelle:  { max: 3, cout: (l) => ({ ferraille: 5 * (l + 1), clous: 2 * (l + 1), ruban: 2 * (l + 1) }) }
+  tourelle:  { max: 3, cout: (l) => ({ ferraille: 5 * (l + 1), clous: 2 * (l + 1), ruban: 2 * (l + 1) }) },
+  // Raid de l'immeuble (2026-11-10) : la remorque artisanale ramène beaucoup plus de butin
+  remorque:  { max: 1, cout: () => ({ planche: 12, ferraille: 8, clous: 8, ruban: 4 }) }
 };
 function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(const k in DEFENSES) c.def[k] = c.def[k] || 0; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 function noter(c, qui, txt){ c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
-function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
+function etatBastion(c, id){ bastionDe(c); const vr = vueRaid(c, id); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
   const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
-  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3, parebuffle: 3, blindage: 3, tourelle: 3 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES }; }
+  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3, parebuffle: 3, blindage: 3, tourelle: 3, remorque: 1 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES, raid: vr }; }
+
+
+/* ---------- Raid de l'immeuble (2026-11-10, idée de Fabien) ----------
+   Une fois par clan. Chaque membre inscrit un volontaire (un survivant de sa famille + ce qu'il lui confie) ;
+   dès que RAID_MIN volontaires sont prêts, le chef lance le raid et le joue (combat tactique, étage par étage).
+   Le résultat (sort de chaque volontaire, butin, replay) est envoyé par le jeu du chef. Chacun récupère ensuite sa part.
+   c.raid = { volontaires:{ id:{pseudo, membre, kit, t} }, pret4, lance:{par, pseudo, t}, fait, res, parts } ; replay : clé KV « raid_<cid> » */
+const RAID_MIN = 4, RAID_MAX = 5, RAID_ATTENTE_CHEF = 48 * 3600e3, RAID_BLOQUE = 2 * 3600e3;
+const KIT_RAID = ["balle", "cartouche", "bandage", "trousse", "antibio", "alcool", "chiffon", "canette"], GEAR_RAID = ["gilet", "casque", "bouclier"];
+function raidDe(c){ c.raid = c.raid || { volontaires: {} }; c.raid.volontaires = c.raid.volontaires || {}; return c.raid; }
+const borne = (v, a, b) => Math.max(a, Math.min(b, Math.floor(+v) || 0));
+const idObjet = (k) => String(k || "").replace(/[^a-zA-Z]/g, "").slice(0, 20);
+// Le survivant envoyé : on ne garde que des données simples et bornées
+function membrePropre(m){
+  m = m || {}; const eq = {};
+  ["arme", "outil", "sac"].forEach((k) => { const o = m.eq && m.eq[k]; if(o && o.id) eq[k] = { id: idObjet(o.id), sol: borne(o.sol, 0, 99), uid: borne(o.uid, 0, 1e9) }; });
+  return { nom: nomPropre(m.nom, 12) || "?", r: nomPropre(m.r, 12), icone: String(m.icone || "").slice(0, 4), trait: idObjet(m.trait), hp: borne(m.hp, 1, 100), en: borne(m.en, 0, 100),
+           faim: borne(m.faim, 0, 100), soif: borne(m.soif, 0, 100), folie: borne(m.folie, 0, 100), idx: borne(m.idx, 0, 7), eq };
+}
+function kitPropre(k){
+  k = k || {}; const n = {}, o = [];
+  KIT_RAID.forEach((id) => { const q = borne(k.n && k.n[id], 0, 40); if(q) n[id] = q; });
+  (Array.isArray(k.o) ? k.o : []).slice(0, 3).forEach((x) => { if(x && GEAR_RAID.indexOf(x.id) >= 0 && !o.some((y) => y.id === x.id)) o.push({ id: x.id, sol: borne(x.sol, 1, 20), uid: borne(x.uid, 0, 1e9) }); });
+  return { n, o };
+}
+function vueRaid(c, id){
+  const R = raidDe(c), vols = Object.keys(R.volontaires).filter((v) => c.membres.some((m) => m.id === v));
+  const now = Date.now(), nb = vols.length, chef = c.chef === id;
+  const lanceBloque = R.lance && R.lance.par !== id && now - R.lance.t < RAID_BLOQUE;
+  const peutLancer = !R.fait && nb >= RAID_MIN && !lanceBloque && (chef || (R.pret4 && now - R.pret4 > RAID_ATTENTE_CHEF) || (R.lance && R.lance.par === id));
+  const part = R.parts && R.parts[id];
+  return { fait: !!R.fait, min: RAID_MIN, max: RAID_MAX, nb, chef, peutLancer, remorque: (c.def && c.def.remorque) || 0,
+    attenteChef: R.pret4 && !R.fait ? Math.max(0, R.pret4 + RAID_ATTENTE_CHEF - now) : null,
+    lance: R.lance && !R.fait ? { pseudo: R.lance.pseudo, t: R.lance.t, moi: R.lance.par === id } : null,
+    volontaires: vols.map((v) => { const x = R.volontaires[v]; return { moi: v === id, pseudo: x.pseudo, t: x.t, membre: { nom: x.membre.nom, r: x.membre.r, hp: x.membre.hp, en: x.membre.en, trait: x.membre.trait, eq: x.membre.eq }, kit: x.kit }; }),
+    res: R.res || null, maPart: part && !part.recupere ? part : null, aRecupere: !!(part && part.recupere), participe: !!part };
+}
 
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
 // {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
@@ -343,6 +382,77 @@ async function clansPost(request, env){
       for(const m in cout){ mon.reserve[m] -= cout[m]; if(!mon.reserve[m]) delete mon.reserve[m]; }
       mon.def[k]++; noter(mon, pseudo || "?", "a construit : " + k + " (niveau " + mon.def[k] + ")"); await sauver();
       return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidPret": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon);
+      if(R.fait) return reponse({ erreur: "L’immeuble a déjà été pillé par le clan." });
+      if(R.lance && now - R.lance.t < RAID_BLOQUE) return reponse({ erreur: "Le raid est en cours : impossible de changer les volontaires." });
+      if(!R.volontaires[id] && Object.keys(R.volontaires).length >= RAID_MAX) return reponse({ erreur: "Il y a déjà " + RAID_MAX + " volontaires." });
+      R.volontaires[id] = { pseudo, membre: membrePropre(d.membre), kit: kitPropre(d.kit), t: now };
+      const nb = Object.keys(R.volontaires).length; if(nb >= RAID_MIN && !R.pret4) R.pret4 = now;
+      noter(mon, "🏢", (pseudo || "?") + " envoie " + R.volontaires[id].membre.nom + " pour le raid de l’immeuble (" + nb + " / " + RAID_MIN + ")");
+      await sauver(); return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidRetrait": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon), v = R.volontaires[id];
+      if(!v) return reponse({ erreur: "Tu n’as pas de volontaire inscrit." });
+      if(R.lance && now - R.lance.t < RAID_BLOQUE) return reponse({ erreur: "Le raid est en cours : ton volontaire ne peut plus se retirer." });
+      delete R.volontaires[id]; if(Object.keys(R.volontaires).length < RAID_MIN) R.pret4 = null;
+      noter(mon, "🏢", (pseudo || "?") + " retire son volontaire du raid");
+      await sauver(); return reponse({ ok: true, kit: v.kit, bastion: etatBastion(mon, id) });
+    }
+    case "raidLancer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon), V = vueRaid(mon, id);
+      if(!V.peutLancer) return reponse({ erreur: R.fait ? "L’immeuble a déjà été pillé." : V.nb < RAID_MIN ? "Il faut " + RAID_MIN + " volontaires prêts." : V.lance ? "Le raid est déjà en cours (lancé par " + (V.lance.pseudo || "?") + ")." : "Seul le chef peut lancer le raid (ou n’importe qui, 48 h après que l’équipe est prête)." });
+      R.lance = { par: id, pseudo, t: now };
+      await sauver();
+      const vols = Object.keys(R.volontaires).filter((v) => mon.membres.some((m) => m.id === v)).map((v) => ({ id: v, pseudo: R.volontaires[v].pseudo, membre: R.volontaires[v].membre, kit: R.volontaires[v].kit }));
+      return reponse({ ok: true, volontaires: vols, remorque: mon.def.remorque || 0, clan: mon.nom });
+    }
+    case "raidFin": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon);
+      if(R.fait) return reponse({ erreur: "L’immeuble a déjà été pillé." });
+      if(!R.lance || R.lance.par !== id) return reponse({ erreur: "Ce n’est pas toi qui as lancé le raid." });
+      const r = d.resultat || {}, vols = Object.keys(R.volontaires).filter((v) => mon.membres.some((m) => m.id === v));
+      // Butin rapporté : objets connus seulement, bornés
+      const butin = {}; let total = 0;
+      for(const k in (r.butin || {})){ const q = borne(r.butin[k], 0, 60), kk = idObjet(k); if(q && kk && total + q <= 200){ butin[kk] = (butin[kk] || 0) + q; total += q; } }
+      // 30 % pour la réserve (objets déposables), le reste partagé entre les volontaires, chacun son tour
+      const parts = {}; vols.forEach((v) => { parts[v] = { objets: {}, membre: null, kit: { n: {}, o: [] }, recupere: false }; });
+      const reserve = {}; let tour = 0;
+      Object.keys(butin).sort().forEach((k) => { let q = butin[k];
+        if(DEPOSABLES.indexOf(k) >= 0){ const pr = Math.round(q * 0.3); if(pr){ reserve[k] = pr; mon.reserve[k] = (mon.reserve[k] || 0) + pr; q -= pr; } }
+        for(let i = 0; i < q; i++){ const v = vols[tour++ % vols.length]; parts[v].objets[k] = (parts[v].objets[k] || 0) + 1; } });
+      // Sort de chaque volontaire et ce qui reste de son kit
+      vols.forEach((v) => { const s = (r.volontaires || {})[v] || {};
+        parts[v].membre = { al: !!s.al, hp: borne(s.hp, 0, 100), en: borne(s.en, 0, 100), cause: String(s.cause || "").replace(/[<>]/g, "").slice(0, 120), eq: membrePropre({ eq: s.eq }).eq };
+        parts[v].kit = kitPropre(s.kit); parts[v].pseudo = R.volontaires[v].pseudo; parts[v].nom = R.volontaires[v].membre.nom; parts[v].idx = R.volontaires[v].membre.idx; });
+      const etages = borne(r.etages, 0, 9), max = borne(r.max, 1, 9), morts = vols.filter((v) => !parts[v].membre.al).map((v) => parts[v].nom + " (" + (parts[v].pseudo || "?") + ")");
+      R.fait = true; R.parts = parts;
+      R.res = { t: now, par: pseudo, etages, max, total, reserve, morts, issue: String(r.issue || "").slice(0, 20), perdu: borne(r.perdu, 0, 500),
+        equipe: vols.map((v) => ({ pseudo: parts[v].pseudo, nom: parts[v].nom, al: parts[v].membre.al, r: R.volontaires[v].membre.r })) };
+      noter(mon, "🏢", "Raid de l’immeuble mené par " + (pseudo || "?") + " : " + etages + " étage" + (etages > 1 ? "s" : "") + " sur " + max + ", " + total + " objets ramenés" + (morts.length ? ". Tombé" + (morts.length > 1 ? "s" : "") + " : " + morts.join(", ") : ", aucun mort") + ".");
+      // Le replay est gardé à part (il peut être gros)
+      let rp = "[]"; try{ rp = JSON.stringify(r.replay || []); }catch(e){} if(rp.length > 300000) rp = "[]";
+      await env.CLASSEMENT.put("raid_" + mon.id, rp);
+      await sauver(); return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidRecuperer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const R = raidDe(mon), p = R.parts && R.parts[id];
+      if(!p) return reponse({ erreur: "Tu n’as pas participé au raid." });
+      if(p.recupere) return reponse({ erreur: "Tu as déjà récupéré ta part." });
+      p.recupere = true; await sauver();
+      return reponse({ ok: true, part: p, res: R.res });
+    }
+    case "raidReplay": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const rp = await env.CLASSEMENT.get("raid_" + mon.id, { type: "json" });
+      return reponse({ ok: true, replay: rp || [], res: raidDe(mon).res || null });
     }
     case "classementClans": {
       const tous = Object.values(C.clans).map((c) => { const b = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 };
@@ -611,17 +721,27 @@ function normaliserMod(t){
     .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/7/g, "t").replace(/8/g, "b").replace(/@/g, "a").replace(/\$/g, "s").replace(/[!|]/g, "i");
 }
 let listeModPrete = null;
+// Lettres répétées : « reduit1 » les ramène à une seule (connnnard -> conard), « reduit2 » à deux au plus (boooob -> boob).
+// Un mot court qui contient une lettre doublée (boob, ass, kkk, ss) n'est cherché qu'avec reduit2 : sinon « bob » ou « as » seraient refusés.
+function reduit1(w){ return w.replace(/(.)\1+/g, "$1"); }
+function reduit2(w){ return w.replace(/(.)\1{2,}/g, "$1$1"); }
 function preparerListeMod(){
-  var serre = function(w){ return normaliserMod(w).replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1"); };
-  listeModPrete = { partout: MOTS_INTERDITS.partout.map(serre).filter(function(w){ return w.length >= 3; }), mot: MOTS_INTERDITS.mot.map(serre) };
+  var lettres = function(w){ return normaliserMod(w).replace(/[^a-z]/g, ""); };
+  listeModPrete = {
+    partout: MOTS_INTERDITS.partout.map(function(w){ return reduit1(lettres(w)); }).filter(function(w){ return w.length >= 3; }),
+    mot: MOTS_INTERDITS.mot.map(function(w){ var b = lettres(w), dbl = /(.)\1/.test(b); return { dbl:dbl, f:dbl ? reduit2(b) : reduit1(b) }; })
+  };
 }
 // true si le texte contient un mot interdit
 function texteInterdit(t){
   if(!listeModPrete) preparerListeMod();
-  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), colle = n.replace(/[^a-z]/g, "").replace(/(.)\1+/g, "$1");
-  var mots = n.split(/[^a-z]+/).filter(Boolean).map(function(w){ return w.replace(/(.)\1+/g, "$1"); });
+  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), tout = n.replace(/[^a-z]/g, ""), colle = reduit1(tout);
+  var mots = n.split(/[^a-z]+/).filter(Boolean);
   if(listeModPrete.partout.some(function(w){ return colle.indexOf(w) >= 0; })) return true;
-  return listeModPrete.mot.some(function(w){ return mots.indexOf(w) >= 0 || colle === w; });
+  return listeModPrete.mot.some(function(w){
+    var red = w.dbl ? reduit2 : reduit1;
+    return mots.some(function(m){ return red(m) === w.f; }) || red(tout) === w.f;
+  });
 }
 const MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";
 
