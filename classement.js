@@ -399,8 +399,27 @@ function blason(n){ return '<span class="blason">' + imgBlason(n) + '</span>'; }
 function adresseClans(){ return adresseClassement().replace("/api/classement", "/api/clans"); }
 var etatClans = null, choixBlason = 1;
 function jourPartie(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.cumule ? G.day : (typeof enCours !== "undefined" && enCours ? enCours.day : 0); }
+// Mon profil de clan : ce que les autres membres voient en touchant mon nom
+function monProfil(){
+  var s = statsJoueur(), P = typeof partieCourante === "function" ? partieCourante() : null;
+  return { zombies:s.zombies, meilleur:s.meilleur, plusLongue:s.plusLongue, parties:s.parties, succes:typeof nbSucces === "function" ? nbSucces() : 0,
+           etoiles:statClan("etoiles"), victoires:statClan("victoires"), depots:statClan("depots"), vivants:P && P.m ? P.m.filter(function(x){ return x.al; }).length : 0 };
+}
+function openProfilMembre(i){
+  var c = etatClans && etatClans.monClan, m = c && c.membresListe[i]; if(!m) return;
+  var p = m.profil, h = '<h2>' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " <small>(toi)</small>" : "") + '</h2>';
+  h += '<p class="sub">' + (m.chef ? "Chef du clan « " + echapper(c.nom) + " »" : "Membre du clan « " + echapper(c.nom) + " »") + (m.rejoint ? " depuis " + quand(m.rejoint).replace(/^il y a /, "").replace("à l’instant", "peu") : "") + ' · vu ' + quand(m.vu) + '</p>';
+  if(p){
+    h += '<p class="titre-butin">🏠 Sa famille</p>' + tuiles([["jour de survie", m.jour || "?"], ["en vie", p.vivants + " / 4", p.vivants >= 3 ? "ok" : p.vivants >= 2 ? "moy" : "ko"], ["record", p.meilleur + " ⭐"]]);
+    h += '<p class="titre-butin">⚔️ Au combat</p>' + tuiles([["zombies abattus", p.zombies], ["étoiles d’assaut", p.etoiles + " ★"], ["guerres gagnées", p.victoires]]);
+    h += '<p class="titre-butin">🏅 Parcours</p>' + tuiles([["succès", p.succes + " / " + (typeof SUCCES !== "undefined" ? SUCCES.length : 25)], ["plus longue survie", p.plusLongue + " j"], ["familles", p.parties]]);
+  } else h += '<p class="sub">Ce membre n’a pas encore partagé ses chiffres (ils arrivent à sa prochaine visite).</p>';
+  h += '<p class="titre-butin">📦 Réserve du clan</p><p>A déposé <b>' + (m.depose || 0) + '</b> objet' + ((m.depose || 0) > 1 ? "s" : "") + ', en a pris <b>' + (m.pris || 0) + '</b>.</p>';
+  h += '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>';
+  show(h);
+}
 function appelClans(corps){
-  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif();
+  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif(); corps.profil = monProfil();
   if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
   return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
 }
@@ -416,7 +435,7 @@ function afficherClans(msg){
     var c = d.monClan;
     h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
     h += '<div class="clan-membres">' + c.membresListe.map(function(m){
-      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><span class="cm-nom">' + (m.chef ? "👑 " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + '</span><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
+      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><button class="cm-nom" data-act="profilmembre" data-id="' + c.membresListe.indexOf(m) + '" title="Voir son profil">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + ' <span class="cm-voir">›</span></button><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
     h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
@@ -451,6 +470,7 @@ document.addEventListener("click", function(e){
     var n = ($("nomclan").value || "").trim(); if(n.length < 3){ $("msgclan").textContent = "Le nom doit faire au moins 3 lettres."; return; }
     appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } noterStatClan("fonde", 1, true); openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
   }
+  else if(a === "profilmembre") openProfilMembre(+id);
   else if(a === "clanrejoindre"){
     if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
     appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });
@@ -496,10 +516,10 @@ function afficherBastion(){
     var ids = Object.keys(B.reserve);
     var P2 = B.part || { depose:0, pris:0 };
     h += '<p class="sub">La réserve commune du clan. Ta participation : <b>+' + P2.depose + '</b> déposés, <b>−' + P2.pris + '</b> pris. On peut prendre au plus 5 objets de plus que ce qu’on a déposé, et 5 par jour : tu peux encore en prendre <b>' + B.retraitsRestants + '</b>.</p>';
-    h += ids.length ? etageres(ids.map(function(k){ return caseObjet(k, { act:enJeu && B.retraitsRestants ? "bastprendre" : "aucun", cle:k, n:B.reserve[k], fixe:!(enJeu && B.retraitsRestants) }); }), 5) : '<p>La réserve est vide : déposez des vivres et des matériaux !</p>';
+    h += ids.length ? etageres(ids.map(function(k){ return caseObjet(k, { act:enJeu && B.retraitsRestants ? "bastprendre" : "aucun", cle:k, n:B.reserve[k], badge:B.reserve[k] === 1 ? 1 : null, fixe:!(enJeu && B.retraitsRestants) }); }), 5) : '<p>La réserve est vide : déposez des vivres et des matériaux !</p>';
     if(enJeu && B.retraitsRestants && ids.length) h += '<p class="sub">Touche un objet de la réserve pour en prendre 1.</p>';
     var mes = B.deposables.filter(function(k){ return OBJETS[k] && compter(k) > 0; });
-    h += '<p class="titre-butin">🎒 Déposer depuis ton stock</p>' + (!enJeu ? '<p class="sub">Pendant une partie.</p>' : mes.length ? etageres(mes.map(function(k){ return caseObjet(k, { act:"bastdeposer", cle:k, n:compter(k) }); }), 5) + '<p class="sub">Touche un objet de ton stock pour en déposer 1.</p>' : '<p class="sub">Rien à déposer (vivres, soins, munitions, matériaux).</p>');
+    h += '<p class="titre-butin">🎒 Déposer depuis ton stock</p>' + (!enJeu ? '<p class="sub">Pendant une partie.</p>' : mes.length ? etageres(mes.map(function(k){ return caseObjet(k, { act:"bastdeposer", cle:k, n:compter(k), badge:compter(k) === 1 ? 1 : null }); }), 5) + '<p class="sub">Touche un objet de ton stock pour en déposer 1.</p>' : '<p class="sub">Rien à déposer (vivres, soins, munitions, matériaux).</p>');
   } else if(ongletBastion === "defenses" || ongletBastion === "camion"){
     var LISTE = ongletBastion === "camion" ? CAMION_BASTION : DEF_BASTION;
     if(ongletBastion === "camion"){

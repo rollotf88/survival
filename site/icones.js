@@ -641,6 +641,8 @@ ICONES_SVG.bouclier = '<rect x="10" y="4" width="28" height="40" rx="6" fill="#9
   '<path d="M14 26 H34 M14 31 H34 M14 36 H34" stroke="#6f8796" stroke-width="2"/><path d="M24 22 V40" stroke="#6f8796" stroke-width="2"/>';
 
 /* ---------- Bastion et camion du clan (2026-11-10) ---------- */
+ICONES_SVG.couronne = '<path d="M6 36 L4 14 L15 24 L24 8 L33 24 L44 14 L42 36Z" fill="' + COUL.jaune + '"/><rect x="6" y="36" width="36" height="6" rx="2" fill="#d99a1e"/>' +
+  '<circle cx="24" cy="27" r="3" fill="' + COUL.rouge + '"/><circle cx="14" cy="30" r="2" fill="#4fa3d9"/><circle cx="34" cy="30" r="2" fill="#4fa3d9"/>';
 ICONES_SVG.bastion = '<path d="M10 44 V14 H16 V9 H21 V14 H27 V9 H32 V14 H38 V44Z" fill="#a1887f"/><path d="M20 44 V35 Q24 29 28 35 V44Z" fill="' + COUL.boisFonce + '"/>' +
   '<path d="M10 22 H38 M10 30 H19 M29 30 H38" stroke-width="2"/><path d="M24 9 V2 L32 5 L24 8" fill="' + COUL.rouge + '"/>';
 ICONES_SVG.reserveClan = '<rect x="6" y="14" width="36" height="28" rx="2" fill="' + COUL.bois + '"/><path d="M6 21 H42 M6 35 H42" stroke-width="2"/><path d="M8 23 L40 33 M40 23 L8 33" stroke-width="2"/><rect x="4" y="10" width="40" height="6" rx="2" fill="' + COUL.boisFonce + '"/>';

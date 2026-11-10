@@ -156,6 +156,10 @@ function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1;
 const PSEUDOS_BOTS = ["Rex_Ranger", "Lili", "MadMax", "Zoé", "Bertrand", "Kader", "Nina", "Tonton", "Jojo", "Sacha", "Hugo", "Lola", "Marius", "Gaby", "Yoyo", "Capu", "Mamie_Ro", "Brico", "Sniper", "Pépé"];
 const NOMS_CLANS_BOTS = ["Les Rôdeurs du Sud", "La Horde Grise", "Les Corbeaux", "Bastion de Fer", "Les Survivants du Lac", "La Meute"];
 const CADRES_BOTS = ["bois", "bronze", "argent", "or", "legende"];
+// Profil d'un membre (2026-11-10) : quelques chiffres envoyés par son jeu, bornés (pas de vraie vérification)
+const CHAMPS_PROFIL = { zombies: 1000000, meilleur: 100000, plusLongue: 1000, parties: 100000, succes: 100, etoiles: 100000, victoires: 10000, depots: 1000000, vivants: 4 };
+function profilDe(d){ const p = d && d.profil; if(!p || typeof p !== "object") return null; const r = {}; for(const k in CHAMPS_PROFIL){ const v = Math.floor(+p[k]); r[k] = v >= 0 ? Math.min(v, CHAMPS_PROFIL[k]) : 0; } return r; }
+function profilBot(jour){ return { zombies: hasardEntier(jour, jour * 4), meilleur: hasardEntier(jour * 2, jour * 4), plusLongue: jour, parties: hasardEntier(1, 30), succes: hasardEntier(3, 22), etoiles: hasardEntier(0, 40), victoires: hasardEntier(0, 8), depots: hasardEntier(0, 200), vivants: hasardEntier(1, 4) }; }
 const hasardEntier = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const idBot = () => "bot" + Math.random().toString(36).slice(2, 12);
 const estBot = (id) => String(id || "").indexOf("bot") === 0;
@@ -251,7 +255,7 @@ async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAG
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees) }; }
-function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", depose: m.depose || 0, pris: m.pris || 0, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", depose: m.depose || 0, pris: m.pris || 0, profil: m.profil || (m.bot ? (m.profil = profilBot(m.jour || 30)) : null), rejoint: m.rejoint || 0, bot: !!m.bot, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -260,7 +264,7 @@ async function clansPost(request, env){
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
   const pseudo = nomPropre(d.pseudo, 16), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
-  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; } }
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; const pf = profilDe(d); if(pf) m.profil = pf; } }
   switch(d.action){
     case "liste": {
       const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);

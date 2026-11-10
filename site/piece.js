@@ -77,7 +77,7 @@ var PIECES = [
   ]},
   // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
   { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
-    ["pCheminee",     0, 395, 235, 745, function(){ return "🔥"; }, "Feu", .5],
+    ["pFoyer",        0, 395, 235, 745, function(){ return "🔥"; }, "Foyer du clan", .5],
     ["pClassClans", 350, 220, 690, 460, function(){ return "🏆"; }, "Classement des clans", .5],
     ["pGuerre",     728, 225, 1010, 665, function(){ return "⚔️"; }, "La guerre", .4],
     ["pClan",       230, 515, 805, 920, function(){ return "🗺️"; }, "Mon clan", .35]
@@ -261,6 +261,8 @@ document.addEventListener("click", function(e){
   else if(a === "pCuisiner" || a === "pRecettes"){ selRef = null; openRef("cuisine"); }
   else if(a === "pGardeManger"){ filtreStock = "vivres"; selStock = null; openStock(); }
   else if(a === "pCheminee") openFeu();
+  else if(a === "pFoyer") openFoyerClan();
+  else if(a === "versSalon"){ hide(); allerPiece(0); }
   else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("feu"); render(); openFeu(); }
   else if(a === "pSac") openStock();
   else if(a === "pReparer") openRef("reparer");
@@ -451,3 +453,10 @@ document.addEventListener("keydown", function(e){
   if(/INPUT|TEXTAREA/.test((e.target || {}).tagName || "") || document.querySelector("#sheet.large")) return;
   if(e.key === "ArrowLeft") allerPiece(pieceIdx - 1); else if(e.key === "ArrowRight") allerPiece(pieceIdx + 1);
 });
+
+// Le foyer de la grande salle du bastion : entretenu par le clan, il brûle toujours (ce n'est pas le feu de la maison)
+function openFoyerClan(){
+  show('<h2>🔥 Le foyer du bastion</h2><p>Le clan l’entretient jour et nuit : il ne s’éteint jamais. C’est ici que les familles se retrouvent pour les veillées et pour préparer les guerres.</p>'
+    + '<p class="sub">Il ne chauffe pas ta maison : ton propre feu s’allume dans la cheminée du salon ou de la chambre (' + (G.feu ? "il est allumé" : "il est éteint") + ').</p>'
+    + '<div class="row"><button class="btn alt" data-act="versSalon">🏠 Aller au salon</button><button class="btn" data-act="close">Fermer</button></div>');
+}
