@@ -45,7 +45,7 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
    Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
    À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
@@ -418,6 +418,14 @@ function openResultat(r){
   if(r.laisses.length) h += '<div class="laisses"><span class="sub">Laissé sur place (plus de place) :</span>' + r.laisses.map(function(g){ return '<span class="mini-case">' + icone(g.id) + (g.n > 1 ? '<b>' + g.n + '</b>' : '') + '</span>'; }).join("") + '</div><p class="sub">Un sac permet de rapporter plus.</p>';
   if(r.vide) h += '<p class="sub">📭 Vous avez vidé les lieux : il n’y a plus rien à trouver ici.</p>';
   show(h + '<button class="btn" style="width:100%" data-act="close">Retour au refuge</button>');
+  // Sur PC : le résultat s'affiche en grand DANS la scène (2026-11-10, retour de Fabien « grosse image vide, pas pro ») :
+  // l'image du lieu en fond, une carte avec le récit et le butin qui apparaît objet par objet
+  if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")){
+    var sh = $("sheet");
+    sh.innerHTML = '<div class="res-carte">' + sh.innerHTML + '</div>';
+    sh.classList.add("large", "resultat");
+    if(im) sh.style.backgroundImage = 'linear-gradient(180deg, rgba(20,12,6,.15) 0%, rgba(20,12,6,.55) 55%, rgba(20,12,6,.85) 100%), url("' + im + '")';
+  }
 }
 
 /* ---------- Équiper un membre ---------- */

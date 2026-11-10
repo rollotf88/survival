@@ -1286,3 +1286,20 @@ body.pc:not(.scene-petite) .sheet.large .fin-recit{flex:1 1 auto;min-height:0;ov
 .fin-recit .pj-tour.fin{border-left-color:var(--acc)}
 .fin-recit .pj-t{display:inline-block;font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
 #tableauPC .pz-txt .zpv.vie i{background:#4f9a3a}
+
+/* Résultat d'une fouille en grand dans la scène (PC) */
+body.pc:not(.scene-petite) #modal .sheet.large.resultat{background-size:cover;background-position:center;background-color:#2a1d14;justify-content:flex-end;padding:22px}
+.sheet.resultat .res-carte{width:min(640px,100%);margin:0 auto;background:color-mix(in srgb,var(--card) 94%,transparent);border:3px solid var(--bois);border-radius:18px;padding:16px 20px;box-shadow:0 10px 30px rgba(0,0,0,.55);max-height:100%;overflow-y:auto;animation:resMonte .45s ease-out}
+.sheet.resultat .res-carte .banniere{display:none}
+.sheet.resultat .res-carte h2{font-size:30px;margin:0 0 6px}
+.sheet.resultat .res-carte .titre-butin{font-size:17px}
+.sheet.resultat .res-carte .etageres{max-width:440px;margin:4px auto}
+.sheet.resultat .res-carte .islot{animation:resObjet .4s cubic-bezier(.2,.8,.3,1.4) both}
+.sheet.resultat .res-carte .islot:nth-child(2){animation-delay:.12s}.sheet.resultat .res-carte .islot:nth-child(3){animation-delay:.24s}
+.sheet.resultat .res-carte .islot:nth-child(4){animation-delay:.36s}.sheet.resultat .res-carte .islot:nth-child(5){animation-delay:.48s}
+.sheet.resultat .res-carte .rangee:nth-child(2) .islot{animation-delay:.6s}
+.sheet.resultat .res-carte .butin-noms{font-size:14px}
+.sheet.resultat .res-carte > .btn{font-size:18px;padding:13px;margin-top:6px}
+@keyframes resMonte{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+@keyframes resObjet{from{opacity:0;transform:scale(.3) translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.sheet.resultat .res-carte,.sheet.resultat .res-carte .islot{animation:none}}
