@@ -1162,3 +1162,18 @@ body.pc:not(.scene-petite) .sheet.large .zc.sprite .zn{font-size:14px}
   .zc.sprite.z-costaud .zs img,.zc.sprite.z-gonfle .zs img{height:54cqh}
   .zc.sprite.z-rampant .zs img{height:26cqh}
 }
+
+/* Fin de combat : carte « ce qui vous attend » (image du lieu + texte) et bouton à taille normale, en bas */
+.fin-suite{display:flex;gap:10px;align-items:stretch;border:2px solid var(--bois);border-radius:12px;background:var(--bg);overflow:hidden;min-height:70px}
+.fin-suite .fs-img{flex:0 0 38%;background-size:cover;background-position:center;min-height:70px}
+.fin-suite .fs-txt{flex:1;padding:8px 10px 8px 0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.fin-suite .fs-txt b{font-size:15px}
+.fin-suite .fs-txt small{font-size:12.5px;color:var(--mut);line-height:1.35}
+.fin-suite.defaite .fs-img{filter:grayscale(1) brightness(.6)}
+.cdroite > .fin-bouton{flex:0 0 auto;height:auto;margin-top:auto}
+body.pc:not(.scene-petite) .sheet.large .fin-suite{flex-direction:column;flex:1 1 auto;min-height:0}
+body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-img{flex:1 1 auto;min-height:140px}
+body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt{padding:10px 14px 12px;flex:0 0 auto}
+body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt b{font-size:18px}
+body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt small{font-size:14px}
+body.pc:not(.scene-petite) .sheet.large .fin-bouton{padding-top:13px;padding-bottom:13px;font-size:17px}

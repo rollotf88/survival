@@ -322,7 +322,16 @@ function openCombat(){
         + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol : x.al ? "✊ Plus d’arme" : "") + '</small></span></div>';
     }).join("");
   }
-  h += fini ? '<button class="btn" style="width:100%" data-act="cfin">' + (G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
+  // Fin du combat : ce qui attend l'équipe (le lieu à fouiller, avec son image), puis le bouton en bas
+  if(fini){
+    var Ls = G.exp.guerre ? null : LIEUX[G.exp.lieu], imS = Ls ? (imageLieu(Ls) || fondCombat(Ls)) : "images/piece-bastion-cour.webp", resteS = Ls ? resteLieu(G.exp.lieu) : 0;
+    var txtS = G.exp.guerre ? (C.fin === "victoire" ? "Le bastion est tombé : à vous le butin et les étoiles." : "L’assaut a échoué.")
+      : C.fin === "victoire" ? "La voie est libre : il reste <b>" + resteS + "</b> objet" + (resteS > 1 ? "s" : "") + " à fouiller ici."
+      : C.fin === "fuite" ? "Vous avez fui : vous ne ramènerez que la moitié de ce que vous trouverez."
+      : "Personne n’est revenu de " + nomLieuCombat() + ".";
+    h += '<div class="fin-suite ' + C.fin + '"><span class="fs-img" style="background-image:url(&quot;' + imS + '&quot;)"></span><span class="fs-txt"><b>' + (G.exp.guerre ? "🏰 " : "📍 ") + (Ls ? Ls.nom : nomLieuCombat()) + '</b><small>' + txtS + '</small></span></div>';
+  }
+  h += fini ? '<button class="btn fin-bouton" style="width:100%" data-act="cfin">' + (G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
   show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
   if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
