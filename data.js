@@ -26,7 +26,7 @@ var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue",
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Illustrations peintes des lieux (Gemini, grilles de 4 découpées) : images/lieux/<nom>.webp
-var IMAGES_LIEUX = { "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital",
+var IMAGES_LIEUX = { "Forêt":"foret", "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital",
   "Quincaillerie":"quinc", "Station-service":"station", "Étang":"etang", "Garage auto":"garage",
   "Commissariat":"police", "Zone industrielle":"indus", "Centre commercial":"centre", "Village voisin":"village",
   "Entrepôt logistique":"entrepot", "Base militaire":"base", "École Jules-Ferry":"ecole", "Caserne des pompiers":"caserne",

@@ -406,7 +406,7 @@ function appelClans(corps){
 }
 function openClans(msg){
   show('<h2>⚔️ Clans</h2><p class="sub">Chargement…</p>' + BTN_FERMER());
-  appelClans({ action:"liste" }).then(function(d){ etatClans = d; noterTours(d.monClan ? d.monClan.tours : 0); afficherClans(msg); })
+  appelClans({ action:"liste" }).then(function(d){ etatClans = d; noterTours(d.monClan ? d.monClan.tours : 0); noterClan(!!d.monClan); afficherClans(msg); })
     .catch(function(){ show('<h2>⚔️ Clans</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "les clans") + '</p>' + BTN_FERMER()); });
 }
 function quand(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "à l’instant" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; }
@@ -461,6 +461,9 @@ document.addEventListener("click", function(e){
 var BONUS_CLAN_DEF = 0;
 try{ BONUS_CLAN_DEF = +localStorage.getItem("survival_clan_tours") || 0; }catch(e){}
 function noterTours(t){ BONUS_CLAN_DEF = t || 0; try{ localStorage.setItem("survival_clan_tours", BONUS_CLAN_DEF); }catch(e){} }
+// Fait-on partie d'un clan ? (retenu à chaque lecture des clans : sert aux pièces du bastion dans la maison)
+function dansUnClan(){ try{ return localStorage.getItem("survival_mon_clan") === "1"; }catch(e){ return false; } }
+function noterClan(oui){ var avant = dansUnClan(); try{ localStorage.setItem("survival_mon_clan", oui ? "1" : ""); }catch(e){} if(avant !== !!oui && typeof G !== "undefined" && G && G.ph === "game" && typeof placerPiece === "function") placerPiece(); }
 var DEF_BASTION = {
   remparts: { nom:"Remparts", icone:"🧱", effet:function(l){ return "Protègent le bastion pendant les guerres (niveau " + l + " / 5)."; } },
   mines:    { nom:"Mines", icone:"💣", effet:function(l){ return (l ? l + " mine" + (l > 1 ? "s" : "") + " posée" + (l > 1 ? "s" : "") : "Aucune mine posée") + " : chacune blesse un assaillant pendant une guerre, puis disparaît."; } },
@@ -515,7 +518,7 @@ document.addEventListener("click", function(e){
   else if(a === "bastconstruire") appelClans({ action:"construire", def:id }).then(function(d){ apres(d, "🔨 " + DEF_BASTION[id].nom + " : niveau supérieur construit !"); });
 });
 // Au lancement : bonus des tours de guet de mon clan (lu une fois)
-(function(){ if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; setTimeout(function(){ appelClans({ action:"liste" }).then(function(d){ noterTours(d && d.monClan ? d.monClan.tours : 0); }).catch(function(){}); }, 4000); })();
+(function(){ if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return; setTimeout(function(){ appelClans({ action:"liste" }).then(function(d){ noterTours(d && d.monClan ? d.monClan.tours : 0); noterClan(!!(d && d.monClan)); }).catch(function(){}); }, 4000); })();
 
 /* ---------- Guerres de clans (phase 3) ---------- */
 var etatGuerre = null;

@@ -74,6 +74,22 @@ var PIECES = [
     ["pPotager",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
     ["pRecup",   430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
     ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
+  ]},
+  // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
+  { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
+    ["pCheminee",     0, 395, 235, 745, function(){ return "🔥"; }, "Feu", .5],
+    ["pClassClans", 350, 220, 690, 460, function(){ return "🏆"; }, "Classement des clans", .5],
+    ["pGuerre",     728, 225, 1010, 665, function(){ return "⚔️"; }, "La guerre", .4],
+    ["pClan",       230, 515, 805, 920, function(){ return "🗺️"; }, "Mon clan", .35]
+  ]},
+  { id:"bastionTresor", nom:"Bastion · salle du trésor", img:"images/piece-bastion-tresor.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:900 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
+    ["pReserve",  100, 205, 930, 855, function(){ return "📦"; }, "Réserve du clan", .2],
+    ["pJournal",  400, 465, 650, 930, function(){ return "📜"; }, "Journal", .4]
+  ]},
+  { id:"bastionCour", nom:"Bastion · cour fortifiée", img:"images/piece-bastion-cour.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:100, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
+    ["pDefenses",  60,  40, 345, 810, function(){ return "🗼"; }, "Défenses", .45],
+    ["pGuerre",   410, 360, 660, 590, function(){ return "⚔️"; }, "La guerre", .5],
+    ["pDefenses", 380, 600, 730, 790, function(){ return "💣"; }, "Remparts et mines", .5]
   ]}
 ];
 var pieceIdx = 0;
@@ -87,8 +103,13 @@ function montrerNav(force){
   c.classList.add("navvue"); clearTimeout(minuteurNav);
   minuteurNav = setTimeout(function(){ var c2 = $("piece"); if(c2) c2.classList.remove("navvue"); }, 3000);
 }
+// Une pièce peut n'exister que dans certains cas (si) : ex. le bastion seulement quand on a un clan
+function pieceVisible(i){ var p = PIECES[i]; return !!p && (!p.si || p.si()); }
 function allerPiece(k){
-  pieceIdx = (k + PIECES.length) % PIECES.length;
+  var sens = k < pieceIdx ? -1 : 1, n = PIECES.length;
+  k = (k + n) % n;
+  for(var g = 0; g < n && !pieceVisible(k); g++) k = (k + sens + n) % n;
+  pieceIdx = k;
   dernierJourEtiquettes = null; // on montre les étiquettes de la nouvelle pièce
   if(typeof son === "function") son("pas");
   placerPiece();
@@ -112,6 +133,7 @@ function placerPiece(){
   var pc = document.body.classList.contains("pc"), gx = 0, dxMax = window.innerWidth;
   if(pc) dxMax = window.innerWidth - LARGEUR_PANNEAU_PC;
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
+  if(!pieceVisible(pieceIdx)) pieceIdx = 0; // on a quitté son clan : retour au salon
   var vw = dxMax - gx, P = PIECES[pieceIdx], F = P.cadre;
   corps.backgroundImage = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
@@ -138,7 +160,7 @@ function placerPiece(){
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
     + '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
-    + PIECES.map(function(p, k){ return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
+    + PIECES.map(function(p, k){ if(!pieceVisible(k)) return ""; return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
     + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>';
   ajusterEtiquettes(cont, dxMax, gx);
   // Le bouton du bas qui correspond à la pièce est mis en avant (Réserve → Stock, Chambre → Dormir…)
@@ -237,6 +259,12 @@ document.addEventListener("click", function(e){
   else if(a === "pRecup") openElement("eau");
   else if(a === "pPoules"){ if(typeof son === "function") son("poule"); openPoules(); }
   else if(a === "buildel"){ var be = b.getAttribute("data-id"); var ok = ameliorer(be); render(); openElement(be, ok ? "✅ " + REFUGE[be].nom + " amélioré : niveau " + G.ref[be] + " !" : ""); if(ok && typeof son === "function") son("construire"); }
+  else if(a === "pClan"){ if(typeof openClans === "function") openClans(); }
+  else if(a === "pClassClans"){ if(typeof openClassementClans === "function") openClassementClans(); }
+  else if(a === "pGuerre"){ if(typeof openGuerre === "function") openGuerre(); }
+  else if(a === "pReserve"){ if(typeof openBastion === "function") openBastion("reserve"); }
+  else if(a === "pJournal"){ if(typeof openBastion === "function") openBastion("journal"); }
+  else if(a === "pDefenses"){ if(typeof openBastion === "function") openBastion("defenses"); }
   else if(a === "piecePrec") allerPiece(pieceIdx - 1);
   else if(a === "pieceSuiv") allerPiece(pieceIdx + 1);
   else if(a === "pieceVa") allerPiece(+b.getAttribute("data-id"));
