@@ -1333,3 +1333,5 @@ body.pc:not(.scene-petite) .sheet.large .journal-morts{display:none}
 .blason{grid-template-rows:100%;grid-template-columns:100%;place-items:stretch;overflow:hidden}
 .blason img{min-height:0;min-width:0}
 .gu-camp .blason{flex:0 0 auto;width:58px;height:58px;margin-bottom:3px}
+.avis-case{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--mut);margin:6px 0 10px;cursor:pointer}
+.avis-case input{margin-top:2px;flex:0 0 auto}

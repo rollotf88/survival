@@ -475,6 +475,9 @@ async function adminPost(request, env){
         tombes: monde.tombes || [] });
     }
     case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500) });
+    case "avis": return repAdmin({ avis: await lireAvis(env) });
+    case "avisLu": { const av = await lireAvis(env), a = av.find((x) => x.aid === d.aid); if(!a) return repAdmin({ erreur: "introuvable" }, 404); a.lu = !a.lu; await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
+    case "avisSupprimer": { const av = (await lireAvis(env)).filter((x) => x.aid !== d.aid); await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
     case "classement": return repAdmin({ scores: liste.slice(0, 200) });
     case "supprimerJoueur": {
       const id = String(d.id || ""); if(!id) return repAdmin({ erreur: "id" }, 400);
@@ -562,6 +565,29 @@ async function adminPost(request, env){
   return repAdmin({ erreur: "action" }, 400);
 }
 
+/* ---------- Avis des joueurs (2026-11-10) : bugs, idées, remarques envoyés depuis le menu du jeu ----------
+   Clé KV « avis » = liste des 500 derniers messages (le plus récent en premier). 5 messages par jour et par appareil. Lus dans l'admin. */
+const CLE_AVIS = "avis", AVIS_MAX = 500, AVIS_PAR_JOUR = 5, TYPES_AVIS = ["bug", "idee", "autre"];
+async function lireAvis(env){ return (await env.CLASSEMENT.get(CLE_AVIS, { type: "json" })) || []; }
+function texteAvis(t, max){ return String(t || "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/[<>]/g, " ").trim().slice(0, max); }
+async function avisPost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const texte = texteAvis(d.texte, 1000);
+  if(texte.length < 5) return reponse({ erreur: "Écris un peu plus (5 lettres au moins)." });
+  const cleLim = "avis_lim_" + id, n = +(await env.CLASSEMENT.get(cleLim)) || 0;
+  if(n >= AVIS_PAR_JOUR) return reponse({ erreur: "Tu as déjà envoyé " + AVIS_PAR_JOUR + " messages aujourd’hui. Merci ! Réessaie demain." });
+  const inf = d.infos && typeof d.infos === "object" ? d.infos : {};
+  const avis = await lireAvis(env);
+  avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: Date.now(), type: TYPES_AVIS.indexOf(d.type) >= 0 ? d.type : "autre", texte, pseudo: texteAvis(d.pseudo, 16), joueur: id.slice(0, 8),
+    infos: { version: texteAvis(inf.version, 40), jour: Math.floor(+inf.jour) || 0, ecran: texteAvis(inf.ecran, 20), appareil: texteAvis(inf.appareil, 160), page: texteAvis(inf.page, 40) }, lu: false });
+  if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
+  await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
+  await env.CLASSEMENT.put(cleLim, String(n + 1), { expirationTtl: 86400 });
+  return reponse({ ok: true });
+}
+
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {
   async fetch(request, env){
@@ -587,6 +613,12 @@ export default {
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "POST") return parrainagePost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/avis"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return avisPost(request, env);
       return reponse({ erreur: "méthode" }, 405);
     }
     if(url.pathname === "/api/monde"){

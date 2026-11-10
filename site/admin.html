@@ -68,6 +68,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         <button data-o="classement">🏆 Classement</button>
         <button data-o="codes">🎟️ Codes</button>
         <button data-o="clans">🏰 Clans</button>
+        <button data-o="avis">💬 Avis</button>
       </div>
       <button class="alt" id="deconnexion">Se déconnecter</button>
     </div>
@@ -127,6 +128,16 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         + '<p class="sub" style="margin-top:8px">Un code spécial donne un colis à chaque appareil qui le tape (une fois par appareil).</p></div><div class="carte tableau"><table><tr><th>Code</th><th>État</th><th>Utilisations</th><th></th></tr>'
         + d.speciaux.map(function(c){ return '<tr><td><b>' + esc(c.code) + '</b></td><td><span class="pastille ' + (c.actif ? "on" : "off") + '">' + (c.actif ? "Actif" : "Désactivé") + '</span></td><td class="num">' + c.n + '</td><td class="row"><button class="alt" data-basculer="' + esc(c.code) + '">' + (c.actif ? "Désactiver" : "Activer") + '</button><button class="danger" data-codesuppr="' + esc(c.code) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
     }
+    if(onglet === "avis"){
+      var TY = { bug:"🐞 Bug", idee:"💡 Idée", autre:"💬 Autre" }, nl = d.avis.filter(function(a){ return !a.lu; }).length;
+      h = '<p class="sub">' + d.avis.length + ' message' + (d.avis.length > 1 ? "s" : "") + ' (' + nl + ' non lu' + (nl > 1 ? "s" : "") + '), le plus récent en premier. 5 messages par jour et par appareil au plus.</p>'
+        + (d.avis.length ? d.avis.map(function(a){ var i = a.infos || {};
+            return '<div class="carte"' + (a.lu ? ' style="opacity:.6"' : '') + '><div class="row" style="justify-content:space-between"><b>' + (TY[a.type] || a.type) + ' · ' + esc(a.pseudo || "(sans pseudo)") + '</b><small>' + quand(a.t) + '</small></div>'
+              + '<p style="white-space:pre-wrap;margin:8px 0">' + esc(a.texte) + '</p>'
+              + (i.ecran || i.jour || i.appareil ? '<p class="sub" style="font-size:12px">Jour ' + (i.jour || "?") + ' · écran ' + esc(i.ecran || "?") + (i.page ? ' · ' + esc(i.page) : '') + (i.version ? ' · version ' + esc(i.version) : '') + '<br>' + esc(i.appareil || "") + '</p>' : '')
+              + '<div class="row"><button class="alt" data-avislu="' + esc(a.aid) + '">' + (a.lu ? "Marquer non lu" : "✔ Marquer lu") + '</button><button class="danger" data-avissuppr="' + esc(a.aid) + '">Supprimer</button></div></div>'; }).join("")
+          : '<div class="carte">Aucun message pour l’instant.</div>');
+    }
     if(onglet === "clans"){
       h = '<div class="carte"><form id="formJour" class="row"><label for="jourMin" style="font-weight:700">Jours de survie pour accéder aux clans</label><input id="jourMin" type="number" min="1" max="1000" value="' + d.jourMin + '" style="width:110px"><button type="submit">Enregistrer</button></form>'
         + '<p class="sub" style="margin-top:8px">100 par défaut. Baisse-le (ex. 1) pour tester les clans avec tes amis, puis remets 100.</p></div>'
@@ -142,6 +153,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   function action(a, extra, ok){ appel(a, extra).then(function(d){ if(d.erreur){ message(d.erreur); return; } charger(); setTimeout(function(){ message(ok, true); }, 300); }).catch(function(){ message("Impossible de joindre le serveur."); }); }
   $("contenu").addEventListener("click", function(e){
     var b = e.target.closest("button"); if(!b) return;
+    if(b.dataset.avislu){ action("avisLu", { aid:b.dataset.avislu }, "C’est noté."); return; }
+    if(b.dataset.avissuppr && confirm("Supprimer ce message ?")){ action("avisSupprimer", { aid:b.dataset.avissuppr }, "Message supprimé."); return; }
     if(b.dataset.suppr && confirm("Supprimer « " + (b.dataset.nom || "ce joueur") + " » des chiffres du monde et du classement ?")) action("supprimerJoueur", { id:b.dataset.suppr }, "Joueur supprimé.");
     else if(b.dataset.score && confirm("Retirer « " + b.dataset.nom + " » du classement ?")) action("supprimerScore", { id:b.dataset.score }, "Score retiré.");
     else if(b.dataset.basculer) action("codeBasculer", { code:b.dataset.basculer }, "Code modifié.");

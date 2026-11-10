@@ -730,3 +730,44 @@ function ligueDe(t){ var k = 0; LIGUES.forEach(function(L, i){ if((t || 0) >= L.
 // Pastille de ligue avec l'insigne peint (images/ligues/1..5.webp, Gemini, 2026-11-10)
 function insigneLigue(k){ return '<img class="ligue-ins" src="images/ligues/' + (k + 1) + '.webp" alt="' + LIGUES[k].icone + '">'; }
 function badgeLigue(t, court){ var k = ligueDe(t), L = LIGUES[k]; return '<span class="ligue l' + k + '" title="Ligue ' + L.nom + '">' + insigneLigue(k) + (court ? '' : ' ' + L.nom) + ' · ' + (t || 0) + ' 🏆</span>'; }
+
+/* ---------- Avis des joueurs : signaler un bug, proposer une idée (2026-11-10, demande de Fabien) ----------
+   Menu ☰ → « 💬 Avis / bug » : le type, le message, et (si la case est cochée) quelques infos techniques pour retrouver le bug.
+   Envoyé à /api/avis, lu dans l'administration (onglet 💬 Avis). Rien n'est envoyé depuis l'ordinateur de test (localhost). */
+var typeAvis = "bug", msgAvis = "";
+function adresseAvis(){ return adresseClassement().replace("/api/classement", "/api/avis"); }
+var TYPES_AVIS = { bug:["🐞", "Un bug", "Que s’est-il passé ? Sur quel écran ? Qu’attendais-tu ?"], idee:["💡", "Une idée", "Ton idée pour améliorer le jeu…"], autre:["💬", "Autre", "Ton message…"] };
+function infosTechniques(){
+  var v = ""; try{ v = (typeof VERSION_JEU !== "undefined" ? VERSION_JEU : "") || ""; }catch(e){}
+  return { version:v, jour:typeof G !== "undefined" && G && G.day || 0, ecran:window.innerWidth + "×" + window.innerHeight, appareil:navigator.userAgent.slice(0, 160), page:typeof G !== "undefined" && G ? G.ph + (G.combat ? "/combat" : "") : "" };
+}
+function openAvis(){
+  var T = TYPES_AVIS[typeAvis];
+  var h = '<h2>💬 Ton avis compte</h2><p class="sub">Un bug, une idée, une remarque ? Écris-nous : chaque message est lu.</p>'
+    + '<div class="tabs onglets">' + Object.keys(TYPES_AVIS).map(function(k){ var t = TYPES_AVIS[k]; return '<button class="tab' + (k === typeAvis ? " on" : "") + '" data-act="avistype" data-id="' + k + '">' + t[0] + '<small>' + t[1] + '</small></button>'; }).join("") + '</div>'
+    + (msgAvis ? '<p class="msg ' + (msgAvis.charAt(0) === "✅" ? "g2" : "") + '">' + msgAvis + '</p>' : '')
+    + '<textarea id="texteAvis" class="desc-clan" maxlength="1000" rows="5" placeholder="' + T[2] + '"></textarea><p class="sub" id="resteAvis"></p>'
+    + '<label class="avis-case"><input type="checkbox" id="infosAvis" checked> Joindre les infos techniques (jour, taille d’écran, appareil) pour nous aider à retrouver le bug</label>'
+    + '<div class="row"><button class="btn alt" data-act="menu">Retour</button><button class="btn" data-act="avisenvoyer">📨 Envoyer</button></div>';
+  msgAvis = "";
+  show(h);
+  var t = document.getElementById("texteAvis"), r = document.getElementById("resteAvis"), maj = function(){ r.textContent = (1000 - t.value.length) + " lettres restantes"; };
+  t.addEventListener("input", maj); maj();
+}
+function envoyerAvis(){
+  var tx = document.getElementById("texteAvis"), texte = tx ? tx.value.trim() : "";
+  if(texte.length < 5){ msgAvis = "❌ Écris un peu plus (5 lettres au moins)."; var garde = texte; openAvis(); document.getElementById("texteAvis").value = garde; return; }
+  var corps = { id:idAppareil(), pseudo:lirePseudo(), type:typeAvis, texte:texte };
+  if(document.getElementById("infosAvis") && document.getElementById("infosAvis").checked) corps.infos = infosTechniques();
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){ msgAvis = "✅ (Test sur l’ordinateur : rien n’est envoyé au serveur.)"; openAvis(); return; }
+  fetch(adresseAvis(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); })
+    .then(function(d){ msgAvis = d.erreur ? "❌ " + d.erreur : "✅ Merci ! Ton message est bien arrivé."; openAvis(); if(d.erreur) document.getElementById("texteAvis").value = texte; })
+    .catch(function(){ msgAvis = "❌ " + MSG_HORS_LIGNE; openAvis(); document.getElementById("texteAvis").value = texte; });
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+  if(a === "avis"){ typeAvis = "bug"; openAvis(); }
+  else if(a === "avistype"){ var garde = (document.getElementById("texteAvis") || {}).value || ""; typeAvis = id; openAvis(); document.getElementById("texteAvis").value = garde; }
+  else if(a === "avisenvoyer") envoyerAvis();
+});

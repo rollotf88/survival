@@ -116,6 +116,7 @@ function openMenu(){
   if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
   h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus" : "🚫 Contenus", CONTENUS_SENSIBLES ? "Durs : activés" : "Durs : coupés");
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
+  if(typeof openAvis === "function") h += t("avis", "💬 Avis / bug", "Signaler, proposer");
   h += '</div>';
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';
   else h += '<p class="msg">Vraiment ? La partie en cours sera perdue.</p><div class="row"><button class="btn" data-act="menunouvelleok">Oui, recommencer</button><button class="btn alt" data-act="menu">Non</button></div>';
