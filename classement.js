@@ -387,7 +387,7 @@ document.addEventListener("click", function(e){
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "champcode") validerCode(); });
 
 /* =====================================================================
-   CLANS (phase 1 des guerres de clans) : à partir du jour 100 (réglable par l'administration),
+   CLANS (phase 1 des guerres de clans) : à partir du jour 30 (réglable par l'administration),
    créer un clan, en rejoindre un (5 familles max), le quitter ; le chef peut exclure.
    Le bastion et les guerres viendront ensuite.
    ===================================================================== */
@@ -470,14 +470,14 @@ function noterClan(oui){ if(oui) noterStatClan("rejoint", 1, true); var avant = 
 var DEF_BASTION = {
   remparts: { nom:"Remparts", icone:"🧱", effet:function(l){ return "Protègent le bastion pendant les guerres (niveau " + l + " / 5)."; } },
   mines:    { nom:"Mines", icone:"💣", effet:function(l){ return (l ? l + " mine" + (l > 1 ? "s" : "") + " posée" + (l > 1 ? "s" : "") : "Aucune mine posée") + " : chacune blesse un assaillant pendant une guerre, puis disparaît."; } },
-  armurerie:{ nom:"Armurerie", icone:"🦺", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + 3 * l + " dégâts et chaque coup " + l + " (seuls les coups à la tête passent)." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
+  armurerie:{ nom:"Armurerie", icone:"🦺", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + Math.round(BAL.assaut.armurerieTir * l + 0.01) + " dégâts (" + Math.round(BAL.assaut.armurerieTete * l + 0.01) + " à la tête) et chaque coup " + Math.round(BAL.assaut.armurerieCoup * l + 0.01) + "." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
   tours:    { nom:"Tours de guet", icone:"🗼", effet:function(l){ return "+" + l + " de défense de nuit pour chaque famille du clan (niveau " + l + " / 3)."; } }
 };
 // Camion du clan (2026-11-10) : améliorations payées par la réserve, utiles à chaque assaut des membres
 var CAMION_BASTION = {
-  parebuffle:{ nom:"Pare-buffle", icone:"🐂", effet:function(l){ return l ? "Le camion enfonce l’entrée : chaque défenseur perd " + 2 * l + " PV au début de l’assaut." : "Le camion arrive sans rien pour enfoncer l’entrée."; } },
+  parebuffle:{ nom:"Pare-buffle", icone:"🐂", effet:function(l){ return l ? "Le camion enfonce l’entrée : chaque défenseur perd " + Math.round(BAL.assaut.parebuffle * l) + " PV au début de l’assaut." : "Le camion arrive sans rien pour enfoncer l’entrée."; } },
   blindage:  { nom:"Blindage", icone:"🔩", effet:function(l){ return l ? "Le camion encaisse les " + l + " première" + (l > 1 ? "s" : "") + " mine" + (l > 1 ? "s" : "") + " de chaque assaut, sans blessé." : "Les mines adverses blessent directement l’équipe."; } },
-  tourelle:  { nom:"Tourelle", icone:"🎯", effet:function(l){ return l ? "À chaque tour, la tourelle tire sur le défenseur le plus faible (" + 2 * l + " à " + (2 * l + 2) + " dégâts ; les gilets de l’armurerie adverse la freinent)." : "Pas de tourelle : toute l’attaque repose sur l’équipe."; } }
+  tourelle:  { nom:"Tourelle", icone:"🎯", effet:function(l){ return l ? "À chaque tour, la tourelle tire sur le défenseur le plus faible (" + Math.round(BAL.assaut.tourelle * l) + " à " + (Math.round(BAL.assaut.tourelle * l) + 2) + " dégâts ; les gilets de l’armurerie adverse la freinent)." : "Pas de tourelle : toute l’attaque repose sur l’équipe."; } }
 };
 function defBastion(k){ return DEF_BASTION[k] || CAMION_BASTION[k]; }
 var etatBastion = null, ongletBastion = "reserve", msgBastion = "";

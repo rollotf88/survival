@@ -183,6 +183,20 @@ var NAIF = {
   evenement: function(ev){ return R(0, ev.choix.length - 1); }
 };
 
+/* ---------- Robot « moyen » (2026-11-10) : joue comme Malin, mais se trompe une fois sur quatre (il joue alors comme Naïf) ----------
+   Sert à estimer un vrai joueur. MOYEN.erreur règle la part d'erreurs (0,25 par défaut). */
+function choixMoyen(){ return Math.random() < MOYEN.erreur ? NAIF : MALIN; }
+var MOYEN = {
+  nom: "Moyen", erreur: 0.25,
+  get sac(){ var t = MALIN.sac.slice(); for(var k = 0; k < 4; k++){ var i = R(0, t.length - 1), j = R(0, t.length - 1), x = t[i]; t[i] = t[j]; t[j] = x; } return t; }, // sac un peu moins bien ordonné
+  matin: function(){ choixMoyen().matin(); },
+  expeditions: function(){ choixMoyen().expeditions(); },
+  soir: function(){ choixMoyen().soir(); },
+  combat: function(){ (Math.random() < MOYEN.erreur / 2 ? NAIF : MALIN).combat(); }, // le bouton Auto la plupart du temps
+  crocheter: function(){ return choixMoyen().crocheter(); },
+  evenement: function(ev){ return choixMoyen().evenement(ev); }
+};
+
 /* ---------- Une partie complète ---------- */
 function jouer(bot, seed, maxJours){
   Math.random = graine(seed);

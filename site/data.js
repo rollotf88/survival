@@ -121,6 +121,13 @@ var BAL = {
   },    // mais la nuit suivante, ce membre récupère 20 de moins
   // Rencontres en chemin : une chance à chaque fouille, au plus une par jour
   rencontres: { jour:3, chance:0.1, bonusTrait:0.2 },
+  debutDoux: { jours:5, degats:0.6 }, // les 5 premiers jours, les zombies font 40 % de dégâts en moins (pour les débutants, 2026-11-10)
+  jourClans: 30,            // jour de survie pour accéder aux clans (affichage ; le vrai réglage est sur le serveur, modifiable dans l'admin)
+  // Assauts des guerres de clans (lissés le 2026-11-10 par simulation)
+  // Réglé par simulation (2 membres, bouton Auto) : bastion nu ≈ 99 % de victoires, moyen ≈ 78 %, fort ≈ 44 %, maximum ≈ 8 % au corps à corps,
+  // ≈ 35 % avec fusils OU équipement de guerre, ≈ 80 % avec tout (fusils + équipement + camion niveau 3)
+  assaut: { defenseurs:[3, 3, 3, 3, 3, 3], pv:22, pvRempart:1.5, pvForce:1.2, degats:[6, 11], degatsRempart:0.25, degatsForce:0.25, joursParForce:30, forceMax:4,
+            armurerieTir:2, armurerieCoup:0.34, armurerieTete:2, mineDegats:[4, 8], tourelle:1, parebuffle:1.5, gilet:2, bouclier:0.4 },
   energieAssaut: 40,        // un assaut de bastion (guerre de clans) coûte 40 ⚡ à chaque membre de l'équipe
   // Dernier recours (contenu sensible, désactivable dans le menu) : quand la famille meurt de faim
   sacrifice: {
@@ -293,9 +300,9 @@ var OBJETS = {
   outils:     { nom:"Boîte à outils", pl:"Boîtes à outils", g:"f", icone:"🧰", cat:"outil", place:2, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées sans bruit" },
   canne:      { nom:"Canne à pêche", pl:"Cannes à pêche", g:"f", icone:"🎣", cat:"outil", place:2, emplacement:"outil", peche:true, sol:8, desc:"Pour pêcher à l’étang (s’use à chaque sortie, 8 fois)" },
   // Équipement de guerre (2026-11-10) : servent seulement pendant les assauts des guerres de clans, portés tout seuls par l'équipe ; s'usent d'un cran par assaut
-  gilet:      { nom:"Gilet pare-balles", pl:"Gilets pare-balles", g:"m", icone:"🦺", cat:"guerre", place:2, sol:3, guerre:"gilet", desc:"Guerre de clans : retire 3 dégâts à chaque coup reçu pendant un assaut (3 assauts)" },
+  gilet:      { nom:"Gilet pare-balles", pl:"Gilets pare-balles", g:"m", icone:"🦺", cat:"guerre", place:2, sol:3, guerre:"gilet", desc:"Guerre de clans : retire 2 dégâts à chaque coup reçu pendant un assaut (3 assauts)" },
   casque:     { nom:"Casque de fortune", pl:"Casques de fortune", g:"m", icone:"⛑️", cat:"guerre", place:1, sol:3, guerre:"casque", desc:"Guerre de clans : les mines et les explosions font moitié moins mal (3 assauts)" },
-  bouclier:   { nom:"Bouclier anti-émeute", pl:"Boucliers anti-émeute", g:"m", icone:"🛡️", cat:"guerre", place:2, sol:4, guerre:"bouclier", desc:"Guerre de clans : « Se protéger » divise les dégâts par 3 au lieu de 2 (4 assauts)" },
+  bouclier:   { nom:"Bouclier anti-émeute", pl:"Boucliers anti-émeute", g:"m", icone:"🛡️", cat:"guerre", place:2, sol:4, guerre:"bouclier", desc:"Guerre de clans : « Se protéger » ne laisse passer que 40 % des dégâts au lieu de la moitié (4 assauts)" },
   pdb:        { nom:"Pied-de-biche", pl:"Pieds-de-biche", g:"m", icone:"⛏️", cat:"outil", place:1, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées" },
   // Sacs (emplacement « sac ») : places de butin en plus
   sacoche:    { nom:"Sacoche", pl:"Sacoches", g:"f", icone:"👝", cat:"sac", place:1, emplacement:"sac", capacite:2, desc:"+2 places pour rapporter du butin" },

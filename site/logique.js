@@ -667,11 +667,12 @@ function equipGuerrePour(equipe){
 function porteGuerre(x, id){ var g = G.exp && G.exp.equipGuerre && G.exp.equipGuerre[G.m.indexOf(x)]; return !!(g && g.some(function(o){ return o.id === id; })); }
 function creerAssaut(p, equipe){
   G.exp = { guerre:true, assaut:p.assaut, nomLieu:"le bastion « " + p.clan + " »", cible:p.cible, lieu:0, equipe:equipe.slice(), notes:[], mult:1, d:0, voiture:false };
-  var T = ZOMBIES.find(function(t){ return t.id === "defenseur"; }), n = Math.min(4, 2 + Math.floor((p.remparts || 0) / 2));
-  var force = Math.min(4, Math.floor(((p.jourCible || 100) - 100) / 25)), zs = [];
+  var T = ZOMBIES.find(function(t){ return t.id === "defenseur"; }), n = BAL.assaut.defenseurs[Math.min(5, p.remparts || 0)];
+  var A = BAL.assaut, force = Math.max(0, Math.min(A.forceMax, Math.floor(((p.jourCible || BAL.jourClans) - BAL.jourClans) / A.joursParForce))), zs = [];
   for(var k = 0; k < n; k++){
     var z = nouveauZombie(T); z.nom = (k ? "Garde " + (k + 1) : p.cible).slice(0, 12);
-    z.pv = z.pvMax = T.pv + 3 * (p.remparts || 0) + 2 * force; z.degats = [T.degats[0] + force, T.degats[1] + force + Math.floor((p.remparts || 0) / 2)];
+    var rp = p.remparts || 0, bonus = Math.floor(A.degatsForce * force);
+    z.pv = z.pvMax = Math.round(A.pv + A.pvRempart * rp + A.pvForce * force); z.degats = [A.degats[0] + bonus, A.degats[1] + bonus + Math.floor(A.degatsRempart * rp)];
     if(p.armurerie) z.armurerie = Math.min(3, p.armurerie); // armurerie du bastion adverse : défenseurs en gilet (surtout contre les tirs)
     zs.push(z);
   }
@@ -683,10 +684,10 @@ function creerAssaut(p, equipe){
   var cam = p.camion || {}; G.exp.camion = { parebuffle:cam.parebuffle || 0, blindage:cam.blindage || 0, tourelle:cam.tourelle || 0 };
   var absorbe = Math.min(p.mines || 0, G.exp.camion.blindage);
   if(absorbe) J.push(["g2", "🚚 Le blindage du camion encaisse " + absorbe + " mine" + (absorbe > 1 ? "s" : "") + " sans dégâts."]);
-  for(var m = absorbe; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(4, 8); if(porteGuerre(x, "casque")) dg = Math.ceil(dg / 2); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV)" + (porteGuerre(x, "casque") ? ", son casque l’a protégé" : "") + " !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
-  if(p.armurerie) J.push(["", "🦺 Les défenseurs portent des gilets (armurerie niveau " + p.armurerie + ") : chaque tir perd " + 3 * Math.min(3, p.armurerie) + " dégâts, chaque coup " + Math.min(3, p.armurerie) + ", sauf à la tête."]);
+  for(var m = absorbe; m < (p.mines || 0); m++){ var eq = equipeCombat(); if(!eq.length) break; var x = eq[R(0, eq.length - 1)], dg = R(A.mineDegats[0], A.mineDegats[1]); if(porteGuerre(x, "casque")) dg = Math.ceil(dg / 2); J.push(["b2", "💣 Une mine explose sous " + x.nom + " (−" + dg + " PV)" + (porteGuerre(x, "casque") ? ", son casque l’a protégé" : "") + " !"]); blesser(x, dg, J, "tué par une mine devant " + G.exp.nomLieu); }
+  if(p.armurerie) J.push(["", "🦺 Les défenseurs portent des gilets (armurerie niveau " + p.armurerie + ") : chaque tir perd " + Math.round(BAL.assaut.armurerieTir * Math.min(3, p.armurerie) + 0.01) + " dégâts, chaque coup " + Math.round(BAL.assaut.armurerieCoup * Math.min(3, p.armurerie) + 0.01) + "."]);
   if(p.remparts) J.push(["", "🧱 Les remparts (niveau " + p.remparts + ") rendent les défenseurs plus coriaces."]);
-  if(G.exp.camion.parebuffle){ var choc = 2 * G.exp.camion.parebuffle; zs.forEach(function(z){ z.pv = Math.max(1, z.pv - choc); }); J.push(["g2", "🚚 Le camion enfonce l’entrée avec son pare-buffle : chaque défenseur perd " + choc + " PV !"]); }
+  if(G.exp.camion.parebuffle){ var choc = Math.round(BAL.assaut.parebuffle * G.exp.camion.parebuffle); zs.forEach(function(z){ z.pv = Math.max(1, z.pv - choc); }); J.push(["g2", "🚚 Le camion enfonce l’entrée avec son pare-buffle : chaque défenseur perd " + choc + " PV !"]); }
   if(G.exp.camion.tourelle) J.push(["g2", "🚚 La tourelle du camion tirera à chaque tour (niveau " + G.exp.camion.tourelle + ")."]);
   G.combat.journal = J; G.combat.resume = J.filter(function(l){ return l[0] === "mort"; });
   if(!equipeCombat().length){ G.combat.fin = "defaite"; G.combat.resume.push(["b2", "💀 L’équipe n’a même pas atteint " + G.exp.nomLieu + "."]); }
@@ -730,6 +731,7 @@ function degatsMembre(x){
   return { dg:Math.max(1, R(d[0], d[1]) + bonus - (fatigue(x) ? C.malusFatigue : 0)), comment:comment, tir:tir };
 }
 function bruit(J, x){
+  if(G.exp && G.exp.guerre) return; // assaut de bastion : les défenseurs sont déjà tous là
   var C = BAL.combat;
   if(hasard() < C.bruitTir + (x && x.trait === "tireur" ? BAL.traits.nerveux : 0) && zombiesDebout().length < C.maxZombies){
     var t = tirerZombie(); G.combat.zombies.push(nouveauZombie(t));
@@ -762,8 +764,9 @@ function actionZombie(z, protege, J){
   var x = z.int && G.m[z.int.c] && eq.indexOf(G.m[z.int.c]) >= 0 ? G.m[z.int.c] : eq[R(0, eq.length - 1)];
   for(var k = 0; k < (T.coups || 1) && x.al; k++){
     var dg = R(z.degats[0], z.degats[1]);
-    if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? 1 / 3 : C.protection)));
-    if(G.exp.guerre && porteGuerre(x, "gilet")) dg = Math.max(1, dg - 3);
+    if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? BAL.assaut.bouclier : C.protection)));
+    if(G.exp.guerre && porteGuerre(x, "gilet")) dg = Math.max(1, dg - BAL.assaut.gilet);
+    if(!G.exp.guerre && G.day <= BAL.debutDoux.jours) dg = Math.max(1, Math.round(dg * BAL.debutDoux.degats)); // début de partie plus doux
     J.push(["b2", iconeZombie(z) + " " + z.nom + " frappe " + x.nom + " (−" + dg + " PV)."]);
     blesser(x, dg, J, "tué par un " + minus(z.nom) + " (" + lieu + ")");
   }
@@ -789,7 +792,7 @@ function jouerTour(choix){
   // 1 bis. La tourelle du camion (assauts de guerre) tire sur le défenseur le plus faible ; les gilets de l'armurerie la freinent
   var tl = G.exp && G.exp.guerre && G.exp.camion ? G.exp.camion.tourelle : 0;
   if(tl && zombiesDebout().length){
-    var zt = zombiesDebout().sort(function(a, b){ return a.pv - b.pv; })[0], dt = Math.max(0, 2 * tl + R(0, 2) - 3 * (zt.armurerie || 0));
+    var zt = zombiesDebout().sort(function(a, b){ return a.pv - b.pv; })[0], dt = Math.max(0, Math.round(BAL.assaut.tourelle * tl) + R(0, 2) - Math.round(BAL.assaut.armurerieTir * (zt.armurerie || 0) + 0.01));
     zt.pv = Math.max(0, zt.pv - dt);
     J.push([dt ? "g2" : "", "🚚 La tourelle tire sur " + zt.nom + (dt ? " : −" + dt + (zt.pv ? "" : ", à terre !") : " : la balle ricoche sur son gilet.")]);
     if(!zt.pv) zombieTombe(zt, protege, J);
@@ -819,10 +822,10 @@ function jouerTour(choix){
     var r = degatsMembre(x), dg = r.dg;
     if(c.a === "tete"){
       var ch = B.tete + (r.tir && x.trait === "tireur" ? B.teteTireur : 0);
-      if(hasard() < ch){ dg = dg * B.teteMult; z.pv = Math.max(0, z.pv - dg); J.push(["g2", "🎯 " + x.nom + (r.tir ? " " + r.comment : "") + " : coup à la tête ! " + z.nom + " −" + dg + (z.pv ? "" : ", à terre !")]); }
+      if(hasard() < ch){ dg = dg * B.teteMult; if(z.armurerie && r.tir) dg = Math.max(1, dg - Math.round(BAL.assaut.armurerieTete * z.armurerie + 0.01)); z.pv = Math.max(0, z.pv - dg); J.push(["g2", "🎯 " + x.nom + (r.tir ? " " + r.comment : "") + " : coup à la tête ! " + z.nom + " −" + dg + (z.pv ? "" : ", à terre !")]); }
       else { J.push(["b2", "🎯 " + x.nom + (r.tir ? " " + r.comment : "") + " vise la tête… et rate " + z.nom + "."]); dg = 0; }
     } else {
-      var arm = (T.armure || 0) + (z.armurerie || 0) * (r.tir ? 3 : 1);
+      var arm = (T.armure || 0) + (z.armurerie ? Math.round((r.tir ? BAL.assaut.armurerieTir : BAL.assaut.armurerieCoup) * z.armurerie + 0.01) : 0);
       if(arm) dg = Math.max(1, dg - arm);
       z.pv = Math.max(0, z.pv - dg);
       J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (arm ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);

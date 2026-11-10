@@ -40,9 +40,9 @@ function reglesGuide(){
     ["Le dernier recours", "🕯️",
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
     ["Équipement de guerre", "🦺",
-      "Pour les guerres de clans, fabrique à l’atelier (ou trouve au commissariat, à la caserne, à la base militaire) : le gilet pare-balles (−3 dégâts par coup reçu), le casque de fortune (mines et explosions ÷2) et le bouclier anti-émeute (« Se protéger » divise par 3). Ils sont portés tout seuls par l’équipe d’assaut, un de chaque par membre, et s’usent d’un cran par assaut. L’armurerie du bastion habille les défenseurs de gilets : chaque tir perd 3 dégâts par niveau (1 pour un coup de mêlée), seuls les coups à la tête passent."],
+      "Pour les guerres de clans, fabrique à l’atelier (ou trouve au commissariat, à la caserne, à la base militaire) : le gilet pare-balles (−2 dégâts par coup reçu), le casque de fortune (mines et explosions ÷2) et le bouclier anti-émeute (« Se protéger » ne laisse passer que 40 % des dégâts). Ils sont portés tout seuls par l’équipe d’assaut, un de chaque par membre, et s’usent d’un cran par assaut. L’armurerie du bastion habille les défenseurs de gilets : chaque tir perd 2 dégâts par niveau (même à la tête), un coup de mêlée un peu moins."],
     ["Le camion du clan", "🚚",
-      "Au bastion, onglet Camion : le clan améliore son camion avec la réserve. Pare-buffle : chaque défenseur perd 2 PV par niveau en début d’assaut. Blindage : le camion encaisse une mine par niveau. Tourelle : à chaque tour, elle tire sur le défenseur le plus faible (2 dégâts par niveau, freinée par l’armurerie adverse). Il sert à l’assaut de chaque membre."],
+      "Au bastion, onglet Camion : le clan améliore son camion avec la réserve. Pare-buffle : chaque défenseur perd 1 à 2 PV par niveau en début d’assaut. Blindage : le camion encaisse une mine par niveau. Tourelle : à chaque tour, elle tire sur le défenseur le plus faible (1 dégât par niveau, plus 0 à 2, freinée par l’armurerie adverse). Il sert à l’assaut de chaque membre."],
     ["La forêt et le bois", "🌲",
       "La forêt (à partir du jour " + LIEUX.filter(function(L){ return L.bois; })[0].jour + ") : chaque survivant qui a une hache en main (case arme) abat un arbre et rapporte " + B.foret.coupe[0] + " ou " + B.foret.coupe[1] + " planches. " +
       "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
@@ -105,7 +105,7 @@ function openMenu(){
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
-  if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= 100 ? "Fonder ou rejoindre" : "Dès le jour 100");
+  if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= BAL.jourClans ? "Fonder ou rejoindre" : "Dès le jour " + BAL.jourClans);
   if(typeof openInviter === "function"){
     var nc = lireColis(), nb = lireBonus().length;
     h += t(nc ? "sacbonus" : "inviter", (nc ? "🪂 " : "🎁 ") + "Inviter", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " bonus gardés");

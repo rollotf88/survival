@@ -173,6 +173,9 @@ function openLoc(){
   if(LIEUX.some(function(L, i){ return L.bois && lieuOuvert(i); })) astuce("foret");
   var h = '<h2>Où envoyer l’équipe ?</h2>';
   var team = G.sel.map(function(j){ return G.m[j]; });
+  // Aide aux débutants : prévenir qu'un membre très blessé risque sa vie en cas de combat
+  var bles = team.filter(function(x){ return x.hp < 35; });
+  if(bles.length) h += '<p class="msg">⚠️ ' + liste(bles.map(function(x){ return x.nom + " (" + x.hp + " ❤️)"; })) + (bles.length > 1 ? " sont gravement blessés" : " est gravement blessé" + (estFeminin(bles[0]) ? "e" : "")) + " : un combat pourrait " + (bles.length > 1 ? "leur" : "lui") + " coûter la vie. Mieux vaut " + (bles.length > 1 ? "les" : estFeminin(bles[0]) ? "la" : "le") + " soigner avant (bouton ＋).</p>";
   var porte = function(test){ return team.some(function(x){ return x.eq.outil && test(OBJETS[x.eq.outil.id]); }); };
   var lumiere = porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? "🔦 lampe prête" : "⚠️ lampe sans pile") : porte(function(o){ return o.lumiere === 1; }) ? "🔥 lueur faible" : "⚠️ pas de lumière";
   var ouvre = porte(function(o){ return o.ouvre; }) ? "🔓 de quoi ouvrir" : "⚠️ porte à forcer";
@@ -894,7 +897,7 @@ var VITRINE = [
   ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits : costaud, soigneur, cuisinier… La mort est définitive."],
   ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
-  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 100 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, et guerres de 3 jours contre d’autres clans."],
+  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, et guerres de 3 jours contre d’autres clans."],
   ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
   ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des succès, et un code pour inviter tes amis."]
 ];

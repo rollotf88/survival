@@ -35,7 +35,7 @@ function tableau(r){
 }
 document.getElementById("go").onclick = function(){
   var out = document.getElementById("out"); out.textContent = "Calcul…";
-  setTimeout(function(){ out.innerHTML = tableau(simuler(MALIN, 500, 200)) + tableau(simuler(NAIF, 500, 200)); }, 30);
+  setTimeout(function(){ out.innerHTML = tableau(simuler(MALIN, 500, 200)) + tableau(simuler(MOYEN, 500, 200)) + tableau(simuler(NAIF, 500, 200)); }, 30);
 };
 </script>
 </body>

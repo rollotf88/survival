@@ -159,7 +159,7 @@ const CADRES_BOTS = ["bois", "bronze", "argent", "or", "legende"];
 const hasardEntier = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const idBot = () => "bot" + Math.random().toString(36).slice(2, 12);
 const estBot = (id) => String(id || "").indexOf("bot") === 0;
-function nouveauBot(){ return { id: idBot(), pseudo: PSEUDOS_BOTS[hasardEntier(0, PSEUDOS_BOTS.length - 1)] + hasardEntier(1, 99), jour: hasardEntier(100, 190), vu: Date.now() - hasardEntier(0, 2) * JOUR_MS, rejoint: Date.now(), cadre: CADRES_BOTS[hasardEntier(0, 4)], bot: true, depose: hasardEntier(0, 30), pris: 0 }; }
+function nouveauBot(){ return { id: idBot(), pseudo: PSEUDOS_BOTS[hasardEntier(0, PSEUDOS_BOTS.length - 1)] + hasardEntier(1, 99), jour: hasardEntier(30, 150), vu: Date.now() - hasardEntier(0, 2) * JOUR_MS, rejoint: Date.now(), cadre: CADRES_BOTS[hasardEntier(0, 4)], bot: true, depose: hasardEntier(0, 30), pris: 0 }; }
 function etoilesBot(){ const r = Math.random(); return r < 0.25 ? 0 : r < 0.6 ? 1 : r < 0.85 ? 2 : 3; }
 // Les bots des deux camps lancent leurs assauts manqués (un par jour écoulé). Renvoie true si quelque chose a changé.
 function botsAttaquent(C, W){
@@ -244,10 +244,10 @@ function etatBastion(c, id){ bastionDe(c); const r = c.retraits[id]; const pris 
 // {action:"rejoindre", id, pseudo, jour, clan}       -> rejoint un clan qui a de la place (5 au maximum)
 // {action:"quitter", id}                             -> quitte (si le chef part, le plus ancien devient chef ; un clan vide disparaît)
 // {action:"exclure", id, cible}                      -> le chef exclut un membre
-// Accès à partir du jour `jourMinClan` de sa partie (100, réglable dans l'administration : clé KV « reglages »).
+// Accès à partir du jour `jourMinClan` de sa partie (30 depuis le 2026-11-10, réglable dans l'administration : clé KV « reglages »).
 const CLE_CLANS = "clans", CLE_REGLAGES = "reglages", MAX_CLAN = 5, BLASONS_OK = 12;
 async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {}; c.clans = c.clans || {}; c.parJoueur = c.parJoueur || {}; c.guerres = c.guerres || {}; c.file = c.file || []; cloreGuerres(c); return c; }
-async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 100; return r; }
+async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 30; return r; }
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees) }; }
@@ -388,7 +388,7 @@ async function clansPost(request, env){
       W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
       if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
       await sauver();
-      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 100, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines, camion: { parebuffle: mon.def.parebuffle || 0, blindage: mon.def.blindage || 0, tourelle: mon.def.tourelle || 0 } });
+      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 30, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines, camion: { parebuffle: mon.def.parebuffle || 0, blindage: mon.def.blindage || 0, tourelle: mon.def.tourelle || 0 } });
     }
     case "finAssaut": {
       if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
