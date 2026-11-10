@@ -343,7 +343,7 @@ function userArme(x, n){
 }
 
 /* ---------- Expédition (fouille d'un lieu) ---------- */
-function dangerLieu(i){ return LIEUX[i].danger + Math.min(BAL.dangerMaxAjoute, G.day * BAL.dangerParJour) + (G.hordeJour === G.day ? 0.2 : 0); }
+function dangerLieu(i){ return LIEUX[i].danger + Math.min(BAL.dangerMaxAjoute, G.day * BAL.dangerParJour) + (G.hordeJour === G.day ? 0.2 : 0) + (G.lieux && G.lieux[i] && G.lieux[i].cache >= G.day ? BAL.caches.danger : 0); }
 // Ce qui reste à prendre dans un lieu (à l'étang : les objets + les poissons)
 function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0) + (LIEUX[i].bois ? (l.arbres || 0) : 0); }
 function bucherons(team){ return team.filter(function(x){ return x.al && x.eq.arme && OBJETS[x.eq.arme.id].coupe; }); }
@@ -1039,6 +1039,21 @@ function nuitMonde(n){
       n.push(["b2", "🏴 Des pillards ont fouillé " + leLieu(LIEUX[c].nom) + " cette nuit : il n’y reste plus que " + l.butin.length + " objet" + (l.butin.length > 1 ? "s" : "") + "."]);
     }
   }
+  // Caches de pillards : un lieu presque vide se remplit un peu (plus dangereux quelques jours)
+  var K = BAL.caches;
+  if(jour >= K.jour && alea("cache") < K.chance){
+    var vides = LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && G.lieux[i].butin.length < K.seuil; });
+    if(vides.length){
+      var ci = vides[Math.floor(alea("cache-lieu") * vides.length)], lc = G.lieux[ci], ids = Object.keys(K.butin), poids = 0;
+      ids.forEach(function(k){ poids += K.butin[k]; });
+      var nbc = K.taille[0] + Math.floor(alea("cache-taille") * (K.taille[1] - K.taille[0] + 1));
+      for(var q = 0; q < nbc; q++){ var t = alea("cache-objet-" + q) * poids, pris = ids[0]; for(var u = 0; u < ids.length; u++){ t -= K.butin[ids[u]]; if(t < 0){ pris = ids[u]; break; } } lc.butin.push(pris); }
+      lc.cache = jour + K.jours - 1;
+      G.stats.caches = (G.stats.caches || 0) + 1;
+      var radio = possede(function(o){ return o.radio; });
+      n.push(["g2", (radio ? "📻 La radio parle d’une cache abandonnée par des pillards " : "🏴 Des pillards en fuite ont abandonné une cache ") + (function(d){ return d.indexOf("le ") === 0 ? "au " + d.slice(3) : "à " + d; })(leLieu(LIEUX[ci].nom)) + " : " + nbc + " objets à prendre" + (K.danger ? ", mais ils rôdent encore autour quelques jours." : ".")]);
+    }
+  }
   // Lieux secrets découverts
   LIEUX.forEach(function(L, i){
     if(L.secret && !G.decouverts[i] && jour >= jourDecouverte(i)){
@@ -1064,7 +1079,7 @@ function nuitMonde(n){
   }
 }
 // « le Garage auto », « l’Hôpital », « la Zone industrielle »
-var FEMININS_LIEUX = ["Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire"];
+var FEMININS_LIEUX = ["Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire", "Forêt"];
 function leLieu(nom){ return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
 function mission(){ return G.mission ? MISSIONS.filter(function(m){ return m.id === G.mission.id; })[0] : null; }
 function texteMission(){ var M = mission(); return M ? M.texte.replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }

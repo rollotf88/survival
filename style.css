@@ -1090,3 +1090,15 @@ button.cl-ligne .cm-voir{color:var(--mut)}
 }
 @keyframes zInfo{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.zrang.arrivee .zc,.zrang.arrivee .zc *{animation:none}}
+
+/* Bloc du score, même allure que les pastilles (2026-11-10, retour de Fabien) */
+body.pc #app .hd-score{flex-direction:row;align-items:center;gap:7px;border-radius:22px;padding:4px 14px;min-height:42px}
+body.pc #app .hd-score .hs-ico{font-size:20px;line-height:1}
+body.pc #app .hd-score b{font-family:inherit;font-size:20px;font-weight:800;color:var(--ink);letter-spacing:0}
+body.pc #app .hd-score small{font-size:10px;line-height:1.15;text-transform:uppercase;letter-spacing:.03em;text-align:left}
+@media (max-width:1500px){ body.pc #app .hd-score b{font-size:18px} }
+/* 1920 px : un peu plus serré pour que les noms tiennent à côté du score */
+body.pc #app .chips{gap:8px}
+body.pc #app .chip{padding:5px 10px;gap:6px}
+body.pc #app .chip-lbl{font-size:11px;letter-spacing:.02em}
+body.pc #app .hd-score{padding:4px 11px;gap:6px}

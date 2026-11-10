@@ -185,6 +185,17 @@ var BAL = {
   // Lieux secrets : découverts avec le temps (2 jours plus tôt avec une radio)
   avanceRadio: 2,
   // Pillards : à partir du jour 8, ils vident peu à peu les lieux qu'on n'a pas encore fouillés
+  // Caches de pillards (2026-11-10, pour éviter une fin brutale quand tout est vidé) : à partir du jour 40, la nuit,
+  // des pillards ou des convois déposent quelques objets dans un lieu presque vide ; le lieu est plus dangereux quelques jours
+  caches: {
+    jour: 40,                // premier jour possible
+    chance: 0.35,            // chance par nuit
+    taille: [4, 7],          // nombre d'objets déposés
+    seuil: 3,                // seulement dans un lieu où il reste moins de 3 objets
+    danger: 0,               // danger en plus quelques jours (0 : testé à 0,05 et 0,15, ça tuait plus que ça ne rapportait)
+    jours: 3,                // pendant combien de jours
+    butin: { bouteille:3, conserves:3, riz:1, biscuits:2, bandage:2, planche:3, clous:2, ferraille:2, balle:1, cartouche:1, chiffon:1, alcool:1, pile:1, canette:1 }
+  },
   pillards: {
     jour: 8,                 // premier jour possible
     chance: 0.3,             // chance par nuit

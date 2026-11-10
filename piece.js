@@ -171,7 +171,8 @@ function placerPiece(){
   var haut = chap.getBoundingClientRect().top + 2, fin = bas.getBoundingClientRect().top - 4;
   // Grand écran (body.pc) : le jeu tient dans un cadre centré de 1500 px au plus ; la pièce s'arrête au panneau de droite
   var pc = document.body.classList.contains("pc"), gx = 0, dxMax = window.innerWidth;
-  if(pc){ var boite = Math.min(window.innerWidth, LARGEUR_BOITE_PC); gx = (window.innerWidth - boite) / 2 + 12; dxMax = gx - 12 + boite - LARGEUR_PANNEAU_PC; }
+  if(pc){ var boite = Math.min(window.innerWidth, LARGEUR_BOITE_PC); gx = (window.innerWidth - boite) / 2 + 12; dxMax = gx - 12 + boite - LARGEUR_PANNEAU_PC;
+    var rc = chap.getBoundingClientRect(); if(rc.width > 200){ gx = rc.left; dxMax = rc.right; } } // la scène a exactement la largeur des cartes et des boutons
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
   if(!pieceVisible(pieceIdx)) pieceIdx = 0; // on a quitté son clan : retour au salon
   var EXT = sceneLieu();

@@ -47,7 +47,7 @@ function reglesGuide(){
       "La forêt (à partir du jour " + LIEUX.filter(function(L){ return L.bois; })[0].jour + ") : chaque survivant qui a une hache en main (case arme) abat un arbre et rapporte " + B.foret.coupe[0] + " ou " + B.foret.coupe[1] + " planches. " +
       "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
     ["Le monde bouge", "🏴",
-      "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. " +
+      "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. À partir du jour " + B.caches.jour + ", il arrive aussi que des pillards en fuite abandonnent une cache (" + B.caches.taille[0] + " à " + B.caches.taille[1] + " objets) dans un lieu presque vide : écoute la radio et le bilan de la nuit. " +
       "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. " +
       "Des missions arrivent aussi, avec un délai : livrer un objet ou aller secourir quelqu’un. Le bouton 🎯 en bas de l’écran les montre."],
     ["La nuit", ic("lune", "🌙"),
