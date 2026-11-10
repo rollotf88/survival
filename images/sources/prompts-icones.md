@@ -137,3 +137,70 @@ Même style, même fond magenta uni, mais grille de 2 colonnes × 2 rangées (4 
 2. visage souriant (rond, jaune)
 3. visage neutre (rond, jaune)
 4. visage triste (rond, jaune)
+
+---
+
+# Deuxième série : les symboles des textes (remplacent les emojis restants)
+
+À faire dans la même conversation Gemini si possible (sinon, joindre une des planches précédentes comme référence de style).
+Ces icônes sont affichées en tout petit dans les phrases : formes simples, grosses, très contrastées, peu de détails.
+
+## Prompt 8 (grille 8 : symboles 1)
+
+Même style que les planches précédentes (cartoon peint, contour brun foncé épais, un peu usé), même fond magenta pur uni (#FF00FF), même grille 4 × 4 sans texte, sans chiffre, sans trait de grille. Ce sont des symboles qui seront affichés en tout petit dans des phrases : formes simples et grosses, très lisibles, peu de détails. Ordre :
+1. éclair jaune (énergie)
+2. cœur rouge
+3. panneau triangulaire jaune « attention » avec un point d'exclamation dessiné (pas de lettres)
+4. flamme orange
+5. livre ouvert
+6. petit calendrier à feuilles (page blanche, sans chiffre)
+7. deux épées croisées
+8. trophée doré
+9. cible rouge et blanche avec une flèche plantée au centre
+10. coche verte
+11. deux flèches vertes en cercle (recyclage)
+12. petite voiture break rouge vue de côté
+13. tête de zombie verte, cartoon, pas effrayante
+14. cadenas fermé
+15. étoile dorée
+16. bougie allumée
+
+## Prompt 9 (grille 9 : symboles 2)
+
+Même style, même fond magenta uni, même grille 4 × 4 sans texte ni trait, symboles simples et lisibles en tout petit :
+1. dent pointue (morsure)
+2. main ouverte levée (paume face à nous)
+3. punaise rouge de carte
+4. deux silhouettes de personnes côte à côte
+5. crayon
+6. drapeau noir en lambeaux sur un bâton
+7. paquet cadeau avec un ruban rouge
+8. caisse en bois suspendue à un parachute
+9. petit graphique à barres
+10. stéthoscope
+11. ticket déchirable
+12. poing fermé
+13. petit robot rond et sympathique
+14. croix rouge (refus)
+15. crâne blanc cartoon
+16. silhouettes d'une famille de quatre (deux adultes, deux enfants)
+
+## Prompt 10 (grille 10 : symboles 3)
+
+Même style, même fond magenta uni, même grille 4 × 4 sans texte ni trait, symboles simples et lisibles en tout petit :
+1. carte au trésor roulée
+2. silhouette d'une personne (buste)
+3. dé blanc à points noirs
+4. silhouette qui court
+5. sapin
+6. lettres « Z Z » de sommeil dessinées comme un symbole bleu (seule exception autorisée au « sans texte »)
+7. ampoule allumée
+8. haut-parleur avec des ondes sonores
+9. note de musique
+10. téléphone portable qui vibre
+11. bulle de dialogue
+12. vieille clé en fer
+13. porte en bois
+14. mégaphone
+15. flocon de neige bleu
+16. spirale violette (folie)

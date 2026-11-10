@@ -741,3 +741,49 @@ function portraitMembre(x){
     + '<path d="M58 -2 L50 28 L64 44 L42 66 L54 102 M50 28 L22 36 L4 30 M64 44 L92 52 M42 66 L16 82 M64 44 L70 20" stroke="#fff" stroke-width="2.5"/></g></svg>';
   return '<span class="portrait' + (x.al ? "" : " mort") + '"><img src="' + PORTRAITS[x.r || x.nom] + '" alt="">' + brise + (b.length ? '<span class="badges">' + b.join("") + '</span>' : '') + '</span>';
 }
+
+/* ---------- Emojis des textes remplacés par les icônes peintes (2026-11-10, demande de Fabien) ----------
+   Un observateur regarde tout ce qui s'affiche (écrans, fenêtres, panneau PC) et remplace, dans le texte,
+   chaque emoji qui a une icône peinte par cette icône. Ajouter une ligne ici suffit pour un nouvel emoji.
+   Les emojis sans icône restent des emojis. Pas dans les champs de saisie. */
+var EMOJI_ICONE = {
+  "🧸":"peluche", "🔦":"lampe", "📻":"radio", "🔍":"loupe", "🔎":"loupe", "🔧":"outils", "🛠":"outils", "🧰":"outils", "🩹":"bandage", "💊":"antibio",
+  "🥫":"conserve", "💧":"bouteille", "🎒":"sacados", "🐔":"poule", "🥚":"poule", "🐟":"poisson", "🎣":"canne", "🪓":"hache", "🔨":"marteau", "⛽":"jerrican",
+  "🛡":"bouclier", "🧱":"ref_barr", "🏰":"bastion", "👑":"couronne", "🥇":"medaille1", "🥈":"medaille2", "🥉":"medaille3", "🏅":"medaille1", "🌙":"lune",
+  "📦":"caisse", "🪵":"planche", "🦺":"gilet", "🪖":"casque", "⛑":"casque", "🔫":"pistolet", "🔪":"couteau", "🗡":"machette", "🍲":"ragout", "🐕":"chien", "🐾":"chien",
+  "😀":"moralBon", "😊":"moralBon", "😐":"moralMoyen", "😟":"moralBas", "😢":"moralBas", "💣":"mine", "🗼":"tour", "🚚":"camionClan", "🥕":"ref_pot", "🪣":"ref_eau",
+  "🏠":"maisonPavillon", "🏡":"maisonPavillon", "🔋":"pile", "🛞":"roue", "🍄":"champignons", "🫐":"baies", "🌿":"herbes", "🧂":"epices", "🥧":"tarte", "🍜":"soupe",
+  "🍝":"pates", "🫓":"galettes", "🍛":"rizSaute", "🍚":"riz", "🍪":"biscuits", "🍫":"barre", "🍱":"ration", "🥤":"canette", "🛢":"bidon", "🫒":"huile", "🌾":"farine",
+  "🔩":"clous", "⚙":"ferraille", "🪤":"piege", "🍾":"alcool", "🧣":"chiffon", "🪢":"collet", "🏢":"maisonAppart", "🚜":"maisonFerme", "📜":"journalClan", "🖼":"photo", "🃏":"cartes"
+};
+var REGEX_EMOJI = null;
+function iconesDansTexte(racine){
+  if(!racine || typeof ICONES_IMG === "undefined") return;
+  if(!REGEX_EMOJI) REGEX_EMOJI = new RegExp("(" + Object.keys(EMOJI_ICONE).sort(function(a, b){ return b.length - a.length; }).join("|") + ")\uFE0F?", "g");
+  var w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT, { acceptNode:function(n){
+    var p = n.parentNode; if(!p || /^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|TITLE)$/.test(p.nodeName) || (p.closest && p.closest(".sans-icones"))) return NodeFilter.FILTER_REJECT;
+    REGEX_EMOJI.lastIndex = 0; return REGEX_EMOJI.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } });
+  var liste = []; while(w.nextNode()) liste.push(w.currentNode);
+  liste.forEach(function(n){
+    var f = document.createDocumentFragment(), t = n.nodeValue, i = 0, m; REGEX_EMOJI.lastIndex = 0;
+    while((m = REGEX_EMOJI.exec(t))){
+      if(m.index > i) f.appendChild(document.createTextNode(t.slice(i, m.index)));
+      var k = EMOJI_ICONE[m[1]];
+      if(ICONES_IMG[k]){ var im = document.createElement("img"); im.className = "ico ico-img emo"; im.src = "images/icones/" + k + ".webp"; im.alt = m[1]; im.draggable = false; f.appendChild(im); }
+      else f.appendChild(document.createTextNode(m[0]));
+      i = m.index + m[0].length;
+    }
+    if(i < t.length) f.appendChild(document.createTextNode(t.slice(i)));
+    n.parentNode.replaceChild(f, n);
+  });
+}
+if(typeof document !== "undefined" && typeof MutationObserver !== "undefined"){
+  var obsIcones = new MutationObserver(function(muts){
+    muts.forEach(function(mu){
+      if(mu.type === "characterData"){ if(mu.target.parentNode) iconesDansTexte(mu.target.parentNode); return; }
+      mu.addedNodes.forEach(function(n){ if(n.nodeType === 1 && !(n.classList && n.classList.contains("emo"))) iconesDansTexte(n); else if(n.nodeType === 3 && n.parentNode) iconesDansTexte(n.parentNode); });
+    });
+  });
+  var lancerObsIcones = function(){ iconesDansTexte(document.body); obsIcones.observe(document.body, { childList:true, subtree:true, characterData:true }); };
+  if(document.body) lancerObsIcones(); else document.addEventListener("DOMContentLoaded", lancerObsIcones);
+}
