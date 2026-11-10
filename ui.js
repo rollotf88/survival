@@ -151,7 +151,7 @@ function rGame(){
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
-  $("app").innerHTML = '<div class="row"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button></div><div class="chips">'
+  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button></div><div class="chips">'
     + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
     + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
     + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
@@ -159,7 +159,7 @@ function rGame(){
     + '<button class="chip" data-act="info" data-id="moral" aria-label="Moral : ' + Math.round(G.moral) + '">' + mo + ' ' + Math.round(G.moral) + '<small class="chip-lbl">moral</small></button>'
     + '<button class="chip chipson" data-act="menu" aria-label="Menu et guide">☰<small class="chip-lbl">menu</small></button>'
     + (chien() ? '<button class="chip chipchien" data-act="chien" title="' + chien().nom + ', le chien">' + ic("chien", "🐕") + (chien().faim ? ' ⚠️' : '') + '</button>' : '')
-    + '</div></div>'
+    + '</div><div class="hd-score" title="Score : chaque jour terminé rapporte 1 point par membre en vie"><b>⭐ ' + (G.score || 0) + '</b><small>score · record ' + Math.max(RECORD, G.score || 0) + '</small></div></div>'
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
     + '<div class="row">' + (mission() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
     + '<div class="row acts"><button class="btn' + (G.sel.length ? "" : " attente") + '" data-act="fouille">' + ic("loupe", "🔍") + ' Fouiller</button><button class="btn alt" data-act="stock">' + ic("caisse", "📦") + ' Stock</button><button class="btn alt" data-act="refuge">' + ic("marteau", "🛠️") + ' Refuge</button><button class="btn' + (G.m.some(peutSortir) ? " alt" : "") + '" data-act="dormir">' + ic("lune", "🌙") + ' Dormir</button></div>';
@@ -942,11 +942,11 @@ document.addEventListener("keydown", function(e){
 });
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
-    + '<p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
+    + '<div class="intro-recit"><p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
-    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
-    + vitrine()
-    + '<div class="monde-place" data-compact="1"></div>'
+    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p></div>'
+    + '<div class="intro-cote">' + vitrine()
+    + '<div class="monde-place" data-compact="1"></div></div>'
     + '<button class="btn" style="width:100%" data-act="intro">Continuer</button></div>';
   lancerVitrine();
   if(typeof poserMonde === "function") poserMonde();

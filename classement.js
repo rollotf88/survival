@@ -63,7 +63,7 @@ function openClassement(message){
     var el = $("listecl"); if(!el) return;
     if(!d.scores || !d.scores.length){ el.textContent = "Personne n’a encore envoyé de score. Sois le premier !"; return; }
     var h = '<ol class="classement">' + d.scores.map(function(e, k){
-      return '<li class="' + (e.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>';
+      return '<li class="' + (e.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>';
     }).join("") + '</ol>';
     // Hors des 50 premiers : on montre quand même sa place
     if(d.moi && d.monRang > d.scores.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">⭐ ' + d.moi.score + ' · ' + d.moi.jours + ' j</span></li></ol>';
@@ -430,14 +430,15 @@ function openClans(msg){
 }
 function quand(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "à l’instant" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; }
 // Fiche d'un clan de la liste : description, membres, ligue, bilan, bouton Rejoindre
-function openFicheClan(i){
-  var d = etatClans, c = d && d.clans[i]; if(!c) return;
-  var ok = jourPartie() >= d.jourMin, plein = c.membres >= 5, b = c.bilan || {};
+var classementClansCache = [];
+function openFicheClan(i, depuisClassement){
+  var d = etatClans || {}, c = depuisClassement ? classementClansCache[i] : d.clans && d.clans[i]; if(!c) return;
+  var ok = jourPartie() >= (d.jourMin || 30), plein = c.membres >= 5, b = c.bilan || {};
   var h = '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>Fondé ' + quand(c.cree).replace("à l’instant", "aujourd’hui") + ' · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
   h += '<p class="clan-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Ce clan n’a pas encore de description.</i>') + '</p>';
   h += tuiles([["joueurs", c.membres + " / 5", plein ? "ko" : "ok"], ["guerres gagnées", b.gagnees || 0], ["trophées", (c.trophees || 0) + " 🏆"]]);
   h += '<p class="titre-butin">👥 Les familles</p><div class="clan-membres">' + (c.noms || []).map(function(m){ return '<div class="clan-m"><span class="cm-nom">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + '</span><small>Jour ' + (m.jour || "?") + '</small></div>'; }).join("") + '</div>';
-  h += '<div class="row">' + (ok && !d.monClan ? '<button class="btn" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '<button class="btn alt" data-act="clans">Retour</button></div>';
+  h += '<div class="row">' + (ok && !d.monClan && !c.moi ? '<button class="btn" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '<button class="btn alt" data-act="' + (depuisClassement ? "classementclans" : "clans") + '">Retour</button></div>';
   show(h);
 }
 function openDescClan(){
@@ -492,6 +493,7 @@ document.addEventListener("click", function(e){
   }
   else if(a === "profilmembre") openProfilMembre(+id);
   else if(a === "clanfiche") openFicheClan(+id);
+  else if(a === "clanfichec") openFicheClan(+id, true);
   else if(a === "clandesc") openDescClan();
   else if(a === "clandescok"){ var tx = document.getElementById("descClan"); appelClans({ action:"description", desc:tx ? tx.value : "" }).then(function(r){ if(r.erreur){ openClans("❌ " + r.erreur); return; } openClans("✏️ Description enregistrée."); }).catch(function(){ openClans("❌ " + MSG_HORS_LIGNE); }); }
   else if(a === "clanrejoindre"){
@@ -687,9 +689,10 @@ function openClassementClans(){
   appelClans({ action:"classementClans" }).then(function(d){
     var el = $("listeclans"); if(!el) return;
     if(!d.clans || !d.clans.length){ el.textContent = "Aucun clan pour l’instant."; return; }
+    classementClansCache = d.clans;
     el.outerHTML = '<ol class="classement clans">' + d.clans.map(function(c, k){
-      return '<li class="' + (c.moi ? "moi" : "") + '"><span class="rang">' + (k < 3 ? ["🥇","🥈","🥉"][k] : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + '</b><span class="pts">' + badgeLigue(c.trophees, true) + '</span></li>';
-    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · rangés par trophées de ligue (🔩 Ferraille, 🥉 Bronze, 🥈 Argent, 🥇 Or, 👑 Légende)' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
+      return '<li class="' + (c.moi ? "moi" : "") + '"><button class="cl-ligne" data-act="clanfichec" data-id="' + k + '" title="Voir le clan"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + ' <span class="cm-voir">›</span></b><span class="pts">' + badgeLigue(c.trophees, true) + '</span></button></li>';
+    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · rangés par trophées de ligue (' + LIGUES.map(function(L, i){ return insigneLigue(i) + ' ' + L.nom; }).join(', ') + ')' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
   }).catch(function(){ var el = $("listeclans"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
 document.addEventListener("click", function(e){

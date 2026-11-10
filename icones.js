@@ -640,6 +640,16 @@ ICONES_SVG.casque = '<path d="M7 30 Q7 10 24 10 Q41 10 41 30Z" fill="#c9a227"/><
 ICONES_SVG.bouclier = '<rect x="10" y="4" width="28" height="40" rx="6" fill="#9fb4c2"/><rect x="14" y="9" width="20" height="10" rx="2" fill="#d9e6ee"/>' +
   '<path d="M14 26 H34 M14 31 H34 M14 36 H34" stroke="#6f8796" stroke-width="2"/><path d="M24 22 V40" stroke="#6f8796" stroke-width="2"/>';
 
+/* ---------- Médailles des classements (2026-11-10) ---------- */
+ICONES_SVG.medaille1 = '<path d="M14 4 L22 20 L17 22 L9 6Z" fill="' + COUL.rouge + '"/><path d="M34 4 L26 20 L31 22 L39 6Z" fill="#4fa3d9"/>' +
+  '<circle cx="24" cy="31" r="13" fill="#c9921b"/><circle cx="24" cy="31" r="9" fill="#f0c03a" stroke-width="2"/>' +
+  '<text x="24" y="36" text-anchor="middle" font-family="Bangers, Impact, sans-serif" font-size="14" fill="' + COUL.trait + '" stroke="none">1</text>';
+ICONES_SVG.medaille2 = '<path d="M14 4 L22 20 L17 22 L9 6Z" fill="' + COUL.rouge + '"/><path d="M34 4 L26 20 L31 22 L39 6Z" fill="#4fa3d9"/>' +
+  '<circle cx="24" cy="31" r="13" fill="#90a4ae"/><circle cx="24" cy="31" r="9" fill="#cfd8dc" stroke-width="2"/>' +
+  '<text x="24" y="36" text-anchor="middle" font-family="Bangers, Impact, sans-serif" font-size="14" fill="' + COUL.trait + '" stroke="none">2</text>';
+ICONES_SVG.medaille3 = '<path d="M14 4 L22 20 L17 22 L9 6Z" fill="' + COUL.rouge + '"/><path d="M34 4 L26 20 L31 22 L39 6Z" fill="#4fa3d9"/>' +
+  '<circle cx="24" cy="31" r="13" fill="#a8622f"/><circle cx="24" cy="31" r="9" fill="#d9925a" stroke-width="2"/>' +
+  '<text x="24" y="36" text-anchor="middle" font-family="Bangers, Impact, sans-serif" font-size="14" fill="' + COUL.trait + '" stroke="none">3</text>';
 /* ---------- Bastion et camion du clan (2026-11-10) ---------- */
 ICONES_SVG.couronne = '<path d="M6 36 L4 14 L15 24 L24 8 L33 24 L44 14 L42 36Z" fill="' + COUL.jaune + '"/><rect x="6" y="36" width="36" height="6" rx="2" fill="#d99a1e"/>' +
   '<circle cx="24" cy="27" r="3" fill="' + COUL.rouge + '"/><circle cx="14" cy="30" r="2" fill="#4fa3d9"/><circle cx="34" cy="30" r="2" fill="#4fa3d9"/>';

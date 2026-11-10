@@ -971,7 +971,10 @@ body.pc #modal .sheet.large{height:auto;max-height:100%;max-width:min(1000px,96v
 #tableauPC{overflow-x:hidden}
 #tableauPC .lj,#tableauPC .lj-txt{min-width:0;white-space:normal;overflow-wrap:anywhere}
 /* Grand écran « boxed » (2026-11-10) : la scène est une boîte encadrée, le jeu reste dans un cadre de 1500 px centré */
-body.pc{background:#1b130d radial-gradient(ellipse at 50% 40%,#3a2819 0%,#1b130d 75%) fixed}
+body.pc{background:#0f1520}
+/* Fond illustré autour du cadre du jeu sur PC (Gemini, 2026-11-10) : assombri et un peu flouté pour rester discret */
+body.pc::before{content:"";position:fixed;inset:-12px;z-index:-1;pointer-events:none;background:url(images/fond-pc.webp) center 40% / cover no-repeat;filter:blur(2px) brightness(.62) saturate(.9)}
+body.pc::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 50%, rgba(10,8,6,.55) 0%, rgba(10,8,6,.15) 60%, rgba(10,8,6,.35) 100%)}
 #fondScene{position:fixed;z-index:0;border-radius:14px;background-repeat:no-repeat;box-shadow:0 0 0 3px var(--bois),0 10px 26px rgba(0,0,0,.55);pointer-events:none}
 body.pc #fondScene::after{content:"";position:absolute;inset:0;border-radius:14px;box-shadow:inset 0 0 40px rgba(0,0,0,.45)}
 body.pc #tableauPC{right:calc((100vw - min(100vw, 1500px)) / 2 + 12px)}
@@ -1016,3 +1019,51 @@ body.pc #app .chip:hover{transform:translateY(-1px);border-color:var(--acc)}
 body.pc #app .chip .ico{width:1.35em;height:1.35em}
 body.pc #app .chip-lbl{display:inline;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 @media (max-width:1500px){ body.pc #app .chip{font-size:18px;padding:5px 9px;gap:5px} body.pc #app .chips{gap:7px} body.pc #app .chip-lbl{font-size:11px;letter-spacing:0} }
+
+ol.classement .rang .ico{width:1.55em;height:1.55em;vertical-align:-.4em}
+
+/* En-tête PC : logo à gauche, score à droite (2026-11-10) */
+.hd-logo,.hd-score{display:none}
+body.pc #app .hd-logo{display:block;width:58px;height:58px;flex:0 0 auto;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))}
+body.pc #app .hd-score{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;flex:0 0 auto;padding:4px 14px;border:2px solid var(--bois);border-radius:14px;background:var(--card);min-height:42px;box-sizing:border-box}
+body.pc #app .hd-score b{font-family:"Bangers","Impact",sans-serif;font-size:24px;line-height:1;color:#c9921b;letter-spacing:.03em}
+body.pc #app .hd-score small{font-size:11px;color:var(--mut);font-weight:700;white-space:nowrap}
+@media (max-width:1500px){ body.pc #app .hd-logo{width:48px;height:48px} body.pc #app .hd-score{padding:3px 10px} body.pc #app .hd-score b{font-size:20px} }
+
+/* Ligne du classement des clans touchable */
+button.cl-ligne{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+button.cl-ligne b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.cl-ligne .cm-voir{color:var(--mut)}
+
+/* Écran d'histoire sur PC (2026-11-10, retour de Fabien : mise en page mobile) : deux colonnes, récit à gauche, vitrine et chiffres à droite */
+@media (min-width:1100px) and (min-height:620px){
+  #app:has(> .panneau.intro){max-width:none}
+  .panneau.intro{max-width:1240px;width:min(92vw,1240px);padding:30px 36px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"tete cote" "recit cote" "bouton cote";column-gap:36px;row-gap:16px;align-items:start;border-width:4px;border-radius:22px;box-shadow:0 10px 40px rgba(0,0,0,.55)}
+  .panneau.intro .tetejeu{grid-area:tete;justify-content:flex-start;gap:18px;margin:0}
+  .panneau.intro .tetejeu .logo{width:128px;height:128px}
+  .panneau.intro .titrejeu{font-size:76px}
+  .panneau.intro .tetejeu .sub{font-size:20px;font-weight:700}
+  .panneau.intro .intro-recit{grid-area:recit}
+  .panneau.intro .intro-recit p{font-size:17.5px;line-height:1.6;margin:0 0 12px}
+  .panneau.intro > .btn{grid-area:bouton;align-self:end;font-size:20px;padding:15px 18px;border-radius:14px}
+  .panneau.intro .intro-cote{grid-area:cote;display:flex;flex-direction:column;gap:16px;align-self:stretch;justify-content:center}
+  .panneau.intro .vitrine{margin:0;padding:14px 46px 10px;border-radius:18px}
+  .panneau.intro .vt{flex-direction:column;align-items:stretch;gap:12px;min-height:0}
+  .panneau.intro .vt-img{flex:none;width:100%;height:auto;aspect-ratio:16/9;border-radius:12px;border-width:3px}
+  .panneau.intro .vt-txt b{font-size:24px}
+  .panneau.intro .vt-txt small{display:block;font-size:16px;line-height:1.45;margin-top:4px}
+  .panneau.intro .vt-fl{font-size:28px}
+  .panneau.intro .vt-pt{width:10px;height:10px}.panneau.intro .vt-pt.on{width:24px}
+  .panneau.intro .monde{max-width:none;margin:0;padding:12px 16px 10px}
+  .panneau.intro .monde .m-c b{font-size:30px}
+  .panneau.intro .monde .m-fil{display:block;font-size:13.5px}
+}
+@media (min-width:1100px) and (min-height:620px) and (max-height:820px){
+  .panneau.intro{padding:20px 28px;row-gap:10px}
+  .panneau.intro .tetejeu .logo{width:96px;height:96px}.panneau.intro .titrejeu{font-size:60px}
+  .panneau.intro .intro-recit p{font-size:16px;line-height:1.5;margin-bottom:8px}
+  .panneau.intro .vt-img{aspect-ratio:2/1}
+  .panneau.intro .vt-txt b{font-size:20px}.panneau.intro .vt-txt small{font-size:14.5px}
+}
+@media (max-width:1400px){ body.pc #app .chip-lbl{display:none} body.pc #app .chip{padding:5px 8px} }
+@media (max-width:1250px){ body.pc #app .hd-logo{display:none} body.pc #app .hd-score small{display:none} body.pc #app .hd-score{padding:3px 9px} body.pc #app > .row:first-child{gap:10px} }
