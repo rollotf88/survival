@@ -16,7 +16,7 @@ function compterNonLus(d){ var vu = chatVu(); return (d && d.messages || []).fil
 function openChat(){
   var h = '<h2>💬 <span id="chatNom">Le clan</span></h2><div id="chat" class="chat-fil"><p class="sub">Chargement…</p></div>'
     + '<p class="msg" id="chatMsg" style="display:none"></p>'
-    + '<div class="chat-rapides">' + CHAT_RAPIDES.map(function(t, i){ return '<button class="chat-r" data-act="chatrapide" data-id="' + i + '">' + t + '</button>'; }).join("") + '</div>'
+    + '<div class="chat-rapides-boite"><div class="chat-rapides">' + CHAT_RAPIDES.map(function(t, i){ return '<button class="chat-r" data-act="chatrapide" data-id="' + i + '">' + t + '</button>'; }).join("") + '</div></div>'
     + '<div class="chat-saisie"><input id="chatTexte" maxlength="200" placeholder="Écrire au clan…" autocomplete="off" enterkeyhint="send"><button class="btn" data-act="chatenvoyer" aria-label="Envoyer">➤</button></div>'
     + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>';
   show(h);
@@ -43,11 +43,11 @@ function afficherChat(defiler){
   var nom = document.getElementById("chatNom"); if(nom) nom.textContent = "Le clan « " + etatChat.nom + " »";
   var bas = f.scrollHeight - f.scrollTop - f.clientHeight < 40;
   // Messages et vie du clan, dans l'ordre du temps
-  var tout = etatChat.messages.map(function(m){ return { t:m.t, m:m }; }).concat(etatChat.journal.map(function(j){ return { t:j.t, j:j }; })).sort(function(a, b){ return a.t - b.t; });
+  var tout = etatChat.messages.map(function(m){ return { t:m.t, m:m }; }).concat(etatChat.journal.slice(0, 8).map(function(j){ return { t:j.t, j:j }; })).sort(function(a, b){ return a.t - b.t; });
   f.innerHTML = tout.length ? tout.map(function(e){
     if(e.j) return '<div class="cm-sys">' + echapper(e.j.qui) + ' ' + echapper(texteJournalClan(e.j.txt)) + ' <small>' + heureChat(e.t) + '</small></div>';
     var m = e.m;
-    return '<div class="cm-m' + (m.moi ? " moi" : "") + (m.r ? " rapide" : "") + '"><span class="cm-tete">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.qui, m.cadre) + ' <small>' + heureChat(m.t) + '</small>'
+    return '<div class="cm-m' + (m.moi ? " moi" : "") + (m.r ? " rapide" : "") + '"><span class="cm-tete">' + (m.chef ? ic("couronne", "👑") + " " : "") + (m.moi ? "<b>Toi</b>" : pseudoCadre(m.qui && m.qui !== "?" ? m.qui : "Sans pseudo", m.cadre)) + ' <small>' + heureChat(m.t) + '</small>'
       + (m.moi || etatChat.chef ? '<button class="cm-a" data-act="chateffacer" data-id="' + m.id + '" aria-label="Effacer">🗑️</button>' : '')
       + (!m.moi ? '<button class="cm-a" data-act="chatsignaler" data-id="' + m.id + '" aria-label="Signaler">🚩</button>' : '') + '</span><p>' + echapper(m.txt) + '</p></div>';
   }).join("") : '<p class="sub">Aucun message pour l’instant. Lance la discussion !</p>';

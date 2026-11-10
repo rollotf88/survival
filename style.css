@@ -1409,7 +1409,9 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .cm-tete small{opacity:.7}
 .cm-a{margin-left:auto;background:none;border:0;padding:0 2px;font-size:13px;cursor:pointer;opacity:.6}
 .cm-a + .cm-a{margin-left:0}
-.cm-sys{align-self:center;max-width:92%;text-align:center;font-size:12px;opacity:.75;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.05)}
+.cm-sys{align-self:center;max-width:96%;text-align:center;font-size:11px;line-height:1.25;opacity:.7;padding:1px 8px;border-radius:8px;background:rgba(0,0,0,.04)}
+.cm-sys .ico{width:1em;height:1em}
+.chat-fil{gap:4px}
 .cm-sys small{opacity:.8}
 .chat-rapides{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
 .chat-r{flex:0 0 auto;padding:5px 10px;border-radius:999px;border:1.5px solid var(--bois);background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
@@ -1422,3 +1424,7 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .nl-badge{position:absolute;top:2px;right:3px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#c62828;color:#fff;font:800 11px/19px Nunito,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none;z-index:2}
 @media (prefers-reduced-motion:no-preference){.nl-badge{animation:nlPop .35s ease-out}}
 @keyframes nlPop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* Messages rapides : un dégradé sur le bord droit montre qu'on peut faire glisser */
+.chat-rapides-boite{position:relative}
+.chat-rapides-boite::after{content:"";position:absolute;top:0;right:0;bottom:6px;width:34px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--card))}
