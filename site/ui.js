@@ -45,7 +45,7 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans"); $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
    Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
    À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
@@ -56,7 +56,8 @@ function parle(nom, portrait){
   var l = document.createElement("div"); l.id = "locuteur"; l.setAttribute("aria-hidden", "true");
   l.innerHTML = '<span class="loc-portrait">' + img + '</span><span class="loc-nom">' + nom + '</span>';
   $("modal").appendChild(l); sh.classList.add("parle");
-  var place = function(){ var r = sh.getBoundingClientRect(); l.style.left = (r.left + 12) + "px"; l.style.top = Math.max(4, r.top - 46) + "px"; };
+  // Pas de place au-dessus de la fenêtre (panneau de droite sur PC, collé en haut) : le portrait entre dans la fenêtre et le texte descend
+  var place = function(){ var r = sh.getBoundingClientRect(); sh.classList.toggle("parle-dedans", r.top - 46 < 4); l.style.left = (r.left + 12) + "px"; l.style.top = Math.max(4, r.top - 46) + "px"; };
   place(); requestAnimationFrame(place);
 }
 // Qui parle dans un événement du matin (null = personne en particulier)
@@ -270,10 +271,30 @@ function noterHistoCombat(C){
   if(histoCombat.c !== C) histoCombat = { c:C, tours:[], dernier:null };
   if(C.journal && C.journal.length && histoCombat.dernier !== C.journal){ histoCombat.tours.push({ t:Math.max(1, C.tour - 1), l:C.journal.slice() }); histoCombat.dernier = C.journal; }
 }
+// Après le combat (PC) : l'état de l'équipe avant de fouiller, ce qui reste ici, et un conseil
+function panneauApresCombat(C, L){
+  var eq = G.exp.equipe.map(function(j){ return G.m[j]; }), vivant = eq.filter(function(x){ return x.al; });
+  var h = '<h2>' + ({ victoire:"🏆 Victoire", fuite:"🏃 En fuite", defaite:"💀 Défaite" })[C.fin] + '</h2><p class="sub">' + (L ? L.nom : nomLieuCombat()) + '</p>';
+  h += '<p class="titre-butin">🎒 L’équipe avant de fouiller</p>' + eq.map(function(x){
+    var a = x.eq.arme, s = x.eq.sac;
+    return '<div class="pz' + (x.al ? "" : " mort") + '"><span class="pz-ico">' + iconeMembre(x) + '</span><span class="pz-txt"><b>' + x.nom + '</b> <small>' + (x.al ? x.hp + " ❤️ · " + Math.round(x.en) + " ⚡" : accorder(roleDe(x), "mort")) + '</small>'
+      + (x.al ? '<span class="zpv vie"><i style="width:' + x.hp + '%"></i></span><small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " (" + a.sol + "/" + OBJETS[a.id].sol + ")" : "✊ À mains nues") + (s ? " · " + icone(s.id) + " " + OBJETS[s.id].nom : "") + '</small>' : '') + '</span></div>';
+  }).join("");
+  if(L && C.fin !== "defaite"){
+    var reste = resteLieu(G.exp.lieu);
+    h += '<p class="titre-butin">📦 Ici</p><div class="tb-bloc"><b>' + reste + ' objet' + (reste > 1 ? "s" : "") + ' à fouiller</b><small>' + (C.fin === "fuite" ? "Vous avez fui : vous ne rapporterez que la moitié de ce que vous trouverez." : "Ce qui ne rentre pas dans les sacs restera sur place pour une prochaine fois.") + '</small></div>';
+  }
+  var blesse = vivant.filter(function(x){ return x.hp < 40; });
+  if(blesse.length) h += '<p class="msg">⚠️ ' + liste(blesse.map(function(x){ return x.nom; })) + (blesse.length > 1 ? " sont blessés" : " est blessé" + (estFeminin(blesse[0]) ? "e" : "")) + " : pense à soigner en rentrant (bouton ＋ sur sa carte).</p>";
+  var casse = vivant.filter(function(x){ return x.eq.arme && x.eq.arme.sol <= 2; });
+  if(casse.length) h += '<p class="msg">🔧 L’arme de ' + liste(casse.map(function(x){ return x.nom; })) + ' est presque cassée : répare-la à l’atelier.</p>';
+  return h;
+}
 function panneauCombat(){
   var t = $("tableauPC"), C = G.combat; if(!t || !C) return;
   noterHistoCombat(C);
   var L = G.exp && !G.exp.guerre ? LIEUX[G.exp.lieu] : null;
+  if(C.fin){ t.innerHTML = panneauApresCombat(C, L); t.scrollTop = 0; return; }
   var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat()) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
   h += '<p class="titre-butin">🧟 En face</p><div class="pz-liste">' + C.zombies.map(function(z){
     var T = typeZombie(z), cib = z.int && G.m[z.int.c];
@@ -352,7 +373,13 @@ function openCombat(){
       : C.fin === "victoire" ? "La voie est libre : il reste <b>" + resteS + "</b> objet" + (resteS > 1 ? "s" : "") + " à fouiller ici."
       : C.fin === "fuite" ? "Vous avez fui : vous ne ramènerez que la moitié de ce que vous trouverez."
       : "Personne n’est revenu de " + nomLieuCombat() + ".";
-    h += '<div class="fin-suite ' + C.fin + '"><span class="fs-img" style="background-image:url(&quot;' + imS + '&quot;)"></span><span class="fs-txt"><b>' + (G.exp.guerre ? "🏰 " : "📍 ") + (Ls ? Ls.nom : nomLieuCombat()) + '</b><small>' + txtS + '</small></span></div>';
+    // Plus d'image ici (elle est déjà dans la scène à gauche) : le lieu en une ligne, puis sur PC le récit du combat tour par tour
+    h += '<div class="fin-suite ' + C.fin + '"><span class="fs-txt"><b>' + (G.exp.guerre ? "🏰 " : "📍 ") + (Ls ? Ls.nom : nomLieuCombat()) + '</b><small>' + txtS + '</small></span></div>';
+    if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")){
+      noterHistoCombat(C);
+      h += '<div class="fin-recit"><p class="titre-butin">📜 Ce qui s’est passé</p>' + (C.resume && C.resume.length ? '<div class="pj-tour fin">' + puces(C.resume) + '</div>' : '')
+        + histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") + '</div>';
+    }
   }
   h += fini ? '<button class="btn fin-bouton" style="width:100%" data-act="cfin">' + (G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
     : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';

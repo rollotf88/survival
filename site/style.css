@@ -1274,3 +1274,15 @@ body.pc:not(.scene-petite) .sheet.large .combat .journal{display:none}
   .pk .cell{height:48px;font-size:26px}
   .pk .tile{font-size:38px;padding:9px 4px 6px}
 }
+.sheet.parle.parle-dedans{padding-top:72px}
+
+/* Fin de combat : plus d'image en double, le récit du combat remplit la colonne (PC) */
+.fin-suite{min-height:0}
+.fin-suite .fs-txt{padding:8px 12px}
+body.pc:not(.scene-petite) .sheet.large .fin-suite{flex:0 0 auto;flex-direction:row}
+body.pc:not(.scene-petite) .sheet.large .fin-recit{flex:1 1 auto;min-height:0;overflow-y:auto;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 10px}
+.fin-recit .titre-butin{margin-top:2px}
+.fin-recit .pj-tour{border-left:3px solid var(--bois);padding:2px 0 4px 8px;margin:0 0 8px}
+.fin-recit .pj-tour.fin{border-left-color:var(--acc)}
+.fin-recit .pj-t{display:inline-block;font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+#tableauPC .pz-txt .zpv.vie i{background:#4f9a3a}
