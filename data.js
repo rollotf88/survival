@@ -44,6 +44,9 @@ function iconeMembre(x){
   if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x);
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
+// Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
+var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1 };
+function spriteZombie(z){ return typeof ICONES_SVG !== "undefined" && SPRITES_ZOMBIES[z.id] ? "images/zombies/" + z.id + ".webp" : null; }
 function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
 /* ---------- Équilibrage : les chiffres faciles à modifier ---------- */

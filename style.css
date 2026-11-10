@@ -1131,3 +1131,34 @@ body.pc:not(.scene-petite) .sheet.large .zc .zpv{height:8px}
 body.pc:not(.scene-petite) .sheet.large .zint{font-size:13px;padding:2px 8px}
 body.pc:not(.scene-petite) .sheet.large .zint small{font-size:11.5px}
 body.pc:not(.scene-petite) .sheet.large .combat.fini{grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr)}
+
+/* Zombies détourés dans le combat (2026-11-10) : debout sur le sol du décor, sans cadre ; la taille suit la hauteur de la scène
+   (unités cqh : l'arène est un conteneur), le Costaud et le Gonflé sont plus grands, le Rampant est au ras du sol */
+.arene{container-type:size}
+.zc.sprite{flex:0 1 auto;padding-top:22px;gap:1px}
+.zc.sprite .zs{display:block;line-height:0;position:relative}
+.zc.sprite .zs img{display:block;height:58cqh;width:auto;max-width:100%;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.55));transform-origin:50% 100%}
+.zc.sprite.z-costaud .zs img,.zc.sprite.z-gonfle .zs img{height:64cqh}
+.zc.sprite.z-rampant .zs img{height:30cqh}
+.zrang.n4 .zc.sprite .zs img,.zrang.n5 .zc.sprite .zs img,.zrang.n6 .zc.sprite .zs img{height:50cqh}
+.zrang.n4 .zc.sprite.z-rampant .zs img,.zrang.n5 .zc.sprite.z-rampant .zs img,.zrang.n6 .zc.sprite.z-rampant .zs img{height:26cqh}
+.zrang:has(.sprite){gap:0;align-items:flex-end}
+.zc.sprite .zn{font-size:11px}
+.zc.sprite .zpv{width:70%;max-width:90px}
+/* visé : halo doré autour de la silhouette (plus de cadre) */
+.zc.sprite.vise .zs img{filter:drop-shadow(0 0 2px #ffcf4a) drop-shadow(0 0 6px #ffcf4a) drop-shadow(0 6px 4px rgba(0,0,0,.55))}
+.zc.sprite.vise .zn{color:#ffcf4a}
+/* touché : il recule et clignote ; mort : il tombe à la renverse, gris */
+.zc.sprite.coup .zs img{animation:zTouche .45s ease-out}
+@keyframes zTouche{0%{transform:none}30%{transform:translateX(6px) rotate(4deg);filter:brightness(2.2) drop-shadow(0 6px 4px rgba(0,0,0,.55))}100%{transform:none}}
+.zc.sprite.mort{opacity:.75}
+.zc.sprite.mort .zs img{transform:rotate(-82deg) translate(-12%, 18%);filter:grayscale(1) brightness(.55);height:34cqh}
+.zc.sprite.mort .zp::after{content:none}
+body.pc:not(.scene-petite) .sheet.large .zc.sprite{flex-basis:auto;padding-top:30px}
+body.pc:not(.scene-petite) .sheet.large .zc.sprite .zn{font-size:14px}
+/* Scène basse (téléphone couché) : zombies un peu plus petits pour que leur bulle reste dans la scène */
+@container (max-height:190px){
+  .zc.sprite .zs img{height:50cqh}
+  .zc.sprite.z-costaud .zs img,.zc.sprite.z-gonfle .zs img{height:54cqh}
+  .zc.sprite.z-rampant .zs img{height:26cqh}
+}

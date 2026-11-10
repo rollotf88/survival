@@ -282,8 +282,9 @@ function openCombat(){
       bulle = z.int.t === "hurle" ? '<span class="zint hurle">📢 Va hurler</span>'
         : '<span class="zint">' + (T.premier ? "⚡" : "🦷") + (T.coups ? "×" + T.coups : "") + " " + (cib ? cib.nom : "?") + '<small>' + z.degats[0] + "-" + z.degats[1] + '</small></span>';
     }
-    return '<button class="zc' + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (perte > 0 ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + ' aria-label="' + z.nom + ', ' + z.pv + ' PV">'
-      + bulle + '<span class="zp">' + iconeZombie(z) + '</span>'
+    var sp = spriteZombie(z);
+    return '<button class="zc' + (sp ? " sprite z-" + z.id : "") + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (perte > 0 ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + ' aria-label="' + z.nom + ', ' + z.pv + ' PV">'
+      + bulle + (sp ? '<span class="zs"><img src="' + sp + '" alt=""></span>' : '<span class="zp">' + iconeZombie(z) + '</span>')
       + '<span class="zn">' + z.nom + (T.armure ? " 🦺" : "") + '</span>'
       + '<span class="zpv"><i style="width:' + Math.round(z.pv / z.pvMax * 100) + '%"></i></span>'
       + (perte > 0 ? '<span class="flot">−' + perte + '</span>' : '') + '</button>';
