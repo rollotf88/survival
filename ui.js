@@ -277,7 +277,7 @@ function noterHistoCombat(C){
 // Après le combat (PC) : l'état de l'équipe avant de fouiller, ce qui reste ici, et un conseil
 function panneauApresCombat(C, L){
   var eq = G.exp.equipe.map(function(j){ return G.m[j]; }), vivant = eq.filter(function(x){ return x.al; });
-  var h = '<h2>' + ({ victoire:"🏆 Victoire", fuite:"🏃 En fuite", defaite:"💀 Défaite" })[C.fin] + '</h2><p class="sub">' + (L ? L.nom : nomLieuCombat()) + '</p>';
+  var h = '<h2>' + ({ victoire:"🏆 Victoire", fuite:"🏃 En fuite", defaite:"💀 Défaite" })[C.fin] + '</h2><p class="sub">' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</p>';
   h += '<p class="titre-butin">🎒 L’équipe avant de fouiller</p>' + eq.map(function(x){
     var a = x.eq.arme, s = x.eq.sac;
     return '<div class="pz' + (x.al ? "" : " mort") + '"><span class="pz-ico">' + iconeMembre(x) + '</span><span class="pz-txt"><b>' + x.nom + '</b> <small>' + (x.al ? x.hp + " ❤️ · " + Math.round(x.en) + " ⚡" : accorder(roleDe(x), "mort")) + '</small>'
@@ -298,8 +298,8 @@ function panneauCombat(){
   noterHistoCombat(C);
   var L = G.exp && !G.exp.guerre ? LIEUX[G.exp.lieu] : null;
   if(C.fin){ t.innerHTML = panneauApresCombat(C, L); t.scrollTop = 0; return; }
-  var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat()) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
-  h += '<p class="titre-butin">🧟 En face</p><div class="pz-liste">' + C.zombies.map(function(z){
+  var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
+  h += '<p class="titre-butin">' + (G.exp && G.exp.guerre ? "🛡️ Les défenseurs" : "🧟 En face") + '</p><div class="pz-liste">' + C.zombies.map(function(z){
     var T = typeZombie(z), cib = z.int && G.m[z.int.c];
     var fait = !z.pv ? "À terre" : C.fin ? "" : z.int && z.int.t === "hurle" ? "📢 va hurler pour appeler du renfort" : cib ? "🦷 va attaquer " + cib.nom + " (" + z.degats[0] + "-" + z.degats[1] + ")" : "";
     return '<div class="pz' + (z.pv ? "" : " mort") + '"><span class="pz-ico">' + iconeZombie(z) + '</span><span class="pz-txt"><b>' + z.nom + '</b> <small>' + z.pv + '/' + z.pvMax + ' PV</small>'
@@ -307,7 +307,7 @@ function panneauCombat(){
   }).join("") + '</div>';
   h += '<p class="titre-butin">📜 Ce qui s’est passé</p>';
   if(C.fin && C.resume && C.resume.length) h += '<div class="pj-tour fin">' + puces(C.resume) + '</div>';
-  h += histoCombat.tours.length ? histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") : '<p class="sub">Le combat commence : les zombies arrivent…</p>';
+  h += histoCombat.tours.length ? histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") : '<p class="sub">' + (G.exp && G.exp.guerre ? "L’assaut commence : les défenseurs vous attendent…" : "Le combat commence : les zombies arrivent…") + '</p>';
   t.innerHTML = h; t.scrollTop = 0;
 }
 /* ---------- Sang (2026-11-10, idée de Fabien d'après un effet vu sur CodePen ; code écrit pour le jeu) ----------
@@ -394,7 +394,7 @@ function openCombat(){
       + (perte > 0 ? '<span class="flot">−' + perte + '</span>' : '') + '</button>';
   }).join("");
   var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
-  var h = '<h2 class="ctitre">🧟 ' + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
+  var h = '<h2 class="ctitre">' + (G.exp && G.exp.guerre ? "⚔️ " : "🧟 ") + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
     + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : imageLieu(L) || fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + (arrivee ? " arrivee" : "") + '">' + zs + '</div>'
     + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
@@ -421,7 +421,7 @@ function openCombat(){
     // Bilan : tours, zombies abattus, vie perdue, puis l'état de chacun (vie, arme)
     var perdu = 0; for(var jj in (C.pv0 || {})) perdu += Math.max(0, C.pv0[jj] - (G.m[jj].al ? G.m[jj].hp : 0));
     var ab = C.abattus !== undefined ? C.abattus : C.zombies.filter(function(z){ return !z.pv; }).length, nt = Math.max(1, C.tour - 1);
-    h += tuiles([["tour" + (nt > 1 ? "s" : ""), nt, ""], ["abattu" + (ab > 1 ? "s" : ""), "🧟 " + ab, ab ? "ok" : ""], ["vie perdue", perdu ? "−" + perdu : "0", perdu >= 30 ? "ko" : perdu ? "moy" : "ok"]]);
+    h += tuiles([["tour" + (nt > 1 ? "s" : ""), nt, ""], ["abattu" + (ab > 1 ? "s" : ""), (G.exp && G.exp.guerre ? "⚔️ " : "🧟 ") + ab, ab ? "ok" : ""], ["vie perdue", perdu ? "−" + perdu : "0", perdu >= 30 ? "ko" : perdu ? "moy" : "ok"]]);
     h += G.exp.equipe.map(function(j){
       var x = G.m[j], a = x.eq.arme;
       return '<div class="bilan-m' + (x.al ? "" : " mort") + '"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + (x.al ? "" : " · " + accorder(roleDe(x), "mort")) + '</b>' + (x.al ? barre("❤️", x.hp) : "")

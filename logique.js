@@ -742,7 +742,7 @@ function bruit(J, x){
 function peutCocktail(){ return compter("alcool") > 0 && compter("chiffon") > 0 && possede(function(o){ return o.allume; }); }
 // Un zombie tombe : le Gonflé explose et blesse toute l'équipe
 function zombieTombe(z, protege, J){
-  G.combat.abattus = (G.combat.abattus || 0) + 1; G.stats.zombies = (G.stats.zombies || 0) + 1; // compté pour les stats du joueur
+  G.combat.abattus = (G.combat.abattus || 0) + 1; if(!(G.exp && G.exp.guerre)) G.stats.zombies = (G.stats.zombies || 0) + 1; // compté pour les stats du joueur (pas les défenseurs d'un bastion)
   var T = typeZombie(z); if(!T.explose) return;
   J.push(["b2", "💥 " + z.nom + " explose en tombant !"]);
   equipeCombat().forEach(function(x){
@@ -778,7 +778,7 @@ function attaqueZombies(protege, J){
 function verifierFin(J){
   var C = G.combat;
   if(!equipeCombat().length){ C.fin = "defaite"; C.resume.push(["b2", "💀 Personne n’est revenu de " + nomLieuCombat() + "."]); }
-  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", "🧟 Combat gagné en " + C.tour + " tour" + (C.tour > 1 ? "s" : "") + " !"]); }
+  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", (G.exp && G.exp.guerre ? "⚔️ Assaut gagné en " : "🧟 Combat gagné en ") + C.tour + " tour" + (C.tour > 1 ? "s" : "") + " !"]); }
   C.tour++;
   if(!C.fin) preparerIntentions();
 }
@@ -867,9 +867,9 @@ function fuir(){
   var C = G.combat, J = [];
   if(hasard() < BAL.combat.fuite){
     C.fin = "fuite"; J.push(["", "🏃 L’équipe prend la fuite !"]);
-    C.resume.push(["b2", "🏃 Fuite devant les zombies : on rapporte moins de butin."]);
+    C.resume.push(["b2", G.exp && G.exp.guerre ? "🏃 Vous battez en retraite : l’assaut est un échec." : "🏃 Fuite devant les zombies : on rapporte moins de butin."]);
   } else {
-    J.push(["b2", "🏃 La fuite échoue, les zombies vous rattrapent !"]);
+    J.push(["b2", G.exp && G.exp.guerre ? "🏃 La retraite échoue, les défenseurs vous rattrapent !" : "🏃 La fuite échoue, les zombies vous rattrapent !"]);
     attaqueZombies({}, J);
     C.resume = C.resume.concat(J.filter(function(l){ return l[0] === "mort" || l[1].indexOf("💀") >= 0; }));
     if(!equipeCombat().length) verifierFin(J); else { C.tour++; preparerIntentions(); }
