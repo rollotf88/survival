@@ -717,7 +717,11 @@ var selRef = null, bilanOuvert = false;
 function resumeRefuge(){
   var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour;
   return '<p class="resume"><span>' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</span><span>' + ic("bouteille", "💧") + ' +' + pe + '/nuit</span><span>' + ic("conserve", "🥫") + ' +' + pn + '/nuit</span><span>' + ic("planche", "🪵") + ' ' + compter("planche") + '</span>'
-    + '<button class="lien" data-act="bilanref">' + (bilanOuvert ? "Masquer le bilan" : "Bilan détaillé") + '</button></p>' + (bilanOuvert ? bilanRefuge() : "");
+    + '<button class="lien" data-act="bilanref">Bilan détaillé</button></p>';
+}
+// Le bilan complet du refuge dans sa propre fenêtre (avant : il ne s'affichait que dans l'onglet Construire, et rien ailleurs)
+function openBilanRefuge(){
+  show('<h2>🏠 Bilan du refuge</h2>' + bilanRefuge() + '<div class="row"><button class="btn alt" data-act="refuge">🛠️ Le refuge</button><button class="btn" data-act="close">Fermer</button></div>');
 }
 function openRef(onglet){
   astuce("atelier");
@@ -1258,7 +1262,7 @@ document.addEventListener("click", function(e){
   else if(a === "build"){ if(ameliorer(id)) msgAtelier = "✅ " + REFUGE[id].nom + " : niveau " + G.ref[id] + " !"; render(); openRef(); return; }
   else if(a === "onglet"){ pieceChoisie = null; openRef(id); return; }
   else if(a === "refsel"){ son("bois"); selRef = selRef === id ? null : id; openRef(); return; }
-  else if(a === "bilanref"){ bilanOuvert = !bilanOuvert; openRef(); return; }
+  else if(a === "bilanref"){ openBilanRefuge(); return; }
   else if(a === "piece"){ pieceChoisie = pieceChoisie === id ? null : id; openRef(); return; }
   else if(a === "pslot"){ if(pieceChoisie) poserPiece(pieceChoisie, id); return; }
   else if(a === "plein"){ msgAtelier = fairePlein() || ""; render(); openRef(); return; }
