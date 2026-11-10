@@ -1338,3 +1338,5 @@ body.pc:not(.scene-petite) .sheet.large .journal-morts{display:none}
 
 /* Icônes peintes : une image n'a pas de ligne de base comme un dessin, on la garde nette et non sélectionnable */
 img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;user-select:none;pointer-events:none}
+/* Badges d'état sur un portrait (bandage, soif…) : la règle « .portrait img » (image plein cadre) ne doit pas agrandir l'icône */
+.portrait .badges img.ico-img{width:1.15em;height:1.15em;border:0;border-radius:50%;object-fit:contain;background:var(--card);padding:1px;display:inline-block}
