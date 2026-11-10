@@ -263,6 +263,29 @@ function appuyerGoupille(){
 var retourEquip = null; // fenêtre à rouvrir après avoir équipé (« quipart »)
 var choixCombat = {}, cibleCombat = 0;
 var dernierPV = null; // PV au tour précédent : sert à animer qui vient d'être touché
+/* Sur PC, pendant un combat, le panneau de droite raconte le combat (2026-11-10, retour de Fabien : le journal sous l'image
+   prenait de la place) : les zombies (vie, ce qu'ils font, leur particularité) puis tout ce qui s'est passé, tour par tour */
+var histoCombat = { c:null, tours:[], dernier:null };
+function noterHistoCombat(C){
+  if(histoCombat.c !== C) histoCombat = { c:C, tours:[], dernier:null };
+  if(C.journal && C.journal.length && histoCombat.dernier !== C.journal){ histoCombat.tours.push({ t:Math.max(1, C.tour - 1), l:C.journal.slice() }); histoCombat.dernier = C.journal; }
+}
+function panneauCombat(){
+  var t = $("tableauPC"), C = G.combat; if(!t || !C) return;
+  noterHistoCombat(C);
+  var L = G.exp && !G.exp.guerre ? LIEUX[G.exp.lieu] : null;
+  var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat()) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
+  h += '<p class="titre-butin">🧟 En face</p><div class="pz-liste">' + C.zombies.map(function(z){
+    var T = typeZombie(z), cib = z.int && G.m[z.int.c];
+    var fait = !z.pv ? "À terre" : C.fin ? "" : z.int && z.int.t === "hurle" ? "📢 va hurler pour appeler du renfort" : cib ? "🦷 va attaquer " + cib.nom + " (" + z.degats[0] + "-" + z.degats[1] + ")" : "";
+    return '<div class="pz' + (z.pv ? "" : " mort") + '"><span class="pz-ico">' + iconeZombie(z) + '</span><span class="pz-txt"><b>' + z.nom + '</b> <small>' + z.pv + '/' + z.pvMax + ' PV</small>'
+      + '<span class="zpv"><i style="width:' + Math.round(z.pv / z.pvMax * 100) + '%"></i></span>' + (fait ? '<small class="pz-fait">' + fait + '</small>' : '') + '<small>' + T.desc + '</small></span></div>';
+  }).join("") + '</div>';
+  h += '<p class="titre-butin">📜 Ce qui s’est passé</p>';
+  if(C.fin && C.resume && C.resume.length) h += '<div class="pj-tour fin">' + puces(C.resume) + '</div>';
+  h += histoCombat.tours.length ? histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") : '<p class="sub">Le combat commence : les zombies arrivent…</p>';
+  t.innerHTML = h; t.scrollTop = 0;
+}
 var combatVu = null; // le combat déjà affiché (pour ne jouer l'arrivée des zombies qu'une fois)
 function openCombat(){
   astuce("combat");
@@ -339,6 +362,7 @@ function openCombat(){
   if(touche && !matchMedia("(prefers-reduced-motion: reduce)").matches){ var sh = $("sheet"); sh.classList.remove("secoue"); void sh.offsetWidth; sh.classList.add("secoue"); setTimeout(function(){ sh.classList.remove("secoue"); }, 450); }
   dernierPV = { c:C, z:C.zombies.map(function(z){ return z.pv; }), m:G.m.map(function(x){ return x.hp; }) };
   var jn = $("journal"); if(jn) jn.scrollTop = jn.scrollHeight;
+  if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")) panneauCombat();
 }
 
 /* ---------- Rencontre en chemin : dialogue à choix ---------- */
@@ -834,6 +858,7 @@ function tableauPC(){
   var t = $("tableauPC");
   if(!document.body.classList.contains("pc")){ if(t) t.remove(); return; }
   if(!t){ t = document.createElement("aside"); t.id = "tableauPC"; document.body.appendChild(t); }
+  if(G.combat && !document.body.classList.contains("scene-petite")){ panneauCombat(); return; }
   var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
   if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
   if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';

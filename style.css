@@ -1177,3 +1177,28 @@ body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt{padding:10px 14px 12p
 body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt b{font-size:18px}
 body.pc:not(.scene-petite) .sheet.large .fin-suite .fs-txt small{font-size:14px}
 body.pc:not(.scene-petite) .sheet.large .fin-bouton{padding-top:13px;padding-bottom:13px;font-size:17px}
+
+/* Panneau de droite pendant un combat (PC) */
+body.pc:not(.scene-petite) .sheet.large .combat .journal{display:none}
+#tableauPC .pz-liste{display:flex;flex-direction:column;gap:6px}
+#tableauPC .pz{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 8px}
+#tableauPC .pz.mort{opacity:.5}
+#tableauPC .pz-ico{flex:0 0 46px;width:46px;height:46px;border-radius:10px;overflow:hidden;font-size:34px;line-height:46px;text-align:center}
+#tableauPC .pz-ico img,#tableauPC .pz-ico .portrait{width:46px;height:46px;object-fit:cover;display:block}
+#tableauPC .pz.mort .pz-ico img{filter:grayscale(1)}
+#tableauPC .pz-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#tableauPC .pz-txt small{color:var(--mut);font-size:11.5px;line-height:1.3}
+#tableauPC .pz-txt .pz-fait{color:var(--bad);font-weight:700}
+#tableauPC .pz-txt .zpv{display:block;height:6px;border-radius:4px;background:rgba(0,0,0,.25);overflow:hidden}
+#tableauPC .pz-txt .zpv i{display:block;height:100%;background:#d6452b}
+#tableauPC .pj-tour{border-left:3px solid var(--bois);padding:2px 0 4px 8px;margin:0 0 8px}
+#tableauPC .pj-tour.fin{border-left-color:var(--acc)}
+#tableauPC .pj-t{display:inline-block;font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+
+/* Barres de défilement aux couleurs du jeu (fines, bois) au lieu de la barre grise du navigateur */
+*{scrollbar-width:thin;scrollbar-color:var(--bois) transparent}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bois);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--boisClair, var(--bois));background-clip:padding-box}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
