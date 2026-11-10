@@ -429,11 +429,31 @@ function openClans(msg){
     .catch(function(){ show('<h2>⚔️ Clans</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "les clans") + '</p>' + BTN_FERMER()); });
 }
 function quand(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "à l’instant" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; }
+// Fiche d'un clan de la liste : description, membres, ligue, bilan, bouton Rejoindre
+function openFicheClan(i){
+  var d = etatClans, c = d && d.clans[i]; if(!c) return;
+  var ok = jourPartie() >= d.jourMin, plein = c.membres >= 5, b = c.bilan || {};
+  var h = '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>Fondé ' + quand(c.cree).replace("à l’instant", "aujourd’hui") + ' · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
+  h += '<p class="clan-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Ce clan n’a pas encore de description.</i>') + '</p>';
+  h += tuiles([["joueurs", c.membres + " / 5", plein ? "ko" : "ok"], ["guerres gagnées", b.gagnees || 0], ["trophées", (c.trophees || 0) + " 🏆"]]);
+  h += '<p class="titre-butin">👥 Les familles</p><div class="clan-membres">' + (c.noms || []).map(function(m){ return '<div class="clan-m"><span class="cm-nom">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + '</span><small>Jour ' + (m.jour || "?") + '</small></div>'; }).join("") + '</div>';
+  h += '<div class="row">' + (ok && !d.monClan ? '<button class="btn" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '<button class="btn alt" data-act="clans">Retour</button></div>';
+  show(h);
+}
+function openDescClan(){
+  var c = etatClans && etatClans.monClan; if(!c) return;
+  show('<h2>✏️ Description du clan</h2><p class="sub">Présente ton clan aux autres joueurs (200 lettres au plus) : votre façon de jouer, vos règles, quand vous êtes là…</p>'
+    + '<textarea id="descClan" class="desc-clan" maxlength="200" rows="4">' + echapper(c.desc || "") + '</textarea><p class="sub" id="descReste"></p>'
+    + '<div class="row"><button class="btn alt" data-act="clans">Annuler</button><button class="btn" data-act="clandescok">Enregistrer</button></div>');
+  var t = document.getElementById("descClan"), r = document.getElementById("descReste"), maj = function(){ r.textContent = (200 - t.value.length) + " lettres restantes"; };
+  t.addEventListener("input", maj); maj(); t.focus();
+}
 function afficherClans(msg){
   var d = etatClans, j = jourPartie(), ok = j >= d.jourMin, h = '<h2>⚔️ Clans</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '');
   if(d.monClan){
     var c = d.monClan;
-    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
+    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>👥 ' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
+    h += '<p class="clan-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Pas encore de description.</i>') + (c.chefId ? ' <button class="mini" data-act="clandesc">✏️ Modifier</button>' : '') + '</p>';
     h += '<div class="clan-membres">' + c.membresListe.map(function(m){
       return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><button class="cm-nom" data-act="profilmembre" data-id="' + c.membresListe.indexOf(m) + '" title="Voir son profil">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + ' <span class="cm-voir">›</span></button><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
@@ -446,7 +466,7 @@ function afficherClans(msg){
   h += '<p class="sub">' + (ok ? "Tu as tenu " + j + " jours : tu peux fonder un clan ou en rejoindre un (5 familles maximum)." : "🔒 Les clans s’ouvrent quand ta famille a tenu <b>" + d.jourMin + " jours</b> (tu en es au jour " + j + "). Voici ceux qui t’attendent :") + '</p>';
   h += d.clans.length ? '<div class="clan-liste">' + d.clans.map(function(c){
     var plein = c.membres >= 5;
-    return '<div class="clan-l">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + '</b><small>👑 ' + echapper(c.chef) + ' · ' + c.membres + ' / 5 · ' + badgeLigue(c.trophees, true) + '</small></span>'
+    return '<div class="clan-l"><button class="cl-ouvrir" data-act="clanfiche" data-id="' + d.clans.indexOf(c) + '" title="Voir le clan">' + blason(c.blason) + '<span class="cl-info"><b>' + echapper(c.nom) + ' <span class="cm-voir">›</span></b><small>' + ic("couronne", "👑") + ' ' + echapper(c.chef) + ' · 👥 ' + c.membres + ' / 5 joueurs · ' + badgeLigue(c.trophees, true) + '</small></span></button>'
       + (ok ? '<button class="mini" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '</div>';
   }).join("") + '</div>' : '<p>Aucun clan pour l’instant. Sois le premier à en fonder un !</p>';
   h += (ok ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="clancreer">🏴 Fonder un clan</button>' : '') + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>' + BTN_FERMER();
@@ -471,6 +491,9 @@ document.addEventListener("click", function(e){
     appelClans({ action:"creer", nom:n, blason:choixBlason }).then(function(d){ if(d.erreur){ openCreerClan("❌ " + d.erreur); return; } noterStatClan("fonde", 1, true); openClans("🏴 Le clan « " + n + " » est fondé ! Tu en es le chef."); }).catch(function(){ openCreerClan(MSG_HORS_LIGNE); });
   }
   else if(a === "profilmembre") openProfilMembre(+id);
+  else if(a === "clanfiche") openFicheClan(+id);
+  else if(a === "clandesc") openDescClan();
+  else if(a === "clandescok"){ var tx = document.getElementById("descClan"); appelClans({ action:"description", desc:tx ? tx.value : "" }).then(function(r){ if(r.erreur){ openClans("❌ " + r.erreur); return; } openClans("✏️ Description enregistrée."); }).catch(function(){ openClans("❌ " + MSG_HORS_LIGNE); }); }
   else if(a === "clanrejoindre"){
     if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
     appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });

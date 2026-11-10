@@ -254,7 +254,12 @@ async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { 
 async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 30; return r; }
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
-  return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees) }; }
+  return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees),
+    desc: c.desc || "", bilan: c.bilan || null, noms: c.membres.map((m) => ({ pseudo: m.pseudo, cadre: m.cadre || "", chef: m.id === c.chef, jour: m.jour || 0 })) }; }
+// Description du clan (2026-11-10) : 200 caractères au plus, écrite par le chef
+const DESC_MAX = 200;
+function descPropre(t){ return String(t || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, DESC_MAX); }
+const DESC_BOTS = ["Clan de test : on défend, on partage, on tient bon.", "Ici on ne laisse personne derrière. Dépose avant de prendre !", "Chasseurs de rôdeurs depuis le premier jour.", "Petit clan tranquille, actif tous les soirs."];
 function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", depose: m.depose || 0, pris: m.pris || 0, profil: m.profil || (m.bot ? (m.profil = profilBot(m.jour || 30)) : null), rejoint: m.rejoint || 0, bot: !!m.bot, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
@@ -413,6 +418,10 @@ async function clansPost(request, env){
       await sauver();
       return reponse({ ok: true, etoiles: s.etoiles, butin: s.butin, guerre: vueGuerre(C, W, mon, id) });
     }
+    case "description": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut changer la description." });
+      mon.desc = descPropre(d.desc); await sauver(); return reponse({ ok: true, monClan: detailClan(mon, id) });
+    }
     case "exclure": {
       if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut exclure un membre." });
       const cible = String(d.cible || ""); if(cible === id) return reponse({ erreur: "Pour partir, utilise « Quitter le clan »." });
@@ -488,7 +497,7 @@ async function adminPost(request, env){
         let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
         let nom = NOMS_CLANS_BOTS[hasardEntier(0, NOMS_CLANS_BOTS.length - 1)]; while(Object.values(C.clans).some((c) => c.nom === nom)) nom = nom.replace(/ \d+$/, "") + " " + hasardEntier(2, 99);
         const membres = []; for(let j = 0; j < MAX_CLAN; j++){ const b = nouveauBot(); membres.push(b); C.parJoueur[b.id] = cid; }
-        C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, recherche: true, trophees: Math.max(0, Math.floor(+d.trophees) >= 0 && d.trophees !== undefined && d.trophees !== "" ? Math.floor(+d.trophees) : hasardEntier(0, 300)),
+        C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, desc: DESC_BOTS[hasardEntier(0, DESC_BOTS.length - 1)], recherche: true, trophees: Math.max(0, Math.floor(+d.trophees) >= 0 && d.trophees !== undefined && d.trophees !== "" ? Math.floor(+d.trophees) : hasardEntier(0, 300)),
           reserve: { planche: hasardEntier(20, 60), conserve: hasardEntier(5, 20), bidon: hasardEntier(1, 5), ferraille: hasardEntier(4, 15), clous: hasardEntier(4, 15), balle: hasardEntier(0, 20) },
           def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2), armurerie: hasardEntier(0, 2), parebuffle: hasardEntier(0, 2), blindage: hasardEntier(0, 2), tourelle: hasardEntier(0, 2) }, journal: [], retraits: {} };
         C.file.push(cid); noms.push(nom);

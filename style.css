@@ -996,3 +996,23 @@ body.pc #piece .navpieces{opacity:1;pointer-events:auto}
 /* Nom d'un membre du clan : touchable, ouvre son profil */
 button.cm-nom{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;display:inline-flex;align-items:center;gap:3px;max-width:100%}
 button.cm-nom .cm-voir{color:var(--mut);font-weight:800}
+
+/* Description et fiche d'un clan */
+.clan-desc{margin:6px 0 8px;font-style:italic;color:var(--ink);overflow-wrap:anywhere}
+.clan-desc i{color:var(--mut)}
+.clan-desc .mini{font-style:normal;margin-left:4px}
+button.cl-ouvrir{display:flex;align-items:center;gap:8px;flex:1;min-width:0;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.cl-ouvrir .cm-voir{color:var(--mut);font-weight:800}
+textarea.desc-clan{width:100%;box-sizing:border-box;font:inherit;padding:8px;border:2px solid var(--bois);border-radius:10px;background:var(--bg);color:var(--ink);resize:vertical}
+
+/* En-tête sur PC (2026-11-10, retour de Fabien : petit et serré à gauche) : les pastilles s'étalent sur toute la largeur de la scène, en grand, avec leur nom */
+.chip-lbl{display:none}
+body.pc #app > .row:first-child{align-items:center;gap:18px;margin-bottom:6px}
+body.pc #app .titre h1{font-size:34px;line-height:1}
+body.pc #app .chapcourt{font-size:13px;max-width:220px}
+body.pc #app .chips{flex:1;display:grid;grid-auto-flow:column;grid-template-columns:repeat(5, minmax(0, 1fr));grid-auto-columns:auto;gap:10px}
+body.pc #app .chip{font-size:20px;padding:5px 14px;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;cursor:pointer;transition:transform .12s}
+body.pc #app .chip:hover{transform:translateY(-1px);border-color:var(--acc)}
+body.pc #app .chip .ico{width:1.35em;height:1.35em}
+body.pc #app .chip-lbl{display:inline;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+@media (max-width:1500px){ body.pc #app .chip{font-size:18px;padding:5px 9px;gap:5px} body.pc #app .chips{gap:7px} body.pc #app .chip-lbl{font-size:11px;letter-spacing:0} }

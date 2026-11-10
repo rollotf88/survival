@@ -152,12 +152,12 @@ function rGame(){
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
   $("app").innerHTML = '<div class="row"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button></div><div class="chips">'
-    + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '</button>'
-    + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '</button>'
-    + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '</button>'
-    + '<button class="chip" data-act="info" data-id="def" aria-label="Défense de nuit : ' + defenseNuit() + '">' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</button>'
-    + '<button class="chip" data-act="info" data-id="moral" aria-label="Moral : ' + Math.round(G.moral) + '">' + mo + ' ' + Math.round(G.moral) + '</button>'
-    + '<button class="chip chipson" data-act="menu" aria-label="Menu et guide">☰</button>'
+    + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
+    + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
+    + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
+    + '<button class="chip" data-act="info" data-id="def" aria-label="Défense de nuit : ' + defenseNuit() + '">' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '<small class="chip-lbl">défense</small></button>'
+    + '<button class="chip" data-act="info" data-id="moral" aria-label="Moral : ' + Math.round(G.moral) + '">' + mo + ' ' + Math.round(G.moral) + '<small class="chip-lbl">moral</small></button>'
+    + '<button class="chip chipson" data-act="menu" aria-label="Menu et guide">☰<small class="chip-lbl">menu</small></button>'
     + (chien() ? '<button class="chip chipchien" data-act="chien" title="' + chien().nom + ', le chien">' + ic("chien", "🐕") + (chien().faim ? ' ⚠️' : '') + '</button>' : '')
     + '</div></div>'
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
