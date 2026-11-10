@@ -113,6 +113,24 @@ function allerPiece(k){
   dernierJourEtiquettes = null; // on montre les étiquettes de la nouvelle pièce
   if(typeof son === "function") son("pas");
   placerPiece();
+  panneauPiece();
+}
+/* Sur PC, le panneau de droite suit la pièce affichée (2026-11-10, « pense ergonomie ») : la chambre montre la nuit qui vient,
+   la réserve le stock, l'atelier les fabrications, etc. Le salon revient au tableau de bord. On ne remplace pas une fenêtre
+   importante (combat, expédition, rencontre, bilan de la nuit, événement). */
+var PANNEAU_PIECE = {
+  cuisine:function(){ selRef = null; openRef("cuisine"); }, chambre:function(){ openDormir(); }, reserve:function(){ selStock = null; filtreStock = "tout"; openStock(); },
+  atelier:function(){ selRef = null; openRef("fabriquer"); }, garage:function(){ openRef("voiture"); }, cour:function(){ selRef = null; openRef("construire"); },
+  bastionSalle:function(){ if(typeof openClans === "function") openClans(); }, bastionTresor:function(){ if(typeof openBastion === "function") openBastion("reserve"); },
+  bastionCour:function(){ if(typeof openBastion === "function") openBastion("defenses"); }
+};
+function panneauPiece(){
+  if(!document.body.classList.contains("pc") || !G || G.ph !== "game") return;
+  if(G.exp || G.combat || G.rencontre) return;
+  var m = $("modal"), ouvert = m && m.style.display !== "none";
+  if(ouvert && document.querySelector("#sheet .banniere, #sheet.large")) return; // bilan de nuit, événement, combat…
+  var f = PANNEAU_PIECE[PIECES[pieceIdx].id];
+  if(f) f(); else if(ouvert) hide(); // salon : le tableau de bord
 }
 function placerDecor(dx, dy, s, boite){
   var d = $("decor"); if(!d){ d = document.createElement("div"); d.id = "decor"; document.body.appendChild(d); }
@@ -120,11 +138,30 @@ function placerDecor(dx, dy, s, boite){
   // Sur PC, les objets posés sont coupés au bord de la boîte de la scène
   if(boite){ d.style.cssText = "left:" + boite.x + "px;top:" + boite.y + "px;width:" + boite.l + "px;height:" + boite.h + "px;right:auto;bottom:auto;border-radius:12px"; dx -= boite.x; dy -= boite.y; }
   else d.style.cssText = "";
-  d.innerHTML = PIECES[pieceIdx].decor.filter(function(e){ return e[5](); }).map(function(e){
+  d.innerHTML = (sceneLieu() ? [] : PIECES[pieceIdx].decor).filter(function(e){ return e[5](); }).map(function(e){
     return '<img src="' + e[0] + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
   }).join("");
 }
 
+/* ---------- La scène suit l'action (2026-11-10, retour de Fabien « rendre ça vivant ») ----------
+   Pendant une expédition (et jusqu'à la fermeture du résultat), la scène montre le lieu fouillé au lieu de la maison ;
+   pendant un assaut, la cour du bastion attaqué. Pas de zones touchables ni de flèches de pièces pendant ce temps. */
+var lieuResultat = null;
+function sceneLieu(){
+  if(!G || G.ph !== "game") return null;
+  var i = null;
+  if(G.exp) i = G.exp.guerre ? "bastion" : G.exp.lieu;
+  else if(G.rencontre && G.rencontre.apres) i = G.rencontre.apres.lieu;
+  else if(lieuResultat !== null) i = lieuResultat;
+  if(i === null || i === undefined) return null;
+  if(i === "bastion") return { img:"images/piece-bastion-cour.webp", l:1024, h:1050, nom:G.exp.nomLieu || "Bastion" };
+  var L = LIEUX[i]; if(!L) return null;
+  var im = imageLieu(L) || fondCombat(L);
+  return { img:im, l:640, h:356, nom:L.nom };
+}
+// Pièce de la maison liée à chaque bouton du bas (toucher Dormir montre la chambre, etc.)
+var PIECE_BOUTON = { dormir:"chambre", stock:"reserve", refuge:"atelier", fouille:"garage" };
+function allerPieceId(id){ var k = PIECES.findIndex(function(p){ return p.id === id; }); if(k >= 0 && k !== pieceIdx && pieceVisible(k)){ pieceIdx = k; dernierJourEtiquettes = null; placerPiece(); } }
 function placerPiece(){
   var cont = $("piece");
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
@@ -137,7 +174,9 @@ function placerPiece(){
   if(pc){ var boite = Math.min(window.innerWidth, LARGEUR_BOITE_PC); gx = (window.innerWidth - boite) / 2 + 12; dxMax = gx - 12 + boite - LARGEUR_PANNEAU_PC; }
   if(fin - haut < 40){ cont.innerHTML = ""; cont.style.display = "none"; corps.backgroundSize = corps.backgroundPosition = corps.backgroundImage = ""; if($("fondu")) $("fondu").style.display = "none"; placerDecor(0, 0, null); return; } // pas assez de place
   if(!pieceVisible(pieceIdx)) pieceIdx = 0; // on a quitté son clan : retour au salon
-  var vw = dxMax - gx, P = PIECES[pieceIdx], F = P.cadre, urlImg = 'url("' + (typeof P.img === "function" ? P.img() : P.img) + '")';
+  var EXT = sceneLieu();
+  var vw = dxMax - gx, P = EXT ? { id:"dehors", nom:"📍 " + EXT.nom, l:EXT.l, h:EXT.h, cadre:{ x0:0, x1:EXT.l, y0:0, y1:EXT.h }, zones:[], decor:[] } : PIECES[pieceIdx], F = P.cadre, urlImg = 'url("' + (EXT ? EXT.img : typeof P.img === "function" ? P.img() : P.img) + '")';
+  document.body.classList.toggle("dehors", !!EXT);
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
   // Sur PC, la pièce est dans une boîte encadrée qu'elle remplit toujours (quelle que soit la largeur de l'image)
@@ -150,6 +189,8 @@ function placerPiece(){
     dx = Math.min(gx, Math.max(dxMax - P.l * s, dx)); dy = Math.min(haut, Math.max(fin - P.h * s, dy)); // pas de bord vide dans la boîte
     corps.backgroundImage = corps.backgroundSize = corps.backgroundPosition = "";
     if(!fs){ fs = document.createElement("div"); fs.id = "fondScene"; document.body.insertBefore(fs, document.body.firstChild); }
+    document.body.classList.toggle("scene-petite", vw < 780 || fin - haut < 540); // trop petite pour y jouer le combat
+    var rs = document.documentElement.style; rs.setProperty("--scene-x", gx + "px"); rs.setProperty("--scene-y", haut + "px"); rs.setProperty("--scene-w", vw + "px"); rs.setProperty("--scene-h", (fin - haut) + "px");
     fs.style.cssText = "display:block;left:" + gx + "px;top:" + haut + "px;width:" + vw + "px;height:" + (fin - haut) + "px;background-image:" + urlImg + ";background-size:" + (P.l * s) + "px auto;background-position:" + (dx - gx) + "px " + (dy - haut) + "px";
   } else {
     if(fs) fs.style.display = "none";
@@ -173,11 +214,11 @@ function placerPiece(){
     return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
-    + '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
+    + (EXT ? '<div class="navpieces dehors navvue"><span class="navnom">' + P.nom + '</span></div>' : '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'
     + PIECES.map(function(p, k){ if(!pieceVisible(k)) return ""; return '<button class="navpt' + (k === pieceIdx ? " on" : "") + '" data-act="pieceVa" data-id="' + k + '" aria-label="' + p.nom + '"><span></span></button>'; }).join("")
-    + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>'
+    + '<button class="navfl" data-act="pieceSuiv" aria-label="Pièce suivante">▶</button><span class="navnom">' + P.nom + '</span></div>')
     // Sur PC : de grandes flèches toujours visibles sur les côtés de la scène (pas de glisser à la souris)
-    + (pc ? '<button class="flpc g" data-act="piecePrec" aria-label="Pièce précédente">‹</button><button class="flpc d" data-act="pieceSuiv" aria-label="Pièce suivante">›</button>' : '');
+    + (pc && !EXT ? '<button class="flpc g" data-act="piecePrec" aria-label="Pièce précédente">‹</button><button class="flpc d" data-act="pieceSuiv" aria-label="Pièce suivante">›</button>' : '');
   ajusterEtiquettes(cont, dxMax, gx);
   // Le bouton du bas qui correspond à la pièce est mis en avant (Réserve → Stock, Chambre → Dormir…)
   var lien = BOUTON_PIECE[P.id];

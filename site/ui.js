@@ -75,7 +75,7 @@ function locuteurEvenement(ev){
   }
   return null;
 }
-function hide(){ $("modal").style.display = "none"; }
+function hide(){ $("modal").style.display = "none"; if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
 var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
@@ -263,10 +263,12 @@ function appuyerGoupille(){
 var retourEquip = null; // fenêtre à rouvrir après avoir équipé (« quipart »)
 var choixCombat = {}, cibleCombat = 0;
 var dernierPV = null; // PV au tour précédent : sert à animer qui vient d'être touché
+var combatVu = null; // le combat déjà affiché (pour ne jouer l'arrivée des zombies qu'une fois)
 function openCombat(){
   astuce("combat");
   var C = G.combat, L = G.exp.guerre ? { nom:G.exp.nomLieu.replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); }) } : LIEUX[G.exp.lieu], fini = !!C.fin;
   if(dernierPV && dernierPV.c !== C) dernierPV = null; // nouveau combat
+  var arrivee = combatVu !== C && C.tour === 1 && !fini; combatVu = C; // première vue du combat : les zombies arrivent du fond
   if(!fini && zombiesDebout().some(function(z){ return !z.int; })) preparerIntentions(); // ancienne sauvegarde
   var debout = zombiesDebout();
   if(!C.zombies[cibleCombat] || C.zombies[cibleCombat].pv <= 0) cibleCombat = debout.length ? C.zombies.indexOf(debout[0]) : 0;
@@ -288,7 +290,7 @@ function openCombat(){
   }).join("");
   var vz = C.zombies[cibleCombat], tv = vz && typeZombie(vz);
   var h = '<h2 class="ctitre">🧟 ' + L.nom + ' <small>· Tour ' + Math.min(C.tour, 99) + '</small></h2><div class="combat' + (fini ? " fini" : "") + '"><div class="cgauche">'
-    + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + '">' + zs + '</div>'
+    + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + (arrivee ? " arrivee" : "") + '">' + zs + '</div>'
     + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
     + (C.journal.length ? '<div class="journal" id="journal">' + puces(C.journal) + '</div>' : '') + '</div><div class="cdroite">';
@@ -346,6 +348,7 @@ function openRencontre(){
   if(R0.portrait !== "" && Rc.noeud) parle(R0.nom, R0.portrait);
 }
 function openResultat(r){
+  if(typeof lieuResultat !== "undefined"){ lieuResultat = r.lieu; if(typeof placerPiece === "function") placerPiece(); }
   var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
   if(r.pris.length){
     h += '<p class="titre-butin">🎒 Butin rapporté</p>' + etageres(r.pris.map(function(g){ return caseObjet(g.id, { act:"aucun", cle:g.id, n:g.n, fixe:true }); }), 5)
@@ -1105,7 +1108,7 @@ document.addEventListener("click", function(e){
     if(retourEquip === "quipart" && typeof openQuiPart === "function"){ render(); openQuiPart(); return; }
     if(modeMini()){ render(); openMembre(+q[0]); return; } hide(); }
   else if(a === "unequip"){ var q = id.split(":"); desequiper(+q[0], q[1]); openSlot(+q[0], q[1]); render(); return; }
-  else if(a === "fouille"){ if(!G.sel.length && typeof openQuiPart === "function"){ openQuiPart(); return; } openLoc(); return; }
+  else if(a === "fouille"){ if(typeof allerPieceId === "function") allerPieceId("garage"); if(!G.sel.length && typeof openQuiPart === "function"){ openQuiPart(); return; } openLoc(); return; }
   else if(a === "loc"){ apresEtape(expedition(i, enVoiture)); return; }
   else if(a === "crocheter"){ jeuSerrure = true; nouvelleZone(); openSerrure(); return; }
   else if(a === "forcer"){ forcerPorte(); apresEtape(suiteExpedition()); return; }
@@ -1126,7 +1129,7 @@ document.addEventListener("click", function(e){
   }
   else if(a === "cfin"){ if(G.exp && G.exp.guerre && typeof terminerAssaut === "function"){ terminerAssaut(); return; } apresEtape(avantFouille()); return; }
   else if(a === "son"){ basculerSon(); return; }
-  else if(a === "stock"){ selStock = null; openStock(); return; }
+  else if(a === "stock"){ if(typeof allerPieceId === "function") allerPieceId("reserve"); selStock = null; openStock(); return; }
   else if(a === "invf"){ filtreStock = id; openStock(); return; }
   else if(a === "invsel"){ son("bois"); selStock = selStock === id ? null : id; openStock(); return; }
   else if(a === "invequip"){ var qe = id.split(":"); if(equiper(+qe[0], qe[1], +qe[2])) msgStock = "✅ " + G.m[+qe[0]].nom + " porte maintenant " + nommer(G.m[+qe[0]].eq[qe[1]].id, 1) + "."; selStock = null; render(); openStock(); return; }
@@ -1138,8 +1141,8 @@ document.addEventListener("click", function(e){
   else if(a === "mangerchienok"){ confirmerChien = false; var mc = mangerChien(); render(); show('<h2>Un soir de famine</h2><p>' + (mc || "Ce n’est plus possible.") + '</p>' + BTN_FERMER("Continuer")); return; }
   else if(a === "marche"){ openMarche(); return; }
   else if(a === "troc"){ msgMarche = echanger(i) || ""; render(); openMarche(); return; }
-  else if(a === "refuge"){ openRef(); return; }
-  else if(a === "dormir"){ openDormir(); return; }
+  else if(a === "refuge"){ if(typeof allerPieceId === "function") allerPieceId("atelier"); openRef(); return; }
+  else if(a === "dormir"){ if(typeof allerPieceId === "function") allerPieceId("chambre"); openDormir(); return; }
   else if(a === "endday"){ var n = finJour(); G.derniereNuit = n.filter(function(l){ return l[0] !== "mort"; }).slice(0, 8); render(); openNuit(n);
     if(typeof envoyerMonde === "function" && vivants().length) envoyerMonde(n.some(function(l){ return l[0] === "mort"; }));
     if(typeof vibrer === "function" && n.some(function(x){ return x[0] === "b2" && x[1].indexOf("🧟 Attaque de nuit (") === 0; })) vibrer([150, 80, 150]); // attaque perdue
