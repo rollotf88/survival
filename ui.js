@@ -76,7 +76,8 @@ function locuteurEvenement(ev){
   }
   return null;
 }
-function hide(){ $("modal").style.display = "none"; if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
+var retourPiece = null; // pièce où revenir à la fermeture de la fenêtre (salon après une expédition, bastion après un assaut)
+function hide(){ $("modal").style.display = "none"; if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
 var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
@@ -468,6 +469,7 @@ function openRencontre(){
   if(R0.portrait !== "" && Rc.noeud) parle(R0.nom, R0.portrait);
 }
 function openResultat(r){
+  retourPiece = "salon"; // « Retour au refuge » ramène au salon (pas au garage d'où l'équipe est partie)
   if(typeof lieuResultat !== "undefined"){ lieuResultat = r.lieu; if(typeof placerPiece === "function") placerPiece(); }
   var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
   if(r.pris.length){

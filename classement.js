@@ -639,7 +639,7 @@ function lancerAssaut(cible){
 function terminerAssaut(){
   var b = bilanAssaut();
   appelClans({ action:"finAssaut", assaut:b.assaut, victoire:b.victoire, etoiles:b.etoiles }).then(function(d){
-    finirAssaut(); var butin = [];
+    finirAssaut(); var butin = []; retourPiece = typeof dansUnClan === "function" && dansUnClan() ? "bastionSalle" : "salon"; // après un assaut : retour au bastion
     if(!d.erreur && b.etoiles){ noterStatClan("etoiles", b.etoiles); if(b.etoiles >= 3) noterStatClan("assauts3"); }
     if(!d.erreur) (d.butin || []).forEach(function(p){ if(OBJETS[p[0]]){ ajouter(p[0], p[1]); butin.push(nommer(p[0], p[1])); } });
     render(); if(typeof sauver === "function") sauver();
