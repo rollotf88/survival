@@ -61,7 +61,7 @@ function statutOp(R){
   if(R.lance) return { txt:"⏳ Raid en cours (" + (R.lance.pseudo || "?") + ")", cls:"moy" };
   if(R.nb >= R.min) return R.peutLancer ? { txt:"✅ Équipe prête : lance le raid !", cls:"ok", agir:true } : { txt:"✅ Équipe prête : le chef peut lancer", cls:"ok" };
   var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; });
-  return { txt:"👥 " + R.nb + " / " + R.min + " volontaires" + (moi ? " · le tien est inscrit" : " · il en manque " + (R.min - R.nb)), cls:moi ? "" : "moy", agir:!moi };
+  return { txt:"👥 " + R.nb + " / " + R.min + " volontaires" + (moi ? " · dont le tien" : ""), cls:moi ? "" : "moy", agir:!moi };
 }
 // État gardé dans le navigateur (pour la lueur de la table et la carte des lieux, sans appeler le serveur)
 function noterEtatOp(R){
