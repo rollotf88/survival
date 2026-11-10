@@ -762,7 +762,7 @@ var EMOJI_ICONE = {
   "⚡":"energie", "❤":"coeur", "⚠":"alerte", "🔥":"feu", "📖":"livre", "📅":"calendrier", "🗓":"calendrier", "⚔":"epees", "🏆":"trophee", "🎯":"cible",
   "✔":"coche", "✅":"coche", "♻":"recycler", "🚗":"voiture", "🚙":"voiture", "🧟":"zombie", "🔒":"cadenas", "🔐":"cadenas", "⭐":"etoile", "🌟":"etoile", "🕯":"bougie",
   "🦷":"dent", "✋":"main", "📍":"punaise", "👥":"groupe", "✏":"crayon", "🏴":"drapeau", "🎁":"cadeau", "🪂":"parachute", "📊":"stats", "🩺":"stetho", "🎟":"ticket",
-  "✊":"poing", "💪":"poing", "🤖":"robot", "❌":"croix", "✖":"croix", "💀":"crane", "👪":"famille", "🗺":"carte", "👤":"silhouette", "🎲":"de", "🏃":"course",
+  "✊":"poing", "💪":"poing", "🤖":"robot", "❌":"croix", "✖":"croix", "💀":"crane", "👪":"famille", "🗺":"carte", "👤":"silhouette", "🎲":"de", "🏃":"course", "🚶":"course",
   "🌲":"sapin", "😴":"sommeil", "💤":"sommeil", "💡":"ampoule", "🔊":"sonHaut", "🎵":"musique", "📳":"vibreur", "💬":"bulle", "🗝":"cle", "🚪":"porte", "📢":"megaphone",
   "🥶":"froid", "❄":"froid", "🌀":"folie"
 };

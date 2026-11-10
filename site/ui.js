@@ -183,9 +183,9 @@ function openLoc(){
   var porte = function(test){ return team.some(function(x){ return x.eq.outil && test(OBJETS[x.eq.outil.id]); }); };
   var lumiere = porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? "🔦 lampe prête" : "⚠️ lampe sans pile") : porte(function(o){ return o.lumiere === 1; }) ? "🔥 lueur faible" : "⚠️ pas de lumière";
   var ouvre = porte(function(o){ return o.ouvre; }) ? "🔓 de quoi ouvrir" : "⚠️ porte à forcer";
-  h += '<p class="sub">Équipe : ' + team.map(function(x){ return iconeMembre(x) + " " + x.nom + " ⚡" + x.en; }).join(", ") + ' · ⚔️ force ' + forceEquipe(team) + ' · 🎒 ' + placesEquipe(team) + ' places pour le butin</p>';
+  h += '<p class="sub">Équipe : ' + team.map(function(x){ return iconeMembre(x) + " " + x.nom + " ⚡" + x.en; }).join(", ") + ' · ⚔️ force ' + forceEquipe(team) + ' · 🎒 ' + placesEquipe(team) + ' places</p>';
   var radio = possede(function(o){ return o.radio; });
-  if(voitureReparee()) h += '<button class="loc toggle' + (enVoiture ? " on" : "") + '" data-act="envoiture"><b>🚗 ' + (enVoiture ? "En voiture" : "À pied") + '</b> <span class="pill">⛽ ' + G.voiture.essence + ' L</span><small>' + (enVoiture ? "Le trajet ne fatigue pas, +" + VOITURE.coffre + " places dans le coffre, mais ça consomme de l’essence et le moteur fait du bruit. Touche pour y aller à pied." : "Touche pour prendre la voiture.") + '</small></button>';
+  if(voitureReparee()) h += '<button class="loc toggle' + (enVoiture ? " on" : "") + '" data-act="envoiture"><b>' + (enVoiture ? "🚗 En voiture" : "🚶 À pied") + '</b> <span class="pill">⛽ ' + G.voiture.essence + ' L</span><small>' + (enVoiture ? "Le trajet ne fatigue pas, +" + VOITURE.coffre + " places dans le coffre, mais ça consomme de l’essence et le moteur fait du bruit. Touche pour y aller à pied." : "Touche pour prendre la voiture.") + '</small></button>';
   // Une carte illustrée par lieu, 2 par ligne : image, ce qu'il reste, danger, énergie, et les conditions en petites icônes
   var cartes = [];
   LIEUX.forEach(function(L, i){
