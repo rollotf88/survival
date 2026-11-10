@@ -1398,3 +1398,27 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .lien-retour{background:none;border:0;padding:2px 0 6px;font:inherit;font-weight:800;color:var(--accent,#9a6512);cursor:pointer}
 .op-ligne{display:flex;flex-direction:column;width:100%;text-align:left;margin:0 0 8px;padding:7px 10px;border-radius:10px;border:2px solid #c98a2a;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
 .op-ligne small{opacity:.85;font-size:12px}
+
+/* ---------- Discussion du clan ---------- */
+.chat-fil{height:clamp(180px,42vh,460px);overflow:auto;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:12px;background:var(--bg);border:2px solid var(--bois);margin-bottom:6px}
+.cm-m{max-width:86%;align-self:flex-start;padding:5px 9px 6px;border-radius:12px 12px 12px 3px;background:var(--card);border:1.5px solid var(--line);box-shadow:0 1px 0 var(--line)}
+.cm-m.moi{align-self:flex-end;border-radius:12px 12px 3px 12px;background:#f3e2bd;border-color:#c98a2a}
+.cm-m.rapide p{font-weight:800}
+.cm-m p{margin:2px 0 0;line-height:1.3;overflow-wrap:anywhere}
+.cm-tete{display:flex;align-items:center;gap:4px;font-size:12px;flex-wrap:wrap}
+.cm-tete small{opacity:.7}
+.cm-a{margin-left:auto;background:none;border:0;padding:0 2px;font-size:13px;cursor:pointer;opacity:.6}
+.cm-a + .cm-a{margin-left:0}
+.cm-sys{align-self:center;max-width:92%;text-align:center;font-size:12px;opacity:.75;padding:2px 8px;border-radius:999px;background:rgba(0,0,0,.05)}
+.cm-sys small{opacity:.8}
+.chat-rapides{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:thin}
+.chat-r{flex:0 0 auto;padding:5px 10px;border-radius:999px;border:1.5px solid var(--bois);background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chat-saisie{display:flex;gap:6px;margin-bottom:8px}
+.chat-saisie input{flex:1;min-width:0;padding:9px 10px;border-radius:10px;border:2px solid var(--bois);background:var(--bg);color:var(--ink);font:inherit}
+.chat-saisie .btn{flex:0 0 auto;min-width:52px}
+.chat-ligne{border-color:var(--bois)}
+/* Pastille rouge du nombre de messages non lus (menu ☰, Clans, Discussion) */
+[data-act="menu"],[data-act="clans"],[data-act="chat"]{position:relative}
+.nl-badge{position:absolute;top:2px;right:3px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#c62828;color:#fff;font:800 11px/19px Nunito,sans-serif;text-align:center;box-shadow:0 0 0 2px var(--bg);pointer-events:none;z-index:2}
+@media (prefers-reduced-motion:no-preference){.nl-badge{animation:nlPop .35s ease-out}}
+@keyframes nlPop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}

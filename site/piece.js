@@ -77,7 +77,7 @@ var PIECES = [
   ]},
   // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
   { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
-    ["pFoyer",        0, 395, 235, 745, function(){ return "🔥"; }, "Foyer du clan", .5],
+    ["pChat",         0, 395, 235, 745, function(){ return "💬"; }, "Discuter", .5],
     ["pClan",       350, 220, 690, 460, function(){ return "🛡️"; }, "Mon clan", .5],
     ["pGuerre",     728, 225, 1010, 665, function(){ return "⚔️"; }, "La guerre", .4],
     ["pOperations", 230, 515, 805, 920, function(){ return "🎯"; }, "Opérations", .35]
@@ -121,7 +121,7 @@ function allerPiece(k){
 var PANNEAU_PIECE = {
   cuisine:function(){ selRef = null; openRef("cuisine"); }, chambre:function(){ openDormir(); }, reserve:function(){ selStock = null; filtreStock = "tout"; openStock(); },
   atelier:function(){ selRef = null; openRef("fabriquer"); }, garage:function(){ openRef("voiture"); }, cour:function(){ selRef = null; openRef("construire"); },
-  bastionSalle:function(){ if(typeof openClans === "function") openClans(); }, bastionTresor:function(){ if(typeof openBastion === "function") openBastion("reserve"); },
+  bastionSalle:function(){ if(typeof openChat === "function") openChat(); else if(typeof openClans === "function") openClans(); }, bastionTresor:function(){ if(typeof openBastion === "function") openBastion("reserve"); },
   bastionCour:function(){ if(typeof openBastion === "function") openBastion("defenses"); }
 };
 function panneauPiece(){
@@ -305,6 +305,7 @@ document.addEventListener("click", function(e){
   else if(a === "pGardeManger"){ filtreStock = "vivres"; selStock = null; openStock(); }
   else if(a === "pCheminee") openFeu();
   else if(a === "pFoyer") openFoyerClan();
+  else if(a === "pChat"){ if(typeof openChat === "function") openChat(); }
   else if(a === "versSalon"){ hide(); allerPiece(0); }
   else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("feu"); render(); openFeu(); }
   else if(a === "pSac") openStock();

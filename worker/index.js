@@ -281,6 +281,20 @@ function vueRaid(c, id){
     res: R.res || null, maPart: part && !part.recupere ? part : null, aRecupere: !!(part && part.recupere), participe: !!part };
 }
 
+
+/* ---------- Chat du clan (2026-11-11, demande de Fabien) ----------
+   Les 100 derniers messages de chaque clan, dans la clé KV « chat_<cid> » (un seul envoi = une écriture).
+   Messages rapides (CHAT_RAPIDES, mêmes textes que chat.js), gros mots masqués, 1 message toutes les 3 s par joueur,
+   le chef efface, chacun signale (le message part dans les avis de l'administration).
+   Partie bien séparée : sur l'hébergeur définitif, elle sera refaite avec une vraie base de données. */
+const CHAT_MAX = 100, CHAT_LONG = 200, CHAT_DELAI = 3000;
+const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🎯 Qui lance le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
+async function lireChat(env, cid){ return (await env.CLASSEMENT.get("chat_" + cid, { type: "json" })) || []; }
+function vueChat(liste, mon, id){
+  return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef })),
+           journal: (mon.journal || []).slice(0, 25).map((j) => ({ t: j.t, qui: j.qui, txt: j.txt })), chef: mon.chef === id, nom: mon.nom };
+}
+
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
 // {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
 // {action:"creer", id, pseudo, jour, nom, blason}    -> crée un clan (le créateur en est le chef)
@@ -453,6 +467,47 @@ async function clansPost(request, env){
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       const rp = await env.CLASSEMENT.get("raid_" + mon.id, { type: "json" });
       return reponse({ ok: true, replay: rp || [], res: raidDe(mon).res || null });
+    }
+    case "chat": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); return reponse(Object.assign({ ok: true }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "chatEnvoyer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const liste = await lireChat(env, mon.id);
+      const dernier = liste.filter((m) => m.par === id).pop();
+      if(dernier && now - dernier.t < CHAT_DELAI) return reponse({ erreur: "Doucement ! Attends quelques secondes entre deux messages." });
+      let txt, rapide = false;
+      if(d.rapide !== undefined && CHAT_RAPIDES[Math.floor(+d.rapide)]){ txt = CHAT_RAPIDES[Math.floor(+d.rapide)]; rapide = true; }
+      else {
+        txt = String(d.texte || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, CHAT_LONG);
+        if(!txt) return reponse({ erreur: "Message vide." });
+        txt = masquerInterdits(txt);
+        if(texteInterdit(txt)) return reponse({ erreur: "Message refusé (insulte ou mot blessant)." });
+      }
+      liste.push({ id: "m" + Math.random().toString(36).slice(2, 9), t: now, par: id, qui: pseudo || "?", cadre: cadreDe(d) || "", txt, r: rapide });
+      while(liste.length > CHAT_MAX) liste.shift();
+      await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(liste));
+      return reponse(Object.assign({ ok: true }, vueChat(liste, mon, id)));
+    }
+    case "chatEffacer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const liste = await lireChat(env, mon.id), m = liste.find((x) => x.id === String(d.mid || ""));
+      if(!m) return reponse({ erreur: "Message introuvable." });
+      if(mon.chef !== id && m.par !== id) return reponse({ erreur: "Seul le chef peut effacer le message d’un autre." });
+      const reste = liste.filter((x) => x !== m); await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(reste));
+      return reponse(Object.assign({ ok: true }, vueChat(reste, mon, id)));
+    }
+    case "chatSignaler": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const liste = await lireChat(env, mon.id), m = liste.find((x) => x.id === String(d.mid || ""));
+      if(!m) return reponse({ erreur: "Message introuvable." });
+      const avis = await lireAvis(env);
+      avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: now, type: "autre", texte: "🚩 Message signalé dans le clan « " + mon.nom + " » : « " + m.txt + " » (écrit par " + m.qui + ")", pseudo: texteAvis(pseudo, 16), joueur: id.slice(0, 8),
+        infos: { version: "chat", jour, ecran: "", appareil: "", page: "chat du clan" }, lu: false });
+      if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
+      await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
+      return reponse({ ok: true });
     }
     case "classementClans": {
       const tous = Object.values(C.clans).map((c) => { const b = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 };
@@ -744,6 +799,8 @@ function texteInterdit(t){
   });
 }
 const MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";
+// Chat du clan : chaque mot interdit est remplacé par des étoiles (le reste du message passe)
+function masquerInterdits(t){ return String(t || "").replace(/[^\s.,;:!?()"'«»]+/g, function(w){ return texteInterdit(w) ? "★".repeat(Math.max(3, Math.min(8, w.length))) : w; }); }
 
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
 export default {

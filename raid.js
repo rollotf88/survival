@@ -127,6 +127,7 @@ function contenuRaid(B){
   if(R.lance) h += '<p class="msg">⏳ Raid en cours, lancé par ' + echapper(R.lance.pseudo || "?") + ' ' + quand(R.lance.t) + '.</p>';
   if(R.peutLancer) h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="raidlancer"' + (enJeu ? "" : " disabled") + '>' + (R.lance && R.lance.moi ? "▶️ Reprendre le raid" : "▶️ Lancer le raid") + '</button>';
   else if(R.nb >= R.min && !R.chef) h += '<p class="sub">L’équipe est prête : le chef peut lancer le raid' + (R.attenteChef ? " (sinon, n’importe qui pourra le lancer dans " + tempsRestant(Date.now() + R.attenteChef) + ")" : "") + '.</p>';
+  h += '<button class="op-ligne chat-ligne" data-act="chat">💬 <b>En parler au clan</b><small>Qui est prêt ? Qui lance ?</small></button>';
   if(!R.lance){
     if(moi) h += '<button class="btn alt" style="width:100%" data-act="raidretrait">↩️ Retirer mon volontaire</button>';
     else if(R.nb < R.max) h += '<button class="btn" style="width:100%" data-act="raidpret"' + (enJeu ? "" : " disabled") + '>✋ Je suis prêt : envoyer un volontaire</button>' + (enJeu ? "" : '<p class="sub">Pendant une partie.</p>');

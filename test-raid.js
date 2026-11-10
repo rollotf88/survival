@@ -41,3 +41,20 @@ async function testRaid(){
   hide();
   return innerWidth + "x" + innerHeight + " raid : " + (Object.keys(pb).length ? JSON.stringify(pb) : "aucun problème");
 }
+
+/* await testChat() : clan de 2 familles, messages, pastille des non-lus, puis controleAffichage sur l'écran principal, le menu, la discussion et Mon clan */
+async function testChat(){
+  var w = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }, pb = {};
+  var verif = function(nom){ var r = controleAffichage(); if(r && r.length) pb[nom] = r; };
+  await serveurFactice(); nouvellePartie(null); demarrer(); G.ph = "game"; G.day = 40; render();
+  var c0 = await appelClans({ action:"creer", nom:"Les Testeurs", blason:3 }); try{ localStorage.setItem("survival_mon_clan", "1"); }catch(e){}
+  await window.__srv({ action:"rejoindre", id:"autreBBBB2", pseudo:"Bob", jour:45, clan:c0.monClan.id });
+  await window.__srv({ action:"chatEnvoyer", id:"autreBBBB2", pseudo:"Bob", jour:45, texte:"Salut ! On prépare le raid de l’immeuble ce soir ? J’ai 15 cartouches et deux trousses." });
+  noterChatVu(0); chatNonLus = compterNonLus(await appelClans({ action:"chat" })); chatNonLus = 12; await w(1100);
+  verif("principalAvecPastille");
+  if(typeof openMenu === "function"){ openMenu(); await w(300); verif("menuAvecPastille"); }
+  openChat(); await w(600); verif("discussion");
+  openClans(); await w(500); verif("monClan");
+  hide(); chatNonLus = 0;
+  return innerWidth + "x" + innerHeight + " chat : " + (Object.keys(pb).length ? JSON.stringify(pb) : "aucun problème");
+}

@@ -47,3 +47,5 @@ function texteInterdit(t){
   });
 }
 var MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";
+// Chat du clan : chaque mot interdit est remplacé par des étoiles (le reste du message passe)
+function masquerInterdits(t){ return String(t || "").replace(/[^\s.,;:!?()"'«»]+/g, function(w){ return texteInterdit(w) ? "★".repeat(Math.max(3, Math.min(8, w.length))) : w; }); }

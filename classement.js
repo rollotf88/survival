@@ -460,6 +460,7 @@ function afficherClans(msg){
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
     var stOp = typeof etatOpGarde === "function" && etatOpGarde() ? statutOp(etatOpGarde()) : null;
+    h += '<button class="op-ligne chat-ligne" data-act="chat">💬 <b>Discussion du clan</b><small>' + (typeof chatNonLus !== "undefined" && chatNonLus ? chatNonLus + " nouveau" + (chatNonLus > 1 ? "x" : "") + " message" + (chatNonLus > 1 ? "s" : "") : "Écrire au clan, organiser le raid et les guerres") + '</small></button>';
     h += '<button class="op-ligne" data-act="opouvrir" data-id="immeuble">🎯 <b>Opération : L’immeuble abandonné</b><small>' + (stOp && stOp.txt ? stOp.txt : "Ouvre-la pour voir où en est le clan") + '</small></button>';
     h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
       + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>'

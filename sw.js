@@ -17,6 +17,7 @@ var FICHIERS = [
   "moderation.js",
   "classement.js",
   "raid.js",
+  "chat.js",
   "succes.js",
   "piece.js",
   "manifest.json",
