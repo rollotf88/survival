@@ -1324,3 +1324,8 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat{background-size:cover;ba
 }
 .journal-morts{margin:4px 0 6px}
 body.pc:not(.scene-petite) .sheet.large .journal-morts{display:none}
+/* Ligne d'un membre du clan : toujours la même mise en page (nom en haut, infos dessous, bouton Exclure à droite), quelle que soit la longueur des textes */
+.clan-membres .clan-m{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:2px;align-items:center}
+.clan-membres .clan-m .cm-nom{grid-column:1;justify-self:start;max-width:100%;min-width:0}
+.clan-membres .clan-m > small{grid-column:1;min-width:0}
+.clan-membres .clan-m > .mini{grid-column:2;grid-row:1 / span 2;align-self:center;width:auto;white-space:nowrap}
