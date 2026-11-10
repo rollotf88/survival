@@ -307,6 +307,63 @@ function panneauCombat(){
   h += histoCombat.tours.length ? histoCombat.tours.slice().reverse().map(function(tr){ return '<div class="pj-tour"><span class="pj-t">Tour ' + tr.t + '</span>' + puces(tr.l) + '</div>'; }).join("") : '<p class="sub">Le combat commence : les zombies arrivent…</p>';
   t.innerHTML = h; t.scrollTop = 0;
 }
+/* ---------- Sang (2026-11-10, idée de Fabien d'après un effet vu sur CodePen ; code écrit pour le jeu) ----------
+   flaqueSous(zc, anime) : une flaque sombre et irrégulière s'étend sous un zombie abattu (dessin sur un canvas posé sous ses pieds).
+   couluresGameOver() : des coulures de sang descendent du haut de l'écran de game over.
+   Le dessin est toujours le même pour un zombie donné (hasard « à graine »), pour qu'il ne change pas à chaque affichage. */
+function graineSang(s){ var h = 2166136261; for(var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return function(){ h = Math.imul(h ^ (h >>> 15), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
+function bougeMoins(){ return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
+function dessinerFlaque(cv, cle, p){
+  var w = cv.width, hgt = cv.height, c = cv.getContext("2d"), r = graineSang(cle);
+  c.clearRect(0, 0, w, hgt);
+  var cx = w / 2, cy = hgt * .55, rx = w * .40 * p, ry = hgt * .38 * p, n = 16, pts = [];
+  for(var k = 0; k < n; k++){ var a = k / n * Math.PI * 2, f = .78 + r() * .38; pts.push([cx + Math.cos(a) * rx * f, cy + Math.sin(a) * ry * f]); }
+  // contour arrondi : courbes passant par le milieu de chaque côté
+  c.beginPath();
+  for(var k = 0; k <= n; k++){ var A = pts[k % n], B = pts[(k + 1) % n], mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2; if(k === 0) c.moveTo(mx, my); else c.quadraticCurveTo(A[0], A[1], mx, my); }
+  c.closePath();
+  var g = c.createRadialGradient(cx, cy - ry * .2, 1, cx, cy, Math.max(rx, 1));
+  g.addColorStop(0, "rgba(120,16,14,.92)"); g.addColorStop(.7, "rgba(84,10,10,.9)"); g.addColorStop(1, "rgba(48,6,6,.85)");
+  c.fillStyle = g; c.fill();
+  // reflet humide
+  c.beginPath(); c.ellipse(cx - rx * .2, cy - ry * .35, rx * .28, ry * .14, -.15, 0, Math.PI * 2); c.fillStyle = "rgba(255,190,170," + (.18 * p) + ")"; c.fill();
+  // gouttelettes autour (elles apparaissent quand la flaque a presque fini de s'étendre)
+  if(p > .6) for(var d = 0; d < 6; d++){ var a2 = r() * Math.PI * 2, dist = 1.02 + r() * .22, rr = (1 + r() * 2.5) * (hgt / 40);
+    c.beginPath(); c.arc(cx + Math.cos(a2) * rx * dist, cy + Math.sin(a2) * ry * dist, rr * Math.min(1, (p - .6) / .4), 0, Math.PI * 2); c.fillStyle = "rgba(80,10,10,.85)"; c.fill(); }
+}
+function sangPermis(){ return typeof CONTENUS_SENSIBLES === "undefined" || CONTENUS_SENSIBLES; } // réglage « Contenus durs » du menu
+function flaqueSous(zc, anime){
+  if(!sangPermis()) return;
+  var zs = zc.querySelector(".zs"); if(!zs || zs.querySelector(".flaque")) return;
+  var cv = document.createElement("canvas"); cv.className = "flaque"; zs.insertBefore(cv, zs.firstChild);
+  var b = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.max(20, Math.round(b.width * dpr)); cv.height = Math.max(8, Math.round(b.height * dpr));
+  var cle = (zc.getAttribute("aria-label") || "z") + (zc.getAttribute("data-id") || "");
+  if(!anime || bougeMoins()){ dessinerFlaque(cv, cle, 1); return; }
+  var t0 = performance.now(), dur = 900;
+  (function pas(){ var p = Math.min(1, (performance.now() - t0) / dur); dessinerFlaque(cv, cle, Math.max(.05, 1 - Math.pow(1 - p, 3))); if(p < 1 && cv.isConnected) setTimeout(pas, 16); })();
+}
+function couluresGameOver(hote){
+  if(!hote || !sangPermis()) return; var cv = document.createElement("canvas"); cv.className = "coulures"; hote.insertBefore(cv, hote.firstChild);
+  var dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.width = Math.round(hote.clientWidth * dpr), H = cv.height = Math.round(hote.clientHeight * dpr), c = cv.getContext("2d");
+  var r = graineSang("gameover" + (G && G.day || 0)), n = Math.max(8, Math.round(W / (90 * dpr))), gouttes = [];
+  for(var k = 0; k < n; k++) gouttes.push({ x:(k + .2 + r() * .6) / n * W, l:(6 + r() * 14) * dpr, fin:H * (.12 + r() * .45), v:.35 + r() * .9, d:r() * 900 });
+  var t0 = performance.now(), dur = 6500;
+  function dessiner(t){
+    var el = t - t0; c.clearRect(0, 0, W, H);
+    // bande irrégulière en haut, d'où partent les coulures
+    c.beginPath(); c.moveTo(0, 0); for(var x = 0; x <= W; x += 24 * dpr) c.lineTo(x, (10 + 8 * Math.sin(x / (37 * dpr)) + 6 * Math.sin(x / (13 * dpr))) * dpr); c.lineTo(W, 0); c.closePath();
+    c.fillStyle = "rgba(96,10,10,.92)"; c.fill();
+    gouttes.forEach(function(g){
+      var p = Math.max(0, Math.min(1, (el - g.d) / (dur / g.v))), y = 14 * dpr + (g.fin - 14 * dpr) * (1 - Math.pow(1 - p, 2)), w = g.l;
+      var gr = c.createLinearGradient(g.x - w / 2, 0, g.x + w / 2, 0); gr.addColorStop(0, "rgba(70,8,8,.95)"); gr.addColorStop(.45, "rgba(128,18,16,.95)"); gr.addColorStop(1, "rgba(60,6,6,.95)");
+      c.fillStyle = gr; c.beginPath(); c.moveTo(g.x - w / 2, 0); c.lineTo(g.x - w * .32, y); c.arc(g.x, y, w * .55, Math.PI, 0, true); c.lineTo(g.x + w / 2, 0); c.closePath(); c.fill();
+      c.beginPath(); c.ellipse(g.x - w * .18, y - w * .1, w * .12, w * .22, 0, 0, Math.PI * 2); c.fillStyle = "rgba(255,200,180,.18)"; c.fill();
+    });
+    if(el < dur * 1.6 && cv.isConnected) setTimeout(function(){ dessiner(performance.now()); }, 20);
+  }
+  if(bougeMoins()) dessiner(t0 + dur * 3); else dessiner(t0);
+}
 var combatVu = null; // le combat déjà affiché (pour ne jouer l'arrivée des zombies qu'une fois)
 function openCombat(){
   astuce("combat");
@@ -389,6 +446,8 @@ function openCombat(){
   if(touche && !matchMedia("(prefers-reduced-motion: reduce)").matches){ var sh = $("sheet"); sh.classList.remove("secoue"); void sh.offsetWidth; sh.classList.add("secoue"); setTimeout(function(){ sh.classList.remove("secoue"); }, 450); }
   dernierPV = { c:C, z:C.zombies.map(function(z){ return z.pv; }), m:G.m.map(function(x){ return x.hp; }) };
   var jn = $("journal"); if(jn) jn.scrollTop = jn.scrollHeight;
+  // Flaque de sang sous chaque zombie abattu (elle s'étend sous celui qui vient de tomber)
+  Array.prototype.forEach.call(document.querySelectorAll("#sheet .zc.sprite.mort"), function(z){ flaqueSous(z, z.classList.contains("coup")); });
   if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")) panneauCombat();
 }
 
@@ -857,6 +916,7 @@ function ecranGameOver(d, nouveau, jour, lv){
     + '<p class="go-score">⭐ ' + G.score + '</p><p class="go-sous">' + (nouveau ? "🏆 Nouveau record !" : "Record : " + RECORD + " points") + ' · 🔨 refuge niveau ' + lv + '</p>'
     + jour + '<button class="btn" style="width:100%" data-act="again">Nouvelle famille</button></div></div>';
   e.style.display = "flex";
+  couluresGameOver(e);
 }
 
 // Texte à coller dans un message pour comparer avec ses amis (en attendant un vrai classement en ligne)

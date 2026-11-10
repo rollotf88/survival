@@ -1309,3 +1309,9 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat{background-size:cover;ba
 #tableauPC .tb-nuit .lj{margin:2px 0}
 #tableauPC .tb-nuit .lj-txt{font-size:12.5px;font-weight:600;line-height:1.35}
 #tableauPC .tb-nuit .b2 .lj-txt,#tableauPC .tb-nuit .lj.b2{color:var(--ink)}
+
+/* Sang : flaque sous un zombie abattu, coulures sur le game over */
+.zc.sprite .zs canvas.flaque{position:absolute;left:calc(50% - 9cqh);bottom:-6%;width:44cqh;height:12cqh;transform:translateX(-50%);z-index:-1;pointer-events:none}
+.zc.sprite .zs{isolation:isolate}
+#gameover canvas.coulures{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#gameover .go-boite{position:relative;z-index:1}
