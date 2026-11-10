@@ -1262,7 +1262,9 @@ document.addEventListener("click", function(e){
   else if(a === "start"){ demarrer(); if(typeof envoyerMonde === "function") envoyerMonde(true); }
   else if(a === "sel" && modeMini()){ openMembre(i); return; }
   else if(a === "msel"){ var xm = G.m[i]; if(peutSortir(xm)){ var pm = G.sel.indexOf(i); if(pm >= 0) G.sel.splice(pm, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); } render(); openMembre(i); return; }
-  else if(a === "sel"){ var x = G.m[i]; if(peutSortir(x)){ var p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); } }
+  else if(a === "sel"){ var x = G.m[i]; if(peutSortir(x)){ var p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); }
+    // Sur PC : la fiche du membre (santé, équipement, soins…) s'ouvre dans le panneau de droite (2026-11-10, demande de Fabien)
+    if(document.body.classList.contains("pc")){ render(); openMembre(i); return; } }
   else if(a === "soins"){ openSoins(i); return; }
   else if(a === "heal"){ soigner(i); hide(); }
   else if(a === "boire"){ boire(i); hide(); }
