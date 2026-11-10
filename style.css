@@ -1322,3 +1322,5 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat{background-size:cover;ba
   #app:has(> .pk){justify-content:center;gap:4px}
   body.maison .pk{margin-top:6px;flex:0 0 auto}
 }
+.journal-morts{margin:4px 0 6px}
+body.pc:not(.scene-petite) .sheet.large .journal-morts{display:none}

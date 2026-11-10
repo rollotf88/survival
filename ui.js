@@ -398,7 +398,9 @@ function openCombat(){
     + '<div class="arene" style="background-image:url(\'' + (G.exp && G.exp.guerre ? "images/piece-bastion-cour.webp" : imageLieu(L) || fondCombat(L)) + '\')"><div class="zrang n' + C.zombies.length + (arrivee ? " arrivee" : "") + '">' + zs + '</div>'
     + (fini ? '<div class="tampon ' + C.fin + '">' + ({ victoire:"Victoire !", fuite:"En fuite !", defaite:"Défaite…" })[C.fin] + '</div>' : '') + '</div>'
     + (!fini && vz && vz.pv ? '<p class="zinfo">🎯 <b>' + vz.nom + '</b> ' + vz.pv + '/' + vz.pvMax + ' PV · ' + tv.desc + '</p>' : '')
-    + (C.journal.length ? '<div class="journal" id="journal">' + puces(C.journal) + '</div>' : '') + '</div><div class="cdroite">';
+    // Les morts s'affichent en dehors de la boîte qui défile (sinon la carte de deuil était coupée en haut sur téléphone)
+    + (C.journal.some(function(l){ return l[0] !== "mort"; }) ? '<div class="journal" id="journal">' + puces(C.journal.filter(function(l){ return l[0] !== "mort"; })) + '</div>' : '')
+    + (C.journal.some(function(l){ return l[0] === "mort"; }) ? '<div class="journal-morts">' + puces(C.journal.filter(function(l){ return l[0] === "mort"; })) + '</div>' : '') + '</div><div class="cdroite">';
   if(!fini){
     var soinOk = soinsDispo() > 0 && equipeCombat().some(function(y){ return y.hp < 100; }), feuOk = peutCocktail();
     h += equipeCombat().map(function(x){
