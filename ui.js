@@ -213,7 +213,7 @@ function openLoc(){
   });
   // Les lieux possibles d'abord, puis ceux impossibles pour l'instant, puis les lieux vidés
   cartes.sort(function(a, b){ return (a.ok ? 0 : a.vide ? 2 : 1) - (b.ok ? 0 : b.vide ? 2 : 1); });
-  h += '<div class="lieux">' + cartes.map(function(c){ return c.html; }).join("") + '</div>';
+  h += '<div class="lieux">' + (typeof carteOperationLieux === "function" ? carteOperationLieux() : "") + cartes.map(function(c){ return c.html; }).join("") + '</div>';
   if(!radio) h += '<p class="sub">⚠️ Sans radio, le danger des lieux est inconnu.</p>';
   show(h + BTN_FERMER("Annuler"));
 }

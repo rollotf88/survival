@@ -1383,3 +1383,18 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .raid-v .zpv{width:56px}
 .rp-journal{min-height:64px;max-height:28vh;overflow:auto}
 .rp-boutons .btn{flex:1 1 0;padding-left:4px;padding-right:4px}
+
+/* ---------- Opérations du clan : cartes de l'onglet, grande carte des lieux, ligne de Mon clan ---------- */
+.ops{display:flex;flex-direction:column;gap:8px}
+.op-carte{display:grid;grid-template-columns:40% 1fr;gap:0;padding:0;border:2px solid var(--bois);border-radius:12px;overflow:hidden;background:var(--card);color:var(--ink);font:inherit;text-align:left;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.op-carte .op-img{width:100%;height:100%;min-height:96px;object-fit:cover;display:block}
+.op-txt{display:flex;flex-direction:column;gap:3px;padding:7px 9px;min-width:0}
+.op-txt b{font-size:15px;line-height:1.15}.op-txt small{font-size:12px;line-height:1.3;opacity:.9}
+.op-st{display:inline-block;align-self:flex-start;margin-top:2px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:800;background:var(--bg);border:1.5px solid var(--line)}
+.op-st.ok{border-color:var(--ok,#4a8a3a);color:var(--ok,#3c7a2e)}.op-st.moy{border-color:#c98a2a;color:#9a6512}
+.carte-lieu.carte-op{grid-column:1/-1;display:grid;grid-template-columns:44% 1fr;border-color:#c98a2a;box-shadow:0 0 0 2px rgba(201,138,42,.35),0 2px 0 var(--line)}
+.carte-lieu.carte-op .cl-img{height:100%;min-height:104px}
+.carte-lieu.carte-op .cl-img img{width:100%;height:100%;object-fit:cover}
+.lien-retour{background:none;border:0;padding:2px 0 6px;font:inherit;font-weight:800;color:var(--accent,#9a6512);cursor:pointer}
+.op-ligne{display:flex;flex-direction:column;width:100%;text-align:left;margin:0 0 8px;padding:7px 10px;border-radius:10px;border:2px solid #c98a2a;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.op-ligne small{opacity:.85;font-size:12px}

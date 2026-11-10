@@ -21,3 +21,6 @@ Même style : un étage transformé en poste militaire abandonné, sacs de sable
 
 ## 6. Le toit (étage 5)
 Même style : le toit de l'immeuble au coucher du soleil, ville en ruine à l'horizon, réservoir d'eau, antennes tordues, un hélicoptère écrasé dans un coin, caisses de ravitaillement, fumée au loin. Le tiers inférieur de l'image est un sol dégagé (gravier du toit). Format 16:9, aucun texte, aucun personnage.
+
+## 7. Le panneau des opérations (petit élément posé dans la grande salle du bastion)
+Même style cartoon peint, un panneau d'affichage en liège dans un cadre en bois, vu de face, sur FOND VERT UNI (#00FF00) pour être détouré : des avis punaisés (une photo de l'immeuble abandonné, un plan griffonné, une liste de noms rayés, des punaises rouges reliées par une ficelle). Aucun texte lisible (gribouillis seulement). Format carré, le panneau occupe 80 % de l'image, aucune ombre sur le fond vert.

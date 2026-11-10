@@ -459,6 +459,8 @@ function afficherClans(msg){
       return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><button class="cm-nom" data-act="profilmembre" data-id="' + c.membresListe.indexOf(m) + '" title="Voir son profil">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + ' <span class="cm-voir">›</span></button><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
         + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
     }).join("") + '</div>';
+    var stOp = typeof etatOpGarde === "function" && etatOpGarde() ? statutOp(etatOpGarde()) : null;
+    h += '<button class="op-ligne" data-act="opouvrir" data-id="immeuble">🎯 <b>Opération : L’immeuble abandonné</b><small>' + (stOp && stOp.txt ? stOp.txt : "Ouvre-la pour voir où en est le clan") + '</small></button>';
     h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
       + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>'
       + '<div class="row"><button class="btn alt" data-act="clanquitter">Quitter le clan</button><button class="btn" data-act="close">Fermer</button></div>';
@@ -536,8 +538,9 @@ function openBastion(onglet){
     .catch(function(){ show('<h2>' + ic("bastion", "🏰") + ' Le bastion</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "le bastion") + '</p>' + BTN_FERMER()); });
 }
 function afficherBastion(){
+  if(etatBastion && etatBastion.raid && typeof noterEtatOp === "function") noterEtatOp(etatBastion.raid);
   var B = etatBastion, h = '<h2>' + ic("bastion", "🏰") + ' Le bastion</h2><div class="tabs onglets">'
-    + [["reserve", ic("reserveClan", "📦"), "Réserve"], ["defenses", ic("bouclier", "🛡️"), "Défenses"], ["camion", ic("camionClan", "🚚"), "Camion"], ["immeuble", ic("bastion", "🏢"), "Immeuble"], ["journal", ic("journalClan", "📜"), "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
+    + [["reserve", ic("reserveClan", "📦"), "Réserve"], ["defenses", ic("bouclier", "🛡️"), "Défenses"], ["camion", ic("camionClan", "🚚"), "Camion"], ["operations", ic("cible", "🎯"), "Opérations"], ["journal", ic("journalClan", "📜"), "Journal"]].map(function(o){ return '<button class="tab' + (o[0] === ongletBastion ? " on" : "") + '" data-act="bastonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(msgBastion){ h += '<p class="msg ' + (msgBastion.charAt(0) === "❌" ? "" : "g2") + '">' + msgBastion + '</p>'; msgBastion = ""; }
   var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
   if(ongletBastion === "reserve"){
@@ -548,8 +551,8 @@ function afficherBastion(){
     if(enJeu && B.retraitsRestants && ids.length) h += '<p class="sub">Touche un objet de la réserve pour en prendre 1.</p>';
     var mes = B.deposables.filter(function(k){ return OBJETS[k] && compter(k) > 0; });
     h += '<p class="titre-butin">🎒 Déposer depuis ton stock</p>' + (!enJeu ? '<p class="sub">Pendant une partie.</p>' : mes.length ? etageres(mes.map(function(k){ return caseObjet(k, { act:"bastdeposer", cle:k, n:compter(k), badge:compter(k) === 1 ? 1 : null }); }), 5) + '<p class="sub">Touche un objet de ton stock pour en déposer 1.</p>' : '<p class="sub">Rien à déposer (vivres, soins, munitions, matériaux).</p>');
-  } else if(ongletBastion === "immeuble"){
-    h += typeof contenuRaid === "function" ? contenuRaid(B) : "";
+  } else if(ongletBastion === "operations"){
+    h += typeof contenuOperations === "function" ? contenuOperations(B) : "";
   } else if(ongletBastion === "defenses" || ongletBastion === "camion"){
     var LISTE = ongletBastion === "camion" ? CAMION_BASTION : DEF_BASTION;
     if(ongletBastion === "camion"){

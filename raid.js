@@ -42,7 +42,52 @@ function evalEquipeRaid(vols){
   return { cls:"ko", txt:"Équipe suicidaire", detail:"Pas assez d’armes, de munitions ou de soins : l’équipe risque de tomber dès les premiers étages." };
 }
 
-/* ---------- Onglet « Immeuble » du bastion ---------- */
+
+/* ---------- Les opérations du clan (2026-11-10, demande de Fabien) ----------
+   Le raid de l'immeuble est la première « opération » ; d'autres viendront (une carte de plus dans OPERATIONS, pas un nouveau menu).
+   On y accède par l'onglet « Opérations » du bastion, la table de la grande salle (qui brille quand il faut agir),
+   la grande carte en haut de « Où envoyer l'équipe ? », la ligne de « Mon clan » et les bandeaux au lancement. */
+var OPERATIONS = [
+  { id:"immeuble", nom:"L’immeuble abandonné", img:function(){ return BAL.immeuble.exterieur; }, secours:function(){ return BAL.immeuble.exterieurSecours; },
+    court:"Chaque famille envoie un volontaire. Dès 4, le chef mène l’assaut, étage par étage. Le butin est partagé.",
+    etat:function(B){ return B.raid; } }
+];
+var opOuverte = null;
+function ouvrirOperation(id){ opOuverte = id || null; ongletBastion = "operations"; openBastion("operations"); }
+// Où en est l'opération (texte court) et faut-il faire quelque chose ?
+function statutOp(R){
+  if(!R) return { txt:"", cls:"" };
+  if(R.fait) return R.maPart ? { txt:"🎁 Pillé : ta part t’attend !", cls:"ok", agir:true } : { txt:"✅ Pillé · revoir le replay", cls:"" };
+  if(R.lance) return { txt:"⏳ Raid en cours (" + (R.lance.pseudo || "?") + ")", cls:"moy" };
+  if(R.nb >= R.min) return R.peutLancer ? { txt:"✅ Équipe prête : lance le raid !", cls:"ok", agir:true } : { txt:"✅ Équipe prête : le chef peut lancer", cls:"ok" };
+  var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; });
+  return { txt:"👥 " + R.nb + " / " + R.min + " volontaires" + (moi ? " · le tien est inscrit" : " · il en manque " + (R.min - R.nb)), cls:moi ? "" : "moy", agir:!moi };
+}
+// État gardé dans le navigateur (pour la lueur de la table et la carte des lieux, sans appeler le serveur)
+function noterEtatOp(R){
+  if(!R) return;
+  var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; });
+  try{ localStorage.setItem("survival_op_etat", JSON.stringify({ fait:R.fait, nb:R.nb, min:R.min, max:R.max, lance:R.lance ? { pseudo:R.lance.pseudo } : null, peutLancer:R.peutLancer, maPart:!!R.maPart, participe:moi, chef:R.chef, t:Date.now() })); }catch(e){}
+}
+function etatOpGarde(){ try{ return JSON.parse(localStorage.getItem("survival_op_etat")); }catch(e){ return null; } }
+function opAttention(){ var R = etatOpGarde(); return !!(R && typeof dansUnClan === "function" && dansUnClan() && statutOp(R).agir); }
+function contenuOperations(B){
+  if(B.raid) noterEtatOp(B.raid);
+  if(opOuverte === "immeuble") return '<button class="lien-retour" data-act="opliste">← Toutes les opérations</button>' + contenuRaid(B);
+  return '<p class="sub">Les opérations se préparent à plusieurs : chaque famille y envoie un volontaire, puis une seule équipe part pour tout le clan. De nouvelles opérations arriveront.</p>'
+    + '<div class="ops">' + OPERATIONS.map(function(O){ var st = statutOp(O.etat(B));
+      return '<button class="op-carte" data-act="opouvrir" data-id="' + O.id + '">' + imgAvecSecours(O.img(), O.secours(), "op-img") + '<span class="op-txt"><b>' + O.nom + '</b><small>' + O.court + '</small>'
+        + (st.txt ? '<span class="op-st ' + st.cls + '">' + st.txt + '</span>' : '') + '</span></button>'; }).join("") + '</div>';
+}
+// Grande carte (sur deux cases) en haut de « Où envoyer l'équipe ? »
+function carteOperationLieux(){
+  if(typeof dansUnClan !== "function" || !dansUnClan()) return "";
+  var O = OPERATIONS[0], R = etatOpGarde(), st = R ? statutOp(R) : { txt:"Ouvre-la pour voir où en est ton clan.", cls:"" };
+  return '<button class="carte-lieu carte-op" data-act="opouvrir" data-id="' + O.id + '"><span class="cl-img">' + imgAvecSecours(O.img(), O.secours()) + '<span class="cl-reste">🎯 Opération de clan</span></span>'
+    + '<span class="op-txt"><b>' + O.nom + '</b><small>' + O.court + '</small><span class="op-st ' + st.cls + '">' + st.txt + '</span></span></button>';
+}
+
+/* ---------- Fenêtre de l'opération « L'immeuble abandonné » ---------- */
 function contenuRaid(B){
   var R = B.raid || { volontaires:[] }, enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule, I = BAL.immeuble, h = "";
   h += '<div class="raid-tete">' + imgAvecSecours(I.exterieur, I.exterieurSecours, "raid-img") + '<div class="raid-titre"><b>' + ic("bastion", "🏢") + ' L’immeuble abandonné</b><small>' + I.etages.length + ' étages · une seule fois par clan</small></div></div>';
@@ -136,14 +181,14 @@ function envoyerVolontaire(){
   ["arme", "outil", "sac"].forEach(function(s){ var o = x.eq[s]; if(o) eq[s] = { id:o.id, sol:o.sol, uid:o.uid }; });
   var membre = { nom:x.nom, r:roleDe(x), icone:x.icone, trait:x.trait, hp:x.hp, en:x.en, faim:x.faim, soif:x.soif, folie:x.folie || 0, idx:raidPrep.idx, eq:eq };
   appelClans({ action:"raidPret", membre:membre, kit:kit }).then(function(d){
-    if(d.erreur){ msgRaid = "❌ " + d.erreur; raidPrep = null; ongletBastion = "immeuble"; afficherBastion(); return; }
+    if(d.erreur){ msgRaid = "❌ " + d.erreur; raidPrep = null; ongletBastion = "operations"; opOuverte = "immeuble"; afficherBastion(); return; }
     // Le kit quitte le stock, le volontaire est réservé pour le raid
     for(var k in kit.n) retirer(k, kit.n[k]);
     kit.o.forEach(function(o){ retirerInstance(o.uid); });
     x.raid = true; x.raidEq = {}; for(var s in eq) x.raidEq[s] = eq[s].uid;
     G.sel = (G.sel || []).filter(function(j){ return j !== raidPrep.idx; });
     etatBastion = d.bastion; msgRaid = "🏢 " + x.nom + " est parti" + (estFeminin(x) ? "e" : "") + " au bastion pour le raid de l’immeuble.";
-    raidPrep = null; ongletBastion = "immeuble"; render(); if(typeof sauver === "function") sauver(); afficherBastion();
+    raidPrep = null; ongletBastion = "operations"; opOuverte = "immeuble"; render(); if(typeof sauver === "function") sauver(); afficherBastion();
   }).catch(function(){ msgRaid = "❌ " + MSG_HORS_LIGNE; raidPrep = null; afficherBastion(); });
 }
 function retirerVolontaire(){
@@ -310,9 +355,9 @@ function raidEnAttente(){ try{ return JSON.parse(localStorage.getItem("survival_
 /* ---------- Ma part : nouvelles de mon volontaire, mon kit, mon butin ---------- */
 function recupererPart(){
   appelClans({ action:"raidRecuperer" }).then(function(d){
-    if(d.erreur){ msgRaid = "❌ " + d.erreur; ongletBastion = "immeuble"; openBastion("immeuble"); return; }
+    if(d.erreur){ msgRaid = "❌ " + d.erreur; ongletBastion = "operations"; opOuverte = "immeuble"; ouvrirOperation("immeuble"); return; }
     appliquerPart(d.part, d.res);
-  }).catch(function(){ msgRaid = "❌ " + MSG_HORS_LIGNE; openBastion("immeuble"); });
+  }).catch(function(){ msgRaid = "❌ " + MSG_HORS_LIGNE; ouvrirOperation("immeuble"); });
 }
 function appliquerPart(p, res){
   var x = G.m[p.idx] && G.m[p.idx].raid ? G.m[p.idx] : membreRaid(), M = p.membre || {}, lignes = [];
@@ -410,12 +455,14 @@ document.addEventListener("click", function(e){
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
-  if(a === "raidpret"){ raidPrep = null; openRaidPret(); }
+  if(a === "opouvrir") ouvrirOperation(id);
+  else if(a === "opliste"){ opOuverte = null; afficherBastion(); }
+  else if(a === "raidpret"){ raidPrep = null; openRaidPret(); }
   else if(a === "raidchoix") choisirVolontaire(+id);
   else if(a === "raidplus"){ raidPrep.n[id] = Math.min(40, compter(id), (raidPrep.n[id] || 0) + 1); openRaidPret(); }
   else if(a === "raidmoins"){ raidPrep.n[id] = Math.max(0, (raidPrep.n[id] || 0) - 1); openRaidPret(); }
   else if(a === "raidgear"){ raidPrep.o[id] = !raidPrep.o[id]; openRaidPret(); }
-  else if(a === "raidretour"){ if(raidPrep){ raidPrep = null; openRaidPret(); } else { ongletBastion = "immeuble"; afficherBastion(); } }
+  else if(a === "raidretour"){ if(raidPrep){ raidPrep = null; openRaidPret(); } else { ongletBastion = "operations"; opOuverte = "immeuble"; afficherBastion(); } }
   else if(a === "raidenvoyer") envoyerVolontaire();
   else if(a === "raidretrait") retirerVolontaire();
   else if(a === "raidlancer") lancerRaid();
@@ -435,10 +482,17 @@ document.addEventListener("click", function(e){
   if(typeof location === "undefined" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
   setTimeout(function(){
     if(typeof dansUnClan === "function" && !dansUnClan()) return;
-    if(raidEnAttente()){ if(typeof fileSucces !== "undefined"){ fileSucces.push({ icone:"🏢", titre:"Raid à envoyer", nom:"Le résultat du raid attend : ouvre l’onglet Immeuble du bastion." }); montrerSucces(); } return; }
+    if(raidEnAttente()){ if(typeof fileSucces !== "undefined"){ fileSucces.push({ icone:"🏢", titre:"Raid à envoyer", nom:"Le résultat du raid attend : ouvre les Opérations du bastion." }); montrerSucces(); } return; }
     appelClans({ action:"bastion" }).then(function(d){
-      var R = d && d.bastion && d.bastion.raid; if(!R || !R.maPart || typeof fileSucces === "undefined") return;
-      fileSucces.push({ icone:"🏢", titre:"Le raid de l’immeuble a eu lieu !", nom:"Va au bastion (onglet Immeuble) : replay, nouvelles de ton volontaire et ta part du butin." }); montrerSucces();
+      var R = d && d.bastion && d.bastion.raid; if(!R || typeof fileSucces === "undefined") return;
+      noterEtatOp(R);
+      var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; }), b = null;
+      if(R.maPart) b = { k:"part", icone:"🏢", titre:"Le raid de l’immeuble a eu lieu !", nom:"Va au bastion (Opérations) : replay, nouvelles de ton volontaire et ta part du butin." };
+      else if(!R.fait && !R.lance && R.peutLancer && R.chef) b = { k:"pret", icone:"🎯", titre:"L’équipe est prête !", nom:R.nb + " volontaires attendent au bastion : à toi de lancer le raid de l’immeuble." };
+      else if(!R.fait && !R.lance && !moi && R.nb > 0 && R.nb < R.max) b = { k:"besoin", icone:"🎯", titre:"Ton clan prépare une opération", nom:R.nb >= R.min ? "Le raid de l’immeuble peut partir : il reste une place pour ton volontaire." : "Raid de l’immeuble : il manque " + (R.min - R.nb) + " volontaire" + (R.min - R.nb > 1 ? "s" : "") + ". Envoie le tien depuis le bastion !" };
+      if(!b) return;
+      var cle = new Date().toISOString().slice(0, 10) + b.k; try{ if(localStorage.getItem("survival_op_bandeau") === cle) return; localStorage.setItem("survival_op_bandeau", cle); }catch(e){}
+      fileSucces.push(b); montrerSucces();
     }).catch(function(){});
   }, 8000);
 })();

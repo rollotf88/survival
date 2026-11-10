@@ -24,7 +24,10 @@ async function testRaid(){
     var kit = { n:{ trousse:2, bandage:2 }, o:[{ id:"gilet", sol:4, uid:7 }, { id:"casque", sol:4, uid:8 }, { id:"bouclier", sol:4, uid:9 }] }; kit.n[mun[armes[i]]] = 15;
     await window.__srv({ action:"raidPret", id:ids[i], pseudo:ps[i], jour:45, membre:{ nom:["Karim", "Lina", "Tom"][i], r:["Papa", "Maman", "Léo"][i], hp:95, en:90, trait:"costaud", idx:1, eq:{ arme:{ id:armes[i], sol:15, uid:5 } } }, kit:kit });
   }
-  openBastion("immeuble"); await w(400); verif("onglet");
+  ouvrirOperation(null); await w(400); verif("listeOperations"); window.__liste = document.getElementById("sheet").innerText;
+  try{ localStorage.setItem("survival_mon_clan", "1"); }catch(e){}
+  G.sel = [1]; openLoc(); await w(300); verif("lieuxAvecOperation"); window.__carteLieu = (document.querySelector("#sheet .carte-op") || {}).innerText;
+  ouvrirOperation("immeuble"); await w(400); verif("onglet");
   clic("raidpret"); await w(200); verif("choixVolontaire");
   clic("raidchoix", 0); await w(200); verif("kit");
   clic("raidenvoyer"); await w(500); verif("ongletPret");
