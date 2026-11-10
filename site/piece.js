@@ -474,7 +474,8 @@ document.addEventListener("pointerup", function(e){ if(e.pointerType === "mouse"
 
 /* ---------- Objets de confort posés dans les pièces : ce qu'ils apportent ---------- */
 var TEXTES_OBJETS_PIECE = {
-  peluche: "La peluche d’Emma. Elle la serre fort chaque soir : tout le monde dort un peu mieux en la voyant.",
+  peluche: ["La peluche d’Emma. Elle la serre fort chaque soir : tout le monde dort un peu mieux en la voyant.",
+            "La peluche d’Emma. On l’a gardée près du lit, en souvenir d’elle : elle donne du courage à tout le monde."],
   photo: "La photo de famille d’avant. Elle rappelle pour qui on se bat.",
   cartes: "Un vieux jeu de cartes. Une partie le soir, et on oublie un moment les grattements dehors.",
   radio: "La radio grésille. Elle capte parfois des messages : on sait mieux où sont les dangers."

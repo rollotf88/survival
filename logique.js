@@ -312,10 +312,15 @@ function phraseMort(nom, cause, r){
   if(/^tué/.test(cause)) return nom + " a été " + accorder(r, cause) + ".";
   return nom + " est " + accorder(r, "mort") + " : " + cause + ".";
 }
-// Remplace Papa, Maman, Léo, Emma dans les récits par les prénoms choisis
-function perso(t){
+// Remplace Papa, Maman, Léo, Emma dans les récits par les prénoms choisis.
+// t peut être une liste de versions : on prend la première qui ne nomme que des membres en vie (sinon la dernière, sans nom).
+// passe = true : récit d'un chapitre déjà vécu, on garde la version d'origine (c'était vrai à ce moment-là).
+function nommeVivants(t){ return (String(t).match(/Papa|Maman|Léo|Emma/g) || []).every(function(r){ var x = parRole(r); return x && x.al; }); }
+function perso(t, passe){
+  if(Array.isArray(t)) t = (!G || !G.m || passe) ? t[0] : (t.filter(nommeVivants)[0] || t[t.length - 1]);
   if(!G || !G.m) return t;
-  return String(t).replace(/Papa|Maman|Léo|Emma/g, function(r){ var x = parRole(r); return x ? x.nom : r; });
+  // « d’Emma » devient « de Lina » si le prénom choisi commence par une consonne
+  return String(t).replace(/(\b[dD](?:’|'|e ))?(Papa|Maman|Léo|Emma)/g, function(m, d, r){ var x = parRole(r), nom = x ? x.nom : r; if(!d) return nom; var v = de(nom); return d.charAt(0) === "D" ? v.charAt(0).toUpperCase() + v.slice(1) : v; });
 }
 function blesser(x, d, n, cause){
   if(!x || !x.al) return;
@@ -1010,8 +1015,8 @@ function chapitreCourant(){
   if(!G.cibleTenir) G.cibleTenir = Math.ceil((G.day + 1) / TENIR_TOUS_LES) * TENIR_TOUS_LES;
   return { titre:"Tenir bon", objectif:"Survivre jusqu’au jour " + G.cibleTenir,
            test:function(){ return G.day >= G.cibleTenir; }, progres:function(){ return [G.day, G.cibleTenir, "jours"]; }, recompense:{}, moral:10, // pas d'objets : ils reviendraient sans fin
-           texte:"Encore debout. Chaque jour arraché compte. La famille reprend courage.",
-           recit:RECITS_TENIR[(Math.round(G.cibleTenir / TENIR_TOUS_LES) - 1) % RECITS_TENIR.length] };
+           texte:vivants().length > 1 ? "Encore debout. Chaque jour arraché compte. La famille reprend courage." : "Encore debout. Chaque jour arraché compte, même sans les autres.",
+           recit:(function(L){ return L[(Math.round(G.cibleTenir / TENIR_TOUS_LES) - 1) % L.length]; })(vivants().length > 1 ? RECITS_TENIR : RECITS_SEUL) };
 }
 // Vérifie l'objectif ; si atteint, donne la récompense et ajoute une annonce
 function verifierChapitre(){

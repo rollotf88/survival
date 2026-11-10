@@ -654,22 +654,38 @@ var VALEURS = {
 // Récits de « Tenir bon » (un nouveau tous les 10 jours, puis ils reviennent)
 var RECITS_TENIR = [
   "Les réserves du quartier sont presque épuisées. Chaque jour gagné est une victoire : la famille s’organise et se relaie pour les gardes.",
-  "Le monde d’avant semble loin. Le soir, Léo raconte des histoires de super-héros à Emma, et pendant un moment, on oublie les grattements dehors.",
-  "Les zombies sont plus nombreux, plus affamés. Papa compte les planches, Maman compte les rations. Personne ne parle de partir.",
+  // Un récit peut avoir plusieurs versions : le jeu prend la première qui ne parle que de membres en vie (perso, logique.js)
+  ["Le monde d’avant semble loin. Le soir, Léo raconte des histoires de super-héros à Emma, et pendant un moment, on oublie les grattements dehors.",
+   "Le monde d’avant semble loin. Le soir, Léo raconte des histoires de super-héros, et pendant un moment, on oublie les grattements dehors.",
+   "Le monde d’avant semble loin. Le soir, Emma invente des histoires de princesses guerrières, et pendant un moment, on oublie les grattements dehors.",
+   "Le monde d’avant semble loin. Le soir, on se raconte des souvenirs d’avant, et pendant un moment, on oublie les grattements dehors."],
+  ["Les zombies sont plus nombreux, plus affamés. Papa compte les planches, Maman compte les rations. Personne ne parle de partir.",
+   "Les zombies sont plus nombreux, plus affamés. Papa compte les planches et les rations, deux fois par jour. Personne ne parle de partir.",
+   "Les zombies sont plus nombreux, plus affamés. Maman compte les planches et les rations, deux fois par jour. Personne ne parle de partir.",
+   "Les zombies sont plus nombreux, plus affamés. On compte les planches, on compte les rations. Personne ne parle de partir."],
   "Une fumée au loin, peut-être d’autres survivants. Peut-être pas. Ici, au moins, c’est chez vous.",
   "L’hiver approche, ou peut-être pas : on ne compte plus les saisons, seulement les jours. Et vous êtes encore là."
 ];
+// « Tenir bon » quand il ne reste qu'un survivant
+var RECITS_SEUL = [
+  "Le refuge est trop grand maintenant. Chaque bruit fait sursauter. Mais tant qu’il reste quelqu’un pour garder la porte, la maison tient.",
+  "Les lits vides, les tasses en trop sur l’étagère. On continue pour eux, un jour après l’autre."
+];
 var CHAPITRES = [
   { titre:"Premiers pas", objectif:"Fouiller 3 lieux différents",
-    recit:"Il y a trois jours, la radio s’est tue. Puis les sirènes. Dans la rue, les voisins ne sont plus vraiment des voisins. Papa a calé la porte avec la commode : il va falloir sortir chercher de quoi tenir.",
+    recit:["Il y a trois jours, la radio s’est tue. Puis les sirènes. Dans la rue, les voisins ne sont plus vraiment des voisins. Papa a calé la porte avec la commode : il va falloir sortir chercher de quoi tenir.",
+           "Il y a trois jours, la radio s’est tue. Puis les sirènes. Dans la rue, les voisins ne sont plus vraiment des voisins. La porte est calée avec la commode : il va falloir sortir chercher de quoi tenir."],
     test:function(){ return Object.keys(G.stats.lieux).length >= 3; }, progres:function(){ return [Object.keys(G.stats.lieux).length, 3, "lieux fouillés"]; },
     recompense:{ canette:1 }, moral:5, texte:"Le quartier n’a plus de secrets pour vous. Un voisin vous laisse une canette." },
   { titre:"Le refuge", objectif:"Construire la barricade (niveau 1)",
     recit:"Les premières sorties ont appris une chose à la famille : la nuit, ils viennent gratter aux fenêtres. Le salon doit devenir un vrai refuge.",
     test:function(){ return G.ref.barr >= 1; }, progres:function(){ return [Math.min(1, G.ref.barr), 1, "niveau de barricade"]; },
-    recompense:{ piege:1 }, moral:5, texte:"La porte tient. Léo bricole un piège avec les restes." },
+    recompense:{ piege:1 }, moral:5, texte:["La porte tient. Léo bricole un piège avec les restes.", "La porte tient. Avec les restes, on bricole un piège."] },
   { titre:"Bricoleurs", objectif:"Fabriquer 2 objets à l’atelier",
-    recit:"La porte tient. Mais les armes s’usent et les bandages manquent. Maman ressort la boîte à couture, Léo démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.",
+    recit:["La porte tient. Mais les armes s’usent et les bandages manquent. Maman ressort la boîte à couture, Léo démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.",
+           "La porte tient. Mais les armes s’usent et les bandages manquent. Maman ressort la boîte à couture et démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.",
+           "La porte tient. Mais les armes s’usent et les bandages manquent. Léo démonte tout ce qui traîne et ressort la vieille boîte à couture : il est temps d’apprendre à fabriquer.",
+           "La porte tient. Mais les armes s’usent et les bandages manquent. On ressort la boîte à couture, on démonte tout ce qui traîne : il est temps d’apprendre à fabriquer."],
     test:function(){ return G.stats.fabriques >= 2; }, progres:function(){ return [Math.min(2, G.stats.fabriques), 2, "objets fabriqués"]; },
     recompense:{ ferraille:2, ruban:2 }, moral:5, texte:"La famille prend le coup de main. Des matériaux en plus pour la suite." },
   { titre:"Sur la route", objectif:"Réparer la voiture",
@@ -677,7 +693,8 @@ var CHAPITRES = [
     test:function(){ return voitureReparee(); }, progres:function(){ return [VOITURE.pieces.filter(function(p){ return G.voiture.installees[p]; }).length, VOITURE.pieces.length, "pièces installées"]; },
     recompense:{ jerrican:1 }, moral:10, texte:"Le moteur ronronne. Un jerrican oublié dans le coffre !" },
   { titre:"Au-delà du quartier", objectif:"Revenir vivant d’une zone éloignée",
-    recit:"Le moteur tousse, puis ronronne. Emma colle son nez à la vitre : au-delà du quartier, il reste peut-être des réserves… et d’autres survivants.",
+    recit:["Le moteur tousse, puis ronronne. Emma colle son nez à la vitre : au-delà du quartier, il reste peut-être des réserves… et d’autres survivants.",
+           "Le moteur tousse, puis ronronne. Les visages se collent aux vitres : au-delà du quartier, il reste peut-être des réserves… et d’autres survivants."],
     test:function(){ return G.stats.eloignes >= 1; }, progres:function(){ return [Math.min(1, G.stats.eloignes), 1, "retour de zone éloignée"]; },
     recompense:{ boiteBalles:1, trousse:1 }, moral:10, texte:"Le monde est plus grand que la rue. Et plus dangereux." }
 ];

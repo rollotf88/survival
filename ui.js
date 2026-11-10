@@ -552,7 +552,7 @@ function openChapitre(){
   h += '<p class="sub">🎁 Récompense : ' + (rec.length ? rec.join(", ") : "aucune") + '</p>';
   // L'histoire jusqu'ici : les récits des chapitres passés, puis celui en cours
   var passes = CHAPITRES.slice(0, Math.min(G.chap, CHAPITRES.length));
-  h += '<div class="gsec histoire"><b>📜 L’histoire jusqu’ici</b>' + passes.map(function(ch){ return '<p class="fait">' + perso(ch.recit) + '</p>'; }).join("")
+  h += '<div class="gsec histoire"><b>📜 L’histoire jusqu’ici</b>' + passes.map(function(ch){ return '<p class="fait">' + perso(ch.recit, true) + '</p>'; }).join("")
     + '<p class="encours">' + perso(c.recit) + '</p></div>';
   show(h + BTN_FERMER());
 }
