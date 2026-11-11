@@ -39,14 +39,14 @@ var DECOR_PIECE = [
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
 var PIECES = [
   // Salon et chambre : la cheminée montre le feu allumé ou éteint (G.feu)
-  { id:"salon", nom:"Salon", img:function(){ return G.feu ? "images/refuge-fond-propre.webp" : "images/refuge-fond-eteint-propre.webp"; }, l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
+  { id:"salon", nom:"Salon", img:"images/refuge-fond-eteint-propre.webp", l:1024, h:1050, cadre:CADRE_PIECE, zones:ZONES_PIECE, decor:DECOR_PIECE },
   // La cuisine (2026-11-09) : la cuisinière montre le feu le jour où on a cuisiné
-  { id:"cuisine", nom:"Cuisine", img:function(){ return G.cuisineJour === G.day ? "images/piece-cuisine-feu.webp" : "images/piece-cuisine.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:740 }, decor:[], zones:[
+  { id:"cuisine", nom:"Cuisine", img:"images/piece-cuisine.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:740 }, decor:[], zones:[
     ["pCuisiner",   20, 420, 290, 740, function(){ return "🍲"; }, "Cuisiner", .55],
     ["pRecettes",  290, 465, 745, 680, function(){ return "🔪"; }, "Recettes", .5],
     ["pGardeManger", 715, 225, 1022, 660, function(){ return ic("conserve", "🥫"); }, "Garde-manger", .3]
   ]},
-  { id:"chambre", nom:"Chambre", img:function(){ return G.feu ? "images/piece-chambre-feu-propre.webp" : "images/piece-chambre-propre.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
+  { id:"chambre", nom:"Chambre", img:"images/piece-chambre-propre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
     decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0; }] ], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
@@ -624,5 +624,24 @@ function niveauBarr(){ return Math.min(3, (G && G.ref && G.ref.barr) || 0); }
     Array.prototype.unshift.apply(liste, plus); // sous les autres décors (trophée, objets de confort)
     var f = FENETRES[id];
     (id === "salon" ? ZONES_PIECE : P.zones).unshift(["pFenetre", f[0], f[1], f[2], f[3], function(){ return ic("ref_barr", "🧱"); }, "Barricade", .5]);
+  });
+})();
+
+/* ---------- Le feu en morceau collé (2026-11-11) ----------
+   Chaque pièce n'a plus qu'une image de base (feu éteint) ; quand le feu brûle (G.feu, ou la cuisinière le jour où
+   l'on a cuisiné), on pose par-dessus la cheminée allumée et sa lueur, découpées dans l'ancienne image « allumée ».
+   Prépare les personnages dans les pièces : chaque variante est un petit morceau, elles se combinent toutes seules. */
+var FEUX_PIECE = {
+  salon:   { img:"images/feux/salon.webp",   z:[192, 312, 312, 540], si:function(){ return !!G.feu; } },
+  chambre: { img:"images/feux/chambre.webp", z:[182, 318, 430, 712], si:function(){ return !!G.feu; } },
+  cuisine: { img:"images/feux/cuisine.webp", z:[108, 276, 440, 836], si:function(){ return G.cuisineJour === G.day; } }
+};
+(function(){
+  Object.keys(FEUX_PIECE).forEach(function(id){
+    var P = PIECES.find(function(p){ return p.id === id; }); if(!P) return;
+    var F = FEUX_PIECE[id], liste = id === "salon" ? DECOR_PIECE : (P.decor = P.decor || []);
+    // juste après les fenêtres (le feu de la chambre déborde un peu sur le coin de la fenêtre), sous les autres décors
+    var apres = 0; liste.forEach(function(d, k){ if(typeof d[0] === "string" && d[0].indexOf("images/barricades/") === 0) apres = k + 1; });
+    liste.splice(apres, 0, [F.img, F.z[0], F.z[1], F.z[2], F.z[3], F.si]);
   });
 })();
