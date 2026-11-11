@@ -172,6 +172,7 @@ function sceneLieu(){
 var PIECE_BOUTON = { dormir:"chambre", stock:"reserve", refuge:"atelier", fouille:"garage" };
 function allerPieceId(id){ var k = PIECES.findIndex(function(p){ return p.id === id; }); if(k >= 0 && k !== pieceIdx && pieceVisible(k)){ pieceIdx = k; dernierJourEtiquettes = null; placerPiece(); } }
 function placerPiece(){
+  if(PIECES[pieceIdx] && PIECES[pieceIdx].id === "bastionSalle" && typeof marquerOpVue === "function") marquerOpVue(); /* être dans la grande salle = l'opération est vue */
   setTimeout(placerMeteo, 0);
   var cont = $("piece");
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
@@ -581,7 +582,7 @@ function openTrophees(){
 function imagePiece(P){ return typeof P.img === "function" ? P.img() : P.img; }
 function pastillePiece(P){
   if(P.id === "chambre" && G.m && !G.m.some(peutSortir)) return "Dormir";
-  if(P.id === "bastionSalle" && typeof opAttention === "function" && opAttention()) return "Opération";
+  if(P.id === "bastionSalle" && typeof opNouveau === "function" && opNouveau()) return "Opération";
   return "";
 }
 function alertePieces(){ return PIECES.some(function(P, k){ return k !== pieceIdx && pieceVisible(k) && pastillePiece(P); }); }

@@ -71,8 +71,12 @@ function noterEtatOp(R){
 }
 function etatOpGarde(){ try{ return JSON.parse(localStorage.getItem("survival_op_etat")); }catch(e){ return null; } }
 function opAttention(){ var R = etatOpGarde(); return !!(R && typeof dansUnClan === "function" && dansUnClan() && statutOp(R).agir); }
+// Point rouge du bouton « Pièces » (2026-11-11, retour de Fabien : il restait allumé sans rien de nouveau) : seulement si l'état de
+// l'opération a changé depuis la dernière visite de la grande salle ou des opérations (la lueur du panneau, elle, reste tant qu'il faut agir)
+function opNouveau(){ if(!opAttention()) return false; var t = statutOp(etatOpGarde()).txt; try{ return localStorage.getItem("survival_op_vu") !== t; }catch(e){ return false; } }
+function marquerOpVue(){ var R = etatOpGarde(); if(!R) return; try{ localStorage.setItem("survival_op_vu", statutOp(R).txt); }catch(e){} }
 function contenuOperations(B){
-  if(B.raid) noterEtatOp(B.raid);
+  if(B.raid){ noterEtatOp(B.raid); marquerOpVue(); }
   if(opOuverte === "immeuble") return '<button class="lien-retour" data-act="opliste">← Toutes les opérations</button>' + contenuRaid(B);
   return '<p class="sub">Les opérations se préparent à plusieurs : chaque famille y envoie un volontaire, puis une seule équipe part pour tout le clan. De nouvelles opérations arriveront.</p>'
     + '<div class="ops">' + OPERATIONS.map(function(O){ var st = statutOp(O.etat(B));
