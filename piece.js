@@ -23,7 +23,7 @@ var ZONES_PIECE = [
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
   ["chapitre",   365, 570, 660, 678, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
   ["oCartes",    372, 578, 410, 604, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
-  ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .5, function(){ return !!chien(); }]
+  ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .95, function(){ return !!chien(); }]
 ];
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
 // [image, x0, y0, x1, y1, condition]
@@ -223,7 +223,7 @@ function placerPiece(){
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
     var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
-    return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[6] + '</span></button>'; // texte seul (retour de Fabien : les icônes à côté des étiquettes chargeaient l'image)
+    return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%' + (z[0] === "chien" && G.m && !G.m.some(peutSortir) ? ';display:none' : '') + '">' + z[6] + '</span></button>'; // texte seul (retour de Fabien : les icônes à côté des étiquettes chargeaient l'image)
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
     + (EXT ? '<div class="navpieces dehors navvue"><span class="navnom">' + P.nom + '</span></div>' : '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'

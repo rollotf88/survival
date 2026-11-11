@@ -2379,3 +2379,25 @@ body.pc #app .chapcourt .ch-btn{font-size:13px}
 [data-act="fouille"].btn-jeu{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 6px}
 [data-act="fouille"].btn-jeu .qp-noms{flex-basis:100%;text-align:center}
 .row:has(> [data-act="fouille"]){align-items:stretch}
+
+/* ---------- « Où envoyer l'équipe ? » (2026-11-11) ---------- */
+.sheet p.msg.lo-alerte{font-size:13px;line-height:1.35;padding:6px 10px;margin:0 0 8px}
+.lo-eq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 8px;padding:6px 8px;border:2px solid var(--bois);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+.lo-m{display:flex;align-items:center;gap:6px}
+.lo-por{flex:none;width:34px;height:34px;border-radius:9px;overflow:hidden;box-shadow:0 0 0 2px var(--bois);display:grid;place-items:center;font-size:22px}
+.lo-por .portrait{width:100%;height:100%;border-radius:0}.lo-por .portrait img{width:100%;height:100%;object-fit:cover}
+.lo-m b{display:block;font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.5px;font-size:16px;line-height:1}
+.lo-m small{font-size:11px;color:var(--mut);white-space:nowrap}
+.lo-m small .ico,.lo-m small img.emo{width:12px;height:12px;vertical-align:-2px}
+.lo-pills{display:flex;gap:4px;margin-left:auto}
+.lo-pills span{font-size:11.5px;font-weight:900;padding:1px 8px;border-radius:999px;border:1.5px solid var(--bois);background:var(--card);white-space:nowrap}
+.lo-pills .ico,.lo-pills img.emo{width:13px;height:13px;vertical-align:-2px}
+.cl-infos{align-items:center;padding:3px 6px 0}
+.cl-infos > span{font-size:11px;font-weight:900;padding:0 7px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);white-space:nowrap}
+.cl-infos .cl-en{border-color:#e0b028}
+.cl-infos .dg.ok{border-color:var(--ok)}.cl-infos .dg.moy{border-color:#c98a2a;color:#9a6512}.cl-infos .dg.ko{border-color:var(--bad)}
+.cl-infos .ico,.cl-infos img.emo{width:12px;height:12px;vertical-align:-2px}
+.cl-conds span{border-radius:999px;padding:1px 5px;line-height:1.2}
+.cl-conds .ico,.cl-conds img.emo{width:15px;height:15px;vertical-align:-3px}
+.cl-conds .ko{box-shadow:inset 0 0 0 1.5px var(--bad)}.cl-conds .ok{box-shadow:inset 0 0 0 1.5px var(--ok)}.cl-conds .moy{box-shadow:inset 0 0 0 1.5px #c98a2a}
+.carte-lieu{border-radius:16px;box-shadow:0 3px 0 var(--line)}

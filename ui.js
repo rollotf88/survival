@@ -186,11 +186,13 @@ function openLoc(){
   var team = G.sel.map(function(j){ return G.m[j]; });
   // Aide aux débutants : prévenir qu'un membre très blessé risque sa vie en cas de combat
   var bles = team.filter(function(x){ return x.hp < 35; });
-  if(bles.length) h += '<p class="msg">⚠️ ' + liste(bles.map(function(x){ return x.nom + " (" + x.hp + " ❤️)"; })) + (bles.length > 1 ? " sont gravement blessés" : " est gravement blessé" + (estFeminin(bles[0]) ? "e" : "")) + " : un combat pourrait " + (bles.length > 1 ? "leur" : "lui") + " coûter la vie. Mieux vaut " + (bles.length > 1 ? "les" : estFeminin(bles[0]) ? "la" : "le") + " soigner avant (bouton ＋).</p>";
+  if(bles.length) h += '<p class="msg b2 lo-alerte">⚠️ <b>' + liste(bles.map(function(x){ return x.nom + " (" + x.hp + " ❤️)"; })) + '</b> ' + (bles.length > 1 ? "sont gravement blessés" : "est gravement blessé" + (estFeminin(bles[0]) ? "e" : "")) + ' : ' + (bles.length > 1 ? "soigne-les" : estFeminin(bles[0]) ? "soigne-la" : "soigne-le") + ' avant de partir (bouton +).</p>';
   var porte = function(test){ return team.some(function(x){ return x.eq.outil && test(OBJETS[x.eq.outil.id]); }); };
   var lumiere = porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? "🔦 lampe prête" : "⚠️ lampe sans pile") : porte(function(o){ return o.lumiere === 1; }) ? "🔥 lueur faible" : "⚠️ pas de lumière";
   var ouvre = porte(function(o){ return o.ouvre; }) ? "🔓 de quoi ouvrir" : "⚠️ porte à forcer";
-  h += '<p class="sub">Équipe : ' + team.map(function(x){ return iconeMembre(x) + " " + x.nom + " ⚡" + x.en; }).join(", ") + ' · ⚔️ force ' + forceEquipe(team) + ' · 🎒 ' + placesEquipe(team) + ' places</p>';
+  // Raccord avec la DA (2026-11-11) : bande de l'équipe (portraits encadrés, énergie) + pastilles force / places
+  h += '<div class="lo-eq">' + team.map(function(x){ return '<span class="lo-m"><span class="lo-por">' + iconeMembre(x) + '</span><span><b>' + x.nom + '</b><small>⚡ ' + x.en + ' · ❤️ ' + x.hp + '</small></span></span>'; }).join("")
+    + '<span class="lo-pills"><span>⚔️ force ' + forceEquipe(team) + '</span><span>🎒 ' + placesEquipe(team) + ' places</span></span></div>';
   var radio = possede(function(o){ return o.radio; });
   // À pied / En voiture : un interrupteur à deux positions (retour de Fabien : le gros bloc orange était trop voyant)
   if(voitureReparee()) h += '<div class="trajet"><div class="seg">'
@@ -204,7 +206,7 @@ function openLoc(){
     var auto = enVoiture || L.voiture;
     var reste = resteLieu(i), d = dangerLieu(i), peut = equipePeutAller(team, i, auto), ok = reste && peut;
     var icones = [];
-    if(L.sombre) icones.push(porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? ["🔦", "ok", "Sombre : lampe prête"] : ["🔦", "ko", "Sombre : lampe sans pile"]) : porte(function(o){ return o.lumiere === 1; }) ? ["🔥", "moy", "Sombre : lueur faible"] : ["🌑", "ko", "Sombre : pas de lumière"]);
+    if(L.sombre) icones.push(porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? ["🔦", "ok", "Sombre : lampe prête"] : ["🔦", "ko", "Sombre : lampe sans pile"]) : porte(function(o){ return o.lumiere === 1; }) ? ["🔥", "moy", "Sombre : lueur faible"] : ["🔦", "ko", "Sombre : pas de lumière"]);
     if(L.verrou) icones.push(porte(function(o){ return o.ouvre; }) ? ["🔓", "ok", "Verrouillé : de quoi ouvrir"] : ["🔒", "ko", "Verrouillé : porte à forcer"]);
     if(L.peche) icones.push(porte(function(o){ return o.peche; }) ? ["🎣", "ok", "Canne à pêche prête"] : ["🎣", "ko", "Pas de canne à pêche"]);
     if(L.bois) icones.push(bucherons(team).length ? ["🪓", "ok", "Hache prête"] : ["🪓", "ko", "Pas de hache"]);
@@ -219,7 +221,7 @@ function openLoc(){
       + (radio && celebreIci(i) ? '<span class="cl-celebre" title="' + typeZombie({ id:G.celebre.id }).nom + ' rôde ici">💀 ' + typeZombie({ id:G.celebre.id }).nom + '</span>' : '')
       + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
       + '<span class="cl-nom">' + L.nom + '</span>'
-      + '<span class="cl-infos"><span>⚡−' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger">' + (radio ? "📻 " : "⚠️ ") + dg[0] + '</span></span>'
+      + '<span class="cl-infos"><span class="cl-en">⚡ −' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger">' + (radio ? "danger " : "⚠️ ") + dg[0] + '</span></span>'
       + (icones.length ? '<span class="cl-conds">' + icones.map(function(c){ return '<span class="' + c[1] + '" title="' + c[2] + '">' + c[0] + '</span>'; }).join("") + '</span>' : '')
       + '</button>' });
   });
