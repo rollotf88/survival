@@ -2057,3 +2057,5 @@ ol.classement li > b{min-width:0;overflow:hidden}
 }
 .acc-titre{display:flex;justify-content:space-between;align-items:center;gap:8px;white-space:nowrap}
 .acc-titre .acc-type{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:800;opacity:.85}
+@supports (height:100dvh){.ch-app{height:min(780px,calc(100dvh - 156px))}body.pc #modal .ch-app{height:calc(100dvh - 96px)}}
+@media (max-height:440px){@supports (height:100dvh){.ch-app{height:calc(100dvh - 86px)}}}

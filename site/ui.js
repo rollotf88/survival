@@ -47,7 +47,7 @@ function puces(n){
 }
 function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
   // Cadre commun (2026-11-11) : une croix en haut à droite de toute fenêtre qu'on peut fermer (sauf si elle a déjà la sienne)
-  if(h.indexOf('data-act="close"') >= 0 && !$("sheet").querySelector(".mf-x")){ $("sheet").insertAdjacentHTML("afterbegin", '<button class="mf-x sheet-x" data-act="close" aria-label="Fermer">✕</button>'); $("sheet").classList.add("avec-x"); } $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+  if(h.indexOf('data-act="close"') >= 0 && !$("sheet").querySelector('.mf-x, [data-act="close"][aria-label="Fermer"]')){ $("sheet").insertAdjacentHTML("afterbegin", '<button class="mf-x sheet-x" data-act="close" aria-label="Fermer">✕</button>'); $("sheet").classList.add("avec-x"); } $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
    Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
    À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
