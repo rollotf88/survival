@@ -266,18 +266,23 @@ window.addEventListener("resize", function(){ if(!G || G.ph !== "game") return; 
 
 // « Qui part ? » quand on touche la porte sans avoir choisi de membres
 function openQuiPart(){
-  var h = '<h2>' + ic("loupe", "🔍") + ' Qui part fouiller ?</h2><p class="sub">Choisis 1 ou 2 membres, puis le lieu.</p>';
+  // Raccord avec la DA (2026-11-11) : portrait encadré (doré + coche quand il part), prénom en Bangers, état en pastille,
+  // barres de vie et d'énergie, cases d'équipement à droite ; compteur de l'équipe dans le titre, bouton qui nomme l'équipe
+  var max = BAL.membresParExpedition, noms = G.sel.map(function(k){ return G.m[k].nom; });
+  var h = '<h2>' + ic("loupe", "🔍") + ' Qui part fouiller ?</h2><div class="qp-tete"><span class="qp-n">Équipe ' + G.sel.length + ' / ' + max + '</span><small>Touche un survivant pour le choisir, une case pour l’équiper.</small></div>';
   G.m.forEach(function(x, i){
     if(!x.al) return;
-    var ok = peutSortir(x), on = G.sel.indexOf(i) >= 0;
-    // Ligne : à gauche le membre (toucher = choisir), à droite ses 3 cases d'équipement (toucher = équiper)
-    h += '<div class="qprow' + (on ? " choisi" : "") + '"><button class="qpqui" data-act="qpsel" data-id="' + i + '"' + (ok ? "" : " disabled") + '><span class="em">' + iconeMembre(x) + '</span><span class="eqt"><b>' + (on ? "✔ " : "") + x.nom + '</b><small>⚡ ' + x.en + (ok ? "" : " · trop fatigué") + '</small></span></button>'
+    var ok = peutSortir(x), on = G.sel.indexOf(i) >= 0, fem = estFeminin(x);
+    var st = x.raid ? ["", "🏢 Au bastion"] : on ? ["ok", "✔ Part"] : !ok ? ["ko", "😴 Épuisé" + (fem ? "e" : "")] : fatigue(x) ? ["moy", "🥱 Fatigué" + (fem ? "e" : "")] : ["", "Disponible"];
+    h += '<div class="qprow' + (on ? " choisi" : "") + (ok ? "" : " hors") + '"><button class="qpqui" data-act="qpsel" data-id="' + i + '"' + (ok ? "" : " disabled") + '><span class="qp-por">' + iconeMembre(x) + (on ? '<i class="qp-coche">✔</i>' : '') + '</span>'
+      + '<span class="qp-t"><b>' + x.nom + '</b><span class="qp-st ' + st[0] + '">' + st[1] + '</span>'
+      + '<span class="qp-bar vie"><i class="' + niveau(x.hp) + '" style="width:' + x.hp + '%"></i></span><span class="qp-bar en"><i style="width:' + x.en + '%"></i></span></span></button>'
       + '<div class="qpeq">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-retour="quipart" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : "vide") + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + '</div></div>';
   });
-  h += offrePub("quipart") + '<div class="row"><button class="btn" data-act="fouille"' + (G.sel.length ? "" : " disabled") + '>🗺️ Choisir le lieu</button><button class="btn alt" data-act="close">Annuler</button></div>';
+  h += offrePub("quipart") + '<div class="row"><button class="btn btn-jeu" data-act="fouille"' + (G.sel.length ? "" : " disabled") + '>🗺️ ' + (G.sel.length ? "Choisir le lieu" : "Choisis d’abord") + (noms.length ? '<small class="qp-noms">' + noms.join(" + ") + '</small>' : '') + '</button><button class="btn alt" data-act="close">Annuler</button></div>';
   show(h);
 }
 
