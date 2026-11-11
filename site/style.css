@@ -2401,3 +2401,10 @@ body.pc #app .chapcourt .ch-btn{font-size:13px}
 .cl-conds .ico,.cl-conds img.emo{width:15px;height:15px;vertical-align:-3px}
 .cl-conds .ko{box-shadow:inset 0 0 0 1.5px var(--bad)}.cl-conds .ok{box-shadow:inset 0 0 0 1.5px var(--ok)}.cl-conds .moy{box-shadow:inset 0 0 0 1.5px #c98a2a}
 .carte-lieu{border-radius:16px;box-shadow:0 3px 0 var(--line)}
+/* Logo du jeu avant « Jour N » aussi sur téléphone (2026-11-11, demande de Fabien) */
+body:not(.pc) #app .hd-logo{display:block;width:46px;height:46px;flex:0 0 auto;align-self:center;margin-right:-2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+@media (max-width:370px){body:not(.pc) #app .hd-logo{width:38px;height:38px}}
+@media (orientation:landscape) and (max-height:500px){body:not(.pc) #app .hd-logo{width:36px;height:36px}}
+/* Menu ☰ : toutes les icônes à la même taille (peintes, dessinées ou emoji) */
+.menugrille .mt b img,.menugrille .mt b svg,.menugrille .mt b .ico{width:20px!important;height:20px!important;vertical-align:-4px;object-fit:contain}
+@media (orientation:landscape) and (max-height:500px){.menugrille .mt b img,.menugrille .mt b svg,.menugrille .mt b .ico{width:15px!important;height:15px!important;vertical-align:-2px}}
