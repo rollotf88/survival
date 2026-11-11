@@ -65,13 +65,13 @@ var selSucces = null;
 function openSucces(){
   var n = nbSucces(), N = SUCCES.length;
   var cad = typeof CADRES !== "undefined" ? CADRES.filter(function(c){ return c.min > n; })[0] : null;
-  var prochain = cad ? (cad.min >= 999 ? "Cadre Légende : tous les succès" : "Cadre " + cad.nom + " dans " + (cad.min - n) + " succès") : "Tous les cadres débloqués !";
-  var h = teteInfo("🏅", "Succès débloqués", n + " / " + N, n >= N ? "ok" : "moy", n / N * 100, "🖼️ " + prochain);
+  var prochain = cad ? (cad.min >= 999 ? "Cadre Légende : tout réussir" : "Cadre " + cad.nom + " : encore " + (cad.min - n)) : "Tous les cadres débloqués !";
+  var h = teteInfo("🏅", "Succès débloqués", n + " / " + N, n >= N ? "ok" : "moy", n / N * 100, prochain);
   var liste = SUCCES.filter(function(x){ return succesObtenus[x.id]; }).concat(SUCCES.filter(function(x){ return !succesObtenus[x.id]; }));
   var sel = SUCCES.filter(function(x){ return x.id === selSucces; })[0] || SUCCES.filter(function(x){ return !succesObtenus[x.id]; })[0] || liste[0], okSel = !!succesObtenus[sel.id];
-  h += '<div class="sc-fiche' + (okSel ? " ok" : "") + '"><span class="sc-med grand' + (okSel ? " ok" : "") + '">' + sel.icone + '</span><span><b>' + sel.nom + '</b><small>' + sel.desc + '</small><span class="sc-etat">' + (okSel ? "✅ Débloqué" : "🔒 À débloquer") + '</span></span></div>';
+  h += '<div class="sc-fiche' + (okSel ? " ok" : "") + '"><span class="sc-med grand' + (okSel ? " ok" : "") + '"><span class="sc-i">' + sel.icone + '</span></span><span><b>' + sel.nom + '</b><small>' + sel.desc + '</small><span class="sc-etat">' + (okSel ? "✅ Débloqué" : "🔒 À débloquer") + '</span></span></div>';
   h += '<div class="sc-grille">' + liste.map(function(x){ var ok = succesObtenus[x.id];
-    return '<button class="sc-m' + (ok ? " ok" : "") + (x === sel ? " sel" : "") + '" data-act="scsel" data-id="' + x.id + '"><span class="sc-med' + (ok ? " ok" : "") + '">' + x.icone + (ok ? '' : '<i class="sc-lock">🔒</i>') + '</span><small>' + x.nom + '</small></button>'; }).join("") + '</div>';
+    return '<button class="sc-m' + (ok ? " ok" : "") + (x === sel ? " sel" : "") + '" data-act="scsel" data-id="' + x.id + '"><span class="sc-med' + (ok ? " ok" : "") + '"><span class="sc-i">' + x.icone + '</span>' + (ok ? '' : '<i class="sc-lock">🔒</i>') + '</span><small>' + x.nom + '</small></button>'; }).join("") + '</div>';
   h += '<p class="bl-note">Ils restent débloqués d’une partie à l’autre.</p>';
   show('<div class="mf info succ">' + h + '</div>');
 }

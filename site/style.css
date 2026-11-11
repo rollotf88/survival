@@ -2115,3 +2115,11 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .mf.succ{gap:8px}
 @media (max-height:700px){.sc-med{width:42px;height:42px}.sc-med .ico,.sc-med img.ico-img{width:26px;height:26px}.sc-grille{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}.sc-m small{font-size:10px}.mf.succ .it-anneau{width:60px;height:60px}.mf.succ .it-anneau .it-ico{width:48px;height:48px}}
 @media (orientation:landscape) and (max-height:500px){.mf.succ .sc-m small{display:none}.sc-grille{grid-template-columns:repeat(auto-fill,minmax(48px,1fr))}}
+.sc-i{display:grid;place-items:center;line-height:1}
+.sc-med:not(.ok) .sc-i{filter:grayscale(1);opacity:.4}
+.sc-med:not(.ok) > .ico,.sc-med:not(.ok) > img.ico-img{filter:none;opacity:1}
+.sc-med .sc-i .ico,.sc-med .sc-i img.ico-img{width:30px;height:30px}
+.sc-med.grand .sc-i .ico,.sc-med.grand .sc-i img.ico-img{width:40px;height:40px}
+.sc-grille{grid-template-columns:repeat(auto-fill,minmax(56px,1fr))}
+.mf.succ .it-etat{white-space:nowrap}
+@media (max-height:700px){.sc-med .sc-i .ico,.sc-med .sc-i img.ico-img{width:26px;height:26px}}
