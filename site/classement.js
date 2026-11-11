@@ -291,11 +291,14 @@ function appelParrainage(corps){
 // Le menu : « 🎁 Inviter » et « 🎒 Bonus »
 function openInviter(){
   var lien = SITE_JEU + "/?code=";
-  show('<h2>🎁 Inviter des amis</h2><p>Partage ton code : quand un ami l’utilise, <b>vous recevez chacun un colis</b> de ravitaillement largué sur le quartier, avec un bonus exclusif.</p>'
+  // Raccord avec la DA (2026-11-11) : bandeau cadeau, ticket du code, deux gros boutons, deux tuiles (code d'un ami, mes bonus)
+  var nb = lireBonus().length;
+  show('<button class="lien-retour" data-act="menu">← Menu</button><h2>🎁 Inviter des amis</h2>'
+    + '<div class="inv-hero"><span class="inv-ico">🪂</span><span><b>Un colis pour toi, un pour ton ami</b><small>Quand un ami utilise ton code, vous recevez chacun un colis largué sur le quartier, avec un bonus exclusif.</small></span></div>'
     + '<div class="moncode"><small>Ton code</small><b id="moncode">…</b></div><p class="msg" id="msgcode"></p>'
-    + '<div class="row"><button class="btn" data-act="partagercode" disabled id="btnpartage">📤 Partager</button><button class="btn alt" data-act="copiercode" disabled id="btncopie">📋 Copier le lien</button></div>'
-    + '<button class="loc" data-act="saisircode"><b>🎟️ J’ai un code d’invitation</b><small>Un seul code d’ami par appareil (et les codes spéciaux)</small></button>'
-    + '<div class="row"><button class="btn alt" data-act="sacbonus">🎒 Mes bonus (' + lireBonus().length + ')</button><button class="btn alt" data-act="menu">↩️ Menu</button></div>');
+    + '<div class="row inv-row"><button class="btn btn-jeu" data-act="partagercode" disabled id="btnpartage">📤 Partager</button><button class="btn alt btn-jeu" data-act="copiercode" disabled id="btncopie">📋 Copier le lien</button></div>'
+    + '<div class="inv-tuiles"><button class="inv-t" data-act="saisircode"><span class="inv-t-ico">🎟️</span><b>J’ai un code</b><small>d’un ami ou spécial</small></button>'
+    + '<button class="inv-t" data-act="sacbonus"><span class="inv-t-ico">🎒</span><b>Mes bonus</b><small>' + (nb ? nb + " en réserve" : "aucun pour l’instant") + '</small></button></div>' + BTN_FERMER());
   var code = null; try{ code = localStorage.getItem("survival_code"); }catch(e){}
   var poser = function(c, n){ code = c; var e = $("moncode"); if(!e) return; e.textContent = c; $("btnpartage").disabled = false; $("btncopie").disabled = false; $("btnpartage").setAttribute("data-id", c); $("btncopie").setAttribute("data-id", c); if(n) $("msgcode").textContent = "👥 Déjà utilisé par " + n + " ami" + (n > 1 ? "s" : "") + " !"; };
   if(code) poser(code);
