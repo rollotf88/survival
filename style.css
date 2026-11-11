@@ -1553,9 +1553,9 @@ body.pc .chapcourt .ch-saison{display:block;font-size:.85em;opacity:.9}
 }
 /* Guide du survivant en tuiles (2026-11-11) : thèmes, tuiles qui ouvrent une fiche, recherche */
 .g-cherche{width:100%;box-sizing:border-box;margin:0 0 8px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
-.gtheme{margin:0 0 6px}
+.gtheme{margin:0}
 .gtheme .gcat{margin:4px 0}
-.gtuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.gtuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin:0 0 10px}
 .gtuiles.objets{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}
 .gtuiles.lieux{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 .gtuile{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--ink);box-shadow:0 2px 0 var(--line);min-width:0}

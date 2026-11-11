@@ -756,6 +756,7 @@ function portraitMembre(x, sansBadges){
    chaque emoji qui a une icône peinte par cette icône. Ajouter une ligne ici suffit pour un nouvel emoji.
    Les emojis sans icône restent des emojis. Pas dans les champs de saisie. */
 var EMOJI_ICONE = {
+  "👨‍🍳":"ragout", "🧑‍🍳":"ragout", // trait Cuisinier : la marmite
   "🧸":"peluche", "🔦":"lampe", "📻":"radio", "🔍":"loupe", "🔎":"loupe", "🔧":"outils", "🛠":"outils", "🧰":"outils", "🩹":"bandage", "💊":"antibio",
   "🥫":"conserve", "💧":"bouteille", "🎒":"sacados", "🐔":"poule", "🥚":"poule", "🐟":"poisson", "🎣":"canne", "🪓":"hache", "🔨":"marteau", "⛽":"jerrican",
   "🛡":"bouclier", "🧱":"ref_barr", "🏰":"bastion", "👑":"couronne", "🥇":"medaille1", "🥈":"medaille2", "🥉":"medaille3", "🏅":"medaille1", "🌙":"lune",
