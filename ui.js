@@ -1065,6 +1065,7 @@ function tableauPC(){
   h += '<p class="titre-butin">📦 Le stock</p>' + (cases.length ? etageres(cases, 5) : '<p class="sub">Le stock est vide.</p>')
     + '<div class="row"><button class="btn alt" data-act="stock">📦 Tout le stock</button><button class="btn alt" data-act="refuge">🛠️ Refuge</button></div>'
     + (G.derniereNuit && G.derniereNuit.length ? '<p class="titre-butin">🌙 La nuit dernière</p><div class="tb-nuit">' + puces(regrouperNuit(G.derniereNuit)) + '</div>' : '')
+    + (typeof contenuDefis === "function" ? '<div class="tb-defis">' + contenuDefis(true) + '</div>' : '')
     + '<p class="sub tb-aide">Les fenêtres s’ouvrent ici, à droite : la pièce reste visible.</p>';
   t.innerHTML = h;
 }

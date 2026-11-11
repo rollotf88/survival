@@ -1495,3 +1495,11 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
   .go-h-case{flex:0 0 38px;width:38px;height:38px;padding:3px}
   .go-heritage small{display:none}
 }
+
+/* Défis du jour et de la semaine */
+.defi{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:5px 8px;margin:0 0 5px;border-radius:10px;background:var(--bg);border:1.5px solid var(--line)}
+.defi .defi-ico{font-size:20px;text-align:center}.defi .defi-ico .ico{width:24px;height:24px}
+.defi-txt b{display:block;font-size:13.5px;margin-bottom:3px}
+.defi small{color:var(--mut);font-size:12px;white-space:nowrap}
+.defi.fait{border-color:var(--ok,#4a8a3a)}.defi.fait .tp-bar i{background:var(--ok,#4a8a3a)}
+.tb-defis .defi{padding:4px 7px}

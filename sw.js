@@ -19,6 +19,7 @@ var FICHIERS = [
   "raid.js",
   "chat.js",
   "succes.js",
+  "defis.js",
   "piece.js",
   "manifest.json",
   "images/refuge-fond.webp",

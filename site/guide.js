@@ -39,6 +39,8 @@ function reglesGuide(){
       "Chaque plat brûle " + nommer("planche", B.cuisine.planches) + " et coûte " + B.energieCraft + " ⚡ au cuisinier. Une portion nourrit plus qu’une ration (+35 à +50 de faim au lieu de +30) avec un bonus (moral, PV, énergie), mais les plats se gâtent en 3 nuits (les galettes en 8). La nuit, chacun mange d’abord un plat s’il y en a. Le potager donne parfois des herbes."],
     ["Le dernier recours", "🕯️",
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
+    ["Les défis", "🎯",
+      "Chaque jour, 3 défis (les mêmes pour tous les joueurs) : abattre des zombies, fouiller, cuisiner, pêcher, couper du bois… Ils avancent dans toutes tes parties. Les 3 réussis rapportent un colis (un largage avec un bonus) ; le grand défi de la semaine en rapporte un autre. Menu ☰ → Défis."],
     ["L’héritage", "📦",
       "Quand ta famille meurt, elle laisse un objet à la suivante (le plus précieux est choisi d’avance sur l’écran de fin, tu peux en choisir un autre) et une lettre. La nouvelle famille trouve le coffre en partant ; la lettre reste près des tombes, dans la cour."],
     ["Les tombes", "🕯️",
@@ -125,6 +127,7 @@ function openMenu(){
   var t = function(act, titre, sous){ return '<button class="mt" data-act="' + act + '"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</button>'; };
   var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : G.ph === "game" ? "🎲 Partie libre" : "") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
+  if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length; h += t("defis", "🎯 Défis", nD + " / 3 aujourd’hui"); }
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
   if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= BAL.jourClans ? "Fonder ou rejoindre" : "Dès le jour " + BAL.jourClans);
@@ -133,7 +136,6 @@ function openMenu(){
     h += t(nc ? "sacbonus" : "inviter", (nc ? "🪂 " : "🎁 ") + "Inviter", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " bonus gardés");
   }
   if(typeof openStats === "function") h += t("stats", "📊 Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
-  h += t("revoirastuces", "💡 Astuces", "Les revoir");
   h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
   if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
   h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus" : "🚫 Contenus", CONTENUS_SENSIBLES ? "Durs : activés" : "Durs : coupés");
@@ -179,7 +181,8 @@ function openGuide(){
     h += '<div class="gsec"><b>' + ic("sam", "🧑") + ' Les recrues</b><p>Si un membre meurt, une survivante peut frapper à la porte et prendre sa place (famille de ' + FAMILLE.length + ' au maximum). Elle arrive avec un trait au hasard.</p></div>';
     h += '<div class="gsec"><b>' + ic("chien", "🐕") + ' Rex, le chien</b><p>Après l’avoir nourri, il reste : +' + BAL.chien.defense + ' de défense la nuit, mais il mange ' + BAL.chien.rations + ' ration chaque soir et part au bout de ' + BAL.chien.nuitsSansManger + ' nuits sans manger.</p></div>';
   }
-  show(h + (guideFiche ? '<div class="row"><button class="btn alt" data-act="gretour">← Tous les objets</button><button class="btn alt" data-act="close">Fermer</button></div>' : BTN_FERMER()));
+  show(h + (guideFiche ? '<div class="row"><button class="btn alt" data-act="gretour">← Tous les objets</button><button class="btn alt" data-act="close">Fermer</button></div>'
+    : '<div class="row"><button class="btn alt" data-act="revoirastuces" aria-label="Revoir les astuces">💡 Astuces</button><button class="btn" data-act="close">Fermer</button></div>'));
   $("sheet").scrollTop = 0;
 }
 

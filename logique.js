@@ -381,6 +381,7 @@ function titresDe(x){ return TITRES.filter(function(t){ return aTitre(x, t.id); 
 function exploit(x, k, nb, n){
   if(!x || !x.al) return "";
   x.xp = x.xp || {}; var avant = x.xp[k] || 0; x.xp[k] = avant + (nb || 1);
+  if(typeof noterDefi === "function") noterDefi(k, nb || 1); // défis du jour / de la semaine (defis.js)
   var txt = "";
   TITRES.forEach(function(t){ if(t.k === k && avant < t.n && x.xp[k] >= t.n){ txt = "🏅 " + x.nom + " devient « " + t.nom + " » : " + t.effet + " !"; if(n) n.push(["g2", txt]); } });
   return txt;
@@ -547,7 +548,7 @@ function finExpedition(){
   if(LIEUX[i].peche && E.peche){
     // Résultat du mini-jeu : les poissons ferrés, partagés entre les pêcheurs ; chaque canne s'use
     peches = Math.min(lieu.poissons, E.peche.prises);
-    lieu.poissons -= peches; G.stats.poissons = (G.stats.poissons || 0) + peches;
+    lieu.poissons -= peches; G.stats.poissons = (G.stats.poissons || 0) + peches; if(peches && typeof noterDefi === "function") noterDefi("poissons", peches);
     for(var pp = 0; pp < peches; pp++) trouves.unshift("poisson");
     n.push([peches ? "g2" : "b2", "🎣 " + (peches ? "Vous pêchez " + nommer("poisson", peches) + " (" + peches + " touche" + (peches > 1 ? "s" : "") + " sur " + E.peche.lancers + ")." : "Aucun poisson cette fois : ils ont tous filé.")]);
     survivants.forEach(function(x){ var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return; c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); } else avertirUsure(x, c, n, "sortie"); });
@@ -555,7 +556,7 @@ function finExpedition(){
   else if(LIEUX[i].peche) survivants.forEach(function(x){
     var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return;
     var k = Math.min(lieu.poissons, Math.max(1, Math.round(R(BAL.peche.prises[0], BAL.peche.prises[1]) * mult)));
-    lieu.poissons -= k; peches += k; G.stats.poissons = (G.stats.poissons || 0) + k;
+    lieu.poissons -= k; peches += k; G.stats.poissons = (G.stats.poissons || 0) + k; if(k && typeof noterDefi === "function") noterDefi("poissons", k);
     for(var p = 0; p < k; p++) trouves.unshift("poisson");
     n.push(["g2", "🎣 " + x.nom + " pêche " + (k ? nommer("poisson", k) : "rien") + "."]);
     c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); }
@@ -566,7 +567,7 @@ function finExpedition(){
     bu.forEach(function(x){
       if(lieu.arbres <= 0) return;
       var k = Math.min(lieu.arbres, Math.max(1, Math.round(R(BAL.foret.coupe[0], BAL.foret.coupe[1]) * mult)));
-      lieu.arbres -= k; G.stats.bois = (G.stats.bois || 0) + k;
+      lieu.arbres -= k; G.stats.bois = (G.stats.bois || 0) + k; if(typeof noterDefi === "function") noterDefi("bois", k);
       for(var pb = 0; pb < k; pb++) trouves.unshift("planche");
       n.push(["g2", "🪓 " + x.nom + " abat un arbre : " + nommer("planche", k) + "."]);
       var h = x.eq.arme; h.sol -= BAL.foret.usure;
@@ -911,6 +912,7 @@ function fuir(){
 function finJour(){
   var n = [];
   G.score += vivants().length;
+  if(vivants().length && typeof noterDefi === "function") noterDefi("nuits", 1);
   // Chaleur : le feu de cheminée (1 planche par nuit, il faut un briquet) réchauffe tout le monde ;
   // sinon une couverture tient chaud 2 personnes, les autres ont froid
   var feu = false;
