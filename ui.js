@@ -259,7 +259,7 @@ function openSerrure(){
   h += '<p class="sub">Appuie quand le curseur est dans la zone verte. ' + icone("epingle") + ' ' + compter("epingle") + ' épingle' + (compter("epingle") > 1 ? "s" : "") + '</p>';
   h += '<div class="goupilles">' + Array.from({ length:BAL.crochetage.goupilles }, function(_, k){ return '<span class="' + (k < S.faites ? "ok" : "") + '">' + (k < S.faites ? "🟢" : "⚪") + '</span>'; }).join("") + '</div>';
   h += '<div class="serrure"><i class="zone" style="left:' + (zoneDebut * 100) + '%;width:' + (zoneCrochetage() * 100) + '%"></i><i class="curseur" id="curseur"></i></div>';
-  h += '<p class="msg">' + (msgSerrure || "&nbsp;") + '</p><button class="btn" style="width:100%" data-act="goupille">🗝️ Appuyer !</button>';
+  h += '<p class="msg' + (msgSerrure ? "" : " vide") + '">' + (msgSerrure || "&nbsp;") + '</p><button class="btn" style="width:100%" data-act="goupille">🗝️ Appuyer !</button>';
   show(h);
   cancelAnimationFrame(animSerrure);
   (function anim(){ var c = $("curseur"); if(!c) return; c.style.left = (positionCurseur() * 100) + "%"; animSerrure = requestAnimationFrame(anim); })();

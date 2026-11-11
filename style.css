@@ -1985,3 +1985,14 @@ ol.classement li > b{min-width:0;overflow:hidden}
 #tableauPC > h2:first-child{font-size:30px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
 #tableauPC .tb-bloc b{font-size:15px}
 .resume.rs .rs-t{display:flex;flex-direction:column;align-items:center}
+/* ---------- DA : toutes les cartes restantes avec l'ombre de jeu (2026-11-11) ---------- */
+.eq,.bilan,.gsec,.succes .sc,.fm,.clan-m,.clan-l,.blasons .bl,.bast-def,.cadre-choix,.raid-tete,.raid-e,.raid-c,.op-st,.tombe,.defi,.evt,.saison,.gfiche,.invtab,.tb-defis .defi{box-shadow:0 3px 0 var(--line);border-radius:14px}
+.menugrille .mt{background:var(--bg);box-shadow:0 3px 0 var(--line);border-radius:14px;transition:transform .08s}
+.menugrille .mt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.menugrille .mt b .ico,.menugrille .mt b img.emo{width:18px;height:18px;vertical-align:-3px}
+/* messages d'alerte en petites cartes */
+.sheet p.msg{background:var(--bg);border:1.5px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:7px 10px;line-height:1.35}
+.sheet p.msg.g2{border-left-color:var(--ok)}
+.sheet p.msg.b2{border-left-color:var(--bad)}
+.blasons .bl:active,.clan-l:active{transform:translateY(1px)}
+.sheet p.msg.vide{background:none;border:0;padding:0}
