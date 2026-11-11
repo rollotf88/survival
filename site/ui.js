@@ -561,7 +561,7 @@ function medaillesMembre(x){
 }
 function openMembre(i){
   var x = G.m[i], on = G.sel.indexOf(i) >= 0, T = TRAITS[x.trait];
-  var h = '<div class="mf' + (x.al ? "" : " mort") + '"><div class="mf-tete"><span class="mf-por">' + iconeMembre(x) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
+  var h = '<div class="mf' + (x.al ? "" : " mort") + '"><div class="mf-tete"><span class="mf-por">' + iconeMembre(x, true) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
     + (T ? '<button class="mf-trait" data-act="mtrait" aria-expanded="false">' + T.icone + ' ' + T.nom + ' <span class="mf-fl">▾</span></button>' : '<span class="mf-trait">Recrue</span>')
     + (x.al ? etiquettesMembre(x, on) : '<div class="mf-tags"><span class="mf-tag bas">💀 ' + causeMort(roleDe(x), "mort") + '</span></div>') + '</div>'
     + '<button class="mf-x" data-act="close" aria-label="Fermer">✕</button></div>';
@@ -632,7 +632,7 @@ function tuileSoin(act, id, ico, nom, eff, petit, ok, extra){
 }
 function openSoins(i){
   var x = G.m[i];
-  var h = '<div class="mf st"><div class="mf-tete st-tete"><span class="mf-por">' + iconeMembre(x) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
+  var h = '<div class="mf st"><div class="mf-tete st-tete"><span class="mf-por">' + iconeMembre(x, true) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
     + '<div class="st-jauges">' + anneauMembre("❤️", "Vie", x.hp) + anneauMembre("⚡", "Énergie", x.en) + anneauMembre(ic("conserve", "🥫"), "Faim", x.faim) + anneauMembre(ic("bouteille", "💧"), "Soif", x.soif) + '</div></div>'
     + '<button class="mf-x" data-act="close" aria-label="Fermer">✕</button></div>';
   // Soins : une tuile par soin du stock (du plus petit au plus gros), celui qui convient le mieux est « conseillé »
