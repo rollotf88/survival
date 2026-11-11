@@ -1655,3 +1655,12 @@ body.pc #modal .ch-app{height:calc(100vh - 96px);max-height:none}
   .ch-rapides{display:none}
   .ch-app{height:calc(100vh - 86px);min-height:220px}
 }
+
+/* Messages rapides : tirables à la souris (curseur main), petite barre de défilement visible sur PC */
+.ch-rapides{cursor:grab;user-select:none}
+.ch-rapides.tire{cursor:grabbing}
+.ch-rapides.tire .ch-r{pointer-events:none}
+@media (hover:hover) and (pointer:fine){
+  .ch-rapides{scrollbar-width:thin;padding-bottom:6px}
+  .ch-rapides::-webkit-scrollbar{display:block;height:6px}
+}

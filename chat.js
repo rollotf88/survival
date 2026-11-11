@@ -29,7 +29,19 @@ function openChat(){
   show(h);
   var inp = document.getElementById("chatTexte");
   if(inp) inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); envoyerChat(); } });
+  defilementHorizontal(document.querySelector(".ch-rapides"));
   chargerChat(true);
+}
+// Messages rapides : au doigt ça glisse tout seul ; à la souris, on peut tirer la rangée ou tourner la molette (retour de Fabien)
+function defilementHorizontal(el){
+  if(!el) return;
+  el.addEventListener("wheel", function(e){ if(Math.abs(e.deltaY) > Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth){ el.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive:false });
+  var x0 = null, s0 = 0, bouge = false;
+  el.addEventListener("pointerdown", function(e){ if(e.pointerType !== "mouse") return; x0 = e.clientX; s0 = el.scrollLeft; bouge = false; });
+  window.addEventListener("pointermove", function(e){ if(x0 === null) return; var d = e.clientX - x0; if(Math.abs(d) > 5){ bouge = true; el.classList.add("tire"); } if(bouge) el.scrollLeft = s0 - d; });
+  window.addEventListener("pointerup", function(){ if(x0 === null) return; x0 = null; setTimeout(function(){ el.classList.remove("tire"); }, 0); });
+  // après avoir tiré, le clic qui suit n'envoie pas de message
+  el.addEventListener("click", function(e){ if(bouge){ e.stopPropagation(); e.preventDefault(); bouge = false; } }, true);
 }
 function chargerChat(defiler){
   appelClans({ action:"chat" }).then(function(d){
