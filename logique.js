@@ -305,12 +305,21 @@ var FEMININS = ["Maman", "Emma", "Nora", "Inès"];
 // Rôle d'origine (le nom peut avoir été changé au départ) : sert au portrait et aux accords
 function roleDe(x){ return x.r || x.nom; }
 // « Papa est mort de soif », « Emma a été tuée par un coureur (Supermarché) » ; r = rôle (féminin ou non)
-function accorder(r, texte){ return FEMININS.indexOf(r) >= 0 ? texte.replace(/^mort/, "morte").replace(/^tué/, "tuée") : texte; }
+// Accord au féminin du participe qui commence la cause (« mort de soif » → « morte de soif », « tué par » → « tuée par »…)
+var PARTICIPES_MORT = /^(mort|tué|mordu|tombé|emporté|coupé|sacrifié|parti|blessé)(?![a-zé])/;
+function accorder(r, texte){
+  texte = String(texte || "");
+  if(FEMININS.indexOf(r) < 0) return texte;
+  return texte.replace(PARTICIPES_MORT, "$1e").replace(/, seul\b/, ", seule"); // « devenu fou » parle du meurtrier : on n’y touche pas
+}
+// Cause seule, accordée et avec une majuscule, pour une légende sous un prénom : « Morte de soif », « Tuée par un coureur »
+function causeMort(r, cause){ var t = accorder(r, cause || "mort"); return t.charAt(0).toUpperCase() + t.slice(1); }
 function phraseMort(nom, cause, r){
   r = r || nom;
   if(!cause) return nom + " est " + accorder(r, "mort") + ".";
-  if(/^mort/.test(cause)) return nom + " est " + accorder(r, cause) + ".";
-  if(/^tué/.test(cause)) return nom + " a été " + accorder(r, cause) + ".";
+  if(/^(mort|tombé|parti)/.test(cause)) return nom + " est " + accorder(r, cause) + ".";
+  if(/^(mordu|coupé)/.test(cause)) return nom + " est " + accorder(r, "mort") + ", " + accorder(r, cause) + ".";
+  if(/^(tué|emporté|sacrifié)/.test(cause)) return nom + " a été " + accorder(r, cause) + ".";
   return nom + " est " + accorder(r, "mort") + " : " + cause + ".";
 }
 // Remplace Papa, Maman, Léo, Emma dans les récits par les prénoms choisis.
