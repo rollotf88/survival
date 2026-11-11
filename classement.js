@@ -87,7 +87,7 @@ function openStats(){
   if(!ongletStats || (ongletStats === "partie" && !g)) ongletStats = g ? "partie" : "toutes";
   var T = function(icone, valeur, nom, cls){ return '<div class="tuile st ' + (cls || "") + '"><span class="st-ico">' + icone + '</span><b>' + valeur + '</b><small>' + nom + '</small></div>'; };
   var pl = function(n, mot){ return n > 1 ? mot + "s" : mot; };
-  var h = '<h2>📊 Mes stats</h2><div class="tabs onglets">'
+  var h = '<button class="lien-retour" data-act="menu">← Menu</button><h2>📊 Mes stats</h2><div class="tabs onglets">'
     + (g ? '<button class="tab' + (ongletStats === "partie" ? " on" : "") + '" data-act="stats" data-id="partie">Cette partie<small>Jour ' + G.day + '</small></button>' : '')
     + '<button class="tab' + (ongletStats === "toutes" ? " on" : "") + '" data-act="stats" data-id="toutes">Toutes tes parties<small>Depuis le début</small></button></div>';
   if(ongletStats === "partie"){
@@ -103,7 +103,8 @@ function openStats(){
       + T("🪓", S.bois || 0, pl(S.bois || 0, "planche") + " " + pl(S.bois || 0, "coupée"))
       + T("🎯", S.missions || 0, pl(S.missions || 0, "mission") + " " + pl(S.missions || 0, "réussie"))
       + '</div>';
-    if(G.dd.length) h += '<p class="sub st-morts">💀 ' + G.dd.map(function(z){ return '<b>' + echapper(z.n) + '</b> (jour ' + z.j + ')'; }).join(", ") + '</p>';
+    if(G.dd.length) h += '<p class="titre-butin">🕯️ Ils nous ont quittés</p><div class="st-morts2">' + G.dd.map(function(z){ var x = { nom:z.n, r:z.r, icone:z.ic || "🙂", al:false, hp:0, en:0, faim:0, soif:0 };
+      return '<span class="st-mort"><span class="st-mort-p">' + iconeMembre(x) + '</span><span><b>' + echapper(z.n) + '</b><small>' + echapper(causeMort(z.r || z.n, z.c)) + ' · jour ' + z.j + '</small></span></span>'; }).join("") + '</div>';
   } else {
     var J = statsJoueur(), moy = J.parties ? Math.round(J.jours / J.parties) : 0;
     h += '<div class="tuiles stats">'
@@ -119,7 +120,8 @@ function openStats(){
       + '</div>';
     if(!J.parties) h += '<p class="sub">Joue une première partie pour remplir tes stats.</p>';
   }
-  show(h + '<div class="row"><button class="btn alt" data-act="cadres">🖼️ Mon cadre</button><button class="btn" data-act="menu">↩️ Menu</button></div>');
+  var cad = typeof cadreActif === "function" ? cadreActif() : "bois", cadN = (CADRES.filter(function(c){ return c.id === cad; })[0] || CADRES[0]).nom;
+  show(h + '<button class="st-cadre" data-act="cadres">' + pseudoCadre(lirePseudo() || "Sans pseudo", cad) + '<span><b>Mon cadre</b><small>' + cadN + ' · ' + nbSucces() + ' / ' + SUCCES.length + ' succès</small></span><span class="cm-voir">›</span></button>' + BTN_FERMER());
 }
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "pseudo") envoyerScore(); });
 
