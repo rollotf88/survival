@@ -2324,3 +2324,4 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .vt-plein small{font-size:12px;font-weight:700;opacity:.8}
 .vt-plein .ico,.vt-plein img.ico-img{width:24px;height:24px}
 .garage .pleg{display:none}
+body:not(.pc) .sheet.a-onglets{height:88%}

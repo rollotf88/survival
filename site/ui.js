@@ -46,7 +46,9 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x", "a-onglets"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
+  // Fenêtres à onglets (stock, refuge, bastion…) : hauteur fixe, pour que la fenêtre ne monte ni ne descende en changeant d'onglet (2026-11-11, retour de Fabien)
+  if(h.indexOf('class="tabs onglets"') >= 0 || h.indexOf('class="invtabs"') >= 0) $("sheet").classList.add("a-onglets");
   // Cadre commun (2026-11-11) : une croix en haut à droite de toute fenêtre qu'on peut fermer (sauf si elle a déjà la sienne)
   if(h.indexOf('data-act="close"') >= 0 && !$("sheet").querySelector('.mf-x, [data-act="close"][aria-label="Fermer"]')){ $("sheet").insertAdjacentHTML("afterbegin", '<button class="mf-x sheet-x" data-act="close" aria-label="Fermer">✕</button>'); $("sheet").classList.add("avec-x"); } $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
