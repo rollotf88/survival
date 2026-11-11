@@ -457,18 +457,24 @@ function afficherClans(msg){
   var d = etatClans, j = jourPartie(), ok = j >= d.jourMin, h = '<h2>⚔️ Clans</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '');
   if(d.monClan){
     var c = d.monClan;
-    h += '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>👥 ' + c.membres + ' / 5 familles · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
-    h += '<p class="clan-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Pas encore de description.</i>') + (c.chefId ? ' <button class="mini" data-act="clandesc">✏️ Modifier</button>' : '') + '</p>';
-    h += '<div class="clan-membres">' + c.membresListe.map(function(m){
-      return '<div class="clan-m' + (m.moi ? " moi" : "") + '"><button class="cm-nom" data-act="profilmembre" data-id="' + c.membresListe.indexOf(m) + '" title="Voir son profil">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " (toi)" : "") + ' <span class="cm-voir">›</span></button><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small>'
-        + (c.chefId && !m.moi ? '<button class="mini" data-act="clanexclure" data-id="' + echapper(m.vrai) + '">Exclure</button>' : '') + '</div>';
+    // Raccord avec la DA (2026-11-11) : carte du clan (blason, nom, ligue, 3 tuiles), devise, 4 grandes tuiles d'action en haut,
+    // familles en lignes compactes (pastille de couleur, ✕ rouge pour exclure), quitter en petit lien
+    var stOp = typeof etatOpGarde === "function" && etatOpGarde() ? statutOp(etatOpGarde()) : null, nl = typeof chatNonLus !== "undefined" ? chatNonLus : 0;
+    h += '<div class="mc-carte">' + blason(c.blason) + '<span class="mc-id"><b class="mc-nom">' + echapper(c.nom) + '</b><small class="mc-stats">👥 <b>' + c.membres + '</b> / 5 familles · <b>' + c.jours + '</b> jours tenus</small>' + badgeLigue(c.trophees) + '</span></div>';
+    h += '<p class="mc-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Pas encore de devise.</i>') + (c.chefId ? '<button class="mc-edit" data-act="clandesc" aria-label="Modifier la description">✏️</button>' : '') + '</p>';
+    var tuileA = function(act, id, ico, titre, sous, cls, badge){ return '<button class="mc-a' + (cls ? " " + cls : "") + '" data-act="' + act + '"' + (id ? ' data-id="' + id + '"' : '') + '><span class="mc-a-ico">' + ico + (badge ? '<i class="nl-badge">' + badge + '</i>' : '') + '</span><b>' + titre + '</b><small>' + sous + '</small></button>'; };
+    h += '<div class="mc-actions">'
+      + tuileA("bastion", "", ic("bastion", "🏰"), "Bastion", "réserve, défenses", "")
+      + tuileA("guerre", "", "⚔️", c.enGuerre ? "En guerre !" : "La guerre", c.enGuerre ? "à l’assaut" : c.recherche ? "recherche…" : "trouver un rival", c.enGuerre ? "chaud" : "")
+      + tuileA("chat", "", "💬", "Discussion", nl ? nl + " nouveau" + (nl > 1 ? "x" : "") : "écrire au clan", nl ? "chaud" : "", nl)
+      + tuileA("opouvrir", "immeuble", "🎯", "Opération", stOp && stOp.txt ? stOp.txt.replace(/^\S+\s/, "") : "l’immeuble", stOp && stOp.agir ? "chaud" : "")
+      + '</div>';
+    h += '<p class="titre-butin">👥 Les familles</p><div class="mc-membres">' + c.membresListe.map(function(m, k){
+      return '<div class="mc-m' + (m.moi ? " moi" : "") + '"><button class="mc-m-b" data-act="profilmembre" data-id="' + k + '">' + (typeof avatarChat === "function" ? avatarChat(m.pseudo) : "") + '<span class="mc-m-t"><b>' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? ' <small class="mc-toi">toi</small>' : '') + '</b><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small></span><span class="cm-voir">›</span></button>'
+        + (c.chefId && !m.moi ? '<button class="mc-ex" data-act="clanexclure" data-id="' + echapper(m.vrai) + '" aria-label="Exclure ' + echapper(m.pseudo) + '" title="Exclure">✕</button>' : '') + '</div>';
     }).join("") + '</div>';
-    var stOp = typeof etatOpGarde === "function" && etatOpGarde() ? statutOp(etatOpGarde()) : null;
-    h += '<button class="op-ligne chat-ligne" data-act="chat">💬 <b>Discussion du clan</b><small>' + (typeof chatNonLus !== "undefined" && chatNonLus ? chatNonLus + " nouveau" + (chatNonLus > 1 ? "x" : "") + " message" + (chatNonLus > 1 ? "s" : "") : "Écrire au clan, organiser le raid et les guerres") + '</small></button>';
-    h += '<button class="op-ligne" data-act="opouvrir" data-id="immeuble">🎯 <b>Opération : L’immeuble abandonné</b><small>' + (stOp && stOp.txt ? stOp.txt : "Ouvre-la pour voir où en est le clan") + '</small></button>';
-    h += '<div class="row" style="margin-bottom:8px"><button class="btn" data-act="bastion">🏰 Bastion</button><button class="btn' + (c.enGuerre ? "" : " alt") + '" data-act="guerre">⚔️ ' + (c.enGuerre ? "En guerre !" : c.recherche ? "Recherche…" : "La guerre") + '</button></div>'
-      + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="classementclans">🏆 Classement des clans</button>'
-      + '<div class="row"><button class="btn alt" data-act="clanquitter">Quitter le clan</button><button class="btn" data-act="close">Fermer</button></div>';
+    h += '<button class="btn alt btn-jeu" style="width:100%;margin:8px 0" data-act="classementclans">🏆 Classement des clans</button>'
+      + '<button class="lien mc-quitter" data-act="clanquitter">🚪 Quitter le clan</button>' + BTN_FERMER();
     show(h); return;
   }
   h += '<p class="sub">' + (ok ? "Tu as tenu " + j + " jours : tu peux fonder un clan ou en rejoindre un (5 familles maximum)." : "🔒 Les clans s’ouvrent quand ta famille a tenu <b>" + d.jourMin + " jours</b> (tu en es au jour " + j + "). Voici ceux qui t’attendent :") + '</p>';
