@@ -132,8 +132,8 @@ function contenuRaid(B){
   // Remorque artisanale : ligne compacte
   var cr = B.couts && B.couts.remorque, peutR = cr && Object.keys(cr).every(function(m){ return (B.reserve[m] || 0) >= cr[m]; });
   h += '<div class="rd-rem' + (R.remorque ? " ok" : "") + '"><span class="bd-ico">' + ic("camionClan", "🚚") + '</span><span class="rd-rem-t"><b>Remorque artisanale</b><small>' + (R.remorque ? "✔ Construite : +" + I.remorque + " objets ramenés" : "Sans elle : " + I.sac + " objets par volontaire") + '</small>'
-    + (!R.remorque && cr ? '<span class="ings2 mini">' + Object.keys(cr).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= cr[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + cr[m] + '</b></span>'; }).join("") + '</span>' : '') + '</span>'
-    + (!R.remorque && cr ? '<button class="btn rd-rem-b" data-act="bastconstruire" data-id="remorque"' + (peutR ? "" : " disabled") + ' aria-label="Construire la remorque">🔨</button>' : '') + '</div>';
+    + '</span>' + (!R.remorque && cr ? '<button class="btn rd-rem-b" data-act="bastconstruire" data-id="remorque"' + (peutR ? "" : " disabled") + ' aria-label="Construire la remorque">🔨</button>'
+    + '<span class="rd-mat">' + Object.keys(cr).map(function(m){ var a = B.reserve[m] || 0; return '<span class="rd-m ' + (a >= cr[m] ? "ok" : "ko") + '" title="' + OBJETS[m].nom + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + cr[m] + '</b></span>'; }).join("") + '</span>' : '') + '</div>';
   h += '<button class="lien rd-chat" data-act="chat">💬 En parler au clan ›</button>';
   return h;
 }

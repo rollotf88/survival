@@ -2247,3 +2247,10 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .rd-rem{padding:5px 8px}
 @media (max-height:860px){.rd-etages + .bl-note{display:none}}
 @media (orientation:landscape) and (max-height:500px){.raid-tete .raid-img{height:70px}.rd-regles small{display:none}.rd-por{width:40px;height:40px}}
+.rd-rem{display:grid;grid-template-columns:auto 1fr auto;align-items:center}
+.rd-mat{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:2px}
+.rd-m{display:flex;align-items:center;gap:4px;justify-content:center;padding:2px 4px;border-radius:10px;background:var(--card)}
+.rd-m .ing2-case{width:28px;height:28px;flex:none}.rd-m .ing2-case .ico,.rd-m .ing2-case img.ico-img{width:18px;height:18px}
+.rd-m b{font-size:12px;font-weight:900;padding:0 6px;border-radius:999px;color:#fff;background:var(--bad)}
+.rd-m.ok b{background:var(--ok)}
+.rd-rem-b:disabled{opacity:.5}
