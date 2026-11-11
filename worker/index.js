@@ -305,7 +305,7 @@ const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un vo
 async function lireChat(env, cid){ return (await env.CLASSEMENT.get("chat_" + cid, { type: "json" })) || []; }
 function vueChat(liste, mon, id){
   return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef })),
-           journal: (mon.journal || []).slice(0, 25).map((j) => ({ t: j.t, qui: j.qui, txt: j.txt })), chef: mon.chef === id, nom: mon.nom };
+           journal: (mon.journal || []).slice(0, 25).map((j) => ({ t: j.t, qui: j.qui, txt: j.txt })), chef: mon.chef === id, nom: mon.nom, blason: mon.blason || 1, membres: (mon.membres || []).length };
 }
 
 // ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------

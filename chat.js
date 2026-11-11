@@ -13,12 +13,19 @@ function chatVu(){ try{ return +localStorage.getItem("survival_chat_vu") || 0; }
 function noterChatVu(t){ try{ localStorage.setItem("survival_chat_vu", String(t)); }catch(e){} }
 function compterNonLus(d){ var vu = chatVu(); return (d && d.messages || []).filter(function(m){ return !m.moi && m.t > vu; }).length; }
 
+/* Fenêtre façon messagerie (2026-11-11, retour de Fabien : « ça fait old school ») :
+   en-tête avec le blason, bulles groupées par auteur avec une pastille de couleur, heure dans la bulle,
+   séparateurs de jour, actions (effacer / signaler) au toucher de la bulle, messages rapides en puces,
+   barre d'envoi arrondie ; sur PC la discussion prend toute la hauteur du panneau. */
 function openChat(){
-  var h = '<h2>💬 <span id="chatNom">Le clan</span></h2><div id="chat" class="chat-fil"><p class="sub">Chargement…</p></div>'
-    + '<p class="msg" id="chatMsg" style="display:none"></p>'
-    + '<div class="chat-rapides-boite"><div class="chat-rapides">' + CHAT_RAPIDES.map(function(t, i){ return '<button class="chat-r" data-act="chatrapide" data-id="' + i + '">' + t + '</button>'; }).join("") + '</div></div>'
-    + '<div class="chat-saisie"><input id="chatTexte" maxlength="200" placeholder="Écrire au clan…" autocomplete="off" enterkeyhint="send"><button class="btn" data-act="chatenvoyer" aria-label="Envoyer">➤</button></div>'
-    + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>';
+  var h = '<div class="ch-app">'
+    + '<div class="ch-tete"><span class="ch-blason" id="chatBlason">' + ic("bulle", "💬") + '</span><span class="ch-titre"><b id="chatNom">Le clan</b><small id="chatInfo">Discussion du clan</small></span>'
+    + '<button class="ch-bouton" data-act="clans" aria-label="Mon clan" title="Mon clan">' + ic("bastion", "🏰") + '</button><button class="ch-bouton" data-act="close" aria-label="Fermer" title="Fermer">✕</button></div>'
+    + '<div id="chat" class="ch-fil"><p class="ch-vide">Chargement…</p></div>'
+    + '<div class="ch-bas"><p class="ch-toast" id="chatMsg" style="display:none"></p>'
+    + '<div class="ch-rapides">' + CHAT_RAPIDES.map(function(t, i){ return '<button class="ch-r" data-act="chatrapide" data-id="' + i + '">' + t + '</button>'; }).join("") + '</div>'
+    + '<div class="ch-saisie"><input id="chatTexte" maxlength="200" placeholder="Écrire au clan…" autocomplete="off" enterkeyhint="send" aria-label="Message"><button class="ch-envoi" data-act="chatenvoyer" aria-label="Envoyer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5 21 12 3 3.5l2.5 7L15 12l-9.5 1.5z"/></svg></button></div></div>'
+    + '</div>';
   show(h);
   var inp = document.getElementById("chatTexte");
   if(inp) inp.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); envoyerChat(); } });
@@ -26,9 +33,9 @@ function openChat(){
 }
 function chargerChat(defiler){
   appelClans({ action:"chat" }).then(function(d){
-    if(d.erreur){ var f = document.getElementById("chat"); if(f) f.innerHTML = '<p class="msg">❌ ' + d.erreur + '</p>'; return; }
+    if(d.erreur){ var f = document.getElementById("chat"); if(f) f.innerHTML = '<p class="ch-vide">❌ ' + d.erreur + '</p>'; return; }
     etatChat = d; afficherChat(defiler);
-  }).catch(function(){ var f = document.getElementById("chat"); if(f) f.innerHTML = '<p>' + MSG_HORS_LIGNE + '</p>'; });
+  }).catch(function(){ var f = document.getElementById("chat"); if(f) f.innerHTML = '<p class="ch-vide">' + MSG_HORS_LIGNE + '</p>'; });
   planifierChat();
 }
 function planifierChat(){
@@ -37,20 +44,45 @@ function planifierChat(){
 }
 // « a déposé 5 planche, 2 clous » → « a déposé 5 planches, 2 poignées de clous » (comme le journal du bastion)
 function texteJournalClan(t){ return String(t || "").replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return typeof defBastion === "function" && defBastion(k) ? ": " + defBastion(k).nom.toLowerCase() + " (" : m0; }); }
-function heureChat(t){ var d = new Date(t), j = new Date(); return (d.toDateString() === j.toDateString() ? "" : d.getDate() + "/" + (d.getMonth() + 1) + " ") + d.getHours() + "h" + String(d.getMinutes()).padStart(2, "0"); }
+function heureChat(t){ var d = new Date(t); return d.getHours() + "h" + String(d.getMinutes()).padStart(2, "0"); }
+function jourChat(t){
+  var d = new Date(t), j = new Date(), hier = new Date(Date.now() - 864e5);
+  if(d.toDateString() === j.toDateString()) return "Aujourd’hui";
+  if(d.toDateString() === hier.toDateString()) return "Hier";
+  return d.getDate() + " " + ["janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][d.getMonth()];
+}
+// Pastille de couleur avec l'initiale (la couleur dépend du pseudo : chacun garde la sienne)
+function avatarChat(p){
+  p = String(p || "?"); var h = 0; for(var i = 0; i < p.length; i++) h = (h * 31 + p.charCodeAt(i)) % 360;
+  return '<span class="ch-av" style="background:hsl(' + h + ',42%,40%)" aria-hidden="true">' + echapper(p.charAt(0).toUpperCase()) + '</span>';
+}
 function afficherChat(defiler){
   var f = document.getElementById("chat"); if(!f || !etatChat) return;
-  var nom = document.getElementById("chatNom"); if(nom) nom.textContent = "Le clan « " + etatChat.nom + " »";
+  var nom = document.getElementById("chatNom"); if(nom) nom.textContent = etatChat.nom;
+  var info = document.getElementById("chatInfo"); if(info) info.textContent = "Discussion du clan" + (etatChat.membres ? " · " + etatChat.membres + " / 5 familles" : "");
+  var bl = document.getElementById("chatBlason"); if(bl && etatChat.blason && typeof imgBlason === "function" && !bl.dataset.b){ bl.innerHTML = imgBlason(etatChat.blason); bl.dataset.b = "1"; }
   var bas = f.scrollHeight - f.scrollTop - f.clientHeight < 40;
   // Messages et vie du clan, dans l'ordre du temps
   var tout = etatChat.messages.map(function(m){ return { t:m.t, m:m }; }).concat(etatChat.journal.slice(0, 8).map(function(j){ return { t:j.t, j:j }; })).sort(function(a, b){ return a.t - b.t; });
-  f.innerHTML = tout.length ? tout.map(function(e){
-    if(e.j) return '<div class="cm-sys">' + echapper(e.j.qui) + ' ' + echapper(texteJournalClan(e.j.txt)) + ' <small>' + heureChat(e.t) + '</small></div>';
-    var m = e.m;
-    return '<div class="cm-m' + (m.moi ? " moi" : "") + (m.r ? " rapide" : "") + '"><span class="cm-tete">' + (m.chef ? ic("couronne", "👑") + " " : "") + (m.moi ? "<b>Toi</b>" : pseudoCadre(m.qui && m.qui !== "?" ? m.qui : "Sans pseudo", m.cadre)) + ' <small>' + heureChat(m.t) + '</small>'
-      + (m.moi || etatChat.chef ? '<button class="cm-a" data-act="chateffacer" data-id="' + m.id + '" aria-label="Effacer">🗑️</button>' : '')
-      + (!m.moi ? '<button class="cm-a" data-act="chatsignaler" data-id="' + m.id + '" aria-label="Signaler">🚩</button>' : '') + '</span><p>' + echapper(m.txt) + '</p></div>';
-  }).join("") : '<p class="sub">Aucun message pour l’instant. Lance la discussion !</p>';
+  var h = "", jour = "", prec = null;
+  tout.forEach(function(e){
+    var jj = jourChat(e.t);
+    if(jj !== jour){ h += '<div class="ch-jour"><span>' + jj + '</span></div>'; jour = jj; prec = null; }
+    if(e.j){ h += '<div class="ch-sys">' + echapper(e.j.qui) + ' ' + echapper(texteJournalClan(e.j.txt)) + '</div>'; prec = null; return; }
+    var m = e.m, qui = m.qui && m.qui !== "?" ? m.qui : "Sans pseudo";
+    // même auteur, moins de 5 minutes après : la bulle se range sous la précédente, sans répéter le nom
+    var suite = prec && prec.moi === m.moi && prec.qui === m.qui && m.t - prec.t < 5 * 60000;
+    var actions = (m.moi || etatChat.chef ? '<button class="ch-act" data-act="chateffacer" data-id="' + m.id + '">' + ic("poubelle", "🗑️") + ' Effacer</button>' : '')
+      + (!m.moi ? '<button class="ch-act" data-act="chatsignaler" data-id="' + m.id + '">' + ic("signaler", "🚩") + ' Signaler</button>' : '');
+    h += '<div class="ch-l' + (m.moi ? " moi" : "") + (suite ? " suite" : "") + '">'
+      + (m.moi ? '' : (suite ? '<span class="ch-av vide"></span>' : avatarChat(qui)))
+      + '<div class="ch-b' + (m.r ? " rapide" : "") + '" data-act="chatbulle" tabindex="0">'
+      + (!m.moi && !suite ? '<span class="ch-qui">' + (m.chef ? ic("couronne", "👑") + " " : "") + echapper(qui) + '</span>' : '')
+      + '<span class="ch-txt">' + echapper(m.txt) + '</span><span class="ch-h">' + heureChat(m.t) + '</span>'
+      + (actions ? '<span class="ch-acts">' + actions + '</span>' : '') + '</div></div>';
+    prec = m;
+  });
+  f.innerHTML = h || '<div class="ch-vide">' + ic("bulle", "💬") + '<p>Aucun message pour l’instant.<br>Dis bonjour à ton clan !</p></div>';
   if(defiler || bas) f.scrollTop = f.scrollHeight;
   // Fenêtre ouverte : tout est lu
   var der = etatChat.messages.reduce(function(t, m){ return Math.max(t, m.t); }, 0);
@@ -102,6 +134,7 @@ document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
   if(a === "chat") openChat();
+  else if(a === "chatbulle"){ var ouverte = b.classList.contains("voir"); Array.prototype.forEach.call(document.querySelectorAll(".ch-b.voir"), function(x){ x.classList.remove("voir"); }); if(!ouverte && b.querySelector(".ch-acts")) b.classList.add("voir"); }
   else if(a === "chatenvoyer") envoyerChat();
   else if(a === "chatrapide") envoyerChat(+id);
   else if(a === "chateffacer") appelClans({ action:"chatEffacer", mid:id }).then(function(d){ if(d.erreur){ montrerMsgChat("❌ " + d.erreur); return; } etatChat = d; afficherChat(false); });
