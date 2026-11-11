@@ -477,7 +477,7 @@ function expedition(i, voiture){
 }
 // Après la porte : rencontre éventuelle (combat), sinon fouille directe
 function suiteExpedition(){
-  if(hasard() < G.exp.d){ creerCombat(); return { combat:true }; }
+  if(celebreIci(G.exp.lieu) || hasard() < G.exp.d){ creerCombat(); return { combat:true }; }
   return avantFouille();
 }
 // Avant la fouille : à l'étang, s'il reste des poissons et qu'un survivant a une canne, on pêche (mini-jeu)
@@ -536,6 +536,7 @@ function finExpedition(){
   var C = G.combat;
   if(C){
     n = n.concat(C.resume);
+    apresCombatCelebre(n);
     if(C.fin === "fuite") mult *= BAL.combat.butinFuite;
   }
   // Fouille : on pioche dans la vraie liste du lieu
@@ -672,13 +673,49 @@ function tirerZombie(sauf){
   return types[0];
 }
 function nouveauZombie(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }
+/* ---------- Zombie célèbre (2026-11-11, idée validée par Fabien) ----------
+   G.celebre = { id, lieu, pv, pvMax, depuis } ; G.trophees = [{ id, nom, jour, par }] ; G.celebreProchain = jour du prochain */
+function celebre(){ return G.celebre && LIEUX[G.celebre.lieu] ? G.celebre : null; }
+function celebreIci(i){ var c = celebre(); return !!(c && c.lieu === i); }
+function lieuxPourCelebre(sauf){ return LIEUX.map(function(L, i){ return i; }).filter(function(i){ return lieuOuvert(i) && i !== sauf && !LIEUX[i].voiture; }); }
+// Chaque nuit : il apparaît (au jour voulu) ou change de lieu ; la radio dit où il a été vu
+function nuitCelebre(n){
+  var jour = G.day + 1, radio = possede(function(o){ return o.radio; });
+  if(!G.celebre){
+    if(jour < (G.celebreProchain || BAL.celebre.jour)) return;
+    var types = ZOMBIES.filter(function(z){ return z.celebre && !(G.trophees || []).some(function(t){ return t.id === z.id; }); });
+    if(!types.length) return;
+    var T = types[Math.floor(alea("celebre") * types.length)], L0 = lieuxPourCelebre(-1); if(!L0.length) return;
+    G.celebre = { id:T.id, lieu:L0[Math.floor(alea("celebre-lieu") * L0.length)], pv:T.pv, pvMax:T.pv, depuis:jour };
+    n.push(["b2", "💀 " + T.nom + " rôde en ville : un zombie que tout le monde craint. " + (radio ? "📻 La radio le signale près " + de(leLieu(LIEUX[G.celebre.lieu].nom)).replace(/^de le /, "du ").replace(/^de les /, "des ") + "." : "Une radio permettrait de savoir où.")]);
+    return;
+  }
+  var L = lieuxPourCelebre(G.celebre.lieu); if(!L.length) return;
+  G.celebre.lieu = L[Math.floor(alea("celebre-bouge") * L.length)];
+  if(radio) n.push(["", "📻 " + typeZombie({ id:G.celebre.id }).nom + " a été vu" + (G.celebre.id === "mariee" ? "e" : "") + " près " + de(leLieu(LIEUX[G.celebre.lieu].nom)).replace(/^de le /, "du ").replace(/^de les /, "des ") + "."]);
+}
+// Après un combat où il était : il garde ses blessures, ou il tombe (butin, moral, trophée)
+function apresCombatCelebre(n){
+  var c = celebre(), C = G.combat; if(!c || !C) return;
+  var z = C.zombies.find(function(x){ return x.celebre; }); if(!z) return;
+  if(z.pv > 0){ c.pv = z.pv; n.push(["", "💀 " + z.nom + " s’échappe, blessé" + (c.id === "mariee" ? "e" : "") + " (" + z.pv + " / " + c.pvMax + " PV). Il rôdera ailleurs cette nuit."]); return; }
+  var par = (C.tueurCelebre !== undefined && G.m[C.tueurCelebre]) ? G.m[C.tueurCelebre].nom : "la famille";
+  G.trophees = (G.trophees || []).concat([{ id:c.id, nom:z.nom, jour:G.day, par:par }]);
+  G.celebre = null; G.celebreProchain = G.day + BAL.celebre.entre;
+  for(var k in BAL.celebre.butin) ajouter(k, BAL.celebre.butin[k]);
+  changerMoral(BAL.celebre.moral);
+  G.stats.celebres = (G.stats.celebres || 0) + 1;
+  n.push(["g2", "🏆 " + z.nom + " est tombé" + (c.id === "mariee" ? "e" : "") + " sous les coups de " + par + " ! La nouvelle fait le tour du quartier (moral +" + BAL.celebre.moral + "). Sur sa dépouille : " + nommerListe(Object.keys(BAL.celebre.butin).map(function(k){ return { id:k, n:BAL.celebre.butin[k] }; })) + ". Son trophée trône au salon."]);
+}
 function creerCombat(){
   var C = BAL.combat, nb = 1;
   for(var k = 0; k < C.maxEnPlus; k++) if(hasard() < Math.min(0.6, G.day * C.zombieEnPlus + (hordeMondiale() ? BAL.horde.zombieEnPlus : 0))) nb++;
   var zs = [];
   for(var k = 0; k < nb; k++) zs.push(nouveauZombie(tirerZombie()));
+  var cel = G.exp && !G.exp.guerre && celebreIci(G.exp.lieu) ? celebre() : null;
+  if(cel){ var Tc = ZOMBIES.find(function(t){ return t.id === cel.id; }), zc = nouveauZombie(Tc); zc.pv = cel.pv; zc.pvMax = cel.pvMax; zc.celebre = true; zs.unshift(zc); if(zs.length > 3) zs.length = 3; }
   var pv0 = {}; equipeCombat().forEach(function(x){ pv0[G.m.indexOf(x)] = x.hp; }); // pour le bilan du combat
-  G.combat = { zombies:zs, tour:1, journal:[], resume:[], fin:null, pv0:pv0, abattus:0 };
+  G.combat = { zombies:zs, tour:1, journal:cel ? [["b2", "💀 " + Tc.nom + " est là ! " + (cel.pv < cel.pvMax ? "Il porte encore les blessures de votre dernière rencontre." : "Le zombie le plus craint du quartier vous barre la route.")]] : [], resume:[], fin:null, pv0:pv0, abattus:0 };
   preparerIntentions();
   return G.combat;
 }
@@ -802,7 +839,7 @@ function actionZombie(z, protege, J){
     if(aTitre(x, "durACuire")) dg = Math.max(1, dg - 1);
     if(!G.exp.guerre && G.day <= BAL.debutDoux.jours) dg = Math.max(1, Math.round(dg * BAL.debutDoux.degats)); // début de partie plus doux
     J.push(["b2", iconeZombie(z) + " " + z.nom + " frappe " + x.nom + " (−" + dg + " PV)."]);
-    blesser(x, dg, J, "tué par un " + minus(z.nom) + " (" + lieu + ")");
+    blesser(x, dg, J, (z.celebre ? "tué par " + minus(z.nom) : "tué par un " + minus(z.nom)) + " (" + lieu + ")");
   }
 }
 // Les zombies debout attaquent (fuite ratée : tout le monde, sans intention de hurler)
@@ -864,7 +901,7 @@ function jouerTour(choix){
       z.pv = Math.max(0, z.pv - dg);
       J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (arm ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);
     }
-    if(dg && !z.pv){ zombieTombe(z, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); }
+    if(dg && !z.pv){ zombieTombe(z, protege, J); if(z.celebre) C.tueurCelebre = j; if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); }
     userArme(x, J);
     if(r.tir) bruit(J, x);
   });
@@ -1073,6 +1110,7 @@ function verifierChapitre(){
 
 /* ---------- Le monde bouge la nuit : pillards, découvertes, missions ---------- */
 function nuitMonde(n){
+  nuitCelebre(n);
   var P = BAL.pillards, jour = G.day + 1; // le jour qui commence
   // Pillards : ils emportent une partie d'un lieu ouvert qu'il reste à fouiller
   if(jour >= P.jour && alea("pillards") < P.chance){

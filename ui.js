@@ -209,6 +209,7 @@ function openLoc(){
       + '<span class="cl-img">' + (im ? '<img src="' + im + '" alt="">' : '<span class="cl-ico">' + iconeLieu(L) + '</span>')
       + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : L.bois ? "🌲 " + G.lieux[i].arbres : reste ? reste + " obj." : "Vidé") + '</span>'
       + (G.mission && G.mission.lieu === i ? '<span class="cl-mission">🎯</span>' : '')
+      + (radio && celebreIci(i) ? '<span class="cl-celebre" title="' + typeZombie({ id:G.celebre.id }).nom + ' rôde ici">💀 ' + typeZombie({ id:G.celebre.id }).nom + '</span>' : '')
       + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
       + '<span class="cl-nom">' + L.nom + '</span>'
       + '<span class="cl-infos"><span>⚡−' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger">' + (radio ? "📻 " : "⚠️ ") + dg[0] + '</span></span>'
@@ -1126,7 +1127,7 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 var VITRINE = [
   ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
   ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
-  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège."],
+  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège, et des zombies célèbres à traquer."],
   ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
   ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
   ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],

@@ -12,7 +12,7 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 // Icône dessinée k si elle existe, sinon l'emoji donné
 function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
-var PORTRAITS_PNJ = { colosse:"images/portrait-costaud.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
+var PORTRAITS_PNJ = { mariee:"images/portrait-coureur.webp", pompier:"images/portrait-soldat.webp", boucher:"images/portrait-rodeur.webp", colosse:"images/portrait-costaud.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
   defenseur:"images/portrait-pillard.webp", rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
 // Décor du combat selon le lieu (images/combat/*.webp)
 var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
@@ -45,7 +45,7 @@ function iconeMembre(x){
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
-var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:"images/zombies/costaud.webp" };
+var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:"images/zombies/costaud.webp", mariee:"images/zombies/coureur.webp", pompier:"images/zombies/soldat.webp", boucher:"images/zombies/rodeur.webp" };
 function spriteZombie(z){ var s = SPRITES_ZOMBIES[z.id]; return typeof ICONES_SVG !== "undefined" && s ? (typeof s === "string" ? s : "images/zombies/" + z.id + ".webp") : null; }
 function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
@@ -303,6 +303,8 @@ var SAISONS = [
 // Réglé par simulation (2026-11-11) : la baisse du récupérateur en été faisait un mur au jour 91 (bon joueur : 90 % ≤ 102 j au lieu de 113) → retirée ;
 // l'hiver reste un vrai cap (potager endormi, étang gelé) : bon 96-98 j (10 % ≤ 66), moyen 48 j (57 sans saisons), débutant inchangé
 BAL.saisons = { duree:30, faimHiver:3, soifEte:3, recupEte:0, feuHiver:true, couvHiver:true };
+// Zombie célèbre : apparaît au jour 20, change de lieu chaque nuit ; abattu, le suivant revient 25 jours plus tard
+BAL.celebre = { jour:20, entre:25, moral:15, butin:{ trousse:2, boiteBalles:1, ration:2, canette:1 } };
 BAL.horde = { risque:0.15, force:1, zombieEnPlus:0.08, objectifMin:500, objectifParJoueur:100 };
 
 /* ---------- Zombies (combat en expédition) ----------
@@ -319,6 +321,10 @@ var ZOMBIES = [
   // Guerres de clans : les défenseurs d'un bastion adverse (jamais tirés au hasard : jour 99999)
   { id:"defenseur", nom:"Défenseur", icone:"🧔", pv:12, degats:[4, 8], jour:99999, poids:0, desc:"Un survivant d’un autre clan qui défend son bastion. Les remparts le rendent plus coriace." },
   // Raid de l'immeuble (2026-11-10) : le monstre du toit (jamais tiré au hasard)
+  // Zombies célèbres (2026-11-11) : un seul à la fois rôde de lieu en lieu, il garde ses blessures (G.celebre)
+  { id:"mariee",  nom:"La Mariée",  icone:"👰", pv:30, degats:[6, 10], jour:99999, poids:0, coups:2, celebre:true, desc:"Zombie célèbre : dans sa robe déchirée, elle court plus vite que tout le monde et frappe deux fois." },
+  { id:"pompier", nom:"Le Pompier", icone:"🧑‍🚒", pv:42, degats:[8, 13], jour:99999, poids:0, armure:2, lourd:true, celebre:true, desc:"Zombie célèbre : son casque et sa veste arrêtent les coups (armure 2), il écrase la protection. Visez la tête !" },
+  { id:"boucher", nom:"Le Boucher", icone:"🔪", pv:36, degats:[10, 16], jour:99999, poids:0, celebre:true, desc:"Zombie célèbre : il frappe plus fort que tous les autres. Mieux vaut se protéger ou le repousser." },
   { id:"colosse", nom:"Colosse", icone:"🧟‍♂️", pv:45, degats:[9, 15], jour:99999, poids:0, lourd:true, armure:1, desc:"Le monstre du toit de l’immeuble : énorme, il écrase la protection et encaisse énormément. Visez la tête !" }
 ];
 function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }

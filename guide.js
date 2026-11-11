@@ -41,6 +41,8 @@ function reglesGuide(){
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
     ["Les défis", "🎯",
       "Chaque jour, 3 défis (les mêmes pour tous les joueurs) : abattre des zombies, fouiller, cuisiner, pêcher, couper du bois… Ils avancent dans toutes tes parties. Les 3 réussis rapportent un colis (un largage avec un bonus) ; le grand défi de la semaine en rapporte un autre. Menu ☰ → Défis."],
+    ["Les zombies célèbres", "💀",
+      "À partir du jour " + BAL.celebre.jour + ", un zombie unique rôde en ville : " + ZOMBIES.filter(function(z){ return z.celebre; }).map(function(z){ return "<b>" + z.nom + "</b>"; }).join(", ") + ". Il change de lieu chaque nuit ; avec une radio, le bilan dit où il a été vu et sa carte est marquée 💀. Aller dans son lieu, c’est l’affronter à coup sûr ; il garde ses blessures si vous fuyez. Abattu, il laisse un butin rare, fait remonter le moral (+" + BAL.celebre.moral + ") et son trophée trône sur la cheminée du salon. Le suivant arrive " + BAL.celebre.entre + " jours plus tard."],
     ["Les saisons", "🍂",
       "Une saison dure " + BAL.saisons.duree + " jours de jeu, dans cet ordre : " + SAISONS.map(function(S){ return S.ico + " <b>" + S.nom + "</b> (" + S.effet + ")"; }).join(" ; ") + ". La saison s’affiche à côté du chapitre, sous le jour ; elle est annoncée dans le bilan de la nuit quand elle change."],
     ["La grande horde du week-end", "🌍",
@@ -175,9 +177,9 @@ function openGuide(){
         + '</p><div class="gmini">' + Object.keys(E.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div>'; }).join("")
       + '<p class="sub">Zombies renforcés étage après étage. Butin : ' + BAL.immeuble.sac + ' objets par volontaire debout, ' + BAL.immeuble.remorque + ' de plus avec la remorque du bastion.</p></div>';
   } else if(guideOnglet === "zombies"){
-    h += ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse"; }).map(function(z){
+    h += ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse" || z.celebre; }).map(function(z){
       var Et = z.id === "colosse" ? BAL.immeuble.etages[BAL.immeuble.etages.length - 1] : null, pvG = Et ? Math.round(z.pv * Et.pv) : z.pv, dgG = Et ? [z.degats[0] + Et.degats, z.degats[1] + Et.degats] : z.degats;
-      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + pvG + ' PV · frappe ' + dgG[0] + ' à ' + dgG[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.id === "colosse" ? "seulement sur le toit de l’immeuble (opération de clan)" : z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
+      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + pvG + ' PV · frappe ' + dgG[0] + ' à ' + dgG[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.id === "colosse" ? "seulement sur le toit de l’immeuble (opération de clan)" : z.celebre ? "zombie célèbre, à partir du jour " + BAL.celebre.jour : z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
     }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
   } else {
     h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';

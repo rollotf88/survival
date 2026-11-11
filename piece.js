@@ -19,6 +19,7 @@ var ZONES_PIECE = [
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
   ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", .5, function(){ return compter("radio") > 0; }],
+  ["oTrophees",  172, 296, 232, 356, function(){ return "🏆"; }, "Trophées", .2, function(){ return G.trophees && G.trophees.length > 0; }],
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
   ["chapitre",   365, 570, 660, 678, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
   ["oCartes",    372, 578, 410, 604, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
@@ -27,6 +28,7 @@ var ZONES_PIECE = [
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
 // [image, x0, y0, x1, y1, condition]
 var DECOR_PIECE = [
+  ["images/icones/trophee.webp", 176, 300, 228, 356, function(){ return G.trophees && G.trophees.length > 0; }], // trophée d'un zombie célèbre abattu, sur la cheminée
   ["images/planches.webp", 904, 262, 1022, 454, function(){ return G.ref && G.ref.barr >= 1; }], // barricade construite : planches sur la porte
   ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],                  // Rex adopté : couché devant le canapé
   // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)
@@ -313,6 +315,7 @@ document.addEventListener("click", function(e){
   else if(a === "pCheminee") openFeu();
   else if(a === "pFoyer") openFoyerClan();
   else if(a === "pTombes") openTombes();
+  else if(a === "oTrophees") openTrophees();
   else if(a === "recueillir"){ if(recueillir()){ msgTombes = "🕯️ La famille se recueille en silence. Le moral remonte un peu (+" + BAL.tombes.moral + ")."; render(); if(typeof sauver === "function") sauver(); } openTombes(); }
   else if(a === "pChat"){ if(typeof openChat === "function") openChat(); }
   else if(a === "versSalon"){ hide(); allerPiece(0); }
@@ -558,4 +561,14 @@ function placerMeteo(){
   if(!type || !dehors || !cont || cont.style.display === "none"){ m.style.display = "none"; return; }
   m.className = "meteo " + type; m.style.display = "block";
   m.style.top = cont.style.top; m.style.height = cont.style.height; m.style.left = cont.style.left; m.style.right = cont.style.right;
+}
+
+/* ---------- Trophées des zombies célèbres (sur la cheminée du salon) ---------- */
+function openTrophees(){
+  var T = G.trophees || [], c = celebre();
+  var h = '<h2>🏆 Les trophées</h2><p class="sub">Sur la cheminée, les souvenirs des zombies célèbres que la famille a abattus.</p>';
+  h += T.length ? '<div class="tombes">' + T.map(function(t){ var Z = ZOMBIES.find(function(z){ return z.id === t.id; }) || { id:t.id };
+    return '<div class="tombe">' + iconeZombie(Z) + '<span class="cl-info"><b>' + t.nom + '</b><small>Abattu' + (t.id === "mariee" ? "e" : "") + ' par ' + t.par + '</small><small>Jour ' + t.jour + '</small></span></div>'; }).join("") + '</div>' : '<p>Aucun trophée pour l’instant.</p>';
+  if(c){ var Z2 = ZOMBIES.find(function(z){ return z.id === c.id; }); h += '<p class="titre-butin">💀 Encore en liberté</p><p>' + Z2.nom + ' (' + c.pv + ' / ' + c.pvMax + ' PV) rôde en ville' + (possede(function(o){ return o.radio; }) ? ", près " + de(leLieu(LIEUX[c.lieu].nom)).replace(/^de le /, "du ").replace(/^de les /, "des ") + "." : ". Une radio dirait où.") + '</p>'; }
+  show(h + BTN_FERMER());
 }
