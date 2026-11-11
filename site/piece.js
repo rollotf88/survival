@@ -83,12 +83,13 @@ var PIECES = [
     ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3],
     ["pTombes",  600, 520, 785, 660, function(){ return "🕯️"; }, "Tombes", .1, function(){ return (G.dd && G.dd.length > 0) || !!G.lettre; }]
   ]},
-  // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
-  { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
+  // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si). Panneau des opérations (Gemini, 2026-11-11) accroché au mur, au-dessus de la niche à bûches
+  { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[["images/panneau-ops.webp", 206, 162, 346, 301, function(){ return true; }]], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
     ["pChat",         0, 395, 235, 745, function(){ return "💬"; }, "Discuter", .5],
     ["pClan",       350, 220, 690, 460, function(){ return "🛡️"; }, "Mon clan", .5],
     ["pGuerre",     728, 225, 1010, 665, function(){ return "⚔️"; }, "La guerre", .4],
-    ["pOperations", 230, 515, 805, 920, function(){ return "🎯"; }, "Opérations", .35]
+    ["pOperations", 230, 515, 805, 920, function(){ return "🎯"; }, "Opérations", .35],
+    ["pPanneau",    206, 162, 346, 301, function(){ return "📌"; }, "Avis", .5]
   ]},
   { id:"bastionTresor", nom:"Bastion · salle du trésor", img:"images/piece-bastion-tresor.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:900 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
     ["pReserve",  100, 205, 930, 855, function(){ return "📦"; }, "Réserve du clan", .2],
@@ -221,7 +222,7 @@ function placerPiece(){
     var x = dx + z[1] * s - gx, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
-    var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
+    var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || ((z[0] === "pOperations" || z[0] === "pPanneau") && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
     return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
@@ -334,7 +335,7 @@ document.addEventListener("click", function(e){
   else if(a === "pPoules"){ if(typeof son === "function") son("poule"); openPoules(); }
   else if(a === "buildel"){ var be = b.getAttribute("data-id"); var ok = ameliorer(be); render(); openElement(be, ok ? "✅ " + REFUGE[be].nom + " amélioré : niveau " + G.ref[be] + " !" : ""); if(ok && typeof son === "function") son("construire"); }
   else if(a === "pClan"){ if(typeof openClans === "function") openClans(); }
-  else if(a === "pOperations"){ if(typeof ouvrirOperation === "function") ouvrirOperation(null); }
+  else if(a === "pOperations" || a === "pPanneau"){ if(typeof ouvrirOperation === "function") ouvrirOperation(null); }
   else if(a === "pClassClans"){ if(typeof openClassementClans === "function") openClassementClans(); }
   else if(a === "pGuerre"){ if(typeof openGuerre === "function") openGuerre(); }
   else if(a === "pReserve"){ if(typeof openBastion === "function") openBastion("reserve"); }
