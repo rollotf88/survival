@@ -2374,3 +2374,8 @@ body.pc #app .chapcourt .ch-btn{font-size:13px}
 .mc-barres{display:flex;flex-direction:column;gap:3px;margin:4px 0 2px}
 .mc-barres .bar{height:9px}
 .mc .slots,.mc .porte{margin-top:auto}
+.qp-barres{display:flex;flex-direction:column;gap:2px;width:100%;max-width:140px}
+.qp-barres .jauge,.qp-barres > *{margin:0}
+[data-act="fouille"].btn-jeu{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:0 6px}
+[data-act="fouille"].btn-jeu .qp-noms{flex-basis:100%;text-align:center}
+.row:has(> [data-act="fouille"]){align-items:stretch}

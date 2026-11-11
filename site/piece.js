@@ -276,7 +276,7 @@ function openQuiPart(){
     var st = x.raid ? ["", "🏢 Au bastion"] : on ? ["ok", "✔ Part"] : !ok ? ["ko", "😴 Épuisé" + (fem ? "e" : "")] : fatigue(x) ? ["moy", "🥱 Fatigué" + (fem ? "e" : "")] : ["", "Disponible"];
     h += '<div class="qprow' + (on ? " choisi" : "") + (ok ? "" : " hors") + '"><button class="qpqui" data-act="qpsel" data-id="' + i + '"' + (ok ? "" : " disabled") + '><span class="qp-por">' + iconeMembre(x) + (on ? '<i class="qp-coche">✔</i>' : '') + '</span>'
       + '<span class="qp-t"><b>' + x.nom + '</b><span class="qp-st ' + st[0] + '">' + st[1] + '</span>'
-      + '<span class="qp-bar vie"><i class="' + niveau(x.hp) + '" style="width:' + x.hp + '%"></i></span><span class="qp-bar en"><i style="width:' + x.en + '%"></i></span></span></button>'
+      + '<span class="qp-barres">' + barre("❤️", x.hp) + barre("⚡", x.en) + '</span></span></button>'
       + '<div class="qpeq">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-retour="quipart" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : "vide") + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
