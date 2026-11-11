@@ -906,8 +906,9 @@ function openRef(onglet){
       var r = REFUGE[k], l = G.ref[k], mx = l >= r.max, peut = !mx && compter("planche") >= coutAmelioration(k);
       if(selRef === "b:" + k){
         var cout = { planche:coutAmelioration(k) };
-        fiche = '<div class="invfiche"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + ' · niveau ' + l + ' / ' + r.max + '</b><small>' + r.desc + '</small></span></div>'
-          + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : ingredients(cout) + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="build" data-id="' + k + '"' + (peut ? "" : " disabled") + '>' + (peut ? "🔨 " + (l ? "Améliorer" : "Construire") : "❌ Il manque " + nommer("planche", coutAmelioration(k) - compter("planche"))) + '</button>');
+        var pips = ''; for(var q = 0; q < r.max; q++) pips += '<i class="' + (q < l ? "on" : "") + '"></i>';
+        fiche = '<div class="invfiche"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + '</b><span class="bd-pips">' + pips + '</span><small>' + r.desc + '</small></span></div>'
+          + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : '<p class="titre-butin">Niveau ' + (l + 1) + ' : il faut</p>' + ingredients(cout) + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="build" data-id="' + k + '"' + (peut ? "" : " disabled") + '>' + (peut ? "🔨 " + (l ? "Améliorer" : "Construire") : "❌ Il manque " + nommer("planche", coutAmelioration(k) - compter("planche"))) + '</button>');
       }
       return caseObjet(null, { act:"refsel", cle:"b:" + k, sel:selRef === "b:" + k, icone:ic("ref_" + k, r.icone), nom:r.nom, badge:l + "/" + r.max, pret:peut, terne:mx });
     }), 5);
@@ -920,7 +921,7 @@ function openRef(onglet){
           if(selRef === "c:" + r.i){
             var o = OBJETS[r.rec.id];
             fiche = '<div class="invfiche"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + '</b><small>' + o.desc + '</small></span></div>'
-              + ingredients(r.rec.ingredients, r.rec.besoin) + boutonTravail("🛠️ Fabriquer", "craft", r.i, r.rec.ingredients, r.rec.besoin);
+              + '<p class="titre-butin">Il faut</p>' + ingredients(r.rec.ingredients, r.rec.besoin) + boutonTravail("🛠️ Fabriquer", "craft", r.i, r.rec.ingredients, r.rec.besoin);
           }
           return caseObjet(r.rec.id, { act:"refsel", cle:"c:" + r.i, sel:selRef === "c:" + r.i, pret:!r.e, terne:!!r.e });
         }), 10);
@@ -934,7 +935,7 @@ function openRef(onglet){
           if(selRef === "k:" + r.i){
             var o = OBJETS[r.rec.id], np = portionsRecette(r.i);
             fiche = '<div class="invfiche"><span class="em">' + icone(r.rec.id) + '</span><span class="eqt"><b>' + o.nom + ' · ' + np + ' portions</b><small>Chaque portion : ' + o.desc + '</small></span></div>'
-              + ingredientsCuisine(r.rec.ingredients) + boutonCuisine(r.i);
+              + '<p class="titre-butin">Il faut</p>' + ingredientsCuisine(r.rec.ingredients) + boutonCuisine(r.i);
           }
           return caseObjet(r.rec.id, { act:"refsel", cle:"k:" + r.i, sel:selRef === "k:" + r.i, pret:!r.e, terne:!!r.e, n:gp[r.rec.id] || null });
         }), 6);
@@ -957,7 +958,7 @@ function openRef(onglet){
     }
   }
   if(!fiche && !selRef && ongletRef !== "voiture" && h.indexOf('data-act="refsel"') >= 0){ var m1 = h.match(/data-act="refsel" data-id="([^"]+)"/); if(m1){ selRef = m1[1]; openRef(); return; } }
-  if(ongletRef !== "voiture") h += fiche || '<p class="sub">Touche une case pour voir le détail.</p>';
+  if(ongletRef !== "voiture") h += fiche ? '<div class="rf-fiche">' + fiche + '</div>' : '<p class="sub">Touche une case pour voir le détail.</p>';
   show(h + BTN_FERMER());
   if(fiche){ var fi = document.querySelector("#sheet .invfiche, #sheet .ings2"); if(fi) fi.scrollIntoView({ block:"nearest" }); }
 }

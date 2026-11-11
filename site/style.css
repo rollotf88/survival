@@ -2274,3 +2274,13 @@ ol.classement li > b{min-width:0;overflow:hidden}
 @media (max-width:400px){.mk-o{grid-template-columns:1fr auto 1fr}.mk-go{grid-column:1/-1}}
 .tuiles.t4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .tuiles.t4 .tuile small{font-size:10.5px;line-height:1.15}
+
+/* ---------- Fiche du refuge en carte (2026-11-11, comme le bastion) ---------- */
+.rf-fiche{border:2px solid var(--bois);border-radius:16px;background:var(--bg);box-shadow:0 3px 0 var(--line);padding:10px 12px}
+.rf-fiche .invfiche{border:0;background:none;box-shadow:none;padding:0;margin:0}
+.rf-fiche .invfiche .em{width:64px;height:64px;flex:none;display:grid;place-items:center;background:url(images/case-sel.webp) center/100% 100%}
+.rf-fiche .invfiche .em .ico,.rf-fiche .invfiche .em img.ico-img{width:42px;height:42px}
+.rf-fiche .titre-butin{margin:10px 0 4px}
+.rf-fiche .ings2{justify-content:flex-start;margin:0 0 8px}
+.rf-fiche > .btn,.rf-fiche .btn-travail{margin-bottom:0!important}
+.resume.rs{margin-bottom:6px}.rs-lien{margin-top:-2px}
