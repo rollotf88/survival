@@ -657,6 +657,10 @@ function auLit(r){ var x = G && G.m && G.m.find(function(y){ return (y.r || y.no
   var P = PIECES.find(function(p){ return p.id === "chambre"; }); if(!P) return;
   P.decor = P.decor || [];
   var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
-  var lits = Object.keys(LITS_CHAMBRE).map(function(r){ var L = LITS_CHAMBRE[r]; return ["images/personnages/chambre-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auLit(r); }]; });
+  // lit vide (couverture pliée, drap bien à plat : retour de Fabien, les lits d'origine avaient l'air occupés) ou lit occupé
+  var lits = [];
+  Object.keys(LITS_CHAMBRE).forEach(function(r){ var L = LITS_CHAMBRE[r];
+    lits.push(["images/personnages/chambre-vide-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return !auLit(r); }]);
+    lits.push(["images/personnages/chambre-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auLit(r); }]); });
   Array.prototype.splice.apply(P.decor, [apres, 0].concat(lits));
 })();
