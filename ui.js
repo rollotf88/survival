@@ -1572,7 +1572,7 @@ if(enCours){
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
   lancerVitrine();
   // Téléphone (2026-11-11, raccord avec la DA) : carte de la partie (jour en grand, score, famille en portraits), gros bouton, deux boutons côte à côte
-  window.htmlAccueil = '<div class="acc-mob"><div class="acc-carte"><p class="mf-titre">Partie en cours · ' + (enCours.seed ? "🏆 classée du " + dateGraine(enCours.seed) : "🎲 libre") + '</p>'
+  window.htmlAccueil = '<div class="acc-mob"><div class="acc-carte"><p class="mf-titre acc-titre"><span>Partie en cours</span><span class="acc-type">' + (enCours.seed ? "🏆 Classée · " + dateGraine(enCours.seed) : "🎲 Libre") + '</span></p>'
     + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
     + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div>'
     + '<div class="acc-bas"><div class="monde-place" data-compact="1"></div>'

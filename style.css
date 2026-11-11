@@ -2055,3 +2055,5 @@ ol.classement li > b{min-width:0;overflow:hidden}
   .mf.mis .it-anneau{width:54px;height:54px}.mf.mis .it-anneau .it-ico{width:42px;height:42px}.mf.mis .it-anneau .it-ico .ico,.mf.mis .it-anneau .it-ico img.ico-img{width:26px;height:26px}
   .mf.mis .msg{font-size:13px;line-height:1.3;padding:6px 9px}.mf.mis .mis-go small{display:none}.mf.mis .mis-go{padding:7px}.mf.mis .mf-bloc{padding:6px 8px}
 }
+.acc-titre{display:flex;justify-content:space-between;align-items:center;gap:8px;white-space:nowrap}
+.acc-titre .acc-type{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:800;opacity:.85}
