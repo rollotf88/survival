@@ -590,17 +590,19 @@ function openMembre(i){
 
 /* ---------- Mission en cours ---------- */
 function openMission(){
+  // Raccord avec la DA (2026-11-11) : anneau du temps qui reste, récit en carte, récompense et objets à livrer en petites cases
   var M = mission(); if(!M){ hide(); return; }
-  var j = joursMission(), h = '<h2>' + M.icone + ' ' + M.titre + '</h2><p>' + texteMission() + '</p>';
-  h += '<p class="sub">⏳ ' + (j > 1 ? "Encore " + j + " jours" : "Dernier jour !") + '</p>';
-  var rec = []; for(var k in M.recompense) rec.push(icone(k) + " " + nommer(k, M.recompense[k]));
-  if(M.moral) rec.push("moral +" + M.moral);
-  h += '<p class="sub">🎁 Récompense : ' + rec.join(", ") + '</p>';
+  var j = joursMission(), kl = M.livrer ? livraisonPossible() : -1;
+  var h = teteInfo(M.icone, "Mission", M.titre, j > 1 ? (kl >= 0 ? "ok" : "moy") : "ko", j / M.delai * 100, j > 1 ? "⏳ Encore " + j + " jours" : "⏳ Dernier jour !");
+  h += '<p class="msg">' + texteMission() + '</p>';
+  var rec = []; for(var k in M.recompense) rec.push('<span class="ing2 rec" title="' + OBJETS[k].nom + '"><span class="ing2-case">' + icone(k) + '</span><b>×' + M.recompense[k] + '</b><small>' + (NOM_COURT[k] || OBJETS[k].nom) + '</small></span>');
+  if(M.moral) rec.push('<span class="ing2 rec"><span class="ing2-case">😊</span><b>+' + M.moral + '</b><small>moral</small></span>');
+  h += '<div class="mf-bloc"><p class="mf-titre">🎁 Récompense</p><div class="ings2">' + rec.join("") + '</div></div>';
   if(M.livrer){
-    var kl = livraisonPossible();
-    h += '<button class="loc" data-act="livrer"' + (kl >= 0 ? "" : " disabled") + '><b>📦 Livrer ' + M.livrer.map(function(l){ return Object.keys(l).map(function(id){ return icone(id) + " " + nommer(id, l[id]); }).join(" + "); }).join(" ou ") + '</b><small>' + (kl >= 0 ? "Vous avez ce qu’il faut." : "Il vous manque des objets : allez fouiller !") + '</small></button>';
-  } else h += '<p class="sub">🗺️ Envoie une équipe à ' + iconeLieu(LIEUX[G.mission.lieu]) + ' ' + LIEUX[G.mission.lieu].nom + ' : la mission réussit si quelqu’un en revient vivant.</p>';
-  show(h + BTN_FERMER());
+    h += '<div class="mf-bloc"><p class="mf-titre">📦 À livrer' + (M.livrer.length > 1 ? ' (au choix)' : '') + '</p>' + '<div class="mis-opts">' + M.livrer.map(function(l){ return ingredients(l); }).join('<span class="mis-ou">ou</span>') + '</div></div>';
+    h += '<button class="loc btn-jeu mis-go" data-act="livrer"' + (kl >= 0 ? "" : " disabled") + '><b>📦 Livrer</b><small>' + (kl >= 0 ? "Vous avez ce qu’il faut." : "Il vous manque des objets : allez fouiller !") + '</small></button>';
+  } else h += '<div class="mf-bloc"><p class="mf-titre">🗺️ Où aller</p><p class="mis-lieu">' + iconeLieu(LIEUX[G.mission.lieu]) + '<span><b>' + LIEUX[G.mission.lieu].nom + '</b><small>La mission réussit si quelqu’un en revient vivant. Le lieu est marqué 🎯 dans la liste.</small></span></p></div>';
+  show('<div class="mf info mis">' + h + '</div>');
 }
 
 /* ---------- Détail du chapitre ---------- */

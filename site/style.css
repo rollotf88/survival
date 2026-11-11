@@ -2032,3 +2032,26 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .acc-mob .acc-ligne{margin:0 0 6px}.acc-mob .acc-carte{margin-bottom:8px}.acc-mob .monde-place{margin-bottom:8px}
 @media (orientation:landscape) and (max-height:500px){.acc-mob{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}.acc-mob .acc-carte{margin:0}.acc-mob .monde-place{display:none}}
 @media (max-height:860px) and (orientation:portrait){.acc-mob .acc-note{display:none}}
+
+/* ---------- Fenêtre des missions (2026-11-11) ---------- */
+.mf.mis .msg{margin:0}
+.mf.mis .ings2{justify-content:flex-start}
+.ing2.rec b{color:var(--ok)}
+.mis-ou{margin:2px 0;font-size:12px;font-weight:900;text-transform:uppercase;color:var(--mut);text-align:center}
+.mis-go{width:100%;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.mis-go b{font-size:17px}
+.mis-lieu{display:flex;align-items:center;gap:10px;margin:0}
+.mis-lieu > .ico,.mis-lieu > img{width:44px;height:44px;flex:none}
+.mis-lieu small{display:block;color:var(--mut);font-size:12.5px}
+.mis-opts{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mis-opts .ings2{margin:0}
+@media (max-height:700px){.mf.mis .msg{font-size:14px;line-height:1.35}}
+@media (orientation:landscape) and (max-height:500px){
+  .mf.mis{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row dense;gap:8px 12px;align-items:start}
+  .mf.mis > .infotete,.mf.mis > .msg{grid-column:1}
+  .mf.mis > .mf-bloc,.mf.mis > .mis-go{grid-column:2}
+}
+@media (orientation:landscape) and (max-height:500px){
+  .mf.mis .it-anneau{width:54px;height:54px}.mf.mis .it-anneau .it-ico{width:42px;height:42px}.mf.mis .it-anneau .it-ico .ico,.mf.mis .it-anneau .it-ico img.ico-img{width:26px;height:26px}
+  .mf.mis .msg{font-size:13px;line-height:1.3;padding:6px 9px}.mf.mis .mis-go small{display:none}.mf.mis .mis-go{padding:7px}.mf.mis .mf-bloc{padding:6px 8px}
+}
