@@ -12,7 +12,7 @@ var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma"
 // Icône dessinée k si elle existe, sinon l'emoji donné
 function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
-var PORTRAITS_PNJ = { mariee:"images/portrait-coureur.webp", pompier:"images/portrait-soldat.webp", boucher:"images/portrait-rodeur.webp", colosse:"images/portrait-costaud.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
+var PORTRAITS_PNJ = { mariee:"images/portrait-mariee.webp", pompier:"images/portrait-pompier.webp", boucher:"images/portrait-boucher.webp", colosse:"images/portrait-colosse.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
   defenseur:"images/portrait-pillard.webp", rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
 // Décor du combat selon le lieu (images/combat/*.webp)
 var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
