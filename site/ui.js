@@ -1549,6 +1549,18 @@ if(enCours){
   nouvellePartie(null); G.ph = "accueil";
   document.body.classList.add("accueil-ouvert"); // la fenêtre « Partie en cours » laisse toucher la vitrine derrière elle
   document.body.classList.add("fond");
+  // Sur PC (2026-11-11, retour de Fabien : « fait encore trop mobile ») : un grand panneau en deux colonnes comme l'écran d'histoire
+  if(window.matchMedia && matchMedia("(min-width:1100px) and (min-height:620px)").matches){
+    document.body.classList.remove("accueil-ouvert");
+    $("app").innerHTML = '<div class="panneau intro accueil-pc"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
+      + '<div class="intro-recit"><div class="acc-carte"><p class="mf-titre">' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + '</p>'
+      + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
+      + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div></div>'
+      + '<div class="acc-boutons"><button class="btn acc-go" data-act="continuer">▶️ Continuer la partie</button><div class="acc-sec"><button class="btn alt" data-act="guide">📖 Guide du survivant</button><button class="btn alt acc-nouv" data-act="nouvelle">🆕 Nouvelle famille</button></div><small class="acc-note">Commencer une nouvelle famille efface la partie en cours.</small></div>'
+      + '<div class="intro-cote">' + vitrine() + '<div class="monde-place"></div></div></div>';
+    lancerVitrine();
+    if(typeof poserMonde === "function") poserMonde();
+  } else {
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
   lancerVitrine();
   show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
@@ -1558,6 +1570,7 @@ if(enCours){
     + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guide">📖 Guide du survivant</button>'
     + '<button class="btn alt" style="width:100%" data-act="nouvelle">🆕 Nouvelle famille (la partie en cours sera perdue)</button>');
   if(typeof poserMonde === "function") poserMonde();
+  }
 } else nouvelleFamille();
 
 /* =====================================================================
