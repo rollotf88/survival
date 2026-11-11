@@ -204,3 +204,33 @@ Même style, même fond magenta uni, même grille 4 × 4 sans texte ni trait, sy
 14. mégaphone
 15. flocon de neige bleu
 16. spirale violette (folie)
+
+## Prompt 11 (grille 11 : symboles 4, demandée le 2026-11-11 — emojis encore affichés dans le jeu)
+
+Même style que les planches précédentes (cartoon peint, contour brun foncé épais, un peu usé), même fond magenta pur uni (#FF00FF), même grille 4 × 4 sans texte, sans chiffre, sans trait de grille. Symboles affichés en tout petit dans des phrases : formes simples et grosses, très lisibles, peu de détails. Ordre :
+1. toque blanche de cuisinier avec une louche en bois croisée (le trait « Cuisinier »)
+2. globe terrestre vert et bleu, une main de zombie verte qui sort par le dessus (la grande horde mondiale)
+3. feuille d'automne orange et rouge (l'automne)
+4. jeune pousse verte à deux feuilles qui sort de la terre (le printemps)
+5. soleil jaune avec des rayons (l'été)
+6. sablier en bois avec du sable qui coule
+7. chronomètre argenté à bouton (compte à rebours)
+8. vieille télévision cathodique à antennes (la publicité)
+9. presse-papiers marron avec une feuille blanche (copier)
+10. carton ouvert avec une flèche verte qui en sort vers le haut (partager)
+11. petit drapeau rouge sur un mât (signaler)
+12. trombone argenté
+13. deux mains jointes (merci)
+14. poignée de main (deux mains qui se serrent)
+15. petite maison en ruine, toit effondré, planches clouées
+16. poubelle en métal avec couvercle (supprimer)
+
+## Prompt 12 (grille 12 : symboles 5, facultatif, 3 × 2)
+
+Même style, même fond magenta uni, grille de 3 colonnes × 2 rangées = 6 cases, sans texte ni trait :
+1. pouce levé
+2. main qui salue
+3. bouton pause (deux barres verticales dans un rond)
+4. deux flèches en boucle (rejouer)
+5. maillot de sport sans manches (le volontaire du raid)
+6. « 100 » remplacé par un tampon rond rouge avec une coche (objectif atteint), sans chiffres
