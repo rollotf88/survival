@@ -731,13 +731,19 @@ ICONES_SVG.chien =
    Sur un portrait, on ne dessine pas par-dessus le visage : on ajoute
    des badges dans le coin (bandage, Z, goutte ou boîte), et le portrait
    devient gris quand le personnage est mort. */
-function portraitMembre(x){
+// Petits badges d'état d'un membre (blessé, épuisé, soif ou faim)
+function badgesEtat(x){
   var b = [];
   if(x.al){
     if(x.hp < ETATS_VISAGE.blesse) b.push(svgIcone("bandage"));
     if(x.en < ETATS_VISAGE.epuise) b.push('<span class="zz">Z</span>');
     if(x.soif < ETATS_VISAGE.faimSoif || x.faim < ETATS_VISAGE.faimSoif) b.push(svgIcone(x.soif <= x.faim ? "bouteille" : "conserve"));
   }
+  return b;
+}
+// sansBadges : les cartes de la famille affichent les badges à droite du prénom (sinon ils cachaient la ligne d'état)
+function portraitMembre(x, sansBadges){
+  var b = sansBadges ? [] : badgesEtat(x);
   // Mort : portrait gris, cadre penché et vitre brisée par-dessus
   var brise = x.al ? '' : '<svg class="fissure" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round">'
     + '<path d="M58 -2 L50 28 L64 44 L42 66 L54 102 M50 28 L22 36 L4 30 M64 44 L92 52 M42 66 L16 82 M64 44 L70 20" stroke="#1d282c" stroke-width="6"/>'

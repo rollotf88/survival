@@ -39,9 +39,9 @@ var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-m
   // Recrues (Leonardo.ai, 2026-11-09)
   "Sam":"images/portrait-sam.webp", "Nora":"images/portrait-nora.webp", "Inès":"images/portrait-ines.webp", "Yanis":"images/portrait-yanis.webp" };
 // x.r = rôle d'origine (Papa, Maman, Léo, Emma ou le nom d'une recrue) : il garde le bon portrait même renommé
-function iconeMembre(x){
+function iconeMembre(x, sansBadges){
   var r = x.r || x.nom;
-  if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x);
+  if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x, sansBadges);
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre

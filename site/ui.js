@@ -148,7 +148,7 @@ function rGame(){
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
     var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + classeUsure(o) + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
-    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (on ? '<span class="coche" aria-hidden="true">✔</span>' : '') + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x) + '</span><b>' + x.nom + '</b></div><small>' + st + '</small>'
+    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (on ? '<span class="coche" aria-hidden="true">✔</span>' : '') + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x, true) + '</span><b>' + x.nom + '</b>' + (typeof badgesEtat === "function" && badgesEtat(x).length ? '<span class="etats">' + badgesEtat(x).join("") + '</span>' : '') + '</div><small>' + st + '</small>'
       + barre("❤️", x.hp) + barre("⚡", x.en) + barre(ic("conserve", "🥫"), x.faim) + barre(ic("bouteille", "💧"), x.soif) + porte
       + (x.al ? '<div class="slots">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0; // case vide mais un objet attend au stock

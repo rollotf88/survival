@@ -1541,3 +1541,13 @@ body.pc .chapcourt .ch-saison{display:block;font-size:.85em;opacity:.9}
 .saison.on{border-color:var(--accent,#d98b2b);box-shadow:0 0 0 1px var(--accent,#d98b2b) inset}
 .saison .s-ico{font-size:24px;text-align:center}
 .saison small{display:block;font-size:12px;opacity:.85}
+
+/* Cartes de la famille : les badges d'état (blessé, épuisé, soif, faim) à droite du prénom, plus sur le portrait */
+.mc > div:first-of-type{display:flex;align-items:center}
+.mc .etats{margin-left:auto;display:flex;gap:3px;align-items:center;flex:0 0 auto}
+.mc .etats .ico,.mc .etats img.ico-img{width:22px;height:22px;background:var(--card);border-radius:50%;box-shadow:0 0 0 1.5px var(--ink);padding:1px}
+.mc .etats .zz{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 0 0 1.5px var(--ink);font-weight:900;font-size:13px;color:#7a5c9e}
+@media (max-width:559px){
+  body.fond .scene .mc .etats{position:absolute;top:15px;right:3px;flex-direction:column;gap:2px;margin:0}
+  body.fond .scene .mc .etats .ico,body.fond .scene .mc .etats img.ico-img,body.fond .scene .mc .etats .zz{width:14px;height:14px;font-size:9px}
+}
