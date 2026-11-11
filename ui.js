@@ -518,6 +518,17 @@ function openSlot(i, slot){
 
 /* ---------- Téléphone : barre de famille compacte + fiche du membre ---------- */
 function modeMini(){ return window.matchMedia("(max-width: 559px)").matches; }
+// Fiche d'un membre : ses titres gagnés, puis les prochains à portée (compteur / seuil)
+function exploitsMembre(x){
+  var gagnes = titresDe(x), xp = x.xp || {};
+  var prochains = TITRES.filter(function(t){ return !aTitre(x, t.id) && (t.id !== "tueur" || aTitre(x, "veteran")); })
+    .map(function(t){ return { t:t, f:(xp[t.k] || 0) / t.n }; }).sort(function(a, b){ return b.f - a.f; }).slice(0, gagnes.length ? 2 : 3);
+  var h = '<p class="sub m-titre">🏅 Exploits</p><div class="exploits">';
+  h += gagnes.map(function(t){ return '<span class="titre-m" title="' + t.effet + '">' + t.icone + ' <b>' + t.nom + '</b><small>' + t.effet + '</small></span>'; }).join("");
+  h += prochains.map(function(p){ var v = xp[p.t.k] || 0;
+    return '<span class="titre-p"><span class="tp-nom">' + p.t.icone + ' ' + p.t.nom + '</span><span class="tp-bar"><i style="width:' + Math.round(Math.min(1, p.f) * 100) + '%"></i></span><small>' + v + ' / ' + p.t.n + ' ' + NOMS_EXPLOITS[p.t.k] + '</small></span>'; }).join("");
+  return h + '</div>';
+}
 function majuscule(t){ t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 function openMembre(i){
   var x = G.m[i], on = G.sel.indexOf(i) >= 0, T = TRAITS[x.trait];
@@ -525,6 +536,7 @@ function openMembre(i){
   if(!x.al){ show(h + BTN_FERMER()); return; }
   [["❤️","Vie",x.hp],["⚡","Énergie",x.en],[ic("conserve", "🥫"),"Faim",x.faim],[ic("bouteille", "💧"),"Soif",x.soif]].forEach(function(j){ h += '<div class="jauge">' + barre(j[0], j[2]) + '<small>' + j[1] + ' ' + j[2] + '/100</small></div>'; });
   if(x.folie) h += '<div class="jauge folie">' + barre("🌀", x.folie) + '<small>Folie ' + x.folie + '/100 · ' + (fou(x) ? "fouille moins bien, peut faire des choses terribles la nuit ; à 100, il part pour toujours" : "encore maître de lui") + '</small></div>';
+  h += exploitsMembre(x);
   h += '<p class="sub m-titre">Équipement · touche une case pour changer</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
     return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '<small>' + (o ? OBJETS[o.id].nom : e[2]) + '</small></button>';
@@ -751,14 +763,14 @@ function ingredientsCuisine(ing){
 function boutonCuisine(r){
   var e = empechementCuisine(r), x = artisan();
   return '<button class="btn travail" data-act="cuire" data-id="' + r + '"' + (e ? " disabled" : "") + '>'
-    + (e ? '<span>❌ ' + e + '</span>' : '<span>🍲 Cuisiner</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + BAL.energieCraft + ' ⚡</small>') + '</button>';
+    + (e ? '<span>❌ ' + e + '</span>' : '<span>🍲 Cuisiner</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + coutTravail(x) + ' ⚡</small>') + '</button>';
 }
 function boutonTravail(texte, act, id, ing, besoin){
   var manque = []; for(var k in ing || {}) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
   var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? "Il faut " + nommer(besoin, 1)
     : manque.length ? "Il manque " + nommerListe(manque) : !x ? "Tout le monde est trop fatigué" : "";
   return '<button class="btn travail" data-act="' + act + '" data-id="' + id + '"' + (raison ? " disabled" : "") + '>'
-    + (raison ? '<span>❌ ' + raison + '</span>' : '<span>' + texte + '</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + BAL.energieCraft + ' ⚡</small>') + '</button>';
+    + (raison ? '<span>❌ ' + raison + '</span>' : '<span>' + texte + '</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + coutTravail(x) + ' ⚡</small>') + '</button>';
 }
 // Phrase d'état sous une recette : prêt, ou ce qui manque exactement
 function etatTravail(ing, besoin, texteOk){
@@ -768,7 +780,7 @@ function etatTravail(ing, besoin, texteOk){
   if(manque.length) return '<p class="etat ko">❌ Il manque ' + nommerListe(manque) + '</p>';
   var x = artisan();
   if(!x) return '<p class="etat ko">😴 Tout le monde est trop fatigué (il faut ' + BAL.energieCraft + ' ⚡)</p>';
-  return '<p class="etat ok">✅ ' + (texteOk || "Prêt : touche pour le faire") + ' (' + iconeMembre(x) + ' ' + x.nom + ', −' + BAL.energieCraft + ' ⚡)</p>';
+  return '<p class="etat ok">✅ ' + (texteOk || "Prêt : touche pour le faire") + ' (' + iconeMembre(x) + ' ' + x.nom + ', −' + coutTravail(x) + ' ⚡)</p>';
 }
 // Tout ce qui protège et nourrit le refuge, d'un coup d'œil (en haut de l'onglet Construire)
 function bilanRefuge(){
@@ -1074,7 +1086,7 @@ var VITRINE = [
   ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
   ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège."],
   ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
-  ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits : costaud, soigneur, cuisinier… La mort est définitive."],
+  ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
   ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],

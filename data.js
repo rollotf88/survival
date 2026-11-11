@@ -275,6 +275,21 @@ BAL.immeuble = {
   exterieur:"images/immeuble/exterieur.webp", exterieurSecours:"images/lieux/centre.webp"
 };
 
+/* ---------- Expérience des survivants (2026-11-11, idée validée par Fabien) ----------
+   Chaque membre compte ce qu'il fait vraiment (x.xp) ; un seuil atteint lui donne un titre et un petit avantage.
+   k = compteur (zombies abattus, fouilles, crochetages réussis, travaux d'atelier, plats cuisinés, blessures graves survécues) */
+var TITRES = [
+  { id:"veteran",      k:"zombies",     n:25, nom:"Vétéran",          icone:"⚔️", effet:"+1 dégât au combat" },
+  { id:"tueur",        k:"zombies",     n:75, nom:"Tueur de zombies", icone:"💀", effet:"+1 dégât de plus (+2 en tout)" },
+  { id:"eclaireur",    k:"fouilles",    n:20, nom:"Éclaireur",        icone:"🗺️", effet:"chaque sortie lui coûte 5 ⚡ de moins" },
+  { id:"passepartout", k:"crochetages", n:5,  nom:"Passe-partout",    icone:"🗝️", effet:"zone verte du crochetage plus large" },
+  { id:"bricoleur",    k:"travaux",     n:15, nom:"Bricoleur",        icone:"🔨", effet:"les travaux d’atelier lui coûtent 5 ⚡ de moins" },
+  { id:"chef",         k:"plats",       n:10, nom:"Chef",             icone:"🍲", effet:"+1 portion par plat cuisiné (pour toute la famille)" },
+  { id:"durACuire",    k:"blessures",   n:3,  nom:"Dur à cuire",      icone:"🩹", effet:"−1 dégât sur chaque coup de zombie reçu" }
+];
+var NOMS_EXPLOITS = { zombies:"zombies abattus", fouilles:"fouilles", crochetages:"serrures crochetées", travaux:"travaux d’atelier", plats:"plats cuisinés", blessures:"blessures graves survécues" };
+BAL.exploits = { eclaireur:5, bricoleur:5, seuilBlessure:20 };
+
 /* ---------- Zombies (combat en expédition) ----------
    jour : apparaît à partir de ce jour ; poids : plus il est grand, plus il est fréquent */
 var ZOMBIES = [

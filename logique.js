@@ -258,15 +258,16 @@ function empechementCuisine(r){
   if(!artisan()) return "Tout le monde est trop fatigué";
   return null;
 }
-function portionsRecette(r){ return RECETTES_CUISINE[r].portions + (vivants().some(function(x){ return x.trait === "cuisinier"; }) ? BAL.traits.cuisinier : 0); }
+function portionsRecette(r){ return RECETTES_CUISINE[r].portions + (vivants().some(function(x){ return x.trait === "cuisinier"; }) ? BAL.traits.cuisinier : 0) + (vivants().some(function(x){ return aTitre(x, "chef"); }) ? 1 : 0); }
 function cuisiner(r){
   if(empechementCuisine(r)) return null;
   var rec = RECETTES_CUISINE[r], x = artisan(), n = portionsRecette(r);
-  x.en -= BAL.energieCraft;
+  x.en -= coutTravail(x);
   for(var k in rec.ingredients){ if(k === "eau") prendreRations("eau", rec.ingredients[k]); else consommer(k, rec.ingredients[k]); }
   retirer("planche", BAL.cuisine.planches);
   ajouter(rec.id, n, 1); G.cuisineJour = G.day; G.stats.plats = (G.stats.plats || 0) + n;
-  return x.nom + " cuisine " + nommer(rec.id, n) + ".";
+  var tt = exploit(x, "plats");
+  return x.nom + " cuisine " + nommer(rec.id, n) + "." + (tt ? " " + tt : "");
 }
 // Un membre mange un plat (celui qui se gâtera le plus tôt, ou le plat choisi) ; renvoie son id
 function mangerPlat(x, id){
@@ -324,7 +325,9 @@ function perso(t, passe){
 }
 function blesser(x, d, n, cause){
   if(!x || !x.al) return;
+  var avantPV = x.hp;
   x.hp -= d;
+  if(x.hp > 0 && x.hp <= BAL.exploits.seuilBlessure && avantPV > BAL.exploits.seuilBlessure) exploit(x, "blessures", 1, n);
   if(x.hp <= 0){
     x.hp = 0; x.al = false; changerMoral(-25);
     // Annonce mise en avant dans les textes (classe « mort », avec le nom pour afficher son portrait)
@@ -370,7 +373,19 @@ function coutMin(){
 }
 function fatigue(x){ return x.en < BAL.fatigueSeuil; }
 // Peut encore sortir aujourd'hui (au moins vers le lieu le plus proche)
-function remiseEnergie(x){ return x.trait === "endurant" ? BAL.traits.endurant : 0; }
+function remiseEnergie(x){ return (x.trait === "endurant" ? BAL.traits.endurant : 0) + (aTitre(x, "eclaireur") ? BAL.exploits.eclaireur : 0); }
+/* ---------- Expérience : compteurs et titres (TITRES dans data.js) ---------- */
+function aTitre(x, id){ var t = TITRES.find(function(t){ return t.id === id; }); return !!(x && t && x.xp && (x.xp[t.k] || 0) >= t.n); }
+function titresDe(x){ return TITRES.filter(function(t){ return aTitre(x, t.id); }); }
+// Ajoute à un compteur ; renvoie l'annonce si un titre vient d'être gagné (et la pousse dans n si on le donne)
+function exploit(x, k, nb, n){
+  if(!x || !x.al) return "";
+  x.xp = x.xp || {}; var avant = x.xp[k] || 0; x.xp[k] = avant + (nb || 1);
+  var txt = "";
+  TITRES.forEach(function(t){ if(t.k === k && avant < t.n && x.xp[k] >= t.n){ txt = "🏅 " + x.nom + " devient « " + t.nom + " » : " + t.effet + " !"; if(n) n.push(["g2", txt]); } });
+  return txt;
+}
+function coutTravail(x){ return BAL.energieCraft - (aTitre(x, "bricoleur") ? BAL.exploits.bricoleur : 0); }
 function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
 function peutSortir(x){ return x.al && !x.raid && x.en >= coutMin() - remiseEnergie(x); } // x.raid : volontaire parti au bastion pour le raid de l'immeuble
 function equipePeutAller(team, i, voiture){
@@ -477,9 +492,9 @@ function lancerPeche(reussi){
    zone verte, une fois par goupille. Chaque raté casse une épingle. */
 function crocheteur(){
   var eq = G.exp.equipe.map(function(j){ return G.m[j]; });
-  return eq.filter(function(x){ return x.trait === "agile"; })[0] || eq[0];
+  return eq.filter(function(x){ return x.trait === "agile" || aTitre(x, "passepartout"); })[0] || eq[0];
 }
-function zoneCrochetage(){ return crocheteur().trait === "agile" ? BAL.crochetage.zoneAgile : BAL.crochetage.zone; }
+function zoneCrochetage(){ var x = crocheteur(); return x.trait === "agile" || aTitre(x, "passepartout") ? BAL.crochetage.zoneAgile : BAL.crochetage.zone; }
 function forcerPorte(){
   var E = G.exp; E.mult *= BAL.force.fouille; E.d += BAL.force.danger;
   E.notes.push(["b2", "🔒 Porte forcée à la brute, ça fait du bruit."]);
@@ -491,7 +506,7 @@ function tentativeGoupille(reussi){
   if(reussi){
     S.faites++;
     if(S.faites >= BAL.crochetage.goupilles){
-      S.fin = "ouvert"; G.stats.crochetages = (G.stats.crochetages || 0) + 1;
+      S.fin = "ouvert"; G.stats.crochetages = (G.stats.crochetages || 0) + 1; exploit(x, "crochetages", 1, G.exp.notes);
       G.exp.notes.push(["g2", "🗝️ " + x.nom + " crochète la serrure en silence" + (S.cassees ? " (" + nommer("epingle", S.cassees) + " cassée" + (S.cassees > 1 ? "s" : "") + ")" : "") + "."]);
       return "Clic ! La porte s’ouvre.";
     }
@@ -514,6 +529,7 @@ function finExpedition(){
   }
   // Fouille : on pioche dans la vraie liste du lieu
   var survivants = team.filter(function(x){ return x.al; });
+  survivants.forEach(function(x){ exploit(x, "fouilles", 1, n); });
   var nb = survivants.length * BAL.fouilleParMembre + (survivants.some(function(x){ return x.trait === "fouineur"; }) ? BAL.traits.fouine : 0)
     - survivants.filter(function(x){ return x.trait === "optimiste"; }).length * BAL.traits.reveur
     + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0)
@@ -732,7 +748,7 @@ function degatsMembre(x){
     else { d = C.crosse; comment = "n’a plus " + (mu === "balle" ? "de balles" : "de cartouches") + ", frappe avec la crosse"; }
   }
   var T = BAL.traits, bonus = (x.trait === "costaud" && !tir ? T.costaud : 0) - (x.trait === "soigneur" ? T.pacifiste : 0) - (x.trait === "cuisinier" ? T.maladroit : 0)
-    + (x.trait === "tireur" && tir ? T.tireur : 0);
+    + (x.trait === "tireur" && tir ? T.tireur : 0) + (aTitre(x, "veteran") ? 1 : 0) + (aTitre(x, "tueur") ? 1 : 0);
   return { dg:Math.max(1, R(d[0], d[1]) + bonus - (fatigue(x) ? C.malusFatigue : 0)), comment:comment, tir:tir };
 }
 function bruit(J, x){
@@ -771,6 +787,7 @@ function actionZombie(z, protege, J){
     var dg = R(z.degats[0], z.degats[1]);
     if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? BAL.assaut.bouclier : C.protection)));
     if(G.exp.guerre && porteGuerre(x, "gilet")) dg = Math.max(1, dg - BAL.assaut.gilet);
+    if(aTitre(x, "durACuire")) dg = Math.max(1, dg - 1);
     if(!G.exp.guerre && G.day <= BAL.debutDoux.jours) dg = Math.max(1, Math.round(dg * BAL.debutDoux.degats)); // début de partie plus doux
     J.push(["b2", iconeZombie(z) + " " + z.nom + " frappe " + x.nom + " (−" + dg + " PV)."]);
     blesser(x, dg, J, "tué par un " + minus(z.nom) + " (" + lieu + ")");
@@ -817,7 +834,7 @@ function jouerTour(choix){
     if(c.a === "cocktail" && peutCocktail()){
       retirer("alcool", 1); retirer("chiffon", 1);
       J.push(["g2", "🔥 " + x.nom + " lance un cocktail incendiaire !"]);
-      debout.forEach(function(zz){ var d = R(B.cocktail[0], B.cocktail[1]); zz.pv = Math.max(0, zz.pv - d); J.push(["g2", "🔥 " + zz.nom + " brûle : −" + d + (zz.pv ? "" : ", à terre !")]); if(!zz.pv) zombieTombe(zz, protege, J); });
+      debout.forEach(function(zz){ var d = R(B.cocktail[0], B.cocktail[1]); zz.pv = Math.max(0, zz.pv - d); J.push(["g2", "🔥 " + zz.nom + " brûle : −" + d + (zz.pv ? "" : ", à terre !")]); if(!zz.pv){ zombieTombe(zz, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); } });
       return;
     }
     if(c.a === "pousser"){
@@ -835,7 +852,7 @@ function jouerTour(choix){
       z.pv = Math.max(0, z.pv - dg);
       J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (arm ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);
     }
-    if(dg && !z.pv) zombieTombe(z, protege, J);
+    if(dg && !z.pv){ zombieTombe(z, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); }
     userArme(x, J);
     if(r.tir) bruit(J, x);
   });
@@ -1276,10 +1293,11 @@ function empechement(ing, besoin){
 }
 function fabriquer(r){
   var rec = RECETTES[r]; if(empechement(rec.ingredients, rec.besoin)) return null;
-  var x = artisan(); x.en -= BAL.energieCraft;
+  var x = artisan(); x.en -= coutTravail(x);
   for(var k in rec.ingredients) consommer(k, rec.ingredients[k]);
   ajouter(rec.id, 1, 1); G.stats.fabriques++;
-  return x.nom + " fabrique " + nommer(rec.id, 1) + ".";
+  var tt = exploit(x, "travaux");
+  return x.nom + " fabrique " + nommer(rec.id, 1) + "." + (tt ? " " + tt : "");
 }
 // Toutes les armes de la famille (stock + en main) qui sont abîmées
 function armesAbimees(){
@@ -1288,21 +1306,23 @@ function armesAbimees(){
 function trouverInstance(uid){ return G.stock.o.concat(equipes()).find(function(o){ return o.uid === uid; }); }
 function reparer(uid){
   var o = trouverInstance(uid); if(!o || empechement(REPARATION)) return null;
-  var x = artisan(); x.en -= BAL.energieCraft;
+  var x = artisan(); x.en -= coutTravail(x);
   for(var k in REPARATION) consommer(k, REPARATION[k]);
   var max = OBJETS[o.id].sol; o.sol = Math.min(max, o.sol + Math.round(max * BAL.reparation));
-  return x.nom + " répare " + nommer(o.id, 1) + " (solidité " + o.sol + " / " + max + ").";
+  var tt = exploit(x, "travaux");
+  return x.nom + " répare " + nommer(o.id, 1) + " (solidité " + o.sol + " / " + max + ")." + (tt ? " " + tt : "");
 }
 // Seuls les objets rangés dans le stock peuvent être démontés
 function demontables(){ return G.stock.o.filter(function(o){ return DEMONTAGE[o.id]; }); }
 function demonter(uid){
   var o = G.stock.o.find(function(o){ return o.uid === uid; });
   if(!o || !DEMONTAGE[o.id] || !artisan()) return null;
-  var x = artisan(); x.en -= BAL.energieCraft;
+  var x = artisan(); x.en -= coutTravail(x);
   retirerInstance(uid);
   var p = DEMONTAGE[o.id], recup = [];
   for(var k in p){ ajouter(k, p[k], 1); recup.push({ id:k, n:p[k] }); }
-  return x.nom + " démonte " + nommer(o.id, 1) + " et récupère " + nommerListe(recup) + ".";
+  var tt = exploit(x, "travaux");
+  return x.nom + " démonte " + nommer(o.id, 1) + " et récupère " + nommerListe(recup) + "." + (tt ? " " + tt : "");
 }
 
 nouvellePartie();
