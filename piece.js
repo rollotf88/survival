@@ -47,7 +47,7 @@ var PIECES = [
     ["pGardeManger", 715, 225, 1022, 660, function(){ return ic("conserve", "🥫"); }, "Garde-manger", .3]
   ]},
   { id:"chambre", nom:"Chambre", img:"images/piece-chambre-propre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
-    decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0; }] ], zones:[
+    decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0 && !auLit("Léo"); }] ], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
     ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],
@@ -633,7 +633,7 @@ function niveauBarr(){ return Math.min(3, (G && G.ref && G.ref.barr) || 0); }
    Prépare les personnages dans les pièces : chaque variante est un petit morceau, elles se combinent toutes seules. */
 var FEUX_PIECE = {
   salon:   { img:"images/feux/salon.webp",   z:[192, 312, 312, 540], si:function(){ return !!G.feu; } },
-  chambre: { img:"images/feux/chambre.webp", z:[182, 318, 430, 712], si:function(){ return !!G.feu; } },
+  chambre: { img:"images/feux/chambre.webp", z:[138, 318, 346, 584], si:function(){ return !!G.feu; } },
   cuisine: { img:"images/feux/cuisine.webp", z:[108, 276, 440, 836], si:function(){ return G.cuisineJour === G.day; } }
 };
 (function(){
@@ -644,4 +644,19 @@ var FEUX_PIECE = {
     var apres = 0; liste.forEach(function(d, k){ if(typeof d[0] === "string" && d[0].indexOf("images/barricades/") === 0) apres = k + 1; });
     liste.splice(apres, 0, [F.img, F.z[0], F.z[1], F.z[2], F.z[3], F.si]);
   });
+})();
+
+/* ---------- La famille dans la chambre (2026-11-11, idée de Fabien ; premier essai) ----------
+   Un membre trop fatigué pour sortir se repose dans SON lit (Papa : matelas de gauche, Maman : de droite,
+   Léo : lit du bas, Emma : lit du haut). Chaque lit occupé est un morceau découpé dans une retouche Gemini de la
+   chambre, posé au-dessus du feu et des fenêtres ; ils se combinent. Les recrues n'ont pas encore leur image. */
+var LITS_CHAMBRE = { "Papa":[98, 540, 452, 790, "papa"], "Maman":[628, 540, 992, 790, "maman"], "Léo":[338, 432, 722, 562, "leo"], "Emma":[330, 250, 722, 352, "emma"] };
+function enSortie(x){ var i = G.m.indexOf(x); return !!(G.exp && G.exp.equipe && G.exp.equipe.indexOf(i) >= 0); }
+function auLit(r){ var x = G && G.m && G.m.find(function(y){ return (y.r || y.nom) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x)); }
+(function(){
+  var P = PIECES.find(function(p){ return p.id === "chambre"; }); if(!P) return;
+  P.decor = P.decor || [];
+  var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
+  var lits = Object.keys(LITS_CHAMBRE).map(function(r){ var L = LITS_CHAMBRE[r]; return ["images/personnages/chambre-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auLit(r); }]; });
+  Array.prototype.splice.apply(P.decor, [apres, 0].concat(lits));
 })();

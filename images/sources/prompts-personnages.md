@@ -25,3 +25,7 @@ Message 4 (Emma, lit du haut des lits superposés) :
 
 Si l'essai plaît : les autres lits pour chacun (pour que n'importe qui puisse dormir n'importe où), les recrues
 (Sam, Nora, Inès, Yanis), puis le canapé du salon (assis : normal, épuisé, moral bas, folie) et la cuisinière (le cuisinier).
+
+## Correction demandée par Fabien (2026-11-11) : les lits vides ont l'air bombés (comme si quelqu'un dormait dessous)
+Une seule image, à partir de la chambre d'origine (joindre `images/piece-chambre-propre.webp`) :
+> Reprends EXACTEMENT cette image, même cadrage, même taille, même style, même lumière. Modifie UNIQUEMENT les quatre lits (le lit du haut et le lit du bas des lits superposés, et les deux matelas posés au sol) : ils sont vides et faits, la couverture en patchwork est tirée bien à plat, sans aucun creux ni bosse, l'oreiller posé à plat à la tête du lit. On doit voir au premier coup d'œil que personne n'est couché dedans. Ne change rien d'autre dans la pièce (cheminée, fenêtre, bougie, réveil, armoire, porte). Aucun texte.
