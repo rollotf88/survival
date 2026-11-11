@@ -289,7 +289,7 @@ function openDormir(){
   // Ce que la nuit va faire, avant de confirmer (mêmes médaillons que le journal)
   var v = vivants().length, be = besoinNuit("eau"), bn = besoinNuit("nour"), re = rations("eau"), rn = rations("nour");
   var couv = compter("couverture") * BAL.feu.couvrePar, froids = G.feu ? 0 : Math.max(0, v - couv);
-  var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce);
+  var A = BAL.attaqueNuit, ch = Math.round(chanceAttaqueNuit() * 100), f = forceMiniNuit();
   var L = [];
   L.push([froids ? "b2" : "g2", "😴 Chacun récupère +" + (G.feu ? BAL.reposNuit + BAL.feu.repos : BAL.reposNuit) + " ⚡" + (froids ? " (sauf " + froids + " qui " + (froids > 1 ? "auront" : "aura") + " froid : +" + BAL.reposFroid + " ⚡, −" + BAL.degatsFroid + " PV)" : "") + "."]);
   L.push([re >= be ? "" : "b2", ic("bouteille", "💧") + " La famille boira " + Math.min(be, re) + " ration" + (Math.min(be, re) > 1 ? "s" : "") + " d’eau (il en reste " + re + ")" + (re < v ? " : pas assez pour tout le monde !" : ".")]);

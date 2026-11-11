@@ -1065,7 +1065,7 @@ function tableauPC(){
   h += '<p class="titre-butin">📦 Le stock</p>' + (cases.length ? etageres(cases, 5) : '<p class="sub">Le stock est vide.</p>')
     + '<div class="row"><button class="btn alt" data-act="stock">📦 Tout le stock</button><button class="btn alt" data-act="refuge">🛠️ Refuge</button></div>'
     + (G.derniereNuit && G.derniereNuit.length ? '<p class="titre-butin">🌙 La nuit dernière</p><div class="tb-nuit">' + puces(regrouperNuit(G.derniereNuit)) + '</div>' : '')
-    + (typeof contenuDefis === "function" ? '<div class="tb-defis">' + contenuDefis(true) + '</div>' : '')
+    + (typeof contenuDefis === "function" ? '<div class="tb-defis">' + (typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? contenuEvt() : '') + contenuDefis(true) + '</div>' : '')
     + '<p class="sub tb-aide">Les fenêtres s’ouvrent ici, à droite : la pièce reste visible.</p>';
   t.innerHTML = h;
 }
@@ -1134,7 +1134,7 @@ var VITRINE = [
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/lieux/centre.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des succès, et un code pour inviter tes amis."]
+  ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des défis quotidiens, une grande horde chaque week-end et un code pour inviter tes amis."]
 ];
 var minuteurVitrine = null;
 function vitrine(){
@@ -1279,7 +1279,7 @@ function openInfo(id){
     if(!cs.length) L.push(["b2", "🩹 Aucun soin au refuge : cherche à l’hôpital, au supermarché, ou fabrique des bandages à l’atelier."]);
     h += puces(L);
   } else if(id === "def"){
-    var A = BAL.attaqueNuit, ch = Math.round(Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque) * 100), f = 1 + Math.floor(G.day / A.joursParForce), d = defenseNuit();
+    var A = BAL.attaqueNuit, ch = Math.round(chanceAttaqueNuit() * 100), f = forceMiniNuit(), d = defenseNuit();
     var etat = d >= f + 2 ? "ok" : d >= f ? "moy" : "ko";
     h = teteInfo(ic("bouclier", "🛡️"), "Défense de nuit", d, etat)
       + tuiles([["risque cette nuit", ch + " %", ch >= 50 ? "ko" : ch >= 30 ? "moy" : "ok"], ["force attendue", f + " à " + (f + 2), ""], ["verdict", d >= f + 2 ? "Solide" : d >= f ? "Juste" : "Trop faible", etat]]);

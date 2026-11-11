@@ -389,6 +389,10 @@ function exploit(x, k, nb, n){
 // Tombes de la cour : se recueillir une fois par jour (un peu de moral)
 function peutRecueillir(){ return G.dd && G.dd.length > 0 && G.recueilJour !== G.day; }
 function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day; changerMoral(BAL.tombes.moral); return true; }
+// Grande horde du week-end (événement mondial, defis.js pose HORDE_MONDIALE) : jamais dans une partie temporaire de raid
+function hordeMondiale(){ return typeof HORDE_MONDIALE !== "undefined" && !!HORDE_MONDIALE && !(G && G.bacASable); }
+function chanceAttaqueNuit(){ var A = BAL.attaqueNuit; return Math.min(A.max + (hordeMondiale() ? 0.1 : 0), A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque + (hordeMondiale() ? BAL.horde.risque : 0)); }
+function forceMiniNuit(){ return 1 + Math.floor(G.day / BAL.attaqueNuit.joursParForce) + (hordeMondiale() ? BAL.horde.force : 0); }
 function coutTravail(x){ return BAL.energieCraft - (aTitre(x, "bricoleur") ? BAL.exploits.bricoleur : 0); }
 function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
 function peutSortir(x){ return x.al && !x.raid && x.en >= coutMin() - remiseEnergie(x); } // x.raid : volontaire parti au bastion pour le raid de l'immeuble
@@ -666,7 +670,7 @@ function tirerZombie(sauf){
 function nouveauZombie(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }
 function creerCombat(){
   var C = BAL.combat, nb = 1;
-  for(var k = 0; k < C.maxEnPlus; k++) if(hasard() < Math.min(0.6, G.day * C.zombieEnPlus)) nb++;
+  for(var k = 0; k < C.maxEnPlus; k++) if(hasard() < Math.min(0.6, G.day * C.zombieEnPlus + (hordeMondiale() ? BAL.horde.zombieEnPlus : 0))) nb++;
   var zs = [];
   for(var k = 0; k < nb; k++) zs.push(nouveauZombie(tirerZombie()));
   var pv0 = {}; equipeCombat().forEach(function(x){ pv0[G.m.indexOf(x)] = x.hp; }); // pour le bilan du combat
@@ -976,8 +980,9 @@ function finJour(){
   if(feu) changerMoral(BAL.feu.moral);
 
   var A = BAL.attaqueNuit;
-  if(alea("attaque") < Math.min(A.max, A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque)){
-    var s = 1 + Math.floor(G.day / A.joursParForce) + aleaR("force", 0, 2), df = defenseNuit();
+  if(alea("attaque") < chanceAttaqueNuit()){
+    var s = forceMiniNuit() + aleaR("force", 0, 2), df = defenseNuit();
+    if(hordeMondiale()) n.push(["b2", "🌍 La grande horde rôde : les zombies sont plus nombreux cette nuit."]);
     if(compter("piege") > 0){ retirer("piege", 1); n.push(["", "🪤 Un piège à zombies a servi (+" + BAL.piegeDef + " de défense), il est cassé."]); }
     if(df >= s){
       n.push(["g2", "🧟 Attaque de nuit repoussée (force " + s + " contre votre défense " + df + ")."]);

@@ -165,11 +165,12 @@ function envoyerMonde(force, fin){
   if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve(); // tests sur l'ordinateur : on n'écrit pas dans les vrais chiffres
   var t = Date.now(), dernier = 0;
   try{ dernier = +localStorage.getItem("survival_monde_t") || 0; }catch(e){}
-  if(!force && t - dernier < 10 * 60000) return Promise.resolve();
+  if(!force && t - dernier < (typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? 5 : 10) * 60000) return Promise.resolve();
   try{ localStorage.setItem("survival_monde_t", t); }catch(e){}
   var s = statsJoueur(), P = partieCourante(), v = P && !fin ? P.m.filter(function(x){ return x.al; }).length : 0;
   var corps = { id:idAppareil(), pseudo:lirePseudo(), vivants:v, jour:v ? P.day : 0, zombies:s.zombies, morts:s.morts, parties:s.parties };
   if(fin) corps.fin = fin;
+  if(typeof lireEvt === "function" && typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE) corps.evt = lireEvt();
   try{ return fetch(adresseMonde(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).catch(function(){}); }catch(e){ return Promise.resolve(); }
 }
 

@@ -53,6 +53,13 @@ async function onRequestPost({ request, env }){
 // Tout est dans la clé « monde » du même KV que le classement.
 const CLE_MONDE = "monde", ACTIF = 3 * 24 * 3600 * 1000, MAX_APPAREILS = 5000;
 const entier = (v, max) => { v = Math.floor(+v); return v >= 0 && v <= max ? v : 0; };
+// Grande horde du week-end : identifiant de l'événement en cours (vendredi 17 h UTC → lundi 5 h UTC), ou "" hors événement
+function idHordeServeur(t){
+  const d = new Date(t), j = d.getUTCDay(), h = d.getUTCHours();
+  const dedans = (j === 5 && h >= 17) || j === 6 || j === 0 || (j === 1 && h < 5); if(!dedans) return "";
+  const v = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((j + 2) % 7)));
+  return "horde-" + v.toISOString().slice(0, 10);
+}
 async function lireMonde(env){ return (await env.CLASSEMENT.get(CLE_MONDE, { type: "json" })) || { j: {}, tombes: [] }; }
 async function mondeGet(env){
   const m = await lireMonde(env), now = Date.now();
@@ -62,7 +69,11 @@ async function mondeGet(env){
     if(e.v > 0 && now - e.t < ACTIF){ survivants += e.v; familles++; if(!doyen || e.d > doyen.jour) doyen = { pseudo: e.n || "", jour: e.d }; }
   }
   const liste = await lireListe(env), r = liste[0];
-  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen,
+  // Événement mondial : total des zombies abattus pendant la horde par tous ceux qui ont envoyé leur part
+  const eid = idHordeServeur(now); let evt = null;
+  if(eid){ let total = 0, part = 0, actifs = 0; for(const id in m.j){ const e = m.j[id]; if(now - e.t < ACTIF) actifs++; if(e.e && e.e.id === eid){ total += e.e.z || 0; part++; } }
+    evt = { id: eid, total, participants: part, objectif: Math.max(500, actifs * 100) }; }
+  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen, evt,
     record: r ? { pseudo: r.pseudo, score: r.score, jours: r.jours } : null, tombes: (m.tombes || []).slice(0, 5) });
 }
 async function mondePost(request, env){
@@ -71,7 +82,9 @@ async function mondePost(request, env){
   if(id.length < 8) return reponse({ erreur: "id" }, 400);
   const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
   const m = await lireMonde(env), now = Date.now();
+  const eid = idHordeServeur(now), avant = m.j[id] && m.j[id].e;
   m.j[id] = { v: entier(d.vivants, 4), d: entier(d.jour, 400), n: pseudo, m: entier(d.morts, 100000), z: entier(d.zombies, 1000000), p: entier(d.parties, 10000), t: now };
+  if(eid && d.evt && String(d.evt.id) === eid) m.j[id].e = { id: eid, z: Math.min(2000, entier(d.evt.z, 2000)) }; else if(avant && avant.id === eid) m.j[id].e = avant;
   if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 400), s: entier(d.fin.score, 1600), t: now }].concat(m.tombes || []).slice(0, 10); }
   const ids = Object.keys(m.j);
   if(ids.length > MAX_APPAREILS) ids.sort((a, b) => m.j[a].t - m.j[b].t).slice(0, ids.length - MAX_APPAREILS).forEach((k) => delete m.j[k]);

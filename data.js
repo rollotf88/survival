@@ -291,6 +291,9 @@ var NOMS_EXPLOITS = { zombies:"zombies abattus", fouilles:"fouilles", crochetage
 BAL.exploits = { eclaireur:5, bricoleur:5, seuilBlessure:20 };
 // Tombes des disparus dans la cour (2026-11-11) : se recueillir une fois par jour
 BAL.tombes = { moral:3 };
+// Événement mondial « Grande horde du week-end » (2026-11-11) : vendredi 17 h → lundi 5 h (heure UTC, soit 18 h → 6 h en France l'hiver)
+// pendant la horde : attaques de nuit plus probables et plus fortes, plus de zombies en combat ; objectif commun de zombies abattus
+BAL.horde = { risque:0.15, force:1, zombieEnPlus:0.08, objectifMin:500, objectifParJoueur:100 };
 
 /* ---------- Zombies (combat en expédition) ----------
    jour : apparaît à partir de ce jour ; poids : plus il est grand, plus il est fréquent */

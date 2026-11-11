@@ -41,6 +41,8 @@ function reglesGuide(){
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
     ["Les défis", "🎯",
       "Chaque jour, 3 défis (les mêmes pour tous les joueurs) : abattre des zombies, fouiller, cuisiner, pêcher, couper du bois… Ils avancent dans toutes tes parties. Les 3 réussis rapportent un colis (un largage avec un bonus) ; le grand défi de la semaine en rapporte un autre. Menu ☰ → Défis."],
+    ["La grande horde du week-end", "🌍",
+      "Chaque week-end, du vendredi soir au lundi matin, une grande horde déferle sur tous les joueurs en même temps : les attaques de nuit sont plus probables (+" + Math.round(BAL.horde.risque * 100) + " %) et plus fortes (+" + BAL.horde.force + "), les combats amènent plus de zombies. Tous les zombies abattus pendant la horde, par tous les joueurs, s’additionnent : si l’objectif commun est atteint, chaque participant reçoit un colis. Menu ☰ → Défis."],
     ["L’héritage", "📦",
       "Quand ta famille meurt, elle laisse un objet à la suivante (le plus précieux est choisi d’avance sur l’écran de fin, tu peux en choisir un autre) et une lettre. La nouvelle famille trouve le coffre en partant ; la lettre reste près des tombes, dans la cour."],
     ["Les tombes", "🕯️",
@@ -127,7 +129,7 @@ function openMenu(){
   var t = function(act, titre, sous){ return '<button class="mt" data-act="' + act + '"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</button>'; };
   var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : G.ph === "game" ? "🎲 Partie libre" : "") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
   h += t("guide", "📖 Guide", "Règles, objets, lieux");
-  if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length; h += t("defis", "🎯 Défis", nD + " / 3 aujourd’hui"); }
+  if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length; h += t("defis", typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? "🌍 Défis" : "🎯 Défis", typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? "La horde est là !" : nD + " / 3 aujourd’hui"); }
   if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
   if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
   if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= BAL.jourClans ? "Fonder ou rejoindre" : "Dès le jour " + BAL.jourClans);
