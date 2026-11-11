@@ -675,13 +675,16 @@ function openSoins(i){
 /* ---------- Marché de quartier ---------- */
 var msgMarche = "";
 function openMarche(){
-  var h = '<h2>' + ic("marco", MARCHE.icone) + ' Marché de quartier</h2><p class="sub">' + MARCHE.nom + ' propose quelques échanges, seulement aujourd’hui. Il repasse dans ' + MARCHE.tousLes + ' jours, tant que sa charrette n’est pas vide (' + Object.keys(G.charrette).reduce(function(t, id){ return t + G.charrette[id]; }, 0) + ' objets).</p>';
+  // Raccord avec la DA (2026-11-11) : deux pastilles (retour, charrette), chaque offre = « tu donnes » ➜ « tu reçois » en cases en bois, bouton Échanger
+  var nCh = Object.keys(G.charrette).reduce(function(t, id){ return t + G.charrette[id]; }, 0);
+  var h = '<h2>' + ic("marco", MARCHE.icone) + ' Marché de quartier</h2><div class="mk-pills"><span>📅 Seulement aujourd’hui · revient dans ' + MARCHE.tousLes + ' jours</span><span>🛒 Charrette : ' + nCh + ' objets</span></div>';
   if(msgMarche){ h += '<p class="g2 msg">' + msgMarche + '</p>'; msgMarche = ""; }
-  G.marche.offres.forEach(function(o, k){
+  var cote = function(id, n, titre, a){ return '<span class="mk-cote"><small class="mk-t">' + titre + '</small><span class="mk-case">' + icone(id) + '<i>×' + n + '</i></span><b>' + (NOM_COURT[id] || OBJETS[id].nom) + '</b>' + (a !== undefined ? '<small class="mk-a' + (a >= n ? "" : " ko") + '">tu en as ' + a + '</small>' : '<small class="mk-a">&nbsp;</small>') + '</span>'; };
+  h += '<div class="mk-offres">' + G.marche.offres.map(function(o, k){
     var ok = peutEchanger(k);
-    h += '<button class="loc troc" data-act="troc" data-id="' + k + '"' + (ok ? "" : " disabled") + '><span class="tr">' + icone(o.donne.id) + ' ×' + o.donne.n + '</span><span class="fl">➜</span><span class="tr">' + icone(o.recoit.id) + ' ×' + o.recoit.n + '</span><small>'
-      + (o.fait ? "✅ Échange déjà fait" : "Donner " + nommer(o.donne.id, o.donne.n) + " (vous en avez " + compter(o.donne.id) + ") contre " + nommer(o.recoit.id, o.recoit.n)) + '</small></button>';
-  });
+    return '<div class="mk-o' + (o.fait ? " fait" : "") + '">' + cote(o.donne.id, o.donne.n, "Tu donnes", compter(o.donne.id)) + '<span class="mk-fl">➜</span>' + cote(o.recoit.id, o.recoit.n, "Tu reçois")
+      + '<button class="btn mk-go" data-act="troc" data-id="' + k + '"' + (ok ? "" : " disabled") + '>' + (o.fait ? "✅ Fait" : ok ? "Échanger" : "Il en manque") + '</button></div>';
+  }).join("") + '</div>';
   show(h + BTN_FERMER());
   parle("Marco", "marco");
 }
