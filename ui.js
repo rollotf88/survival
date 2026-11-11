@@ -531,20 +531,54 @@ function exploitsMembre(x){
   return h + '</div>';
 }
 function majuscule(t){ t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
+/* Fiche d'un membre façon jeu mobile (2026-11-11, demande de Fabien : « que ça fasse jeu mobile et pas web ») :
+   carte du personnage (grand portrait, prénom, trait en pastille dépliable, étiquettes d'état), 4 jauges en anneaux,
+   exploits en médailles, équipement en cases, barre d'actions en gros boutons, croix pour fermer. */
+function anneauMembre(ico, nom, v, inverse){
+  v = Math.max(0, Math.min(100, Math.round(v)));
+  var c = inverse ? (v >= 60 ? "bas" : v >= 20 ? "moy" : "ok") : (v >= 60 ? "ok" : v >= 30 ? "moy" : "bas");
+  return '<div class="mj ' + c + '" style="--p:' + v + '"><span class="mj-r"><span class="mj-i">' + ico + '</span></span><b>' + v + '</b><small>' + nom + '</small></div>';
+}
+function etiquettesMembre(x, on){
+  var t = [];
+  if(x.raid) t.push(["", "🏢 Au bastion"]);
+  else if(!peutSortir(x)) t.push(["bas", "😴 Épuisé" + (estFeminin(x) ? "e" : "")]);
+  else if(fatigue(x)) t.push(["moy", "🥱 Fatigué" + (estFeminin(x) ? "e" : "")]);
+  if(x.hp < 40) t.push(["bas", "🩸 Blessé" + (estFeminin(x) ? "e" : "")]);
+  if(x.soif < 25) t.push(["bas", "💧 Assoiffé" + (estFeminin(x) ? "e" : "")]);
+  if(x.faim < 25) t.push(["bas", "🥫 Affamé" + (estFeminin(x) ? "e" : "")]);
+  if(fou(x)) t.push(["bas", "🌀 Folie"]);
+  return t.length ? '<div class="mf-tags">' + t.map(function(e){ return '<span class="mf-tag ' + e[0] + '">' + e[1] + '</span>'; }).join("") + '</div>' : '';
+}
+function medaillesMembre(x){
+  var xp = x.xp || {}, gagnes = titresDe(x);
+  var prochains = TITRES.filter(function(t){ return !aTitre(x, t.id) && (t.id !== "tueur" || aTitre(x, "veteran")); })
+    .map(function(t){ return { t:t, f:(xp[t.k] || 0) / t.n }; }).sort(function(a, b){ return b.f - a.f; }).slice(0, Math.max(1, 4 - gagnes.length));
+  var med = function(t, f, g){ var v = xp[t.k] || 0, pc = g ? 100 : Math.round(Math.min(1, f) * 100);
+    return '<div class="md' + (g ? " gagne" : "") + '" style="--p:' + pc + '" title="' + t.nom + ' : ' + t.effet + '"><span class="md-r"><span class="md-i">' + t.icone + '</span></span><b>' + t.nom + '</b><small>' + (g ? "obtenu" : v + " / " + t.n) + '</small></div>'; };
+  return '<div class="mf-bloc"><p class="mf-titre">🏅 Exploits</p><div class="mf-medailles">' + gagnes.map(function(t){ return med(t, 1, true); }).join("") + prochains.map(function(p){ return med(p.t, p.f, false); }).join("") + '</div></div>';
+}
 function openMembre(i){
   var x = G.m[i], on = G.sel.indexOf(i) >= 0, T = TRAITS[x.trait];
-  var h = '<div class="rt"><span class="em" style="font-size:60px">' + iconeMembre(x) + '</span><span class="eqt"><h2>' + x.nom + '</h2>' + (T ? '<p class="m-trait">' + T.icone + ' <b>' + T.nom + '</b></p><p class="m-plus">✅ ' + majuscule(T.plus) + '</p><p class="m-moins">⚠️ ' + majuscule(T.moins).replace(" (", " : ").replace(/\)$/, "") + '</p>' : '<p class="m-trait">Recrue</p>') + (x.al ? "" : '<p class="m-moins">💀 ' + accorder(roleDe(x), "mort") + '</p>') + '</span></div>';
-  if(!x.al){ show(h + BTN_FERMER()); return; }
-  [["❤️","Vie",x.hp],["⚡","Énergie",x.en],[ic("conserve", "🥫"),"Faim",x.faim],[ic("bouteille", "💧"),"Soif",x.soif]].forEach(function(j){ h += '<div class="jauge">' + barre(j[0], j[2]) + '<small>' + j[1] + ' ' + j[2] + '/100</small></div>'; });
-  if(x.folie) h += '<div class="jauge folie">' + barre("🌀", x.folie) + '<small>Folie ' + x.folie + '/100 · ' + (fou(x) ? "fouille moins bien, peut faire des choses terribles la nuit ; à 100, il part pour toujours" : "encore maître de lui") + '</small></div>';
-  h += exploitsMembre(x);
-  h += '<p class="sub m-titre">Équipement · touche une case pour changer</p><div class="slots grands">' + EMPLACEMENTS.map(function(e){
+  var h = '<div class="mf' + (x.al ? "" : " mort") + '"><div class="mf-tete"><span class="mf-por">' + iconeMembre(x) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
+    + (T ? '<button class="mf-trait" data-act="mtrait" aria-expanded="false">' + T.icone + ' ' + T.nom + ' <span class="mf-fl">▾</span></button>' : '<span class="mf-trait">Recrue</span>')
+    + (x.al ? etiquettesMembre(x, on) : '<div class="mf-tags"><span class="mf-tag bas">💀 ' + causeMort(roleDe(x), "mort") + '</span></div>') + '</div>'
+    + '<button class="mf-x" data-act="close" aria-label="Fermer">✕</button></div>';
+  if(T) h += '<div class="mf-trait-det cache" id="mfTrait"><p class="m-plus">✅ ' + majuscule(T.plus) + '</p><p class="m-moins">⚠️ ' + majuscule(T.moins).replace(" (", " : ").replace(/\)$/, "") + '</p></div>';
+  if(!x.al){ show(h + '</div>'); return; }
+  h += '<div class="mf-jauges">' + anneauMembre("❤️", "Vie", x.hp) + anneauMembre("⚡", "Énergie", x.en) + anneauMembre(ic("conserve", "🥫"), "Faim", x.faim) + anneauMembre(ic("bouteille", "💧"), "Soif", x.soif)
+    + (x.folie ? anneauMembre("🌀", "Folie", x.folie, true) : '') + '</div>';
+  if(fou(x)) h += '<p class="mf-alerte">🌀 Fouille moins bien, actes terribles la nuit ; à 100, ' + (estFeminin(x) ? "elle" : "il") + ' part.</p>';
+  h += medaillesMembre(x);
+  h += '<div class="mf-bloc"><p class="mf-titre">🎒 Équipement</p><div class="slots grands mf-slots">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
     return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '">' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '<small>' + (o ? OBJETS[o.id].nom : e[2]) + '</small></button>';
-  }).join("") + '</div>';
-  h += '<button class="loc" data-act="soins" data-id="' + i + '"><b>＋ Soigner, boire, manger</b><small>Soins, rations d’eau et de nourriture, canette</small></button>';
-  h += '<button class="loc' + (on ? " choisi" : "") + '" data-act="msel" data-id="' + i + '"' + (peutSortir(x) || on ? "" : " disabled") + '><b>' + (on ? "✅ Part en fouille" : "🔍 Choisir pour partir") + '</b><small>' + (peutSortir(x) || on ? (on ? "Touche pour " + (estFeminin(x) ? "la" : "le") + " retirer · " : "") + "⚡ " + x.en + " · " + G.sel.length + " / " + BAL.membresParExpedition + " dans l’équipe" : x.raid ? "🏢 Au bastion pour le raid de l’immeuble" : "Trop fatigué" + (estFeminin(x) ? "e" : "") + " pour sortir aujourd’hui") + '</small></button>' + offrePub();
-  show(h + BTN_FERMER());
+  }).join("") + '</div></div>';
+  var peut = peutSortir(x) || on;
+  h += '<div class="mf-actions"><button class="mf-a" data-act="soins" data-id="' + i + '"><span class="mf-ai">' + ic("trousse", "⛑️") + '</span><b>Soigner</b><small>boire, manger</small></button>'
+    + '<button class="mf-a partir' + (on ? " on" : "") + '" data-act="msel" data-id="' + i + '"' + (peut ? "" : " disabled") + '><span class="mf-ai">' + (on ? "✅" : ic("loupe", "🔍")) + '</span><b>' + (on ? "Part en fouille" : "Partir") + '</b><small>'
+    + (peut ? (on ? "touche pour " + (estFeminin(x) ? "la" : "le") + " retirer" : "⚡ " + x.en + " · " + G.sel.length + " / " + BAL.membresParExpedition + " dans l’équipe") : x.raid ? "au bastion pour le raid" : "trop fatigué" + (estFeminin(x) ? "e" : "")) + '</small></button></div>';
+  show(h + '</div>' + offrePub());
 }
 
 /* ---------- Mission en cours ---------- */
@@ -1346,6 +1380,7 @@ document.addEventListener("click", function(e){
   else if(a === "sel"){ var x = G.m[i]; if(peutSortir(x)){ var p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); }
     // Sur PC : la fiche du membre (santé, équipement, soins…) s'ouvre dans le panneau de droite (2026-11-10, demande de Fabien)
     if(document.body.classList.contains("pc")){ render(); openMembre(i); return; } }
+  else if(a === "mtrait"){ var dt = $("mfTrait"); if(dt){ var cache = dt.classList.toggle("cache"); b.setAttribute("aria-expanded", String(!cache)); b.classList.toggle("ouvert", !cache); } return; }
   else if(a === "soins"){ openSoins(i); return; }
   else if(a === "heal"){ var qh = String(id).split(":"); soigner(+qh[0], qh[1]); hide(); }
   else if(a === "boire"){ boire(i); hide(); }

@@ -1683,3 +1683,91 @@ body.pc #modal .ch-app{height:calc(100vh - 96px);max-height:none}
 @media (max-height:440px){ .pz-grille{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px} .pz-nom{font-size:11px;padding:3px 4px} }
 #piece.compact .zone.invite ~ .zone[data-act="chien"] .etiq{display:none} /* scène minuscule : l’invitation à dormir passe avant l’étiquette de Rex */
 #piece.compact .zone[data-act^="o"] .etiq{display:none} /* scène minuscule : pas d’étiquette pour les petits objets (photo, radio, cartes, trophées), ils restent touchables */
+
+/* ---------- Fiche d'un membre façon jeu mobile (2026-11-11) ---------- */
+.mf{display:flex;flex-direction:column;gap:10px}
+.mf-tete{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start}
+.mf-por{width:96px;height:96px;border-radius:16px;overflow:hidden;border:3px solid var(--bois);box-shadow:0 3px 0 var(--line),inset 0 0 0 2px rgba(255,255,255,.25);background:var(--bg);display:grid;place-items:center;font-size:64px}
+.mf-por .portrait{width:100%;height:100%;border-radius:0}
+.mf-por .portrait img{width:100%;height:100%;object-fit:cover}
+.mf.mort .mf-por{filter:grayscale(1)}
+.mf-id{min-width:0;display:flex;flex-direction:column;gap:5px}
+.mf-nom{font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.8px;font-size:30px;line-height:1;margin:2px 0 0}
+.mf-trait{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;border:2px solid var(--bois);border-radius:999px;background:var(--bg);color:var(--ink);font:inherit;font-size:13px;font-weight:800;padding:3px 10px;cursor:pointer}
+.mf-trait .ico,.mf-trait img.emo{width:18px;height:18px}
+.mf-fl{font-size:10px;opacity:.7;transition:transform .2s}
+.mf-trait.ouvert .mf-fl{transform:rotate(180deg)}
+.mf-tags{display:flex;flex-wrap:wrap;gap:4px}
+.mf-tag{font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--bg);border:1.5px solid var(--line);white-space:nowrap}
+.mf-tag .ico,.mf-tag img.emo{width:14px;height:14px;vertical-align:-2px}
+.mf-tag.ok{border-color:var(--ok);color:var(--ok)}
+.mf-tag.moy{border-color:#c98a2a;color:#9a6512}
+.mf-tag.bas{border-color:var(--bad);color:var(--bad)}
+.mf-tag.or{border-color:#c9a227;background:linear-gradient(180deg,#fff4c9,#f3d77a);color:#5a4205}
+.mf-x{width:36px;height:36px;border-radius:50%;border:2px solid var(--bois);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;font-weight:900;cursor:pointer;display:grid;place-items:center}
+.mf-trait-det{border:2px dashed var(--line);border-radius:12px;padding:6px 10px;font-size:13px}
+.mf-trait-det p{margin:2px 0}
+.mf-trait-det.cache{display:none}
+.mf-jauges{display:flex;justify-content:space-around;gap:6px;padding:10px 6px;border-radius:16px;background:var(--bg);border:2px solid var(--line)}
+.mj{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.mj{--c:var(--ok)}
+.mj.moy{--c:#d98e2b}
+.mj.bas{--c:var(--bad)}
+.mj-r{width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p) * 1%),rgba(0,0,0,.13) 0);display:grid;place-items:center;box-shadow:0 2px 0 var(--line)}
+.mj-i{width:42px;height:42px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:20px}
+.mj-i .ico,.mj-i img.ico-img,.mj-i img.emo{width:24px;height:24px}
+.mj b{font-size:16px;line-height:1.1;color:var(--c)}
+.mj small{font-size:11px;font-weight:700;opacity:.75;line-height:1}
+.mf-alerte{margin:-4px 0 0;font-size:12px;color:var(--bad);font-weight:700}
+.mf-bloc{display:flex;flex-direction:column;gap:6px}
+.mf-titre{margin:0;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:var(--mut)}
+.mf-titre .ico,.mf-titre img.emo{width:16px;height:16px;vertical-align:-3px}
+.mf-medailles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.md{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:0}
+.md-r{width:50px;height:50px;border-radius:50%;background:conic-gradient(#c9a227 calc(var(--p) * 1%),rgba(0,0,0,.13) 0);display:grid;place-items:center}
+.md-i{width:40px;height:40px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:20px;filter:grayscale(.85);opacity:.7}
+.md-i .ico,.md-i img.ico-img,.md-i img.emo{width:24px;height:24px}
+.md.gagne .md-r{background:radial-gradient(circle,#fff3b0,#e0b23a);box-shadow:0 0 0 2px #a8841c,0 0 10px rgba(240,190,60,.6)}
+.md.gagne .md-i{filter:none;opacity:1;background:linear-gradient(180deg,#fff8dc,#f6dd8a)}
+.md b{font-size:11px;line-height:1.1;overflow-wrap:anywhere}
+.md small{font-size:10px;opacity:.7;line-height:1.1}
+.mf-slots{margin:0}
+.mf-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mf-a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px 8px;border-radius:16px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:inherit;cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.mf-a:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.mf-a:disabled{opacity:.5;cursor:default}
+.mf-ai{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--bg);font-size:22px}
+.mf-ai .ico,.mf-ai img.ico-img,.mf-ai img.emo{width:26px;height:26px}
+.mf-a b{font-size:15px;line-height:1.1}
+.mf-a small{font-size:11px;opacity:.75;line-height:1.15}
+.mf-a.partir{background:linear-gradient(180deg,#f6c86a,#e09a2f);color:#2b1a08}
+.mf-a.partir.on{background:linear-gradient(180deg,#9fd47a,#5f9a3c);color:#10240a}
+@media (max-width:380px){ .mf-por{width:80px;height:80px} .mf-nom{font-size:26px} .mj-r{width:48px;height:48px} .mj-i{width:37px;height:37px} .md-r{width:44px;height:44px} .md-i{width:35px;height:35px} }
+@media (max-height:440px){ .mf{gap:6px} .mf-por{width:64px;height:64px} .mf-nom{font-size:22px} .mj-r{width:42px;height:42px} .mj-i{width:32px;height:32px} .mf-jauges{padding:6px} }
+/* Fiche du membre sur téléphone : tout tient sans défiler */
+@media (max-width:559px), (max-height:760px){
+  .mf{gap:7px}
+  .mf-alerte{margin:-3px 0 0;font-size:11px}
+  .mf-tete{gap:10px}
+  .mf-por{width:80px;height:80px;border-radius:14px}
+  .mf-nom{font-size:26px}
+  .mf-jauges{padding:7px 4px}
+  .mj-r{width:46px;height:46px} .mj-i{width:36px;height:36px} .mj-i .ico,.mj-i img.ico-img,.mj-i img.emo{width:20px;height:20px}
+  .mj b{font-size:14px}
+  .md-r{width:42px;height:42px} .md-i{width:33px;height:33px} .md-i .ico,.md-i img.ico-img,.md-i img.emo{width:20px;height:20px}
+  .md b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .mf .slots.grands .slot{height:64px;min-height:0;aspect-ratio:auto;padding:4px 2px}
+  .mf-slots .slot .ico,.mf-slots .slot img.ico-img{width:30px;height:30px}
+  .mf-slots .slot small{font-size:10px}
+  .mf-a{padding:7px 6px 6px} .mf-ai{width:32px;height:32px} .mf-ai .ico,.mf-ai img.ico-img,.mf-ai img.emo{width:22px;height:22px}
+  .mf-a b{font-size:14px}
+}
+/* Fiche du membre en paysage bas : deux colonnes (personnage et jauges | exploits, équipement, actions) */
+@media (max-height:440px) and (min-width:600px){
+  .mf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:4px 14px;grid-auto-flow:row dense;align-items:start}
+  .mf > .mf-tete,.mf > .mf-trait-det,.mf > .mf-jauges,.mf > .mf-alerte{grid-column:1}
+  .mf > .mf-bloc,.mf > .mf-actions{grid-column:2}
+  .mf-medailles{gap:4px} .md small{display:none}
+  .mf .slots.grands .slot{height:54px}
+  .mf-a{flex-direction:row;justify-content:center;gap:6px;padding:6px} .mf-a small{display:none}
+}
