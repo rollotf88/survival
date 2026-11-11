@@ -83,8 +83,8 @@ var PIECES = [
     ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3],
     ["pTombes",  600, 520, 785, 660, function(){ return "🕯️"; }, "Tombes", .1, function(){ return (G.dd && G.dd.length > 0) || !!G.lettre; }]
   ]},
-  // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si). Panneau des opérations (Gemini, 2026-11-11) accroché au mur, au-dessus de la niche à bûches
-  { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[["images/panneau-ops.webp", 206, 162, 346, 301, function(){ return true; }]], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
+  // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si). L'été, la grande salle a la cheminée éteinte (2026-11-11). Panneau des opérations (Gemini, 2026-11-11) accroché au mur, au-dessus de la niche à bûches
+  { id:"bastionSalle", nom:"Bastion · grande salle", img:function(){ return typeof estSaison === "function" && estSaison("ete") ? "images/piece-bastion-salle-ete.webp" : "images/piece-bastion-salle.webp"; }, l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[["images/panneau-ops.webp", 206, 162, 346, 301, function(){ return true; }]], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
     ["pChat",         0, 395, 235, 745, function(){ return "💬"; }, "Discuter", .5],
     ["pClan",       350, 220, 690, 460, function(){ return "🛡️"; }, "Mon clan", .5],
     ["pGuerre",     728, 225, 1010, 665, function(){ return "⚔️"; }, "La guerre", .4],
