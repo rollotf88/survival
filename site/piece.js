@@ -222,7 +222,7 @@ function placerPiece(){
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
     var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
-    return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[5]() + ' ' + z[6] + '</span></button>';
+    return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%">' + z[6] + '</span></button>'; // texte seul (retour de Fabien : les icônes à côté des étiquettes chargeaient l'image)
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
     + (EXT ? '<div class="navpieces dehors navvue"><span class="navnom">' + P.nom + '</span></div>' : '<div class="navpieces"><button class="navfl" data-act="piecePrec" aria-label="Pièce précédente">◀</button>'

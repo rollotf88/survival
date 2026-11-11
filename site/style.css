@@ -226,7 +226,7 @@ body.fond .scene .b span{width:13px;text-align:center}
 .loc.choisi{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
 /* Fond de la scène : couleur du plancher autour de l'image recadrée */
 body.fond{background-color:#4a3221}
-#piece.compact .etiq{font-size:0;padding:2px 4px}#piece.compact .etiq .ico{font-size:14px}
+#piece.compact .etiq{font-size:10px;padding:2px 4px}
 /* ---------- Téléphone : barre de famille compacte ---------- */
 .mc{position:relative}
 .mc .pastille{display:none}
@@ -1682,3 +1682,4 @@ body.pc #modal .ch-app{height:calc(100vh - 96px);max-height:none}
 .acts:has(> .bt-pieces){grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-height:440px){ .pz-grille{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px} .pz-nom{font-size:11px;padding:3px 4px} }
 #piece.compact .zone.invite ~ .zone[data-act="chien"] .etiq{display:none} /* scène minuscule : l’invitation à dormir passe avant l’étiquette de Rex */
+#piece.compact .zone[data-act^="o"] .etiq{display:none} /* scène minuscule : pas d’étiquette pour les petits objets (photo, radio, cartes, trophées), ils restent touchables */
