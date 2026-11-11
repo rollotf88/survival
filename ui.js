@@ -289,7 +289,7 @@ function panneauApresCombat(C, L){
   h += '<p class="titre-butin">🎒 L’équipe avant de fouiller</p>' + eq.map(function(x){
     var a = x.eq.arme, s = x.eq.sac;
     return '<div class="pz' + (x.al ? "" : " mort") + '"><span class="pz-ico">' + iconeMembre(x) + '</span><span class="pz-txt"><b>' + x.nom + '</b> <small>' + (x.al ? x.hp + " ❤️ · " + Math.round(x.en) + " ⚡" : accorder(roleDe(x), "mort")) + '</small>'
-      + (x.al ? '<span class="zpv vie"><i style="width:' + x.hp + '%"></i></span><small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " (" + a.sol + "/" + OBJETS[a.id].sol + ")" : "✊ À mains nues") + (s ? " · " + icone(s.id) + " " + OBJETS[s.id].nom : "") + '</small>' : '') + '</span></div>';
+      + (x.al ? '<span class="zpv vie"><i style="width:' + x.hp + '%"></i></span><small class="arme-p' + (a ? "" : " ko") + '">' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " (" + a.sol + "/" + OBJETS[a.id].sol + ")" : "✊ À mains nues") + '</small>' + (s ? '<small>' + icone(s.id) + " " + OBJETS[s.id].nom + '</small>' : "") : '') + '</span></div>';
   }).join("");
   if(L && C.fin !== "defaite"){
     var reste = resteLieu(G.exp.lieu);
@@ -433,7 +433,7 @@ function openCombat(){
     h += G.exp.equipe.map(function(j){
       var x = G.m[j], a = x.eq.arme;
       return '<div class="bilan-m' + (x.al ? "" : " mort") + '"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + (x.al ? "" : " · " + accorder(roleDe(x), "mort")) + '</b>' + (x.al ? barre("❤️", x.hp) : "")
-        + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol : x.al ? "✊ Plus d’arme" : "") + '</small></span></div>';
+        + (a ? '<small class="arme-p">' + icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + '</small>' : x.al ? '<small class="arme-p ko">✊ Plus d’arme</small>' : '') + '</span></div>';
     }).join("");
   }
   // Fin du combat : ce qui attend l'équipe (le lieu à fouiller, avec son image), puis le bouton en bas
@@ -496,14 +496,17 @@ function poserDansScene(im){
 function openResultat(r){
   retourPiece = "salon"; // « Retour au refuge » ramène au salon (pas au garage d'où l'équipe est partie)
   if(typeof lieuResultat !== "undefined"){ lieuResultat = r.lieu; if(typeof placerPiece === "function") placerPiece(); }
-  var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>' + puces(r.notes);
+  var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>';
+  var nPris = r.pris.reduce(function(t, g){ return t + g.n; }, 0), nLai = r.laisses.reduce(function(t, g){ return t + g.n; }, 0), resteR = resteLieu(i);
+  h += tuiles([["rapporté" + (nPris > 1 ? "s" : ""), nPris, nPris ? "ok" : "ko"], ["laissé" + (nLai > 1 ? "s" : "") + " sur place", nLai, nLai ? "moy" : ""], ["reste ici", resteR, resteR ? "" : "ko"]]);
+  if(r.notes && r.notes.length) h += '<p class="titre-butin">📜 Ce qui s’est passé</p>' + puces(r.notes);
   if(r.pris.length){
     h += '<p class="titre-butin">🎒 Butin rapporté</p>' + etageres(r.pris.map(function(g){ return caseObjet(g.id, { act:"aucun", cle:g.id, n:g.n, fixe:true }); }), 5)
       + '<p class="sub butin-noms">' + nommerListe(r.pris).replace(/^./, function(c){ return c.toUpperCase(); }) + '.</p>';
   } else h += '<p><b>Vous rentrez les mains vides.</b></p>';
   if(r.laisses.length) h += '<div class="laisses"><span class="sub">Laissé sur place (plus de place) :</span>' + r.laisses.map(function(g){ return '<span class="mini-case">' + icone(g.id) + (g.n > 1 ? '<b>' + g.n + '</b>' : '') + '</span>'; }).join("") + '</div><p class="sub">Un sac permet de rapporter plus.</p>';
   if(r.vide) h += '<p class="sub">📭 Vous avez vidé les lieux : il n’y a plus rien à trouver ici.</p>';
-  show(h + '<button class="btn" style="width:100%" data-act="close">Retour au refuge</button>');
+  show(h + '<button class="btn btn-jeu" style="width:100%" data-act="close">' + ic("maisonPavillon", "🏠") + ' Retour au refuge</button>');
   // Sur PC : le résultat s'affiche en grand DANS la scène (2026-11-10, retour de Fabien « grosse image vide, pas pro ») :
   // l'image du lieu en fond, une carte avec le récit et le butin qui apparaît objet par objet
   poserDansScene(im);

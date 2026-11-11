@@ -1864,3 +1864,45 @@ body.fond .scene .mc > small.mc-st{display:inline-block;max-width:100%}
   .mf.info .it-txt b{font-size:26px}
   .mf.info .lj{font-size:12px}
 }
+
+/* ---------- Combat, fin de combat, résultat, panneau PC : raccord avec la fiche (2026-11-11) ---------- */
+/* cartes de l'équipe pendant le combat */
+.cmc{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+.cmp,.cmp .portrait{border-radius:10px;overflow:hidden}
+.cmc .cmp,.bilan-m .cmp{box-shadow:0 0 0 2.5px var(--bois)}
+.cmc .cmi b,.bilan-m .cmi b{font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.6px;font-size:17px}
+.cmc .bar,.bilan-m .bar{height:9px;border-radius:999px;background:rgba(0,0,0,.13);box-shadow:inset 0 1px 1px rgba(0,0,0,.15)}
+.cmc .bar i,.bilan-m .bar i{border-radius:999px}
+.act{border-color:var(--bois);border-radius:12px;box-shadow:0 2px 0 var(--line);transition:transform .08s}
+.act:active{transform:translateY(2px);box-shadow:none}
+.act.on{border-color:#a8841c;background:linear-gradient(180deg,#fff1c2,#f2cf6b);box-shadow:0 0 0 1.5px #c9a227,0 2px 0 #a8841c}
+.act.on small{color:#4a3505;font-weight:900}
+/* fin de combat */
+.bilan-m{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+.arme-p{display:inline-block;margin-top:3px;font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arme-p .ico,.arme-p img.ico-img{width:14px;height:14px;vertical-align:-2px}
+.arme-p.ko{border-color:var(--bad);color:var(--bad)}
+.fin-suite{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+/* panneau de droite (PC) : zombies, équipe, tableau de bord */
+#tableauPC .pz{border-radius:14px;box-shadow:0 3px 0 var(--line);align-items:center}
+#tableauPC .pz-ico{border-radius:12px;box-shadow:0 0 0 2.5px var(--bois)}
+#tableauPC .pz-txt b{font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.6px;font-size:18px}
+#tableauPC .pz-txt .zpv{height:9px;border-radius:999px;background:rgba(0,0,0,.13);box-shadow:inset 0 1px 1px rgba(0,0,0,.15);margin:3px 0}
+#tableauPC .pz-txt .zpv i{border-radius:999px}
+#tableauPC .pz-txt .zpv.vie i{background:var(--ok)}
+#tableauPC .pz-txt .pz-fait{display:inline-block;margin:2px 0;font-size:11px;font-weight:900;padding:1px 8px;border-radius:999px;border:1.5px solid var(--bad);background:var(--card)}
+#tableauPC .tb-bloc,#tableauPC .tb-nuit,#tableauPC .tb-marche{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+#tableauPC .defi{border-radius:12px;box-shadow:0 2px 0 var(--line);border-color:var(--bois)}
+#tableauPC .titre-butin{margin-top:12px}
+/* résultat de fouille */
+.btn-jeu{display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-jeu .ico,.btn-jeu img.ico-img{width:22px;height:22px}
+.sheet.resultat .res-carte .tuiles,.sheet .tuiles + .titre-butin{margin-top:4px}
+.sheet.resultat .res-carte .titre-butin{font-size:12px}
+/* Tuiles compactes dans les fenêtres de récit (résultat de fouille, fin de combat) sur téléphone */
+@media (max-width:559px), (max-height:440px){
+  .sheet:not(.resultat) .tuiles{gap:5px;margin-bottom:6px}
+  .sheet:not(.resultat) .tuile{padding:4px 3px}
+  .sheet:not(.resultat) .tuile b{font-size:16px}
+  .sheet:not(.resultat) .tuile small{font-size:10px}
+}

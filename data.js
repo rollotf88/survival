@@ -41,7 +41,7 @@ var PORTRAITS = { "Papa":"images/portrait-papa.webp", "Maman":"images/portrait-m
 // x.r = rôle d'origine (Papa, Maman, Léo, Emma ou le nom d'une recrue) : il garde le bon portrait même renommé
 function iconeMembre(x, sansBadges){
   var r = x.r || x.nom;
-  if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x, sansBadges);
+  if(PORTRAITS[r] && typeof ICONES_SVG !== "undefined") return portraitMembre(x, sansBadges !== false); // badges d’état seulement si on les demande (false) : sinon ils prenaient toute la place des petits portraits
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
