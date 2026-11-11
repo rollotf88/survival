@@ -144,7 +144,7 @@ function rGame(){
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
-    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 Mort" : x.raid ? "🏢 Au bastion" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
+    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 " + causeMort(roleDe(x), "mort") : x.raid ? "🏢 Au bastion" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
     var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + classeUsure(o) + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
@@ -591,9 +591,15 @@ function openChapitre(){
 /* ---------- Soigner / donner une canette ---------- */
 function openSoins(i){
   var x = G.m[i], h = '<h2>' + iconeMembre(x) + ' ' + x.nom + '</h2><p class="sub">❤️ ' + x.hp + ' PV · ⚡ ' + x.en + ' énergie</p>';
-  var bs = bonusSoin(), k = x.hp < 100 ? choisirSoin(100 - x.hp - bs) : null;
-  h += '<button class="loc craft" data-act="heal" data-id="' + i + '"' + (k ? "" : " disabled") + '><span class="em">' + (k ? icone(k) : "🩹") + '</span><span class="eqt"><b>Soigner</b><small>'
-    + (k ? "Utilise " + nommer(k, 1) + " (+" + OBJETS[k].soin + (bs ? " +" + bs + " grâce au soigneur" : "") + " PV) · il en reste " + compter(k) : x.hp >= 100 ? "En pleine forme" : "Aucun soin au refuge") + '</small></span></button>';
+  // Un bouton par soin du stock (du plus petit au plus gros) ; celui qui convient le mieux est « conseillé » (retour de Fabien : il ne voyait que la trousse)
+  var bs = bonusSoin(), manque = 100 - x.hp, conseil = x.hp < 100 ? choisirSoin(manque - bs) : null;
+  var soins = Object.keys(G.stock.n).filter(function(k){ return OBJETS[k].soin && G.stock.n[k] > 0; }).sort(function(a, b){ return OBJETS[a].soin - OBJETS[b].soin; });
+  if(x.hp >= 100 || !soins.length) h += '<button class="loc craft" disabled><span class="em">🩹</span><span class="eqt"><b>Soigner</b><small>' + (x.hp >= 100 ? "En pleine forme" : "Aucun soin au refuge") + '</small></span></button>';
+  else soins.forEach(function(k){
+    var gain = OBJETS[k].soin + bs, perdu = Math.max(0, gain - manque);
+    h += '<button class="loc craft' + (k === conseil ? " conseil" : "") + '" data-act="heal" data-id="' + i + ':' + k + '"><span class="em">' + icone(k) + '</span><span class="eqt"><b>Soigner avec ' + nommer(k, 1) + (k === conseil ? ' <span class="pill">conseillé</span>' : '') + '</b><small>'
+      + "+" + gain + " PV" + (bs ? " (dont +" + bs + " grâce au soigneur)" : "") + (perdu >= 10 ? " · " + perdu + " PV de trop" : "") + " · il en reste " + G.stock.n[k] + '</small></span></button>';
+  });
   var raison = !compter("canette") ? "Aucune canette au refuge" : x.canette ? "Déjà une canette aujourd’hui" : x.en >= 100 ? "Déjà plein d’énergie" : "";
   h += '<button class="loc craft" data-act="boire" data-id="' + i + '"' + (peutBoire(x) ? "" : " disabled") + '><span class="em">' + icone("canette") + '</span><span class="eqt"><b>Boire une canette</b><small>'
     + (raison || "+" + BAL.canetteEnergie + " ⚡ et +" + BAL.canetteSoif + " de soif 💧 tout de suite, mais " + BAL.canetteContrecoup + " ⚡ de repos en moins cette nuit · il en reste " + compter("canette")) + '</small></span></button>';
@@ -1341,7 +1347,7 @@ document.addEventListener("click", function(e){
     // Sur PC : la fiche du membre (santé, équipement, soins…) s'ouvre dans le panneau de droite (2026-11-10, demande de Fabien)
     if(document.body.classList.contains("pc")){ render(); openMembre(i); return; } }
   else if(a === "soins"){ openSoins(i); return; }
-  else if(a === "heal"){ soigner(i); hide(); }
+  else if(a === "heal"){ var qh = String(id).split(":"); soigner(+qh[0], qh[1]); hide(); }
   else if(a === "boire"){ boire(i); hide(); }
   else if(a === "rchoix"){ choisirRencontre(i); render(); openRencontre(); return; }
   else if(a === "rfin"){ var rf = finirRencontre(); render(); if(rf){ openResultat(rf); finiSiMorts(); } else hide(); return; }

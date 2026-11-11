@@ -1591,3 +1591,7 @@ body.pc .chapcourt .ch-saison{display:block;font-size:.85em;opacity:.9}
 .gtuiles.regles .gtuile small{text-align:left;font-size:12.5px}
 .gtuiles.regles .gt-ico{font-size:22px;flex:0 0 auto}
 .gtuiles.regles .gt-ico .ico,.gtuiles.regles .gt-ico img.ico-img{width:24px;height:24px}
+
+/* Soins : le soin conseillé est encadré */
+.loc.craft.conseil{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.loc.craft .pill{font-size:10.5px;padding:1px 6px;vertical-align:middle}

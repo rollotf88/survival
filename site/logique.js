@@ -177,10 +177,12 @@ function choisirSoin(manque){
 function retirerSoin(){ var k = choisirSoin(0); if(k) retirer(k, 1); return k; }
 // Bonus de soin : un Soigneur en vie dans la famille
 function bonusSoin(){ return vivants().some(function(x){ return x.trait === "soigneur"; }) ? BAL.traits.soin : 0; }
-function soigner(i){
+// k (facultatif) : le soin choisi par le joueur ; sinon le plus adapté
+function soigner(i, k){
   var x = G.m[i]; if(!x.al || x.hp >= 100) return null;
   var bonus = bonusSoin();
-  var k = choisirSoin(100 - x.hp - bonus); if(!k) return null;
+  if(!(k && OBJETS[k] && OBJETS[k].soin && compter(k) > 0)) k = choisirSoin(100 - x.hp - bonus);
+  if(!k) return null;
   retirer(k, 1); x.hp = Math.min(100, x.hp + OBJETS[k].soin + bonus);
   return k;
 }
