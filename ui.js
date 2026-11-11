@@ -874,8 +874,10 @@ var selRef = null, bilanOuvert = false;
 // Une ligne courte au lieu du grand bilan (le bilan complet s'ouvre à la demande)
 function resumeRefuge(){
   var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour;
-  return '<p class="resume"><span>' + ic("bouclier", "🛡️") + ' ' + defenseNuit() + '</span><span>' + ic("bouteille", "💧") + ' +' + pe + '/nuit</span><span>' + ic("conserve", "🥫") + ' +' + pn + '/nuit</span><span>' + ic("planche", "🪵") + ' ' + compter("planche") + '</span>'
-    + '<button class="lien" data-act="bilanref">Bilan détaillé</button></p>';
+  // Résumé en petites tuiles (2026-11-11, raccord avec la DA) : défense, eau et nourriture par nuit, planches, puis le lien du bilan
+  var t = function(ico, v, nom, cls){ return '<span class="rs-t' + (cls ? " " + cls : "") + '">' + ico + '<b>' + v + '</b><small>' + nom + '</small></span>'; };
+  return '<div class="resume rs">' + t(ic("bouclier", "🛡️"), defenseNuit(), "défense", defenseNuit() ? "" : "ko") + t(ic("bouteille", "💧"), "+" + pe, "eau / nuit", pe ? "ok" : "") + t(ic("conserve", "🥫"), "+" + pn, "repas / nuit", pn ? "ok" : "") + t(ic("planche", "🪵"), compter("planche"), "planches", "")
+    + '<button class="lien rs-lien" data-act="bilanref">Bilan détaillé ›</button></div>';
 }
 // Le bilan complet du refuge dans sa propre fenêtre (avant : il ne s'affichait que dans l'onglet Construire, et rien ailleurs)
 function openBilanRefuge(){
@@ -945,6 +947,7 @@ function openRef(onglet){
       }), 5) : '<p>Rien à démonter dans le stock (les objets équipés ne sont pas proposés).</p>';
     }
   }
+  if(!fiche && !selRef && ongletRef !== "voiture" && h.indexOf('data-act="refsel"') >= 0){ var m1 = h.match(/data-act="refsel" data-id="([^"]+)"/); if(m1){ selRef = m1[1]; openRef(); return; } }
   if(ongletRef !== "voiture") h += fiche || '<p class="sub">Touche une case pour voir le détail.</p>';
   show(h + BTN_FERMER());
   if(fiche){ var fi = document.querySelector("#sheet .invfiche, #sheet .ings2"); if(fi) fi.scrollIntoView({ block:"nearest" }); }

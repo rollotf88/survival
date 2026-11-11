@@ -1953,3 +1953,35 @@ body.fond .scene .mc > small.mc-st{display:inline-block;max-width:100%}
   .panneau.intro .ir-go{font-size:22px;padding:16px 18px;border-radius:16px}
 }
 @media (max-width:1099px) and (max-height:760px), (max-height:619px){ .ir-puces,.ir-titre{display:none} .ir-premier{font-size:1em} }
+
+/* ---------- DA partout (2026-11-11) ---------- */
+/* onglets de jeu : bois, ombre, l'onglet choisi en ambre qui ressort */
+.tab{border:2px solid var(--bois);border-radius:12px;box-shadow:0 3px 0 var(--line);transition:transform .08s;color:var(--ink)}
+.tab:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.tab.on{background:linear-gradient(180deg,#f6c86a,#e09a2f);color:#2b1a08;border-color:#9a6512;box-shadow:0 3px 0 #9a6512}
+.tab small{font-weight:800}
+/* résumé du refuge en tuiles */
+.resume.rs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 8px;align-items:stretch}
+.rs-t{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px 4px;border:2px solid var(--bois);border-radius:12px;background:var(--bg);box-shadow:0 2px 0 var(--line);min-width:0}
+.rs-t .ico,.rs-t img.ico-img{width:20px;height:20px}
+.rs-t b{font-size:16px;font-weight:900;line-height:1.1}
+.rs-t small{font-size:10px;font-weight:700;color:var(--mut);line-height:1.1;text-align:center}
+.rs-t.ok b{color:var(--ok)}.rs-t.ko b{color:var(--bad)}
+.rs-lien{grid-column:1/-1;justify-self:end;font-size:12px}
+/* classement en cartes, podium pour les 3 premiers */
+ol.classement{list-style:none;padding:0;margin:0 0 8px;display:flex;flex-direction:column;gap:6px}
+ol.classement li{padding:6px 10px;border:2px solid var(--line);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+ol.classement:not(.clans) li{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px}
+ol.classement li:nth-child(-n+3){border-color:#c9a227;background:linear-gradient(90deg,#fff3c4,var(--bg) 60%)}
+ol.classement li:first-child{box-shadow:0 0 0 1.5px #c9a227,0 3px 0 #a8841c}
+ol.classement li.moi{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 2px 0 var(--line)}
+ol.classement .rang{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--card);border:2px solid var(--line);font-weight:900;font-size:13px}
+ol.classement li:nth-child(-n+3) .rang{border:0;background:none}
+ol.classement .rang .ico,ol.classement .rang img.ico-img{width:30px;height:30px}
+ol.classement .pts{font-weight:900;font-size:14px;white-space:nowrap}
+ol.classement .pts .ico,ol.classement .pts img.emo{width:15px;height:15px;vertical-align:-2px}
+ol.classement li > b{min-width:0;overflow:hidden}
+/* tableau de bord PC : « Jour N » en carte */
+#tableauPC > h2:first-child{font-size:30px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+#tableauPC .tb-bloc b{font-size:15px}
+.resume.rs .rs-t{display:flex;flex-direction:column;align-items:center}
