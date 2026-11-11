@@ -63,13 +63,16 @@ function ligneDefi(D, v, fait){
 }
 function contenuDefis(court){
   var d = lireDefis(), J = defisDuJour(), S = defiSemaine(), nf = J.filter(function(D){ return d.faits[D.id]; }).length;
-  var h = '<p class="titre-butin">🎯 Défis du jour · ' + nf + ' / 3</p>' + J.map(function(D){ return ligneDefi(D, d.prog[D.k] || 0, d.faits[D.id]); }).join("");
-  h += '<p class="sub">' + (d.colisJour ? "🪂 Colis du jour gagné !" : "Les 3 réussis = 1 colis. ") + (court ? "" : " Nouveaux défis dans " + tempsAvantDemain() + ".") + '</p>';
-  h += '<p class="titre-butin">🏆 Défi de la semaine</p>' + ligneDefi(S, d.progS[S.k] || 0, d.faitS);
-  if(!court) h += '<p class="sub">' + (d.faitS ? "🪂 Colis de la semaine gagné !" : "Réussi = 1 colis.") + ' Les défis avancent dans toutes tes parties, et sont les mêmes pour tous les joueurs.</p>';
+  // Raccord avec la DA (2026-11-11) : en-tête de section avec le temps restant, récompense en pastille (colis), barres visibles
+  var colis = function(gagne, txt){ return '<span class="df-colis' + (gagne ? " ok" : "") + '">' + (gagne ? "✅ Colis gagné" : "🪂 " + txt) + '</span>'; };
+  var h = '<div class="df-tete"><p class="titre-butin">🎯 Défis du jour · ' + nf + ' / 3</p>' + (court ? '' : '<span class="df-temps">⏳ ' + tempsAvantDemain() + '</span>') + '</div>' + J.map(function(D){ return ligneDefi(D, d.prog[D.k] || 0, d.faits[D.id]); }).join("");
+  h += '<div class="df-rec"><span class="df-pts">' + J.map(function(D){ return '<i class="' + (d.faits[D.id] ? "ok" : "") + '"></i>'; }).join("") + '</span>' + colis(d.colisJour, "Les 3 = 1 colis") + '</div>';
+  h += '<div class="df-tete"><p class="titre-butin">🏆 Défi de la semaine</p></div>' + ligneDefi(S, d.progS[S.k] || 0, d.faitS);
+  h += '<div class="df-rec">' + colis(d.faitS, "Réussi = 1 colis") + '</div>';
+  if(!court) h += '<p class="bl-note">Les défis avancent dans toutes tes parties et sont les mêmes pour tous les joueurs.</p>';
   return h;
 }
-function openDefis(){ show('<h2>🎯 Défis</h2>' + contenuDefis(false) + contenuEvt() + '<div class="row"><button class="btn alt" data-act="menu">☰ Menu</button><button class="btn" data-act="close">Fermer</button></div>'); }
+function openDefis(){ show('<button class="lien-retour" data-act="menu">← Menu</button><h2>🎯 Défis</h2>' + contenuDefis(false) + contenuEvt() + BTN_FERMER()); }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   if(b.getAttribute("data-act") === "defis") openDefis();
