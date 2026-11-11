@@ -2369,3 +2369,8 @@ body:not(.pc) .sheet.a-onglets{height:88%}
 body:not(.fond) .chapcourt .ch-btn{background:var(--bg);color:var(--ink);border-color:var(--bois)}
 body.pc .chapcourt .ch-saison{display:inline-flex!important}
 body.pc #app .chapcourt .ch-btn{font-size:13px}
+/* Cartes de la famille : 2 barres plus épaisses ; faim / soif seulement quand elles sont basses (en rouge) ; les cases restent alignées en bas */
+.mc{display:flex;flex-direction:column}
+.mc-barres{display:flex;flex-direction:column;gap:3px;margin:4px 0 2px}
+.mc-barres .bar{height:9px}
+.mc .slots,.mc .porte{margin-top:auto}

@@ -51,6 +51,7 @@ function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z
 
 /* ---------- Équilibrage : les chiffres faciles à modifier ---------- */
 var BAL = {
+  cartesBas: 40, // cartes de la famille : la barre de faim / de soif n'apparaît qu'à 40 ou moins
   tempsDepart: 60,          // secondes pour remplir le sac au départ
   membresParExpedition: 2,  // nombre max de membres envoyés en même temps
   fouilleParMembre: 4,      // objets trouvés par membre (si tout va bien)
