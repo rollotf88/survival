@@ -393,6 +393,9 @@ function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day
 function hordeMondiale(){ return typeof HORDE_MONDIALE !== "undefined" && !!HORDE_MONDIALE && !(G && G.bacASable); }
 function chanceAttaqueNuit(){ var A = BAL.attaqueNuit; return Math.min(A.max + (hordeMondiale() ? 0.1 : 0), A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque + (hordeMondiale() ? BAL.horde.risque : 0)); }
 function forceMiniNuit(){ return 1 + Math.floor(G.day / BAL.attaqueNuit.joursParForce) + (hordeMondiale() ? BAL.horde.force : 0); }
+// Saison du jour de jeu (SAISONS, data.js)
+function saison(d){ return SAISONS[Math.floor(((d || G.day) - 1) / BAL.saisons.duree) % SAISONS.length]; }
+function estSaison(id){ return !!(G && G.day && saison().id === id); }
 function coutTravail(x){ return BAL.energieCraft - (aTitre(x, "bricoleur") ? BAL.exploits.bricoleur : 0); }
 function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
 function peutSortir(x){ return x.al && !x.raid && x.en >= coutMin() - remiseEnergie(x); } // x.raid : volontaire parti au bastion pour le raid de l'immeuble
@@ -481,7 +484,7 @@ function suiteExpedition(){
 function pecheursEquipe(){ return G.exp.equipe.map(function(j){ return G.m[j]; }).filter(function(x){ return x.al && x.eq.outil && OBJETS[x.eq.outil.id].peche; }); }
 function avantFouille(){
   var E = G.exp;
-  if(LIEUX[E.lieu].peche && !E.peche && G.lieux[E.lieu].poissons > 0){
+  if(LIEUX[E.lieu].peche && !E.peche && G.lieux[E.lieu].poissons > 0 && !estSaison("hiver")){
     var p = pecheursEquipe();
     if(p.length){ E.peche = { lancers:BAL.peche.lancers * p.length, faits:0, prises:0 }; return { peche:true }; }
   }
@@ -557,6 +560,7 @@ function finExpedition(){
     n.push([peches ? "g2" : "b2", "🎣 " + (peches ? "Vous pêchez " + nommer("poisson", peches) + " (" + peches + " touche" + (peches > 1 ? "s" : "") + " sur " + E.peche.lancers + ")." : "Aucun poisson cette fois : ils ont tous filé.")]);
     survivants.forEach(function(x){ var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return; c.sol--; if(c.sol <= 0){ x.eq.outil = null; n.push(["b2", "🎣 La canne à pêche " + de(x.nom) + " casse."]); } else avertirUsure(x, c, n, "sortie"); });
   }
+  else if(LIEUX[i].peche && estSaison("hiver") && survivants.some(function(x){ return x.eq.outil && OBJETS[x.eq.outil.id].peche; })) n.push(["b2", "❄️ L’étang est gelé : impossible de pêcher avant le printemps."]);
   else if(LIEUX[i].peche) survivants.forEach(function(x){
     var c = x.eq.outil; if(!c || !OBJETS[c.id].peche) return;
     var k = Math.min(lieu.poissons, Math.max(1, Math.round(R(BAL.peche.prises[0], BAL.peche.prises[1]) * mult)));
@@ -923,15 +927,15 @@ function finJour(){
   if(G.feu){
     if(G.braises > 0){ G.braises--; feu = true; n.push(["g2", "🔥 Le feu de cheminée a brûlé toute la nuit (la planche d’hier a suffi)."]); }
     else if(compter("planche") >= BAL.feu.planches && possede(function(o){ return o.allume; })){
-      retirer("planche", BAL.feu.planches); feu = true; G.braises = BAL.feu.nuitsParPlanche - 1; // une planche brûle plusieurs nuits
+      retirer("planche", BAL.feu.planches); feu = true; G.braises = estSaison("hiver") && BAL.saisons.feuHiver ? 0 : BAL.feu.nuitsParPlanche - 1; // une planche brûle plusieurs nuits (une seule en hiver)
       n.push(["g2", "🔥 Le feu de cheminée a brûlé toute la nuit (−" + BAL.feu.planches + " planche" + (BAL.feu.planches > 1 ? "s" : "") + (BAL.feu.nuitsParPlanche > 1 ? ", elle durera " + BAL.feu.nuitsParPlanche + " nuits" : "") + ")."]);
     } else { G.feu = false; n.push(["b2", "🔥 Le feu s’est éteint : " + (possede(function(o){ return o.allume; }) ? "plus de planches à brûler." : "plus de briquet pour le rallumer.")]); }
   }
-  var auChaud = feu ? 99 : compter("couverture") * BAL.feu.couvrePar, froids = [], diner = [];
+  var auChaud = feu ? 99 : compter("couverture") * (estSaison("hiver") && BAL.saisons.couvHiver ? 1 : BAL.feu.couvrePar), froids = [], diner = [];
   vivants().forEach(function(x, kx){
     var chaud = kx < auChaud; if(!chaud) froids.push(x.nom);
-    x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0);
-    x.soif -= BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0);
+    x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0) + (estSaison("hiver") ? BAL.saisons.faimHiver : 0);
+    x.soif -= BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0) + (estSaison("ete") ? BAL.saisons.soifEte : 0);
     var repos = (chaud ? BAL.reposNuit + (feu ? BAL.feu.repos : 0) : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
     if(x.canette) n.push(["", "🥴 " + x.nom + " dort mal après sa canette (+" + repos + " ⚡ seulement)."]);
     x.en = Math.min(100, x.en + repos); x.canette = false;
@@ -1012,8 +1016,13 @@ function finJour(){
   var gates = {}; platsDispo().forEach(function(o){ o.sol--; if(o.sol <= 0){ retirerInstance(o.uid); gates[o.id] = (gates[o.id] || 0) + 1; } });
   if(Object.keys(gates).length) n.push(["b2", "🤢 Gâté" + (Object.keys(gates).length > 1 || gates[Object.keys(gates)[0]] > 1 ? "s" : "") + " : " + liste(Object.keys(gates).map(function(id){ return nommer(id, gates[id]); })) + ", à jeter."]);
   // Le potager donne parfois des herbes fraîches
-  for(var hp = 0; hp < G.ref.pot; hp++) if(hasard() < BAL.cuisine.herbesPotager){ ajouter("herbes", 1); n.push(["g2", icone("herbes") + " Des herbes fraîches ont poussé au potager."]); break; }
+  for(var hp = 0; hp < (estSaison("hiver") ? 0 : G.ref.pot); hp++) if(hasard() < BAL.cuisine.herbesPotager){ ajouter("herbes", 1); n.push(["g2", icone("herbes") + " Des herbes fraîches ont poussé au potager."]); break; }
   var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour;
+  // Saisons : pluie d'automne, sécheresse d'été, potager endormi l'hiver et généreux au printemps
+  if(estSaison("automne") && G.ref.eau) pe += 1;
+  if(estSaison("ete")) pe = Math.max(0, pe - G.ref.eau * BAL.saisons.recupEte);
+  if(estSaison("hiver")) pn = 0;
+  if(estSaison("printemps")) pn *= 2;
   G.reste.eau += pe; G.reste.nour += pn;
   if(pe) n.push(["g2", ic("ref_eau", "🪣") + " Le récupérateur a recueilli " + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]);
   if(pn) n.push(["g2", ic("ref_pot", "🥕") + " Le potager a donné " + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]);
@@ -1022,7 +1031,9 @@ function finJour(){
   var moral = 0;
   G.stock.o.concat(equipes()).forEach(function(o){ moral += OBJETS[o.id].moral || 0; });
   changerMoral(-BAL.moralPerteNuit + BAL.moralBonusObjet * moral + BAL.traits.optimiste * vivants().filter(function(x){ return x.trait === "optimiste"; }).length);
+  if(estSaison("printemps")) changerMoral(1);
   G.day++; G.ads = 0; G.sel = []; G.nTirage = 0;
+  if((G.day - 1) % BAL.saisons.duree === 0){ var Sn = saison(); n.push(["", Sn.ico + " " + Sn.annonce]); }
   if(G.day % MARCHE.tousLes === 0 && Object.keys(G.charrette).some(function(id){ return G.charrette[id] > 0; })){ genererMarche(); n.push(["g2", ic("marco", MARCHE.icone) + " " + MARCHE.nom + " s’installe au coin de la rue aujourd’hui : allez voir le marché !"]); }
   if(!n.length) n.push(["g2", "Nuit calme."]);
   return n;

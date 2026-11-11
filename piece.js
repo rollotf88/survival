@@ -170,6 +170,7 @@ function sceneLieu(){
 var PIECE_BOUTON = { dormir:"chambre", stock:"reserve", refuge:"atelier", fouille:"garage" };
 function allerPieceId(id){ var k = PIECES.findIndex(function(p){ return p.id === id; }); if(k >= 0 && k !== pieceIdx && pieceVisible(k)){ pieceIdx = k; dernierJourEtiquettes = null; placerPiece(); } }
 function placerPiece(){
+  setTimeout(placerMeteo, 0);
   var cont = $("piece");
   if(!cont){ cont = document.createElement("div"); cont.id = "piece"; document.body.appendChild(cont); }
   var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
@@ -542,4 +543,19 @@ function openTombes(){
   if(dd.length) h += '<button class="btn" style="width:100%;margin-top:8px" data-act="recueillir"' + (peutRecueillir() ? "" : " disabled") + '>'
     + (peutRecueillir() ? "🕯️ Se recueillir (+" + BAL.tombes.moral + " moral)" : "🕯️ Déjà fait aujourd’hui") + '</button>';
   show(h + BTN_FERMER());
+}
+
+/* ---------- Météo des saisons (2026-11-11, idée de Fabien) ----------
+   Neige l'hiver, pluie l'automne, seulement par-dessus les images d'extérieur : la cour, la cour du bastion,
+   les lieux (expéditions, combats dehors) ; jamais dans la maison ni dans l'immeuble du raid. Tout en CSS (.meteo). */
+var PIECES_DEHORS = { cour:1, bastionCour:1 };
+function placerMeteo(){
+  var m = $("meteo"); if(!m){ m = document.createElement("div"); m.id = "meteo"; m.className = "meteo"; document.body.appendChild(m); }
+  var cont = $("piece"), type = G && G.ph === "game" && G.day ? saison().meteo : null;
+  var dehors = !!sceneLieu() ? !(G.exp && G.exp.raid) : !!PIECES_DEHORS[PIECES[pieceIdx] && PIECES[pieceIdx].id];
+  document.body.classList.toggle("meteo-neige", type === "neige" && !!G.exp && !G.exp.raid);
+  document.body.classList.toggle("meteo-pluie", type === "pluie" && !!G.exp && !G.exp.raid);
+  if(!type || !dehors || !cont || cont.style.display === "none"){ m.style.display = "none"; return; }
+  m.className = "meteo " + type; m.style.display = "block";
+  m.style.top = cont.style.top; m.style.height = cont.style.height; m.style.left = cont.style.left; m.style.right = cont.style.right;
 }

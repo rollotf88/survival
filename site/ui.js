@@ -155,7 +155,7 @@ function rGame(){
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
-  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button></div><div class="chips">'
+  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '<span class="ch-sep"> · </span><span class="ch-saison">' + saison().ico + ' ' + saison().nom + '</span></button></div><div class="chips">'
     + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
     + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
     + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
@@ -1133,7 +1133,7 @@ var VITRINE = [
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/lieux/centre.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
-  ["images/nuit.webp", "🌙 Des nuits d’angoisse", "Les zombies attaquent, le froid mord, la folie guette. Tiendras-tu jusqu’au matin ?"],
+  ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
   ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des défis quotidiens, une grande horde chaque week-end et un code pour inviter tes amis."]
 ];
 var minuteurVitrine = null;

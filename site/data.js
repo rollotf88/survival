@@ -293,6 +293,16 @@ BAL.exploits = { eclaireur:5, bricoleur:5, seuilBlessure:20 };
 BAL.tombes = { moral:3 };
 // Événement mondial « Grande horde du week-end » (2026-11-11) : vendredi 17 h → lundi 5 h (heure UTC, soit 18 h → 6 h en France l'hiver)
 // pendant la horde : attaques de nuit plus probables et plus fortes, plus de zombies en combat ; objectif commun de zombies abattus
+// Saisons (2026-11-11, idée validée par Fabien) : 30 jours de jeu chacune, dans cet ordre, puis on recommence
+var SAISONS = [
+  { id:"automne",   nom:"Automne",   ico:"🍂", meteo:"pluie", annonce:"L’automne s’installe : la pluie remplit le récupérateur d’eau.", effet:"pluie : +1 ration d’eau par nuit avec un récupérateur" },
+  { id:"hiver",     nom:"Hiver",     ico:"❄️", meteo:"neige", annonce:"L’hiver arrive : l’étang gèle, le potager dort, et le feu devient vital.", effet:"froid : une couverture ne tient chaud qu’une personne, le feu brûle une planche par nuit, +3 de faim par jour, l’étang est gelé, le potager ne donne rien" },
+  { id:"printemps", nom:"Printemps", ico:"🌱", meteo:null,    annonce:"Le printemps revient : le potager repart et le moral remonte.", effet:"le potager donne deux fois plus, +1 de moral par nuit" },
+  { id:"ete",       nom:"Été",       ico:"☀️", meteo:null,    annonce:"L’été écrase tout : la chaleur donne soif.", effet:"+3 de soif par jour" }
+];
+// Réglé par simulation (2026-11-11) : la baisse du récupérateur en été faisait un mur au jour 91 (bon joueur : 90 % ≤ 102 j au lieu de 113) → retirée ;
+// l'hiver reste un vrai cap (potager endormi, étang gelé) : bon 96-98 j (10 % ≤ 66), moyen 48 j (57 sans saisons), débutant inchangé
+BAL.saisons = { duree:30, faimHiver:3, soifEte:3, recupEte:0, feuHiver:true, couvHiver:true };
 BAL.horde = { risque:0.15, force:1, zombieEnPlus:0.08, objectifMin:500, objectifParJoueur:100 };
 
 /* ---------- Zombies (combat en expédition) ----------
