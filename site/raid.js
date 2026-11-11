@@ -105,37 +105,36 @@ function contenuRaid(B){
     if(R.participe && !R.maPart) h += '<p class="sub">✅ Tu as récupéré ta part.</p>';
     return h;
   }
-  h += '<p class="sub">Un immeuble de ' + I.etages.length + ' étages, plein de provisions… et de zombies. Chaque famille du clan peut y envoyer <b>un volontaire</b>. Dès <b>' + R.min + ' volontaires</b>, le chef lance le raid et le joue, étage par étage : entre deux étages, il choisit de monter ou de redescendre avec le butin. Les blessures et les morts sont réelles.</p>';
-  h += '<div class="raid-etages">' + I.etages.map(function(E, k){ return '<span class="raid-e"><b>' + (k + 1) + '</b>' + E.nom + '</span>'; }).join("") + '</div>';
-  // Remorque artisanale
-  var cr = B.couts && B.couts.remorque;
-  h += '<div class="bast-def"><div class="invfiche"><span class="em">' + ic("camionClan", "🚚") + '</span><span class="eqt"><b>Remorque artisanale · ' + (R.remorque ? "construite ✔" : "à construire") + '</b><small>'
-    + (R.remorque ? "Elle ramène " + I.remorque + " objets de plus." : "Sans elle, chaque volontaire debout ne ramène que " + I.sac + " objets : le reste du butin reste dans l’immeuble.") + '</small></span></div>';
-  if(!R.remorque && cr){
-    var manque = Object.keys(cr).filter(function(m){ return !((B.reserve[m] || 0) >= cr[m]); });
-    h += '<div class="ings2">' + Object.keys(cr).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= cr[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + cr[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>'
-      + '<button class="btn" style="width:100%" data-act="bastconstruire" data-id="remorque"' + (manque.length ? " disabled" : "") + '>' + (manque.length ? "❌ Il manque des matériaux dans la réserve" : "🔨 Construire la remorque") + '</button>';
+  // Raccord avec la DA (2026-11-11) : règles en 3 tuiles, étages en parcours, volontaires en places (vides en pointillés), remorque en ligne compacte, gros bouton
+  h += '<div class="rd-regles"><span><b>✋ 1</b><small>volontaire par famille</small></span><span><b>👥 ' + R.min + '</b><small>pour partir (' + R.max + ' au plus)</small></span><span><b>👑</b><small>le chef mène le raid</small></span></div>';
+  h += '<div class="rd-etages">' + I.etages.map(function(E, k){ return '<span class="rd-e"><i>' + (k + 1) + '</i><small>' + E.nom.replace(/^(Le |La |Les |L’)/, "") + '</small></span>'; }).join("") + '</div>';
+  h += '<p class="bl-note">Entre deux étages, le chef choisit de monter ou de redescendre avec le butin. Blessures et morts sont réelles.</p>';
+  // Volontaires : une place par volontaire possible
+  h += '<p class="titre-butin">✋ Volontaires · ' + R.nb + ' / ' + R.min + '</p><div class="rd-places">';
+  for(var q = 0; q < R.max; q++){
+    var v = R.volontaires[q];
+    if(v){
+      var m = v.membre, a = m.eq && m.eq.arme;
+      h += '<span class="rd-p plein' + (v.moi ? " moi" : "") + '"><span class="rd-por">' + iconeMembre({ nom:m.nom, r:m.r, icone:"🙂", al:true, hp:m.hp, en:m.en, faim:80, soif:80 }) + '</span><b>' + echapper(m.nom) + '</b><small>' + echapper(v.pseudo || "?") + '</small><small class="rd-arme">' + (a && OBJETS[a.id] ? icone(a.id) : "✊") + ' ❤️' + m.hp + '</small></span>';
+    } else h += '<span class="rd-p' + (q >= R.min ? " option" : "") + '"><span class="rd-por vide">+</span><small>' + (q >= R.min ? "en plus" : "libre") + '</small></span>';
   }
   h += '</div>';
-  // Volontaires
-  h += '<p class="titre-butin">✋ Volontaires · ' + R.nb + ' / ' + R.min + (R.nb > R.min ? " (" + R.max + " au plus)" : "") + '</p>';
-  h += R.volontaires.length ? '<div class="raid-liste">' + R.volontaires.map(function(v){
-    var m = v.membre, a = m.eq && m.eq.arme, kit = v.kit || { n:{}, o:[] };
-    var kitTxt = Object.keys(kit.n || {}).map(function(k){ return icone(k) + kit.n[k]; }).concat((kit.o || []).map(function(o){ return icone(o.id); })).join(" ");
-    return '<div class="raid-l' + (v.moi ? " moi" : "") + '">' + iconeMembre({ nom:m.nom, r:m.r, icone:"🙂", al:true, hp:m.hp, en:m.en, faim:80, soif:80 }) + '<span class="cl-info"><b>' + echapper(m.nom) + ' <small>· famille de ' + echapper(v.pseudo || "?") + (v.moi ? " (toi)" : "") + '</small></b>'
-      + '<small>❤️ ' + m.hp + ' · ⚡ ' + m.en + ' · ' + (a && OBJETS[a.id] ? icone(a.id) + " " + OBJETS[a.id].nom : "à mains nues") + '</small><small>' + (kitTxt || "Rien d’autre") + '</small></span></div>';
-  }).join("") + '</div>' : '<p class="sub">Personne pour l’instant. Sois le premier !</p>';
-  if(R.volontaires.length){ var ev = evalEquipeRaid(R.volontaires); h += '<p class="etat ' + ev.cls + '">' + ev.txt + '</p><p class="sub">' + ev.detail + '</p>'; }
+  if(R.volontaires.length){ var ev = evalEquipeRaid(R.volontaires); h += '<p class="etat ' + ev.cls + '">' + ev.txt + '</p><p class="bl-note">' + ev.detail + '</p>'; }
   // Actions
   var moi = R.volontaires.some(function(v){ return v.moi; });
   if(R.lance) h += '<p class="msg">⏳ Raid en cours, lancé par ' + echapper(R.lance.pseudo || "?") + ' ' + quand(R.lance.t) + '.</p>';
-  if(R.peutLancer) h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="raidlancer"' + (enJeu ? "" : " disabled") + '>' + (R.lance && R.lance.moi ? "▶️ Reprendre le raid" : "▶️ Lancer le raid") + '</button>';
-  else if(R.nb >= R.min && !R.chef) h += '<p class="sub">L’équipe est prête : le chef peut lancer le raid' + (R.attenteChef ? " (sinon, n’importe qui pourra le lancer dans " + tempsRestant(Date.now() + R.attenteChef) + ")" : "") + '.</p>';
-  h += '<button class="op-ligne chat-ligne" data-act="chat">💬 <b>En parler au clan</b><small>Qui envoie un volontaire ? Qui est prêt ?</small></button>';
+  if(R.peutLancer) h += '<button class="btn btn-jeu" style="width:100%;margin-bottom:8px" data-act="raidlancer"' + (enJeu ? "" : " disabled") + '>' + (R.lance && R.lance.moi ? "▶️ Reprendre le raid" : "▶️ Lancer le raid") + '</button>';
+  else if(R.nb >= R.min && !R.chef) h += '<p class="msg">L’équipe est prête : le chef peut lancer le raid' + (R.attenteChef ? " (sinon, n’importe qui pourra le lancer dans " + tempsRestant(Date.now() + R.attenteChef) + ")" : "") + '.</p>';
   if(!R.lance){
-    if(moi) h += '<button class="btn alt" style="width:100%" data-act="raidretrait">↩️ Retirer mon volontaire</button>';
-    else if(R.nb < R.max) h += '<button class="btn" style="width:100%" data-act="raidpret"' + (enJeu ? "" : " disabled") + '>✋ Je suis prêt : envoyer un volontaire</button>' + (enJeu ? "" : '<p class="sub">Pendant une partie.</p>');
+    if(moi) h += '<button class="btn alt btn-jeu" style="width:100%;margin-bottom:8px" data-act="raidretrait">↩️ Retirer mon volontaire</button>';
+    else if(R.nb < R.max) h += '<button class="btn btn-jeu" style="width:100%;margin-bottom:8px" data-act="raidpret"' + (enJeu ? "" : " disabled") + '>✋ Envoyer un volontaire</button>' + (enJeu ? "" : '<p class="sub">Pendant une partie.</p>');
   }
+  // Remorque artisanale : ligne compacte
+  var cr = B.couts && B.couts.remorque, peutR = cr && Object.keys(cr).every(function(m){ return (B.reserve[m] || 0) >= cr[m]; });
+  h += '<div class="rd-rem' + (R.remorque ? " ok" : "") + '"><span class="bd-ico">' + ic("camionClan", "🚚") + '</span><span class="rd-rem-t"><b>Remorque artisanale</b><small>' + (R.remorque ? "✔ Construite : +" + I.remorque + " objets ramenés" : "Sans elle : " + I.sac + " objets par volontaire") + '</small>'
+    + (!R.remorque && cr ? '<span class="ings2 mini">' + Object.keys(cr).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= cr[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + cr[m] + '</b></span>'; }).join("") + '</span>' : '') + '</span>'
+    + (!R.remorque && cr ? '<button class="btn rd-rem-b" data-act="bastconstruire" data-id="remorque"' + (peutR ? "" : " disabled") + ' aria-label="Construire la remorque">🔨</button>' : '') + '</div>';
+  h += '<button class="lien rd-chat" data-act="chat">💬 En parler au clan ›</button>';
   return h;
 }
 

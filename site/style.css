@@ -2211,3 +2211,39 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .bj-l{display:grid!important;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
 .bj-t{font-size:11px;color:var(--mut);white-space:nowrap}
 .bj .ch-jour{margin:6px 0 2px}
+
+/* ---------- Opération « L'immeuble » (2026-11-11) ---------- */
+.rd-regles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}
+.rd-regles span{display:flex;flex-direction:column;align-items:center;text-align:center;padding:6px 4px;border:2px solid var(--bois);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+.rd-regles b{font-size:18px;font-weight:900}.rd-regles b .ico,.rd-regles b img.emo{width:20px;height:20px;vertical-align:-3px}
+.rd-regles small{font-size:11px;color:var(--mut);line-height:1.15}
+.rd-etages{position:relative;display:flex;justify-content:space-between;margin:10px 4px 2px}
+.rd-etages::before{content:"";position:absolute;left:14px;right:14px;top:13px;height:3px;background:var(--bois);border-radius:2px}
+.rd-e{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;width:20%}
+.rd-e i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:900;background:var(--card);border:2.5px solid var(--bois);box-shadow:0 2px 0 var(--line)}
+.rd-e:last-child i{background:linear-gradient(180deg,#f6c86a,#e09a2f);border-color:#9a6512}
+.rd-e small{font-size:10.5px;font-weight:800;text-align:center;line-height:1.1;color:var(--mut)}
+.rd-places{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.rd-p{display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center;min-width:0}
+.rd-por{width:52px;height:52px;border-radius:12px;overflow:hidden;display:grid;place-items:center;box-shadow:0 0 0 2.5px var(--bois),0 3px 0 3px var(--line);background:var(--card);font-size:30px}
+.rd-por .portrait{width:100%;height:100%;border-radius:0}.rd-por .portrait img{width:100%;height:100%;object-fit:cover}
+.rd-por.vide{box-shadow:none;border:2.5px dashed var(--line);background:none;color:var(--mut);font-weight:900;font-size:24px}
+.rd-p.option .rd-por.vide{opacity:.55}
+.rd-p.moi .rd-por{box-shadow:0 0 0 2.5px var(--acc),0 3px 0 3px var(--line)}
+.rd-p b{font-size:12.5px;margin-top:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-p small{font-size:10.5px;color:var(--mut);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-p .rd-por.vide + small{margin-top:4px}
+.rd-arme .ico,.rd-arme img.ico-img,.rd-arme img.emo{width:13px;height:13px;vertical-align:-2px}
+.rd-rem{display:flex;align-items:center;gap:10px;padding:6px 8px;border:2px solid var(--line);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line);margin-bottom:6px}
+.rd-rem.ok{border-color:var(--ok)}
+.rd-rem .bd-ico{flex:none;width:48px;height:48px}.rd-rem .bd-ico .ico,.rd-rem .bd-ico img.ico-img{width:32px;height:32px}
+.rd-rem-t{flex:1;min-width:0}.rd-rem-t b{display:block;font-size:14px}.rd-rem-t > small{display:block;font-size:11.5px;color:var(--mut)}
+.ings2.mini{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}.ings2.mini .ing2{flex-direction:row;gap:3px;align-items:center}
+.ings2.mini .ing2-case{width:24px;height:24px}.ings2.mini .ing2-case .ico,.ings2.mini .ing2-case img.ico-img{width:16px;height:16px}.ings2.mini .ing2 b{font-size:11px}
+.rd-rem-b{flex:none;width:44px;height:44px;padding:0;font-size:20px}
+.rd-chat{display:block;margin:2px auto 0}
+.raid-tete .raid-img{height:clamp(90px,14vh,150px)}
+.ings2.mini{flex-wrap:nowrap}
+.rd-rem{padding:5px 8px}
+@media (max-height:860px){.rd-etages + .bl-note{display:none}}
+@media (orientation:landscape) and (max-height:500px){.raid-tete .raid-img{height:70px}.rd-regles small{display:none}.rd-por{width:40px;height:40px}}
