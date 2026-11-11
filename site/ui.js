@@ -33,6 +33,7 @@ function barre(l, v){ v = Math.max(0, Math.min(100, v)); return '<div class="b">
 function ligneJournal(a){
   var t = String(a[1]), ico = "", m;
   if(t.indexOf("<svg") === 0){ var f = t.indexOf("</svg>") + 6; ico = t.slice(0, f); t = t.slice(f); }
+  else if(t.indexOf("<img") === 0){ var f3 = t.indexOf(">") + 1; ico = t.slice(0, f3); t = t.slice(f3); } // icône peinte au début de la ligne (2026-11-11 : sinon le médaillon restait vide « • »)
   else if(t.indexOf('<span class="portrait') === 0){ var f2 = t.indexOf("</span></span>"); f2 = f2 >= 0 ? f2 + 14 : t.indexOf("</span>") + 7; ico = t.slice(0, f2); t = t.slice(f2); }
   else if((m = t.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u))){ ico = m[1]; t = t.slice(m[0].length); }
   if(!ico) ico = a[0] === "g2" ? "✔" : a[0] === "b2" ? "!" : "•";

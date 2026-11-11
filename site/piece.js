@@ -294,18 +294,21 @@ function openDormir(){
   var v = vivants().length, be = besoinNuit("eau"), bn = besoinNuit("nour"), re = rations("eau"), rn = rations("nour");
   var couv = compter("couverture") * BAL.feu.couvrePar, froids = G.feu ? 0 : Math.max(0, v - couv);
   var A = BAL.attaqueNuit, ch = Math.round(chanceAttaqueNuit() * 100), f = forceMiniNuit();
+  // Raccord avec la DA (2026-11-11) : 4 tuiles (énergie, eau, repas, risque), puis seulement les lignes utiles
+  var rep = G.feu ? BAL.reposNuit + BAL.feu.repos : BAL.reposNuit, d = defenseNuit();
+  var h = tuiles([["énergie", "+" + rep, froids ? "moy" : "ok"], ["eau · reste " + re, "−" + Math.min(be, re), re >= be ? "" : "ko"], ["repas · reste " + rn, "−" + Math.min(bn, rn), rn >= bn ? "" : "ko"], ["risque d’attaque", ch + " %", d >= f + 2 ? "ok" : d >= f ? "moy" : "ko"]]).replace('class="tuiles"', 'class="tuiles t4"');
   var L = [];
-  L.push([froids ? "b2" : "g2", "😴 Chacun récupère +" + (G.feu ? BAL.reposNuit + BAL.feu.repos : BAL.reposNuit) + " ⚡" + (froids ? " (sauf " + froids + " qui " + (froids > 1 ? "auront" : "aura") + " froid : +" + BAL.reposFroid + " ⚡, −" + BAL.degatsFroid + " PV)" : "") + "."]);
-  L.push([re >= be ? "" : "b2", ic("bouteille", "💧") + " La famille boira " + Math.min(be, re) + " ration" + (Math.min(be, re) > 1 ? "s" : "") + " d’eau (il en reste " + re + ")" + (re < v ? " : pas assez pour tout le monde !" : ".")]);
-  L.push([rn >= bn ? "" : "b2", ic("conserve", "🥫") + " Elle mangera " + Math.min(bn, rn) + " ration" + (Math.min(bn, rn) > 1 ? "s" : "") + " (il en reste " + rn + ")" + (rn < v ? " : pas assez pour tout le monde !" : ".")]);
+  if(froids) L.push(["b2", "🥶 " + froids + (froids > 1 ? " auront" : " aura") + " froid sans feu ni couverture : +" + BAL.reposFroid + " ⚡ seulement, −" + BAL.degatsFroid + " PV."]);
+  if(re < v) L.push(["b2", ic("bouteille", "💧") + " Pas assez d’eau pour tout le monde !"]);
+  if(rn < v) L.push(["b2", ic("conserve", "🥫") + " Pas assez à manger pour tout le monde !"]);
   if(G.feu) L.push(["g2", "🔥 Le feu brûle toute la nuit" + (G.braises > 0 ? " (la planche d’hier suffit)." : " (1 planche pour 2 nuits).")]);
   if(chien()) L.push(["", ic("chien", "🐕") + " " + chien().nom + " mange 1 ration et monte la garde."]);
-  if(compter("poule")) L.push(["", ic("poule", "🐔") + " Les poules boivent " + Math.ceil(compter("poule") / BAL.poules.eauPour) + " ration(s) d’eau et pondent peut-être."]);
-  L.push([defenseNuit() >= f + 2 ? "g2" : defenseNuit() >= f ? "" : "b2", "🧟 Environ " + ch + " % de risque d’attaque, force " + f + " à " + (f + 2) + " · votre défense : " + defenseNuit() + "."]);
+  if(compter("poule")) L.push(["", ic("poule", "🐔") + " Les poules boivent " + Math.ceil(compter("poule") / BAL.poules.eauPour) + " ration" + (Math.ceil(compter("poule") / BAL.poules.eauPour) > 1 ? "s" : "") + " d’eau et pondent peut-être."]);
+  L.push([d >= f + 2 ? "g2" : d >= f ? "" : "b2", "🧟 Si les zombies viennent : force " + f + " à " + (f + 2) + ", votre défense " + d + (d >= f + 2 ? " : vous tiendrez." : d >= f ? " : ce sera juste." : " : la barricade risque de céder.")]);
   if(sacrificePossible()) L.push(["b2", "💀 Quelqu’un va mourir de faim, et il n’y a plus rien. Il reste une solution, la pire de toutes…"]);
-  show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2><p class="sub">La journée se termine. Cette nuit :</p>' + puces(L)
+  show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2>' + h + '<p class="titre-butin">🌙 Cette nuit</p>' + puces(L)
     + (sacrificePossible() ? '<button class="loc sombre" data-act="sacrifice"><b>🕯️ Le choix impossible</b><small>Sacrifier l’un des vôtres pour que les autres survivent</small></button>' : '')
-    + '<div class="row"><button class="btn" data-act="endday">🌙 Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
+    + '<div class="row"><button class="btn btn-jeu" data-act="endday">🌙 Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
