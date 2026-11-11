@@ -937,6 +937,47 @@ function over(){
   if(auto) envoyerScoreAuto();
 }
 // Écran de fin plein écran : les disparus en gris, le score en grand
+
+/* ---------- Héritage (2026-11-11, idée validée par Fabien) ----------
+   Au game over, la famille laisse un objet à la suivante (le plus précieux est choisi d'avance, on peut changer)
+   et une lettre. Gardé dans localStorage « survival_heritage » ; remis au départ de la famille suivante (coffre + lettre). */
+function lireHeritage(){ try{ return JSON.parse(localStorage.getItem("survival_heritage")); }catch(e){ return null; } }
+function ecrireHeritage(h){ try{ if(h) localStorage.setItem("survival_heritage", JSON.stringify(h)); else localStorage.removeItem("survival_heritage"); }catch(e){} }
+// Ce que la famille possède encore (stock, y compris l'équipement des morts), du plus précieux au moins précieux
+function candidatsHeritage(){
+  var vus = {}, c = [];
+  G.stock.o.forEach(function(o){ var O = OBJETS[o.id]; if(!O || O.cat === "plat") return; if(!vus[o.id] || (o.sol || 0) > (vus[o.id].sol || 0)) vus[o.id] = { id:o.id, sol:o.sol, n:1 }; });
+  for(var k in G.stock.n){ var O = OBJETS[k]; if(!O || O.cat === "plat" || !(G.stock.n[k] > 0)) continue; vus[k] = { id:k, n:Math.min(5, G.stock.n[k]) }; }
+  for(var id in vus) c.push(vus[id]);
+  return c.sort(function(a, b){ return (VALEURS[b.id] || 1) * b.n - (VALEURS[a.id] || 1) * a.n; }).slice(0, 10);
+}
+function choisirHeritage(objet, jours){
+  var noms = G.m.map(function(x){ return x.nom; }), dernier = G.dd[G.dd.length - 1];
+  ecrireHeritage({ id:objet.id, sol:objet.sol || null, n:objet.n || 1, noms:noms, jours:jours,
+    texte:"Nous avons tenu " + jours + " jour" + (jours > 1 ? "s" : "") + ". " + (dernier ? dernier.n + " a été " + (estFeminin({ r:dernier.r }) ? "la dernière" : "le dernier") + " à tomber. " : "")
+      + "Prenez " + nommer(objet.id, objet.n || 1) + " : " + (OBJETS[objet.id].g === "f" ? ((objet.n || 1) > 1 ? "elles nous ont bien servi" : "elle nous a bien servi") : ((objet.n || 1) > 1 ? "ils nous ont bien servi" : "il nous a bien servi")) + ". Tenez plus longtemps que nous." });
+}
+function blocHeritage(d){
+  var c = candidatsHeritage(); if(!c.length) return "";
+  var h = lireHeritage(); if(!h || h.jours !== d || !c.some(function(o){ return o.id === h.id; })){ choisirHeritage(c[0], d); h = lireHeritage(); }
+  return '<div class="go-heritage"><p class="go-h-titre">📦 Ce que ta famille laisse à la suivante</p><div class="go-h-cases">' + c.map(function(o){
+    return '<button class="go-h-case' + (o.id === h.id ? " on" : "") + '" data-act="legs" data-id="' + o.id + '" title="' + OBJETS[o.id].nom + '">' + icone(o.id) + (o.n > 1 ? '<b>' + o.n + '</b>' : '') + '</button>'; }).join("")
+    + '</div><small id="goHChoix">' + nommer(h.id, h.n) + ' · touche un autre objet pour changer</small></div>';
+}
+// Au départ d'une nouvelle famille : le coffre de la famille d'avant
+function appliquerHeritage(){
+  var h = lireHeritage(); if(!h || !OBJETS[h.id]) return null;
+  if(OBJETS[h.id].empile) ajouter(h.id, h.n || 1); else G.stock.o.push({ uid:++G.uid, id:h.id, sol:h.sol || (OBJETS[h.id].sol || null) });
+  G.lettre = { texte:h.texte, noms:h.noms, jours:h.jours };
+  ecrireHeritage(null);
+  return h;
+}
+function htmlLettre(L){ return '<div class="lettre"><p>« ' + echapper(L.texte) + ' »</p><small>— ' + echapper(liste(L.noms || [])) + '</small></div>'; }
+function openCoffre(h){
+  show('<h2>📦 Le coffre de la famille d’avant</h2><p class="sub">Sous l’escalier, une caisse attendait. Dedans :</p>'
+    + etageres([caseObjet(h.id, { fixe:true, n:h.n || 1 })], 5) + htmlLettre(G.lettre)
+    + '<p class="sub">La lettre est gardée près des tombes, dans la cour.</p>' + BTN_FERMER("Continuer"));
+}
 function ecranGameOver(d, nouveau, jour, lv){
   hide(); son("glas");
   if(typeof verifierSucces === "function"){ verifierSucces(); vibrer([300, 150, 300, 150, 600]); }
@@ -945,7 +986,7 @@ function ecranGameOver(d, nouveau, jour, lv){
     + '<div class="go-morts">' + G.dd.map(function(z){ return '<div class="go-mort"><span class="em">' + iconeMembre({ nom:z.n, r:z.r, al:false, hp:0, en:0, faim:0, soif:0, icone:z.ic || "💀" }) + '</span><b>' + z.n + '</b><small>' + accorder(z.r || z.n, z.c) + '<br>jour ' + z.j + '</small></div>'; }).join("") + '</div></div>'
     + '<div class="go-droite"><p class="go-jours">Vous avez tenu <b>' + d + ' jour' + (d > 1 ? "s" : "") + '</b></p>'
     + '<p class="go-score">⭐ ' + G.score + '</p><p class="go-sous">' + (nouveau ? "🏆 Nouveau record !" : "Record : " + RECORD + " points") + ' · 🔨 refuge niveau ' + lv + '</p>'
-    + jour + '<button class="btn" style="width:100%" data-act="again">Nouvelle famille</button></div></div>';
+    + jour + blocHeritage(d) + '<button class="btn" style="width:100%" data-act="again">Nouvelle famille</button></div></div>';
   e.style.display = "flex";
   couluresGameOver(e);
 }
@@ -989,7 +1030,7 @@ function tick(){
   document.body.classList.toggle("urgence", tm <= 10 && tm > 0);
   var sec = Math.ceil(tm);
   if(tm <= 10 && tm > 0 && sec !== derniereSeconde){ derniereSeconde = sec; if(sec % 2 === 0) son("porte"); if(typeof vibrer === "function") vibrer(sec <= 3 ? 120 : 40); }
-  if(G.tl <= 0){ demarrer(); if(typeof envoyerMonde === "function") envoyerMonde(true); render(); show('<h2>Trop tard !</h2><p>Les zombies enfoncent la porte. Vous fuyez avec ce qu’il y a dans le sac.</p>' + BTN_FERMER("Courir")); }
+  if(G.tl <= 0){ demarrer(); var hh = appliquerHeritage(); if(typeof envoyerMonde === "function") envoyerMonde(true); render(); show('<h2>Trop tard !</h2><p>Les zombies enfoncent la porte. Vous fuyez avec ce qu’il y a dans le sac.</p>' + (hh ? '<p class="g2 msg">📦 Dans la fuite, vous emportez aussi le coffre de la famille d’avant : ' + nommer(hh.id, hh.n || 1) + ' et une lettre.</p>' : '') + BTN_FERMER("Courir")); }
 }
 var derniereSeconde = null;
 setInterval(tick, 250);
@@ -1280,7 +1321,8 @@ document.addEventListener("click", function(e){
   else if(a === "saisieok"){ validerSaisie(id); return; }
   else if(a === "trait"){ var qt = id.split(":"); changerTrait(+qt[0], +qt[1]); }
   else if(a === "house"){ if(G.seed) return; if(i !== G.h){ G.h = i; G.pack = {}; G.info = "Tu as changé de maison : le sac est vidé."; } }
-  else if(a === "start"){ demarrer(); if(typeof envoyerMonde === "function") envoyerMonde(true); }
+  else if(a === "start"){ demarrer(); var hh = appliquerHeritage(); if(typeof envoyerMonde === "function") envoyerMonde(true); if(hh){ render(); openCoffre(hh); } }
+  else if(a === "legs"){ var cc = candidatsHeritage().find(function(o){ return o.id === id; }); if(cc){ choisirHeritage(cc, G.day - 1); Array.prototype.forEach.call(document.querySelectorAll(".go-h-case"), function(b2){ b2.classList.toggle("on", b2.getAttribute("data-id") === id); }); var t = document.getElementById("goHChoix"); if(t) t.textContent = nommer(cc.id, cc.n) + " · touche un autre objet pour changer"; } return; }
   else if(a === "sel" && modeMini()){ openMembre(i); return; }
   else if(a === "msel"){ var xm = G.m[i]; if(peutSortir(xm)){ var pm = G.sel.indexOf(i); if(pm >= 0) G.sel.splice(pm, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); } render(); openMembre(i); return; }
   else if(a === "sel"){ var x = G.m[i]; if(peutSortir(x)){ var p = G.sel.indexOf(i); if(p >= 0) G.sel.splice(p, 1); else if(G.sel.length < BAL.membresParExpedition) G.sel.push(i); }

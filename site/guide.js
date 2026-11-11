@@ -39,6 +39,8 @@ function reglesGuide(){
       "Chaque plat brûle " + nommer("planche", B.cuisine.planches) + " et coûte " + B.energieCraft + " ⚡ au cuisinier. Une portion nourrit plus qu’une ration (+35 à +50 de faim au lieu de +30) avec un bonus (moral, PV, énergie), mais les plats se gâtent en 3 nuits (les galettes en 8). La nuit, chacun mange d’abord un plat s’il y en a. Le potager donne parfois des herbes."],
     ["Le dernier recours", "🕯️",
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs)."],
+    ["L’héritage", "📦",
+      "Quand ta famille meurt, elle laisse un objet à la suivante (le plus précieux est choisi d’avance sur l’écran de fin, tu peux en choisir un autre) et une lettre. La nouvelle famille trouve le coffre en partant ; la lettre reste près des tombes, dans la cour."],
     ["Les tombes", "🕯️",
       "Chaque membre disparu a sa stèle au fond de la cour, contre la palissade. Touche les tombes pour revoir qui est tombé, comment et quel jour, et pour te recueillir : une fois par jour, le moral remonte un peu (+" + BAL.tombes.moral + ")."],
     ["L’expérience des survivants", "🏅",

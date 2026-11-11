@@ -79,7 +79,7 @@ var PIECES = [
     ["pPotager",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
     ["pRecup",   430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
     ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3],
-    ["pTombes",  600, 520, 785, 660, function(){ return "🕯️"; }, "Tombes", .1, function(){ return G.dd && G.dd.length > 0; }]
+    ["pTombes",  600, 520, 785, 660, function(){ return "🕯️"; }, "Tombes", .1, function(){ return (G.dd && G.dd.length > 0) || !!G.lettre; }]
   ]},
   // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
   { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
@@ -534,6 +534,7 @@ function openTombes(){
   var dd = G.dd || [];
   var h = '<h2>🕯️ Les tombes</h2><p class="sub">Au fond de la cour, contre la palissade, la famille a enterré ses disparus.</p>';
   if(msgTombes){ h += '<p class="msg g2">' + msgTombes + '</p>'; msgTombes = ""; }
+  if(G.lettre) h += '<p class="titre-butin">📜 La lettre de la famille d’avant</p>' + htmlLettre(G.lettre);
   h += dd.length ? '<div class="tombes">' + dd.map(function(d){
     var x = { nom:d.n, r:d.r, icone:d.ic || "🙂", al:false, hp:0, en:0, faim:0, soif:0 };
     return '<div class="tombe">' + iconeMembre(x) + '<span class="cl-info"><b>' + echapper(d.n) + '</b><small>' + echapper(d.c || "disparu") + '</small><small>Jour ' + d.j + '</small></span></div>';
