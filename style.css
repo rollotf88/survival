@@ -2059,3 +2059,17 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .acc-titre .acc-type{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:800;opacity:.85}
 @supports (height:100dvh){.ch-app{height:min(780px,calc(100dvh - 156px))}body.pc #modal .ch-app{height:calc(100dvh - 96px)}}
 @media (max-height:440px){@supports (height:100dvh){.ch-app{height:calc(100dvh - 86px)}}}
+
+/* ---------- Bilan du refuge (2026-11-11) ---------- */
+.bilan2{display:flex;flex-direction:column;gap:6px}
+.bilan2 .bl{display:flex;gap:10px;align-items:center;padding:6px 8px;border:2px solid var(--line);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+.bilan2 .bl .em{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;background:url(images/case.webp) center/100% 100%;font-size:26px}
+.bilan2 .bl .em .ico,.bilan2 .bl .em img.ico-img{width:32px;height:32px}
+.bilan2 .bl b{font-size:15px}
+.bilan2 .bl small{display:block;color:var(--mut);font-size:12px;line-height:1.25}
+.bl-niv{display:inline-block;font-size:11px;font-weight:900;padding:0 8px;border-radius:999px;border:1.5px solid var(--bois);background:var(--card);vertical-align:2px;white-space:nowrap}
+.bl-note{font-size:12.5px;color:var(--mut);margin:8px 2px}
+.bl-note .ico,.bl-note img.emo{width:14px;height:14px;vertical-align:-2px}
+.bl-go{width:100%}
+@media (max-height:700px){.bilan2{gap:4px}.bilan2 .bl{padding:4px 6px}.bilan2 .bl .em{width:38px;height:38px}.bilan2 .bl .em .ico,.bilan2 .bl .em img.ico-img{width:26px;height:26px}}
+@media (orientation:landscape) and (max-height:500px){.bilan2{display:grid;grid-template-columns:1fr 1fr}.bilan2 > .mf-titre,.bilan2 > .sub{grid-column:1/-1}.bilan2 .bl small{font-size:11px}}

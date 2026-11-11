@@ -855,7 +855,8 @@ function etatTravail(ing, besoin, texteOk){
 }
 // Tout ce qui protège et nourrit le refuge, d'un coup d'œil (en haut de l'onglet Construire)
 function bilanRefuge(){
-  var L = [], ligne = function(icn, titre, detail){ L.push('<div class="bl"><span class="em">' + icn + '</span><span class="eqt"><b>' + titre + '</b><small>' + detail + '</small></span></div>'); };
+  // Raccord avec la DA (2026-11-11) : tuiles en haut, une carte par élément (icône dans une case en bois, niveau en pastille)
+  var L = [], ligne = function(icn, titre, detail){ var m = titre.split(" · "); L.push('<div class="bl"><span class="em">' + icn + '</span><span class="eqt"><b>' + m[0] + (m[1] ? ' <span class="bl-niv">' + m[1] + '</span>' : '') + '</b><small>' + detail + '</small></span></div>'); };
   if(G.ref.barr) ligne(ic("ref_barr", "🧱"), "Barricade · niveau " + G.ref.barr, "+" + G.ref.barr * BAL.defenseBarricade + " de défense la nuit (une attaque perdue en détruit un niveau)");
   if(G.ref.eau) ligne(ic("ref_eau", "🪣"), "Récupérateur d’eau · niveau " + G.ref.eau, "+" + G.ref.eau * REFUGE.eau.parJour + " ration(s) d’eau chaque nuit");
   if(G.ref.pot) ligne(ic("ref_pot", "🥕"), "Potager · niveau " + G.ref.pot, "+" + G.ref.pot * REFUGE.pot.parJour + " ration(s) de nourriture chaque nuit");
@@ -867,10 +868,11 @@ function bilanRefuge(){
   var np = compter("poule"); if(np) ligne(ic("poule", "🐔"), nommer("poule", np).replace(/^une /, "1 "), "pondent ≈ " + String(Math.round(np * BAL.poules.oeuf * 10) / 10).replace(".", ",") + " ration(s) par nuit · boivent " + Math.ceil(np / BAL.poules.eauPour) + " ration(s) d’eau · +" + Math.round(np * BAL.poules.attaque * 100) + " % de risque d’attaque");
   var c = chien(); if(c) ligne(ic("chien", "🐕"), c.nom + ", le chien", "+" + BAL.chien.defense + " de défense la nuit · mange " + BAL.chien.rations + " ration chaque soir" + (c.faim ? " · ⚠️ n’a pas mangé hier" : ""));
   var nb = vivants().length, armes = 0; equipes().forEach(function(o){ armes += OBJETS[o.id].def || 0; });
-  var h = '<div class="bilan"><b>Ce qui protège et nourrit le refuge</b>';
+  var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour, d = defenseNuit(), boit = nb, mange = nb + (c ? BAL.chien.rations : 0);
+  var h = tuiles([["défense de nuit", d, d ? "" : "ko"], ["eau / nuit · " + boit + " bues", "+" + pe, pe >= boit ? "ok" : pe ? "moy" : "ko"], ["repas / nuit · " + mange + " mangés", "+" + pn, pn >= mange ? "ok" : pn ? "moy" : "ko"]]);
+  h += '<div class="mf-bloc bilan2"><p class="mf-titre">Ce qui protège et nourrit le refuge</p>';
   h += L.length ? L.join("") : '<p class="sub">Rien pour l’instant. Construis un récupérateur d’eau ou un potager, ou fabrique une bâche ou un collet à l’atelier.</p>';
-  h += '<p class="sub">Chaque nuit, la famille boit ' + nb + ' et mange ' + nb + (c ? " (+" + BAL.chien.rations + " pour " + c.nom + ")" : "") + ' rations. '
-    + 'Défense de nuit : ' + defenseNuit() + ' (dont ' + armes + ' grâce aux armes en main).</p></div>';
+  h += '</div><p class="bl-note">🛡️ Défense ' + d + ' (dont ' + armes + ' grâce aux armes en main). Chaque nuit, la famille boit ' + boit + ' et mange ' + mange + ' rations' + (c ? ' (' + c.nom + ' compris)' : '') + '.</p>';
   return h;
 }
 var selRef = null, bilanOuvert = false;
@@ -884,7 +886,7 @@ function resumeRefuge(){
 }
 // Le bilan complet du refuge dans sa propre fenêtre (avant : il ne s'affichait que dans l'onglet Construire, et rien ailleurs)
 function openBilanRefuge(){
-  show('<h2>🏠 Bilan du refuge</h2>' + bilanRefuge() + '<div class="row"><button class="btn alt" data-act="refuge">🛠️ Le refuge</button><button class="btn" data-act="close">Fermer</button></div>');
+  show('<h2>🏠 Bilan du refuge</h2>' + bilanRefuge() + '<button class="btn btn-jeu bl-go" data-act="refuge">🛠️ Construire et fabriquer</button>' + BTN_FERMER());
 }
 function openRef(onglet){
   astuce("atelier");
