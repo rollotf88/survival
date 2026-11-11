@@ -942,7 +942,9 @@ function openRef(onglet){
     } else if(ongletRef === "reparer"){
       var ab = armesAbimees(), e = empechement(REPARATION);
       h += ab.length ? etageres(ab.map(function(o){
-        if(selRef === "r:" + o.uid) fiche = ligneObjet(o.id, 1, o) + '<p class="sub">Une réparation rend ' + Math.round(BAL.reparation * 100) + ' % de la solidité. Il faut :</p>' + ingredients(REPARATION) + boutonTravail("🔧 Réparer", "repair", o.uid, REPARATION);
+        if(selRef === "r:" + o.uid){ var mxs = OBJETS[o.id].sol, apres = Math.min(mxs, o.sol + Math.round(mxs * BAL.reparation)), pc = Math.round(o.sol / mxs * 100);
+          fiche = '<div class="invfiche"><span class="em">' + icone(o.id) + '</span><span class="eqt"><b>' + OBJETS[o.id].nom + '</b><span class="rf-sol"><i class="apres" style="width:' + Math.round(apres / mxs * 100) + '%"></i><i class="' + niveau(pc) + '" style="width:' + pc + '%"></i></span><small>Solidité ' + o.sol + ' / ' + mxs + ' → <b>' + apres + '</b> après réparation</small></span></div>'
+            + '<p class="titre-butin">Il faut</p>' + ingredients(REPARATION) + boutonTravail("🔧 Réparer", "repair", o.uid, REPARATION); }
         return caseObjet(o.id, { act:"refsel", cle:"r:" + o.uid, sel:selRef === "r:" + o.uid, usure:Math.round(o.sol / OBJETS[o.id].sol * 100), pret:!e });
       }), 5) : '<p>Aucune arme abîmée.</p>';
     } else {
