@@ -2325,3 +2325,9 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .vt-plein .ico,.vt-plein img.ico-img{width:24px;height:24px}
 .garage .pleg{display:none}
 body:not(.pc) .sheet.a-onglets{height:88%}
+/* Marges (2026-11-11) : bouton d'une fiche du refuge détaché du texte, boutons du bas détachés du récit */
+.rf-fiche > .btn,.rf-fiche > .btn.travail{margin-top:10px!important}
+.sheet .tuiles.t4{margin-bottom:4px}
+.sheet .tuiles + .titre-butin{margin-top:12px}
+.sheet .lj + .row,.sheet .puces + .row,.sheet .journal + .row{margin-top:12px}
+.sheet .fil + .row,.sheet .fil + .loc{margin-top:12px}
