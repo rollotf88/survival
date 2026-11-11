@@ -155,7 +155,7 @@ function rGame(){
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
-  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><button class="chapcourt" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '<span class="ch-sep"> · </span><span class="ch-saison">' + saison().ico + ' ' + saison().nom + '</span></button></div><div class="chips">'
+  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><div class="chapcourt"><button class="ch-btn" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button><span class="ch-sep"> · </span><button class="ch-btn ch-saison" data-act="saison" aria-label="La saison : comment ça marche">' + saison().ico + ' ' + saison().nom + '</button></div></div><div class="chips">'
     + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
     + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
     + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("bandage", "🩹") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
@@ -563,6 +563,17 @@ function openMission(){
 }
 
 /* ---------- Détail du chapitre ---------- */
+// La saison : où on en est et ce que chaque saison change (toucher la saison sous « Jour N »)
+function openSaison(){
+  var S = saison(), D = BAL.saisons.duree, jour = (G.day - 1) % D + 1, reste = D - jour + 1;
+  var suiv = SAISONS[(SAISONS.indexOf(S) + 1) % SAISONS.length];
+  var h = '<h2>' + S.ico + ' ' + S.nom + '</h2><p class="sub">Jour ' + jour + ' sur ' + D + ' de la saison · ' + suiv.ico + ' ' + suiv.nom + (reste > 1 ? ' dans ' + reste + ' jours' : ' demain') + '</p>';
+  h += '<p class="msg">' + S.annonce + '</p>';
+  h += '<p class="titre-butin">Les quatre saisons</p><div class="saisons">' + SAISONS.map(function(X){
+    return '<div class="saison' + (X === S ? ' on' : '') + '"><span class="s-ico">' + X.ico + '</span><span><b>' + X.nom + (X === S ? ' · en ce moment' : '') + '</b><small>' + majuscule(X.effet) + '.</small></span></div>'; }).join("") + '</div>';
+  h += '<p class="sub">Une saison dure ' + D + ' jours de jeu, puis la suivante arrive ; après l’été, l’automne revient.</p>';
+  show(h + BTN_FERMER());
+}
 function openChapitre(){
   var c = chapitreCourant(), p = c.progres ? c.progres() : null;
   var h = '<h2>📖 Chapitre ' + (G.chap + 1) + ' · ' + c.titre + '</h2><p><b>Objectif :</b> ' + c.objectif + '</p>';
@@ -1370,6 +1381,7 @@ document.addEventListener("click", function(e){
   else if(a === "invsel"){ son("bois"); selStock = selStock === id ? null : id; openStock(); return; }
   else if(a === "invequip"){ var qe = id.split(":"); if(equiper(+qe[0], qe[1], +qe[2])) msgStock = "✅ " + G.m[+qe[0]].nom + " porte maintenant " + nommer(G.m[+qe[0]].eq[qe[1]].id, 1) + "."; selStock = null; render(); openStock(); return; }
   else if(a === "chapitre"){ openChapitre(); return; }
+  else if(a === "saison"){ openSaison(); return; }
   else if(a === "mission"){ openMission(); return; }
   else if(a === "livrer"){ var lm = livrerMission(); render(); if(lm) show('<h2>🎯 Mission réussie</h2><p>' + lm + '</p>' + BTN_FERMER()); return; }
   else if(a === "chien"){ confirmerChien = false; openChien(); return; }

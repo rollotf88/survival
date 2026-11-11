@@ -1531,3 +1531,13 @@ body.pc .chapcourt .ch-saison{display:block;font-size:.85em;opacity:.9}
 /* Colosse (toit de l'immeuble) et Boucher : plus massifs que les autres */
 .zc.sprite.z-boucher .zs img{height:64cqh}
 .zc.sprite.z-colosse .zs img{height:72cqh}
+
+/* En-tête : le chapitre et la saison sont deux boutons distincts (chacun ouvre sa fenêtre) */
+.chapcourt .ch-btn{border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;text-shadow:inherit;cursor:pointer;text-align:left}
+.chapcourt .ch-btn:hover{text-decoration:underline}
+/* Fenêtre des saisons */
+.saisons{display:flex;flex-direction:column;gap:6px}
+.saison{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--bg);border:1.5px solid var(--line)}
+.saison.on{border-color:var(--accent,#d98b2b);box-shadow:0 0 0 1px var(--accent,#d98b2b) inset}
+.saison .s-ico{font-size:24px;text-align:center}
+.saison small{display:block;font-size:12px;opacity:.85}

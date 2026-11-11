@@ -45,7 +45,7 @@ function evalEquipeRaid(vols){
 
 /* ---------- Les opérations du clan (2026-11-10, demande de Fabien) ----------
    Le raid de l'immeuble est la première « opération » ; d'autres viendront (une carte de plus dans OPERATIONS, pas un nouveau menu).
-   On y accède par l'onglet « Opérations » du bastion, la table de la grande salle (qui brille quand il faut agir),
+   On y accède par l'onglet « Opérations » du bastion, le panneau d'affichage de la grande salle (qui brille quand il faut agir),
    la grande carte en haut de « Où envoyer l'équipe ? », la ligne de « Mon clan » et les bandeaux au lancement. */
 var OPERATIONS = [
   { id:"immeuble", nom:"L’immeuble abandonné", img:function(){ return BAL.immeuble.exterieur; }, secours:function(){ return BAL.immeuble.exterieurSecours; },
@@ -63,7 +63,7 @@ function statutOp(R){
   var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; });
   return { txt:"👥 " + R.nb + " / " + R.min + " volontaires" + (moi ? " · dont le tien" : ""), cls:moi ? "" : "moy", agir:!moi };
 }
-// État gardé dans le navigateur (pour la lueur de la table et la carte des lieux, sans appeler le serveur)
+// État gardé dans le navigateur (pour la lueur du panneau et la carte des lieux, sans appeler le serveur)
 function noterEtatOp(R){
   if(!R) return;
   var moi = R.participe || (R.volontaires || []).some(function(v){ return v.moi; });
