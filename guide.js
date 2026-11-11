@@ -82,7 +82,8 @@ function reglesGuide(){
       "Une attaque perdue blesse quelqu’un, fait perdre de la nourriture et détruit un niveau de barricade. Sans couverture ni briquet, la nuit est glaciale."],
     ["Le refuge", ic("marteau", "🛠️"),
       "Construire : barricade, récupérateur d’eau, potager (avec des planches). Fabriquer, réparer, démonter : chaque travail coûte " + B.energieCraft + " ⚡ au plus reposé. " +
-      "Le bilan en haut de l’onglet Construire résume tout ce qui protège et nourrit la famille."],
+      "Le bilan en haut de l’onglet Construire résume tout ce qui protège et nourrit la famille. " +
+      "Chaque niveau de barricade se voit aux fenêtres de la maison : quelques planches, puis des planches serrées, puis de la tôle et du barbelé. Touche une fenêtre pour voir la barricade et l’améliorer."],
     ["La voiture", ic("roue", "🚗"),
       "La voiture du voisin est en panne : trouve une batterie, une roue et une courroie, puis glisse-les dessus (onglet Voiture du refuge). " +
       "Elle consomme " + VOITURE.litresParDistance + " L par niveau de distance, porte " + VOITURE.coffre + " objets de plus et seule elle mène aux zones éloignées."],

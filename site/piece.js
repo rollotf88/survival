@@ -29,7 +29,6 @@ var ZONES_PIECE = [
 // [image, x0, y0, x1, y1, condition]
 var DECOR_PIECE = [
   ["images/icones/trophee.webp", 176, 300, 228, 356, function(){ return G.trophees && G.trophees.length > 0; }], // trophée d'un zombie célèbre abattu, sur la cheminée
-  ["images/planches.webp", 904, 262, 1022, 454, function(){ return G.ref && G.ref.barr >= 1; }], // barricade construite : planches sur la porte
   ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],                  // Rex adopté : couché devant le canapé
   // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)
   ["images/objet-radio.webp",  771, 192, 823, 234, function(){ return compter("radio") > 0; }],
@@ -317,6 +316,7 @@ document.addEventListener("click", function(e){
   else if(a === "pFoyer") openFoyerClan();
   else if(a === "pTombes") openTombes();
   else if(a === "oTrophees") openTrophees();
+  else if(a === "pFenetre") openElement("barr");
   else if(a === "recueillir"){ if(recueillir()){ msgTombes = "🕯️ La famille se recueille en silence. Le moral remonte un peu (+" + BAL.tombes.moral + ")."; render(); if(typeof sauver === "function") sauver(); } openTombes(); }
   else if(a === "pChat"){ if(typeof openChat === "function") openChat(); }
   else if(a === "versSalon"){ hide(); allerPiece(0); }
@@ -603,3 +603,26 @@ document.addEventListener("click", function(e){
   if(a === "pieces"){ openPieces(); }
   else if(a === "pieceVa2"){ var k = +b.getAttribute("data-id"); hide(); if(k !== pieceIdx) allerPiece(k); }
 });
+
+/* ---------- Barricades aux fenêtres (2026-11-11, idée de Fabien ; retouches Gemini découpées par Claude) ----------
+   Les planches ne vont plus sur la porte (on ne les enlève pas à chaque sortie) : chaque fenêtre change avec le
+   niveau de barricade (1, 2, 3). La cuisine et la chambre étaient déjà barricadées sur l'image d'origine : leur
+   niveau 0 est une vitre propre. Toucher une fenêtre ouvre la fiche de la barricade. Images : images/barricades/. */
+var BARRICADES = { salon:[[0, 158, 198, 612]], cuisine:[[348, 172, 682, 462]], chambre:[[0, 172, 178, 452]],
+  reserve:[[640, 55, 842, 232], [858, 55, 1024, 312]], atelier:[[8, 172, 178, 432]] };
+var BARRICADE_NIV0 = { cuisine:1, chambre:1 };
+// zone touchable de chaque fenêtre (plus petite que la découpe, pour ne pas gêner les autres zones)
+var FENETRES = { salon:[0, 185, 110, 420], cuisine:[370, 200, 650, 440], chambre:[0, 185, 150, 435], reserve:[650, 120, 1010, 300], atelier:[25, 190, 160, 335] };
+function niveauBarr(){ return Math.min(3, (G && G.ref && G.ref.barr) || 0); }
+(function(){
+  Object.keys(BARRICADES).forEach(function(id){
+    var P = PIECES.find(function(p){ return p.id === id; }); if(!P) return;
+    var liste = id === "salon" ? DECOR_PIECE : (P.decor = P.decor || []), plus = [];
+    for(var niv = BARRICADE_NIV0[id] ? 0 : 1; niv <= 3; niv++) BARRICADES[id].forEach(function(r, k){
+      var n = niv; plus.push(["images/barricades/" + id + "-" + n + (BARRICADES[id].length > 1 ? "-" + (k + 1) : "") + ".webp", r[0], r[1], r[2], r[3], function(){ return niveauBarr() === n; }]);
+    });
+    Array.prototype.unshift.apply(liste, plus); // sous les autres décors (trophée, objets de confort)
+    var f = FENETRES[id];
+    (id === "salon" ? ZONES_PIECE : P.zones).unshift(["pFenetre", f[0], f[1], f[2], f[3], function(){ return ic("ref_barr", "🧱"); }, "Barricade", .5]);
+  });
+})();
