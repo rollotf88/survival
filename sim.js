@@ -39,6 +39,7 @@ function partir(bot, i){
   if(r.peche){ while(G.exp.peche.faits < G.exp.peche.lancers) lancerPeche(Math.random() < BAL.peche.chanceRobot); finExpedition(); }
   // Rencontre en chemin : le robot prend le premier choix possible (le prudent), ou le meilleur s'il est « audacieux »
   var gr = 0;
+  if(G.siphon) finirSiphon(hasard() < BAL.siphon.chanceRobot);
   while(G.rencontre && gr++ < 6){
     if(!G.rencontre.noeud && G.rencontre.texte){ finirRencontre(); break; }
     var cs = choixRencontre().filter(function(o){ return o.ok; });

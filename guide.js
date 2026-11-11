@@ -86,7 +86,8 @@ function reglesGuide(){
       "Chaque niveau de barricade se voit aux fenêtres de la maison : quelques planches, puis des planches serrées, puis de la tôle et du barbelé. Touche une fenêtre pour voir la barricade et l’améliorer."],
     ["La voiture", ic("roue", "🚗"),
       "La voiture du voisin est en panne : trouve une batterie, une roue et une courroie, puis glisse-les dessus (onglet Voiture du refuge). " +
-      "Elle consomme " + VOITURE.litresParDistance + " L par niveau de distance, porte " + VOITURE.coffre + " objets de plus et seule elle mène aux zones éloignées."],
+      "Elle consomme " + VOITURE.litresParDistance + " L par niveau de distance, porte " + VOITURE.coffre + " objets de plus et seule elle mène aux zones éloignées. " +
+      "L’essence : la cuve de la station-service (à pied) contient " + BAL.station.litres + " L, chaque survivant envoyé là-bas rapporte un jerrican plein. Avec un kit de siphonnage au refuge (garage, station, ou à fabriquer : adhésif, chiffon, ferraille), il arrive de croiser une voiture abandonnée sur le retour : aspire au bon moment pour récupérer " + BAL.siphon.litres[0] + " à " + BAL.siphon.litres[1] + " L, sinon le bruit attire les zombies et il faut filer."],
     ["Score et chapitres", "⭐",
       "Chaque nuit, tu gagnes 1 point par membre en vie : garder toute la famille en vie rapporte le plus. Les chapitres donnent des objectifs et des récompenses ; ensuite, « Tenir bon » revient tous les 10 jours. " +
       "En Partie du jour, tout le monde a la même partie : mêmes choix, même résultat. Compare ton score !"],

@@ -85,7 +85,9 @@ function demarrer(){
   equiperDepart();
 }
 // État de départ d'un lieu : sa liste d'objets, + les poissons (étang) ou les arbres (forêt)
-function etatLieu(L, b){ var l = { butin:b }; if(L.peche) l.poissons = BAL.peche.poissons; if(L.bois) l.arbres = BAL.foret.arbres; return l; }
+function etatLieu(L, b){ var l = { butin:b }; if(L.peche) l.poissons = BAL.peche.poissons; if(L.bois) l.arbres = BAL.foret.arbres; if(L.cuve) l.essence = BAL.station.litres; return l; }
+// Litres encore dans la cuve de la station (les anciennes parties n'avaient pas de cuve : elle est pleine)
+function cuveLieu(i){ var l = G.lieux[i]; if(!LIEUX[i].cuve) return 0; if(l.essence === undefined) l.essence = BAL.station.litres; return l.essence; }
 // Anciennes sauvegardes (avant l'étang) : on insère l'étang à sa place dans la liste des lieux
 function migrerPartie(g){
   var ie = LIEUX.findIndex(function(L){ return L.peche; });
@@ -364,7 +366,7 @@ function userArme(x, n){
 /* ---------- Expédition (fouille d'un lieu) ---------- */
 function dangerLieu(i){ return LIEUX[i].danger + Math.min(BAL.dangerMaxAjoute, G.day * BAL.dangerParJour) + (G.hordeJour === G.day ? 0.2 : 0) + (G.lieux && G.lieux[i] && G.lieux[i].cache >= G.day ? BAL.caches.danger : 0); }
 // Ce qui reste à prendre dans un lieu (à l'étang : les objets + les poissons)
-function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0) + (LIEUX[i].bois ? (l.arbres || 0) : 0); }
+function resteLieu(i){ var l = G.lieux[i]; return l.butin.length + (LIEUX[i].peche ? (l.poissons || 0) : 0) + (LIEUX[i].bois ? (l.arbres || 0) : 0) + Math.floor(cuveLieu(i) / VOITURE.litresJerrican); }
 function bucherons(team){ return team.filter(function(x){ return x.al && x.eq.arme && OBJETS[x.eq.arme.id].coupe; }); }
 function lieuOuvert(i){ return (!LIEUX[i].jour || G.day >= LIEUX[i].jour) && (!LIEUX[i].secret || !!(G.decouverts && G.decouverts[i])); }
 // Jour où un lieu secret est découvert (plus tôt avec une radio)
@@ -597,6 +599,12 @@ function finExpedition(){
     if(lieu.arbres <= 0 && bu.length) n.push(["b2", "🌲 Il ne reste plus un arbre debout dans la forêt."]);
   }
   if(LIEUX[i].peche && !peches && survivants.length && !survivants.some(function(x){ return x.eq.outil && OBJETS[x.eq.outil.id].peche; })) n.push(["b2", "🎣 Sans canne à pêche, impossible d’attraper les poissons."]);
+  // Station-service : la cuve souterraine. Chaque survivant remplit un jerrican à la pompe à main (tant qu'il en reste)
+  if(LIEUX[i].cuve && survivants.length){
+    var nj = Math.min(survivants.length, Math.floor(cuveLieu(i) / VOITURE.litresJerrican));
+    if(nj){ lieu.essence -= nj * VOITURE.litresJerrican; ajouter("jerrican", nj); n.push(["g2", "⛽ À la pompe à main, vous remplissez " + nommer("jerrican", nj) + " dans la cuve (il reste " + lieu.essence + " L)."]); }
+    else n.push(["b2", "⛽ La cuve de la station est vide."]);
+  }
 
   // Transport : bras + sacs ; ce qui ne rentre pas reste sur place
   var places = placesEquipe(survivants) + (E.voiture && survivants.length ? VOITURE.coffre : 0);
@@ -614,6 +622,30 @@ function finExpedition(){
   if(survivants.length && G.mission && G.mission.lieu === i){ var mr = reussirMission(); if(mr) n.push(["g2", mr]); }
   var res = { lieu:i, notes:n, pris:grouper(pris), laisses:grouper(laisses), vide:resteLieu(i) === 0 };
   if(survivants.length) lancerRencontre(E.equipe, res);
+  if(survivants.length) lancerSiphon(E.equipe, res);
+  return res;
+}
+/* ---------- Siphonner une voiture abandonnée (2026-11-11, idée de Fabien) ----------
+   Sur le chemin du retour, de temps en temps, une voiture abandonnée : avec un kit de siphonnage au refuge,
+   l'équipe peut tenter de siphonner son réservoir (mini-jeu : réussi = 4 à 12 L, raté = les zombies arrivent, on file). */
+function kitSiphon(){ return G.stock.o.find(function(o){ return o.id === "siphon"; }) || null; }
+function lancerSiphon(equipe, res){
+  var B = BAL.siphon;
+  if(G.rencontre || G.siphon || !kitSiphon() || G.day < B.jour || G.jourSiphon === G.day || hasard() >= B.chance) return;
+  G.siphon = { equipe:equipe.slice(), apres:res }; G.jourSiphon = G.day; res.siphon = true;
+}
+// reussi : true / false (mini-jeu), null = on ne s'arrête pas
+function finirSiphon(reussi){
+  var S = G.siphon; if(!S) return null;
+  var res = S.apres, k = kitSiphon(); G.siphon = null;
+  if(reussi === null || !k){ res.notes.push(["", "🚗 Vous passez devant une voiture abandonnée sans vous arrêter."]); return res; }
+  k.sol--; if(k.sol <= 0){ retirerInstance(k.uid); res.notes.push(["b2", "🧪 Le kit de siphonnage est fichu : le tuyau a cédé."]); }
+  if(reussi){
+    var l = R(BAL.siphon.litres[0], BAL.siphon.litres[1]), place = VOITURE.reservoir - G.voiture.essence, dans = Math.min(place, l), reste = l - dans, j = Math.floor(reste / VOITURE.litresJerrican);
+    G.voiture.essence += dans; if(j) ajouter("jerrican", j);
+    G.stats.siphons = (G.stats.siphons || 0) + 1;
+    res.notes.push(["g2", "⛽ Vous siphonnez " + l + " L d’essence dans une voiture abandonnée" + (dans ? " (réservoir : " + G.voiture.essence + " L)" : "") + (j ? " et remplissez " + nommer("jerrican", j) : "") + (reste - j * VOITURE.litresJerrican > 0 && !dans ? " (le reste déborde)" : "") + "."]);
+  } else res.notes.push(["b2", "🧟 Le tuyau gargouille, l’essence gicle… le bruit attire des zombies : vous filez les mains vides !"]);
   return res;
 }
 /* ---------- Rencontres en chemin ---------- */

@@ -664,3 +664,39 @@ function auLit(r){ var x = G && G.m && G.m.find(function(y){ return (y.r || y.no
     lits.push(["images/personnages/chambre-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auLit(r); }]); });
   Array.prototype.splice.apply(P.decor, [apres, 0].concat(lits));
 })();
+
+/* ---------- Mini-jeu du siphonnage (2026-11-11) ----------
+   La jauge d'aspiration monte et descend dans le tuyau : il faut appuyer quand elle est dans la zone verte.
+   Un seul essai : réussi = l'essence coule (volume au hasard), raté = ça gicle, les zombies arrivent. */
+var siphonDebut = 0, siphonPeriode = 1300, siphonZone = null;
+function openSiphon(){
+  var S = G.siphon; if(!S){ hide(); return; }
+  var k = kitSiphon();
+  var h = '<h2>🚗 Une voiture abandonnée</h2><div class="banniere"><img src="images/voiture-panne.webp" alt=""></div>'
+    + '<p>Sur le chemin du retour, une vieille voiture est garée de travers, portières ouvertes. Le bouchon du réservoir est encore là… il reste peut-être de l’essence.</p>'
+    + (k ? '<p class="sub">' + icone("siphon") + ' Kit de siphonnage : encore ' + k.sol + ' utilisation' + (k.sol > 1 ? "s" : "") + '. Il faut aspirer au bon moment : trop tôt ou trop tard, ça gicle et le bruit attire les zombies.</p>' : '')
+    + '<div class="row"><button class="btn" data-act="siphonGo">' + icone("siphon") + ' Siphonner</button><button class="btn alt" data-act="siphonNon">Continuer la route</button></div>';
+  show(h);
+  if(typeof poserDansScene === "function" && document.body.classList.contains("pc") && G.siphon.apres) poserDansScene(imageLieu(LIEUX[G.siphon.apres.lieu]));
+}
+function jeuSiphon(){
+  var w = BAL.siphon.fenetre, z0 = 0.18 + Math.random() * (0.64 - w); siphonZone = [z0, z0 + w];
+  siphonPeriode = 1100 + Math.random() * 500; siphonDebut = performance.now();
+  show('<h2>⛽ Siphonnage</h2><p class="sub">Appuie sur « Aspirer » quand le niveau est dans la zone verte.</p>'
+    + '<div class="siph"><div class="siph-tube"><span class="siph-zone" style="left:' + (z0 * 100) + '%;width:' + (w * 100) + '%"></span><span class="siph-niv" id="siphNiv"></span></div></div>'
+    + '<button class="btn" style="width:100%" data-act="siphonAspire">💨 Aspirer !</button>');
+  (function anime(){ var n = $("siphNiv"); if(!n) return; n.style.left = (positionSiphon() * 100) + "%"; requestAnimationFrame(anime); })();
+}
+function positionSiphon(){ var t = ((performance.now() - siphonDebut) % siphonPeriode) / siphonPeriode; return t < 0.5 ? t * 2 : 2 - t * 2; } // va-et-vient
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "siphonGo") jeuSiphon();
+  else if(a === "siphonNon"){ var r = finirSiphon(null); render(); if(r){ openResultat(r); finiSiMorts(); } }
+  else if(a === "siphonAspire"){
+    var p = positionSiphon(), ok = siphonZone && p >= siphonZone[0] && p <= siphonZone[1];
+    if(typeof son === "function") son(ok ? "soin" : "rate");
+    if(!ok && typeof vibrer === "function") vibrer(120);
+    var r2 = finirSiphon(ok); render(); if(r2){ openResultat(r2); finiSiMorts(); }
+  }
+});

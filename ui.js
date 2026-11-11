@@ -210,7 +210,7 @@ function openLoc(){
     var im = imageLieu(L);
     cartes.push({ ok:!!ok, vide:!reste, html:'<button class="carte-lieu' + (ok ? "" : " off") + (G.mission && G.mission.lieu === i ? " mission" : "") + '" data-act="loc" data-id="' + i + '"' + (ok ? "" : " disabled") + ' aria-label="' + L.nom + (pourquoi ? " : " + pourquoi : "") + '">'
       + '<span class="cl-img">' + (im ? '<img src="' + im + '" alt="">' : '<span class="cl-ico">' + iconeLieu(L) + '</span>')
-      + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : L.bois ? "🌲 " + G.lieux[i].arbres : reste ? reste + " obj." : "Vidé") + '</span>'
+      + '<span class="cl-reste">' + (L.peche ? "🐟 " + G.lieux[i].poissons : L.bois ? "🌲 " + G.lieux[i].arbres : L.cuve && cuveLieu(i) ? "⛽ " + cuveLieu(i) + " L" : reste ? reste + " obj." : "Vidé") + '</span>'
       + (G.mission && G.mission.lieu === i ? '<span class="cl-mission">🎯</span>' : '')
       + (radio && celebreIci(i) ? '<span class="cl-celebre" title="' + typeZombie({ id:G.celebre.id }).nom + ' rôde ici">💀 ' + typeZombie({ id:G.celebre.id }).nom + '</span>' : '')
       + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
@@ -232,6 +232,7 @@ function apresEtape(r){
   else if(r.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
   else if(r.peche){ openPeche(); }
   else if(G.rencontre){ openRencontre(); }
+  else if(G.siphon){ openSiphon(); }
   else { openResultat(r); finiSiMorts(); }
 }
 
@@ -1529,6 +1530,7 @@ function reprendre(g){
   else if(G.combat){ choixCombat = {}; cibleCombat = 0; openCombat(); }
   else if(G.exp){ if(G.exp.peche && G.exp.peche.faits < G.exp.peche.lancers) openPeche(); else apresEtape(G.exp.peche ? finExpedition() : avantFouille()); }
   else if(G.rencontre) openRencontre();
+  else if(G.siphon) openSiphon();
   else if(G.ev) openEvent(G.ev);
   else fermer(); // montre les chapitres terminés en attente, sinon rien
 }

@@ -304,6 +304,9 @@ var SAISONS = [
 // l'hiver reste un vrai cap (potager endormi, étang gelé) : bon 96-98 j (10 % ≤ 66), moyen 48 j (57 sans saisons), débutant inchangé
 BAL.saisons = { duree:30, faimHiver:3, soifEte:3, recupEte:0, feuHiver:true, couvHiver:true };
 // Zombie célèbre : apparaît au jour 20, change de lieu chaque nuit ; abattu, le suivant revient 25 jours plus tard
+// Essence (2026-11-11, idée de Fabien) : la cuve de la station-service (à pied) et le siphonnage des voitures abandonnées au retour
+BAL.station = { litres:150 };   // la cuve : chaque survivant revient avec un jerrican plein (10 L) tant qu'il en reste
+BAL.siphon = { jour:2, chance:0.3, litres:[4, 12], fenetre:0.22, chanceRobot:0.6 }; // une voiture sur le chemin du retour, si un kit est au refuge
 BAL.celebre = { jour:20, entre:25, moral:15, butin:{ trousse:2, boiteBalles:1, ration:2, canette:1 } };
 BAL.horde = { risque:0.15, force:1, zombieEnPlus:0.08, objectifMin:500, objectifParJoueur:100 };
 
@@ -379,6 +382,7 @@ var OBJETS = {
   lampe:      { nom:"Lampe torche", pl:"Lampes torches", g:"f", icone:"🔦", cat:"outil", place:1, emplacement:"outil", lumiere:2, desc:"Éclaire les lieux sombres (1 pile par fouille)" },
   briquet:    { nom:"Briquet", pl:"Briquets", g:"m", icone:"🔥", cat:"outil", place:1, emplacement:"outil", lumiere:1, allume:true, desc:"Lueur faible dans le noir, permet d’allumer le feu de cheminée" },
   outils:     { nom:"Boîte à outils", pl:"Boîtes à outils", g:"f", icone:"🧰", cat:"outil", place:2, emplacement:"outil", ouvre:true, desc:"Ouvre les portes verrouillées sans bruit" },
+  siphon:     { nom:"Kit de siphonnage", pl:"Kits de siphonnage", g:"m", icone:"🧪", cat:"voiture", place:1, sol:8, desc:"Un tuyau et une poire pour siphonner l’essence des voitures abandonnées sur le chemin du retour (s’use : 8 fois)" },
   canne:      { nom:"Canne à pêche", pl:"Cannes à pêche", g:"f", icone:"🎣", cat:"outil", place:2, emplacement:"outil", peche:true, sol:8, desc:"Pour pêcher à l’étang (s’use à chaque sortie, 8 fois)" },
   // Équipement de guerre (2026-11-10) : servent seulement pendant les assauts des guerres de clans, portés tout seuls par l'équipe ; s'usent d'un cran par assaut
   gilet:      { nom:"Gilet pare-balles", pl:"Gilets pare-balles", g:"m", icone:"🦺", cat:"guerre", place:2, sol:3, guerre:"gilet", desc:"Guerre de clans : retire 2 dégâts à chaque coup reçu pendant un assaut (3 assauts)" },
@@ -434,6 +438,7 @@ var OBJETS = {
    Chaque fabrication coûte BAL.energieCraft au membre le plus reposé. */
 var RECETTES = [
   { id:"bandage", ingredients:{ chiffon:2 } },
+  { id:"siphon",  ingredients:{ ruban:1, chiffon:1, ferraille:1 } },
   { id:"trousse", ingredients:{ bandage:2, alcool:1 } },
   { id:"torche",  ingredients:{ planche:1, chiffon:1, alcool:1 } },
   { id:"lance",   ingredients:{ planche:1, ferraille:1, ruban:1 } },
@@ -518,13 +523,13 @@ var LIEUX = [
     butin:{ bandage:4, trousse:3, antibio:3, bouteille:3, barre:2, lampe:1, alcool:3, chiffon:4, epingle:2 } },
   { nom:"Quincaillerie", icone:"🔧", verrou:true, danger:0.35, distance:2,
     butin:{ planche:11, pile:4, hache:1, pdb:1, outils:1, barrefer:1, lampe:1, clous:5, ruban:3, ferraille:3 } },
-  { nom:"Station-service", icone:"⛽", danger:0.45, distance:1, jour:2,
-    butin:{ jerrican:2, canette:2, barre:4, bouteille:4, chiffon:2, biscuits:2 } },
+  { nom:"Station-service", icone:"⛽", danger:0.45, distance:1, jour:2, cuve:true, // cuve d'essence : chaque survivant rapporte un jerrican plein (BAL.station)
+    butin:{ jerrican:2, canette:2, barre:4, bouteille:4, chiffon:2, biscuits:2, siphon:1 } },
   // L'étang : on y pêche avec une canne. Les poissons se reproduisent lentement... tant qu'il en reste assez
   { nom:"Étang", icone:"🎣", danger:0.25, distance:2, jour:4, peche:true,
     butin:{ canne:1, bouteille:2, ferraille:2, chiffon:1 } },
   { nom:"Garage auto", icone:"🛠️", verrou:true, danger:0.40, distance:2, jour:3,
-    butin:{ batterie:1, roue:1, jerrican:1, ferraille:4, ruban:2, chiffon:2, pile:2 } },
+    butin:{ batterie:1, roue:1, jerrican:1, ferraille:4, ruban:2, chiffon:2, pile:2, siphon:1 } },
   { nom:"Commissariat", icone:"🚓", sombre:true, verrou:true, danger:0.65, distance:2, jour:6,
     butin:{ pistolet:1, boiteBalles:3, trousse:1, lampe:1, pile:2, canette:1, bandage:2 } },
   { nom:"Zone industrielle", icone:"🏭", sombre:true, verrou:true, danger:0.55, distance:3, jour:4,
@@ -709,7 +714,7 @@ var VALEURS = {
   bouteille:2, bidon:8, conserve:2, conserves:8, riz:12, biscuits:4, pates:3, barre:1, ration:4,
   bandage:3, trousse:6, antibio:5, canette:4, planche:1, pile:2, chiffon:1, clous:1, ferraille:2,
   ruban:2, alcool:2, epingle:1, jerrican:8, boiteBalles:6, boiteCart:6, balle:1, cartouche:1.5,
-  batterie:10, roue:10, courroie:8, piege:4, poisson:2, poule:6, canne:5,
+  batterie:10, roue:10, courroie:8, piege:4, poisson:2, poule:6, canne:5, siphon:4,
   epices:2, huile:2, farine:2, champignons:1, baies:1, herbes:1
 };
 
