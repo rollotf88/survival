@@ -81,7 +81,7 @@ function locuteurEvenement(ev){
   return null;
 }
 var retourPiece = null; // pièce où revenir à la fermeture de la fenêtre (salon après une expédition, bastion après un assaut)
-function hide(){ $("modal").style.display = "none"; if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
+function hide(){ $("modal").style.display = "none"; if(G && G.ph === "accueil" && window.htmlAccueil) setTimeout(function(){ if(G.ph === "accueil" && $("modal").style.display === "none"){ show(window.htmlAccueil); if(typeof poserMonde === "function") poserMonde(); } }, 0); /* fermer le guide (ou une autre fenêtre) depuis l'accueil du téléphone y ramène */ if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
 var BTN_FERMER = function(t){ return '<button class="btn alt' + (t ? "" : " btn-fermer") + '" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
@@ -1570,13 +1570,14 @@ if(enCours){
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
   lancerVitrine();
   // Téléphone (2026-11-11, raccord avec la DA) : carte de la partie (jour en grand, score, famille en portraits), gros bouton, deux boutons côte à côte
-  show('<div class="acc-mob"><div class="acc-carte"><p class="mf-titre">Partie en cours · ' + (enCours.seed ? "🏆 classée du " + dateGraine(enCours.seed) : "🎲 libre") + '</p>'
+  window.htmlAccueil = '<div class="acc-mob"><div class="acc-carte"><p class="mf-titre">Partie en cours · ' + (enCours.seed ? "🏆 classée du " + dateGraine(enCours.seed) : "🎲 libre") + '</p>'
     + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
     + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div>'
     + '<div class="acc-bas"><div class="monde-place" data-compact="1"></div>'
     + '<button class="btn acc-go" data-act="continuer">▶️ Continuer la partie</button>'
     + '<div class="acc-sec"><button class="btn alt" data-act="guide">📖 Guide</button><button class="btn alt acc-nouv" data-act="nouvelle">🆕 Nouvelle famille</button></div>'
-    + '<small class="acc-note">Une nouvelle famille efface la partie en cours.</small></div></div>');
+    + '<small class="acc-note">Une nouvelle famille efface la partie en cours.</small></div></div>';
+  show(window.htmlAccueil);
   if(typeof poserMonde === "function") poserMonde();
   }
 } else nouvelleFamille();
