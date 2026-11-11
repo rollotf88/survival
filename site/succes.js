@@ -59,13 +59,21 @@ function montrerSucces(){
   minuteurSucces = setTimeout(function(){ b.classList.remove("on"); setTimeout(montrerSucces, 400); }, 3200);
 }
 function nbSucces(){ return SUCCES.filter(function(s){ return succesObtenus[s.id]; }).length; }
+// Raccord avec la DA (2026-11-11) : anneau de progression et prochain cadre, médailles rondes (obtenues d'abord, les autres grisées),
+// toucher une médaille montre sa fiche en haut (par défaut : le prochain succès à débloquer)
+var selSucces = null;
 function openSucces(){
-  var h = '<h2>🏅 Succès · ' + nbSucces() + ' / ' + SUCCES.length + '</h2><p class="sub">Ils restent débloqués d’une partie à l’autre.</p><div class="succes">';
-  h += SUCCES.map(function(s){
-    var ok = succesObtenus[s.id];
-    return '<div class="sc' + (ok ? " ok" : "") + '"><span class="em">' + (ok ? s.icone : "🔒") + '</span><span><b>' + s.nom + '</b><small>' + s.desc + '</small></span></div>';
-  }).join("") + '</div>';
-  show(h + BTN_FERMER());
+  var n = nbSucces(), N = SUCCES.length;
+  var cad = typeof CADRES !== "undefined" ? CADRES.filter(function(c){ return c.min > n; })[0] : null;
+  var prochain = cad ? (cad.min >= 999 ? "Cadre Légende : tous les succès" : "Cadre " + cad.nom + " dans " + (cad.min - n) + " succès") : "Tous les cadres débloqués !";
+  var h = teteInfo("🏅", "Succès débloqués", n + " / " + N, n >= N ? "ok" : "moy", n / N * 100, "🖼️ " + prochain);
+  var liste = SUCCES.filter(function(x){ return succesObtenus[x.id]; }).concat(SUCCES.filter(function(x){ return !succesObtenus[x.id]; }));
+  var sel = SUCCES.filter(function(x){ return x.id === selSucces; })[0] || SUCCES.filter(function(x){ return !succesObtenus[x.id]; })[0] || liste[0], okSel = !!succesObtenus[sel.id];
+  h += '<div class="sc-fiche' + (okSel ? " ok" : "") + '"><span class="sc-med grand' + (okSel ? " ok" : "") + '">' + sel.icone + '</span><span><b>' + sel.nom + '</b><small>' + sel.desc + '</small><span class="sc-etat">' + (okSel ? "✅ Débloqué" : "🔒 À débloquer") + '</span></span></div>';
+  h += '<div class="sc-grille">' + liste.map(function(x){ var ok = succesObtenus[x.id];
+    return '<button class="sc-m' + (ok ? " ok" : "") + (x === sel ? " sel" : "") + '" data-act="scsel" data-id="' + x.id + '"><span class="sc-med' + (ok ? " ok" : "") + '">' + x.icone + (ok ? '' : '<i class="sc-lock">🔒</i>') + '</span><small>' + x.nom + '</small></button>'; }).join("") + '</div>';
+  h += '<p class="bl-note">Ils restent débloqués d’une partie à l’autre.</p>';
+  show('<div class="mf info succ">' + h + '</div>');
 }
 
 /* ---------- Vibrations (Android ; l'iPhone ne sait pas faire vibrer une page web) ---------- */
@@ -76,6 +84,7 @@ function basculerVibrations(){ var on = !vibrationsActives(); try{ localStorage.
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act");
-  if(a === "succes") openSucces();
+  if(a === "succes"){ selSucces = null; openSucces(); }
+  else if(a === "scsel"){ selSucces = b.getAttribute("data-id"); openSucces(); }
   else if(a === "menuvibre"){ basculerVibrations(); openMenu(); }
 });
