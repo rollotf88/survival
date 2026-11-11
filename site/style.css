@@ -2360,3 +2360,12 @@ body:not(.pc) .sheet.a-onglets{height:88%}
 .qp-bar.en i{background:#e0b028}
 .qp-noms{display:block;font-size:11px;font-weight:700;opacity:.8}
 [data-act="fouille"].btn-jeu{flex-direction:column;gap:0}
+/* En-tête (2026-11-11, retour de Fabien) : chapitre et saison en petites pastilles au lieu du texte souligné en pointillés */
+.chapcourt{display:flex!important;flex-wrap:wrap;gap:4px;text-decoration:none;overflow:visible;max-width:none!important;margin-top:3px}
+.chapcourt .ch-sep{display:none}
+.chapcourt .ch-btn{display:inline-flex;align-items:center;gap:3px;padding:1px 8px;border-radius:999px;border:1.5px solid rgba(255,236,200,.45);background:rgba(30,18,8,.45);color:#fff6e6;font-weight:800;font-size:11px;line-height:1.5;text-shadow:none;white-space:nowrap}
+.chapcourt .ch-btn:hover{text-decoration:none;border-color:rgba(255,236,200,.8)}
+.chapcourt .ch-btn .ico,.chapcourt .ch-btn img.emo{width:13px;height:13px}
+body:not(.fond) .chapcourt .ch-btn{background:var(--bg);color:var(--ink);border-color:var(--bois)}
+body.pc .chapcourt .ch-saison{display:inline-flex!important}
+body.pc #app .chapcourt .ch-btn{font-size:13px}
