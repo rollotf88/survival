@@ -586,7 +586,15 @@ function afficherBastion(){
     } else h += '<p class="etat ok">⭐ Niveau maximum</p>';
     h += '</div></div>';
   } else {
-    h += B.journal.length ? '<div class="fil">' + B.journal.map(function(j){ return '<div class="lj"><span class="lj-ico">📜</span><span class="lj-txt"><b>' + echapper(j.qui) + '</b> ' + echapper(j.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; })) + ' <small>' + quand(j.t) + '</small></span></div>'; }).join("") + '</div>' : '<p>Rien pour l’instant.</p>';
+    // Raccord avec la DA (2026-11-11) : regroupé par jour, l'emoji de la ligne sort dans un médaillon coloré (rouge = pillé / perdu, vert = repoussé / construit…), l'heure en petit
+    var jourPrec = "";
+    h += B.journal.length ? '<div class="bj">' + B.journal.map(function(jl){
+      var txt = jl.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; });
+      var m = txt.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u), ico = m ? m[1] : "📜"; if(m) txt = txt.slice(m[0].length);
+      var cls = /pillé|tombée?|quitté|perdu|exclu|détruit/i.test(txt) ? "b2" : /repoussé|gagn|construit|déposé|rejoint|fondé|victoire/i.test(txt) ? "g2" : "";
+      var jr = typeof jourChat === "function" ? jourChat(jl.t) : "", sep = jr !== jourPrec ? '<p class="ch-jour"><span>' + jr + '</span></p>' : ""; jourPrec = jr;
+      return sep + '<div class="lj bj-l ' + cls + '"><span class="lj-ico">' + ico + '</span><span class="lj-txt">' + (jl.qui ? '<b>' + echapper(jl.qui) + '</b> ' : '') + echapper(txt) + '</span><small class="bj-t">' + quand(jl.t) + '</small></div>';
+    }).join("") + '</div>' : '<p>Rien pour l’instant.</p>';
   }
   show('<button class="lien-retour" data-act="clans">← Mon clan</button>' + h + BTN_FERMER());
 }
