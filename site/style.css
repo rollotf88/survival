@@ -1829,3 +1829,38 @@ body.fond .scene .mc > small.mc-st{display:inline-block;max-width:100%}
   .st-t b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .st-eff{font-size:11px;white-space:nowrap}
 }
 @media (max-height:440px) and (min-width:600px){ .mf.st > .mf-bloc{grid-column:auto} }
+
+/* ---------- Fenêtres des pastilles du haut (2026-11-11) ---------- */
+.mf.info .infotete{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;margin:0}
+.it-anneau{--c:var(--ok);width:76px;height:76px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p) * 1%),rgba(0,0,0,.13) 0);display:grid;place-items:center;box-shadow:0 3px 0 var(--line)}
+.infotete.moy .it-anneau{--c:#d98e2b}.infotete.ko .it-anneau{--c:var(--bad)}
+.it-anneau .it-ico{flex:none;width:60px;height:60px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:30px;box-shadow:none}
+.it-anneau .it-ico .ico,.it-anneau .it-ico img.ico-img{width:38px;height:38px}
+.it-etat{display:inline-block;margin-top:4px;font-size:11.5px;font-weight:900;padding:1px 9px;border-radius:999px;border:1.5px solid var(--ok);color:var(--ok);background:var(--bg)}
+.infotete.moy .it-etat{border-color:#c98a2a;color:#9a6512}.infotete.ko .it-etat{border-color:var(--bad);color:var(--bad)}
+.mf.info .tuiles{margin:0}
+.mf.info .jmoral{margin:0}
+.mf.info .jmoral-leg{margin:-6px 0 0}
+
+/* ---------- Cadre commun des fenêtres (2026-11-11) ---------- */
+.sheet{position:relative}
+.sheet-x{position:absolute;top:12px;right:12px;z-index:3}
+.sheet.avec-x > h2:first-of-type,.sheet.avec-x > .rt:first-of-type h2{padding-right:44px}
+.sheet.avec-x .btn-fermer{display:none}
+.sheet.avec-x .row:has(> .btn-fermer:only-child){display:none}
+.titre-butin{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin:10px 0 5px}
+.titre-butin .ico,.titre-butin img.emo{width:16px;height:16px;vertical-align:-3px}
+.loc{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+.loc:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.tuile{border-radius:14px;box-shadow:0 3px 0 var(--line)}
+.tuile b{font-size:19px;font-weight:900}
+.mf-trait{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Fenêtres des pastilles du haut en paysage bas : en-tête et tuiles à gauche, explications à droite */
+@media (max-height:440px) and (min-width:600px){
+  .mf.info{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 14px;align-items:start}
+  .mf.info > *{grid-column:1}
+  .mf.info > .mf-bloc{grid-column:2;grid-row:1 / span 6}
+  .it-anneau{width:56px;height:56px} .it-anneau .it-ico{width:44px;height:44px} .it-anneau .it-ico .ico,.it-anneau .it-ico img.ico-img{width:28px;height:28px}
+  .mf.info .it-txt b{font-size:26px}
+  .mf.info .lj{font-size:12px}
+}

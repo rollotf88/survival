@@ -45,7 +45,9 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h; $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
+  // Cadre commun (2026-11-11) : une croix en haut à droite de toute fenêtre qu'on peut fermer (sauf si elle a déjà la sienne)
+  if(h.indexOf('data-act="close"') >= 0 && !$("sheet").querySelector(".mf-x")){ $("sheet").insertAdjacentHTML("afterbegin", '<button class="mf-x sheet-x" data-act="close" aria-label="Fermer">✕</button>'); $("sheet").classList.add("avec-x"); } $("modal").style.display = "flex"; $("sheet").scrollTop = 0; }
 /* ---------- Le personnage qui parle (comme dans les MMO) ----------
    Un médaillon avec son portrait, qui dépasse du haut de la fenêtre à gauche, et son nom à côté.
    À appeler juste après show(). portrait : du HTML (portrait de membre) ou le nom d'un fichier images/portrait-<nom>.webp */
@@ -80,7 +82,7 @@ function locuteurEvenement(ev){
 }
 var retourPiece = null; // pièce où revenir à la fermeture de la fenêtre (salon après une expédition, bastion après un assaut)
 function hide(){ $("modal").style.display = "none"; if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
-var BTN_FERMER = function(t){ return '<button class="btn alt" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
+var BTN_FERMER = function(t){ return '<button class="btn alt' + (t ? "" : " btn-fermer") + '" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
 // Familles d'objets (couleur du liseré et ordre d'affichage)
@@ -1316,34 +1318,41 @@ document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.targ
 
 /* ---------- Pastilles du haut : ce qu'elles veulent dire ---------- */
 /* ---------- Pastilles du haut : fenêtres façon jeu (en-tête, tuiles, détail en journal) ---------- */
-function teteInfo(icone, titre, valeur, cls){ return '<div class="infotete ' + (cls || "") + '"><span class="it-ico">' + icone + '</span><span class="it-txt"><small>' + titre + '</small><b>' + valeur + '</b></span></div>'; }
+// En-tête des fenêtres des pastilles du haut (2026-11-11, raccord avec la fiche du membre) : grand anneau rempli selon pct (0-100),
+// titre, valeur en grand, mot d'état coloré, croix pour fermer
+function teteInfo(icone, titre, valeur, cls, pct, etat){
+  pct = Math.max(0, Math.min(100, Math.round(pct === undefined ? 100 : pct)));
+  return '<div class="infotete ' + (cls || "") + '"><span class="it-anneau" style="--p:' + pct + '"><span class="it-ico">' + icone + '</span></span><span class="it-txt"><small>' + titre + '</small><b>' + valeur + '</b>'
+    + (etat ? '<span class="it-etat">' + etat + '</span>' : '') + '</span><button class="mf-x" data-act="close" aria-label="Fermer">✕</button></div>';
+}
+function lignesInfo(titre, L){ return '<div class="mf-bloc"><p class="mf-titre">' + titre + '</p>' + puces(L) + '</div>'; }
 function tuiles(t){ return '<div class="tuiles">' + t.map(function(x){ return '<div class="tuile ' + (x[2] || "") + '"><b>' + x[1] + '</b><small>' + x[0] + '</small></div>'; }).join("") + '</div>'; }
 function openInfo(id){
   var h = "", v = vivants().length, L = [];
   if(id === "eau" || id === "nour"){
     var eau = id === "eau", r = rations(id), b = Math.min(besoinNuit(id), r), nuits = v ? Math.floor(r / v) : 0;
     var prod = eau ? G.ref.eau * REFUGE.eau.parJour : G.ref.pot * REFUGE.pot.parJour;
-    h = teteInfo(ic(eau ? "bouteille" : "conserve", eau ? "💧" : "🥫"), eau ? "Rations d’eau" : "Rations de nourriture", r, r < v ? "ko" : "")
+    h = teteInfo(ic(eau ? "bouteille" : "conserve", eau ? "💧" : "🥫"), eau ? "Rations d’eau" : "Rations de nourriture", r, r < v || nuits < 2 ? "ko" : nuits < 4 ? "moy" : "ok", v ? nuits / 7 * 100 : 0, r < v ? "Pas assez ce soir" : nuits < 2 ? "Presque vide" : nuits < 4 ? "Juste" : "Ça va")
       + tuiles([["cette nuit", "−" + b, r < v ? "ko" : ""], ["gagné / nuit", "+" + prod, prod ? "ok" : ""], ["réserve", "≈ " + nuits + " nuit" + (nuits > 1 ? "s" : ""), nuits < 2 ? "ko" : nuits < 4 ? "moy" : "ok"]]);
     if(r < v) L.push(["b2", "⚠️ Pas assez pour tout le monde ce soir : " + (eau ? "la soif" : "la faim") + " va faire des dégâts."]);
     L.push(["", "🌙 Chaque nuit, chacun " + (eau ? "boit" : "mange") + " 1 ration, et 1 de plus si sa jauge tombe sous " + BAL.rattrapage + "."]);
     if(prod) L.push(["g2", ic(eau ? "ref_eau" : "ref_pot", eau ? "🪣" : "🥕") + " " + (eau ? "Le récupérateur" : "Le potager") + " rapporte " + prod + " ration" + (prod > 1 ? "s" : "") + " par nuit."]);
     else L.push(["", (eau ? "🪣 Construis un récupérateur d’eau, fabrique une bâche, ou profite de la pluie." : "🥕 Construis un potager, pêche à l’étang, élève des poules ou pose des collets.")]);
     L.push(["", "➕ Une ration de plus dans la journée (bouton ＋ d’un membre) ne sert qu’en urgence."]);
-    h += puces(L);
+    h += lignesInfo("Bon à savoir", L);
   } else if(id === "soin"){
     var cs = []; for(var k in G.stock.n) if(OBJETS[k].soin) cs.push(caseObjet(k, { act:"aucun", cle:k, n:G.stock.n[k], fixe:true }));
     var blesses = vivants().filter(function(x){ return x.hp < 100; }).length;
-    h = teteInfo(ic("bandage", "🩹"), "Objets de soin", soinsDispo(), soinsDispo() ? "" : "ko")
+    h = teteInfo(ic("trousse", "⛑️"), "Objets de soin", soinsDispo(), !soinsDispo() ? "ko" : soinsDispo() < blesses ? "moy" : "ok", soinsDispo() / Math.max(1, v * 2) * 100, !soinsDispo() ? "Aucun soin" : soinsDispo() < blesses ? "Trop peu" : "Ça va")
       + tuiles([["blessés", blesses, blesses ? "ko" : "ok"], ["bonus soigneur", bonusSoin() ? "+" + bonusSoin() + " PV" : "—", bonusSoin() ? "ok" : ""], ["repos / nuit", "+" + BAL.regenPV + " PV", ""]])
       + (cs.length ? etageres(cs, 5) : '');
     L.push(["", "➕ Pour soigner quelqu’un, touche le ＋ de sa carte : le soin le mieux adapté est choisi tout seul."]);
     if(!cs.length) L.push(["b2", "🩹 Aucun soin au refuge : cherche à l’hôpital, au supermarché, ou fabrique des bandages à l’atelier."]);
-    h += puces(L);
+    h += lignesInfo("Bon à savoir", L);
   } else if(id === "def"){
     var A = BAL.attaqueNuit, ch = Math.round(chanceAttaqueNuit() * 100), f = forceMiniNuit(), d = defenseNuit();
     var etat = d >= f + 2 ? "ok" : d >= f ? "moy" : "ko";
-    h = teteInfo(ic("bouclier", "🛡️"), "Défense de nuit", d, etat)
+    h = teteInfo(ic("bouclier", "🛡️"), "Défense de nuit", d, etat, d / Math.max(1, f + 2) * 100, d >= f + 2 ? "Solide" : d >= f ? "Juste" : "Trop faible")
       + tuiles([["risque cette nuit", ch + " %", ch >= 50 ? "ko" : ch >= 30 ? "moy" : "ok"], ["force attendue", f + " à " + (f + 2), ""], ["verdict", d >= f + 2 ? "Solide" : d >= f ? "Juste" : "Trop faible", etat]]);
     if(G.ref.barr) L.push(["g2", ic("ref_barr", "🧱") + " Barricade niveau " + G.ref.barr + " : +" + G.ref.barr * BAL.defenseBarricade]);
     equipes().forEach(function(o){ if(OBJETS[o.id].def) L.push(["g2", icone(o.id) + " " + OBJETS[o.id].nom + " en main : +" + OBJETS[o.id].def]); });
@@ -1352,22 +1361,22 @@ function openInfo(id){
     if(typeof BONUS_CLAN_DEF !== "undefined" && BONUS_CLAN_DEF) L.push(["g2", "🗼 Tours de guet du bastion de ton clan : +" + BONUS_CLAN_DEF]);
     if(!L.length) L.push(["b2", "🧱 Rien pour l’instant : construis la barricade et garde des armes en main."]);
     L.push(["b2", "🧟 Attaque perdue : un blessé, de la nourriture volée et un niveau de barricade détruit."]);
-    h += puces(L);
+    h += lignesInfo("Bon à savoir", L);
   } else if(id === "moral"){
     var visage = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟"); // le même visage que la pastille du haut
     var mo = 0; G.stock.o.concat(equipes()).forEach(function(o){ mo += OBJETS[o.id].moral || 0; }); for(var kk in G.stock.n) mo += (OBJETS[kk].moral || 0) * G.stock.n[kk];
     var gain = BAL.moralBonusObjet * mo + (G.feu ? BAL.feu.moral : 0) + BAL.traits.optimiste * vivants().filter(function(x){ return x.trait === "optimiste"; }).length;
     var net = gain - BAL.moralPerteNuit, m = Math.round(G.moral);
-    h = teteInfo(visage, "Moral de la famille", m + " / 100", m < BAL.moralBas ? "ko" : m >= BAL.moralHaut ? "ok" : "")
+    h = teteInfo(visage, "Moral de la famille", m + " / 100", m < BAL.moralBas ? "ko" : m >= BAL.moralHaut ? "ok" : "moy", m, m < BAL.moralBas ? "Au plus bas" : m >= BAL.moralHaut ? "Excellent" : "Correct")
       + '<div class="jmoral"><span class="z-bas" style="width:' + BAL.moralBas + '%"></span><span class="z-mid" style="width:' + (BAL.moralHaut - BAL.moralBas) + '%"></span><span class="z-haut" style="width:' + (100 - BAL.moralHaut) + '%"></span><i style="left:' + m + '%"></i></div>'
       + '<div class="jmoral-leg"><span>fouille moins bien</span><span>normal</span><span>+1 objet</span></div>'
       + tuiles([["perte / nuit", "−" + BAL.moralPerteNuit, "ko"], ["gain / nuit", "+" + gain, gain ? "ok" : ""], ["bilan / nuit", (net >= 0 ? "+" + net : "−" + (-net)), net >= 0 ? "ok" : "ko"]]);
     L.push(["", "🧸 Les objets de confort au refuge (peluche, photo, cartes…) remontent le moral chaque nuit."]);
     L.push(["", "🔥 Un feu de cheminée, les bons choix du matin, les chapitres et les missions réussis aussi."]);
     L.push(["b2", "💀 Une mort fait chuter le moral de 25."]);
-    h += puces(L);
+    h += lignesInfo("Bon à savoir", L);
   }
-  show(h + BTN_FERMER());
+  show('<div class="mf info">' + h + '</div>');
 }
 
 /* ---------- Clics ---------- */
