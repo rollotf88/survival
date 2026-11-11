@@ -1771,3 +1771,61 @@ body.pc #modal .ch-app{height:calc(100vh - 96px);max-height:none}
   .mf .slots.grands .slot{height:54px}
   .mf-a{flex-direction:row;justify-content:center;gap:6px;padding:6px} .mf-a small{display:none}
 }
+
+/* ---------- Soigner, boire, manger façon jeu mobile (2026-11-11) ---------- */
+.st-tete{align-items:center}
+.st .mf-por{width:72px;height:72px}
+.st .mf-nom{font-size:24px}
+.st-jauges{display:flex;gap:6px}
+.st-jauges .mj-r{width:38px;height:38px} .st-jauges .mj-i{width:30px;height:30px;font-size:15px}
+.st-jauges .mj-i .ico,.st-jauges .mj-i img.ico-img,.st-jauges .mj-i img.emo{width:17px;height:17px}
+.st-jauges .mj b{font-size:12px} .st-jauges .mj small{display:none}
+.st-bonus{font-size:10.5px;font-weight:800;text-transform:none;letter-spacing:0;color:var(--ok);margin-left:4px}
+.st-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:7px}
+.st-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;border-radius:14px;border:2px solid var(--bois);background:var(--bg);color:var(--ink);font:inherit;cursor:pointer;box-shadow:0 3px 0 var(--line);min-width:0}
+.st-t:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.st-t:disabled{opacity:.45;cursor:default;box-shadow:none;filter:grayscale(.6)}
+.st-i{width:44px;height:44px;display:grid;place-items:center;font-size:28px}
+.st-i .ico,.st-i img.ico-img{width:40px;height:40px}
+.st-t b{font-size:12px;line-height:1.1;text-align:center;overflow-wrap:anywhere}
+.st-eff{font-size:12.5px;font-weight:900;color:var(--ok);line-height:1.1;text-align:center}
+.st-eff .ico,.st-eff img.emo{width:14px;height:14px;vertical-align:-2px}
+.st-t:disabled .st-eff{color:inherit}
+.st-t small{font-size:10.5px;opacity:.75;line-height:1.1;text-align:center}
+.st-t small .ico,.st-t small img.emo{width:12px;height:12px;vertical-align:-2px}
+.st-t.conseil{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc),0 3px 0 var(--line);background:linear-gradient(180deg,#fff3d6,var(--bg))}
+.st-t.conseil::before{content:"conseillé";position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--acc);color:var(--accink);font-size:10px;font-weight:900;padding:1px 7px;border-radius:999px;border:1.5px solid var(--ink);white-space:nowrap}
+.st-vide{grid-column:1/-1;margin:0;font-size:13px;color:var(--mut)}
+.st-note{margin:0;font-size:11.5px;color:var(--mut);line-height:1.35}
+.st-note .ico,.st-note img.emo{width:14px;height:14px;vertical-align:-2px}
+@media (max-height:440px) and (min-width:600px){ .st-grille{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))} .st-i{width:34px;height:34px} .st-i .ico,.st-i img.ico-img{width:30px;height:30px} .st .mf-por{width:56px;height:56px} }
+
+/* ---------- Cartes de la famille, raccord avec la fiche (2026-11-11) ---------- */
+.mc .em .portrait{border-radius:12px;box-shadow:0 0 0 2.5px var(--bois),0 2px 0 3px var(--line)}
+.mc > div:first-of-type b{font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.6px;font-size:17px}
+.mc .mc-st{display:inline-block;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);line-height:1.35;margin:2px 0 3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc .mc-st .ico,.mc .mc-st img.emo{width:12px;height:12px;vertical-align:-2px}
+.mc .mc-st.ok{border-color:var(--ok);color:var(--ok)}
+.mc .mc-st.moy{border-color:#c98a2a;color:#9a6512}
+.mc .mc-st.bas{border-color:var(--bad);color:var(--bad)}
+.mc .mc-st.mort{opacity:.7}
+.mc .bar{background:rgba(0,0,0,.12);box-shadow:inset 0 1px 1px rgba(0,0,0,.15);border-radius:999px}
+.mc .bar i{border-radius:999px}
+body.fond .scene .mc > small.mc-st{display:inline-block;max-width:100%}
+@media (max-width:559px){ .st-i{width:38px;height:38px} .st-i .ico,.st-i img.ico-img{width:34px;height:34px} .st-t{padding:7px 3px 5px} }
+@media (max-height:440px) and (min-width:600px){
+  .mf.st{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 12px;align-items:start}
+  .mf.st > .mf-tete{grid-column:1/-1}
+  .mf.st > .st-note{grid-column:1/-1;font-size:10.5px}
+  .st-grille{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .st-t{padding:5px 2px 4px} .st-t small{display:none}
+  .mf-tags{flex-wrap:nowrap;overflow:hidden}
+}
+@media (max-height:440px) and (min-width:600px){
+  .st .mf-por{width:48px;height:48px;border-radius:10px} .st .mf-nom{font-size:20px}
+  .st-jauges .mj-r{width:32px;height:32px} .st-jauges .mj-i{width:25px;height:25px}
+  .mf.st > .st-note{display:none}
+  .st-i{width:28px;height:28px} .st-i .ico,.st-i img.ico-img{width:26px;height:26px}
+  .st-t b{font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%} .st-eff{font-size:11px;white-space:nowrap}
+}
+@media (max-height:440px) and (min-width:600px){ .mf.st > .mf-bloc{grid-column:auto} }

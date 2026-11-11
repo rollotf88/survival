@@ -144,11 +144,12 @@ function rGame(){
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
-    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 " + causeMort(roleDe(x), "mort") : x.raid ? "🏢 Au bastion" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" : fatigue(x) ? "🥱 Fatigué" : "Au refuge";
+    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 " + causeMort(roleDe(x), "mort") : x.raid ? "🏢 Au bastion" : on ? "✔ Part fouiller" : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" + (estFeminin(x) ? "e" : "") : fatigue(x) ? "🥱 Fatigué" + (estFeminin(x) ? "e" : "") : "Au refuge";
+    var stc = !x.al ? "mort" : on ? "ok" : fou(x) || !peutSortir(x) ? "bas" : fatigue(x) ? "moy" : ""; // couleur de la pastille d'état
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)
     var porte = x.al ? '<div class="porte">' + EMPLACEMENTS.map(function(e){ var o = x.eq[e[0]]; return '<span class="' + (o ? "f" : "") + classeUsure(o) + '">' + (o ? icone(o.id) : "") + '</span>'; }).join("") + '</div>' : '';
-    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (on ? '<span class="coche" aria-hidden="true">✔</span>' : '') + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x, true) + '</span><b>' + x.nom + '</b>' + (typeof badgesEtat === "function" && badgesEtat(x).length ? '<span class="etats">' + badgesEtat(x).join("") + '</span>' : '') + '</div><small>' + st + '</small>'
+    return '<div class="mc' + (on ? " on" : "") + (x.al ? "" : " dead") + '" data-act="sel" data-id="' + i + '" tabindex="0">' + (on ? '<span class="coche" aria-hidden="true">✔</span>' : '') + (aEquiper ? '<span class="pastille" title="Un objet peut être équipé">+</span>' : '') + '<div><span class="em">' + iconeMembre(x, true) + '</span><b>' + x.nom + '</b>' + (typeof badgesEtat === "function" && badgesEtat(x).length ? '<span class="etats">' + badgesEtat(x).join("") + '</span>' : '') + '</div><small class="mc-st ' + stc + '">' + st + '</small>'
       + barre("❤️", x.hp) + barre("⚡", x.en) + barre(ic("conserve", "🥫"), x.faim) + barre(ic("bouteille", "💧"), x.soif) + porte
       + (x.al ? '<div class="slots">' + EMPLACEMENTS.map(function(e){
           var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0; // case vide mais un objet attend au stock
@@ -623,34 +624,44 @@ function openChapitre(){
 }
 
 /* ---------- Soigner / donner une canette ---------- */
+// Fenêtre « Soigner, boire, manger » façon jeu mobile (2026-11-11, raccord avec la fiche du membre) :
+// en-tête du personnage avec ses jauges en anneaux, puis des tuiles (soins, boire et manger) avec l'effet en gros
+function tuileSoin(act, id, ico, nom, eff, petit, ok, extra){
+  return '<button class="st-t' + (extra || "") + '" data-act="' + act + '" data-id="' + id + '"' + (ok ? "" : " disabled") + '><span class="st-i">' + ico + '</span><b>' + nom + '</b>'
+    + (eff ? '<span class="st-eff">' + eff + '</span>' : '') + '<small>' + petit + '</small></button>';
+}
 function openSoins(i){
-  var x = G.m[i], h = '<h2>' + iconeMembre(x) + ' ' + x.nom + '</h2><p class="sub">❤️ ' + x.hp + ' PV · ⚡ ' + x.en + ' énergie</p>';
-  // Un bouton par soin du stock (du plus petit au plus gros) ; celui qui convient le mieux est « conseillé » (retour de Fabien : il ne voyait que la trousse)
+  var x = G.m[i];
+  var h = '<div class="mf st"><div class="mf-tete st-tete"><span class="mf-por">' + iconeMembre(x) + '</span><div class="mf-id"><h2 class="mf-nom">' + x.nom + '</h2>'
+    + '<div class="st-jauges">' + anneauMembre("❤️", "Vie", x.hp) + anneauMembre("⚡", "Énergie", x.en) + anneauMembre(ic("conserve", "🥫"), "Faim", x.faim) + anneauMembre(ic("bouteille", "💧"), "Soif", x.soif) + '</div></div>'
+    + '<button class="mf-x" data-act="close" aria-label="Fermer">✕</button></div>';
+  // Soins : une tuile par soin du stock (du plus petit au plus gros), celui qui convient le mieux est « conseillé »
   var bs = bonusSoin(), manque = 100 - x.hp, conseil = x.hp < 100 ? choisirSoin(manque - bs) : null;
   var soins = Object.keys(G.stock.n).filter(function(k){ return OBJETS[k].soin && G.stock.n[k] > 0; }).sort(function(a, b){ return OBJETS[a].soin - OBJETS[b].soin; });
-  if(x.hp >= 100 || !soins.length) h += '<button class="loc craft" disabled><span class="em">🩹</span><span class="eqt"><b>Soigner</b><small>' + (x.hp >= 100 ? "En pleine forme" : "Aucun soin au refuge") + '</small></span></button>';
-  else soins.forEach(function(k){
+  h += '<div class="mf-bloc"><p class="mf-titre">❤️ Soigner' + (bs ? ' <span class="st-bonus">+' + bs + ' PV grâce au soigneur</span>' : '') + '</p><div class="st-grille">';
+  if(x.hp >= 100 || !soins.length) h += '<p class="st-vide">' + (x.hp >= 100 ? "En pleine forme : pas besoin de soin." : "Aucun soin au refuge.") + '</p>';
+  else h += soins.map(function(k){
     var gain = OBJETS[k].soin + bs, perdu = Math.max(0, gain - manque);
-    h += '<button class="loc craft' + (k === conseil ? " conseil" : "") + '" data-act="heal" data-id="' + i + ':' + k + '"><span class="em">' + icone(k) + '</span><span class="eqt"><b>Soigner avec ' + nommer(k, 1) + (k === conseil ? ' <span class="pill">conseillé</span>' : '') + '</b><small>'
-      + "+" + gain + " PV" + (bs ? " (dont +" + bs + " grâce au soigneur)" : "") + (perdu >= 10 ? " · " + perdu + " PV de trop" : "") + " · il en reste " + G.stock.n[k] + '</small></span></button>';
-  });
-  var raison = !compter("canette") ? "Aucune canette au refuge" : x.canette ? "Déjà une canette aujourd’hui" : x.en >= 100 ? "Déjà plein d’énergie" : "";
-  h += '<button class="loc craft" data-act="boire" data-id="' + i + '"' + (peutBoire(x) ? "" : " disabled") + '><span class="em">' + icone("canette") + '</span><span class="eqt"><b>Boire une canette</b><small>'
-    + (raison || "+" + BAL.canetteEnergie + " ⚡ et +" + BAL.canetteSoif + " de soif 💧 tout de suite, mais " + BAL.canetteContrecoup + " ⚡ de repos en moins cette nuit · il en reste " + compter("canette")) + '</small></span></button>';
-  // Boire / manger une ration en plus
-  [["eau", "bouteille", "Boire une ration d’eau", "soif", x.soif], ["nour", "conserve", "Manger une ration", "faim", x.faim]].forEach(function(r){
+    return tuileSoin("heal", i + ":" + k, icone(k), majuscule(OBJETS[k].nom.replace(/^Boîte d’/, "")), "+" + gain + " PV", "×" + G.stock.n[k] + (perdu >= 10 ? " · " + perdu + " de trop" : ""), true, k === conseil ? " conseil" : "");
+  }).join("");
+  h += '</div></div>';
+  // Boire et manger : canette, ration d'eau, ration de nourriture, plats cuisinés
+  var t = [];
+  var raison = !compter("canette") ? "plus aucune" : x.canette ? "déjà bu aujourd’hui" : x.en >= 100 ? "énergie pleine" : "";
+  t.push(tuileSoin("boire", i, icone("canette"), "Canette", "+" + BAL.canetteEnergie + " ⚡", raison || "×" + compter("canette") + " · −" + BAL.canetteContrecoup + " ⚡ la nuit", peutBoire(x)));
+  [["eau", "bouteille", "Ration d’eau", "💧", x.soif, BAL.soifParJour], ["nour", "conserve", "Ration", "🥫", x.faim, BAL.faimParJour]].forEach(function(r){
     var ok = peutPrendreRation(x, r[0]), dispo = rations(r[0]);
-    h += '<button class="loc craft" data-act="ration" data-id="' + i + ':' + r[0] + '"' + (ok ? "" : " disabled") + '><span class="em">' + icone(r[1]) + '</span><span class="eqt"><b>' + r[2] + '</b><small>'
-      + (!dispo ? "Plus rien au refuge" : r[4] > seuilRation(r[0]) ? "Pas besoin : " + r[3] + " " + r[4] + " / 100, la ration de la nuit suffit" : "+" + (r[0] === "eau" ? BAL.soifParJour : BAL.faimParJour) + " de " + r[3] + " (" + r[3] + " : " + r[4] + " / 100) · il en reste " + dispo) + '</small></span></button>';
+    t.push(tuileSoin("ration", i + ":" + r[0], icone(r[1]), r[2], "+" + r[5] + " " + r[3], !dispo ? "plus rien" : r[4] > seuilRation(r[0]) ? "pas besoin" : "×" + dispo, ok));
   });
   var gp = {}; platsDispo().forEach(function(o){ gp[o.id] = (gp[o.id] || 0) + 1; });
   Object.keys(gp).forEach(function(pid){
     var P = OBJETS[pid].plat, ok = x.al && x.faim <= 100 - P.faim / 2;
-    h += '<button class="loc craft" data-act="plat" data-id="' + i + ':' + pid + '"' + (ok ? "" : " disabled") + '><span class="em">' + icone(pid) + '</span><span class="eqt"><b>Manger : ' + OBJETS[pid].nom + '</b><small>'
-      + (ok ? OBJETS[pid].desc.replace(/ \(se gard.*\)$/, "") + " · il en reste " + gp[pid] : "Pas faim (faim " + x.faim + " / 100) : la nuit, chacun mange un plat s’il y en a") + '</small></span></button>';
+    var eff = "+" + P.faim + " 🥫" + (P.moral ? " +" + P.moral + " 🙂" : "") + (P.pv ? " +" + P.pv + " ❤️" : "");
+    t.push(tuileSoin("plat", i + ":" + pid, icone(pid), OBJETS[pid].nom, eff, ok ? "×" + gp[pid] : "pas faim", ok));
   });
-  h += '<p class="sub">🌙 Chaque nuit, chacun boit et mange déjà <b>1 ration</b> automatiquement, sans gaspillage (et 1 de plus si sa jauge tombe sous ' + BAL.rattrapage + '). Une ration en plus ne sert qu’en cas d’urgence, quand une jauge est basse.</p>';
-  show(h + BTN_FERMER());
+  h += '<div class="mf-bloc"><p class="mf-titre">🍽️ Boire et manger</p><div class="st-grille">' + t.join("") + '</div></div>';
+  h += '<p class="st-note">🌙 La nuit, chacun boit et mange déjà 1 ration (2 si sa jauge passe sous ' + BAL.rattrapage + ') : n’en donne en plus qu’en cas d’urgence.</p></div>';
+  show(h);
 }
 
 /* ---------- Marché de quartier ---------- */
