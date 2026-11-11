@@ -2331,3 +2331,7 @@ body:not(.pc) .sheet.a-onglets{height:88%}
 .sheet .tuiles + .titre-butin{margin-top:12px}
 .sheet .lj + .row,.sheet .puces + .row,.sheet .journal + .row{margin-top:12px}
 .sheet .fil + .row,.sheet .fil + .loc{margin-top:12px}
+/* Coches des cases (2026-11-11, retour de Fabien : « un check suffit ») : l'icône peinte seule, sans rond vert derrière */
+.islot .pret,.bd-ico .pret,.vt-p .pret{background:none;box-shadow:none;border-radius:0}
+.islot .pret img.ico-img,.bd-ico .pret img.ico-img,.vt-p .pret img.ico-img{width:20px!important;height:20px!important;filter:drop-shadow(0 1px 1px rgba(0,0,0,.5))!important;opacity:1!important}
+.islot .pret img.ico-img{width:17px!important;height:17px!important}
