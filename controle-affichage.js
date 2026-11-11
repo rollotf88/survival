@@ -47,7 +47,7 @@ function controleAffichage(){
   // 6) zone centrale qui déborde
   var st = document.querySelector(".stage"); if(st && st.scrollHeight > st.clientHeight + 1) pb.push("La zone centrale déborde de " + (st.scrollHeight - st.clientHeight) + " px");
   // 7) les boutons du bas ont la même largeur
-  var larg = q("#app .acts .btn").filter(vis).map(function(b){ return Math.round(rect(b).width); });
+  var larg = q("#app .acts .btn:not(.bt-pieces)").filter(vis).map(function(b){ return Math.round(rect(b).width); });
   if(larg.length > 1 && Math.max.apply(null, larg) - Math.min.apply(null, larg) > 2) pb.push("Boutons du bas de tailles différentes : " + larg.join(", "));
   // 8) fenêtre ouverte qui dépasse de l'écran
   var sh = document.querySelector("#modal"); if(sh && sh.style.display === "flex"){ var r = rect(document.getElementById("sheet")); if(r.top < 0) pb.push("La fenêtre dépasse en haut de l'écran"); }

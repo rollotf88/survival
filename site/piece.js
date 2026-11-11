@@ -574,3 +574,32 @@ function openTrophees(){
   if(c){ var Z2 = ZOMBIES.find(function(z){ return z.id === c.id; }); h += '<p class="titre-butin">💀 Encore en liberté</p><p>' + Z2.nom + ' (' + c.pv + ' / ' + c.pvMax + ' PV) rôde en ville' + (possede(function(o){ return o.radio; }) ? ", près " + de(leLieu(LIEUX[c.lieu].nom)).replace(/^de le /, "du ").replace(/^de les /, "des ") + "." : ". Une radio dirait où.") + '</p>'; }
   show(h + BTN_FERMER());
 }
+
+/* ---------- Accès rapide aux pièces (2026-11-11, idée de Fabien) ----------
+   Bouton maison à droite de « Dormir » : une vignette par pièce visible (découpée dans sa propre image),
+   la pièce actuelle encadrée, une pastille quand il s'y passe quelque chose. Un toucher = on y va. */
+function imagePiece(P){ return typeof P.img === "function" ? P.img() : P.img; }
+function pastillePiece(P){
+  if(P.id === "chambre" && G.m && !G.m.some(peutSortir)) return "Dormir";
+  if(P.id === "bastionSalle" && typeof opAttention === "function" && opAttention()) return "Opération";
+  return "";
+}
+function alertePieces(){ return PIECES.some(function(P, k){ return k !== pieceIdx && pieceVisible(k) && pastillePiece(P); }); }
+function openPieces(){
+  var h = '<h2>' + ic("maisonPavillon", "🏠") + ' Les pièces</h2><div class="pz-grille">';
+  PIECES.forEach(function(P, k){
+    if(!pieceVisible(k)) return;
+    var F = P.cadre, cx = ((F.x0 + F.x1) / 2) / P.l * 100, cy = ((F.y0 + F.y1) / 2) / P.h * 100, pa = pastillePiece(P);
+    h += '<button class="pz-v' + (k === pieceIdx ? " ici" : "") + '" data-act="pieceVa2" data-id="' + k + '">'
+      + '<span class="pz-img" style="background-image:url(\'' + imagePiece(P) + '\');background-position:' + cx.toFixed(1) + '% ' + cy.toFixed(1) + '%"></span>'
+      + (pa ? '<span class="pz-pastille">' + pa + '</span>' : '')
+      + '<span class="pz-nom">' + P.nom.replace(/^Bastion · /, "Bastion : ") + (k === pieceIdx ? ' <small>(ici)</small>' : '') + '</span></button>';
+  });
+  show(h + '</div>' + BTN_FERMER());
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "pieces"){ openPieces(); }
+  else if(a === "pieceVa2"){ var k = +b.getAttribute("data-id"); hide(); if(k !== pieceIdx) allerPiece(k); }
+});

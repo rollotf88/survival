@@ -1664,3 +1664,20 @@ body.pc #modal .ch-app{height:calc(100vh - 96px);max-height:none}
   .ch-rapides{scrollbar-width:thin;padding-bottom:6px}
   .ch-rapides::-webkit-scrollbar{display:block;height:6px}
 }
+
+/* Bouton « Pièces » à droite de Dormir et fenêtre des vignettes */
+.acts .btn.bt-pieces{flex:0 0 auto;padding-left:12px;padding-right:12px;position:relative}
+.acts .btn.bt-pieces .ico{width:22px;height:22px}
+.acts .btn.bt-pieces.alerte::after{content:"";position:absolute;top:3px;right:3px;width:12px;height:12px;border-radius:50%;background:var(--bad);border:2px solid var(--card)}
+@media (max-width:559px){ .acts .btn.bt-pieces{padding-left:9px;padding-right:9px} .acts .btn.bt-pieces .bt-pieces-txt{display:none} .acts .btn.bt-pieces .ico{width:26px;height:26px} }
+.pz-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:7px;margin:0 0 10px}
+.pz-v{position:relative;display:flex;flex-direction:column;padding:0;border:2px solid var(--bois);border-radius:12px;overflow:hidden;background:var(--bg);cursor:pointer;color:var(--ink);box-shadow:0 2px 0 var(--line)}
+.pz-v:hover{border-color:var(--acc)}
+.pz-v.ici{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.pz-img{display:block;width:100%;aspect-ratio:16/10;background-size:cover;background-repeat:no-repeat}
+.pz-nom{font-size:12px;font-weight:800;padding:4px 5px;text-align:center;line-height:1.15}
+.pz-nom small{font-weight:700;opacity:.7}
+.pz-pastille{position:absolute;top:6px;right:6px;background:var(--bad);color:#fff;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.acts:has(> .bt-pieces){grid-template-columns:repeat(4,minmax(0,1fr)) auto}
+@media (max-height:440px){ .pz-grille{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px} .pz-nom{font-size:11px;padding:3px 4px} }
+#piece.compact .zone.invite ~ .zone[data-act="chien"] .etiq{display:none} /* scène minuscule : l’invitation à dormir passe avant l’étiquette de Rex */
