@@ -70,10 +70,16 @@ var PIECES = [
   ]},
   // La cour change selon ce qui est construit : potager (légumes ou bacs vides), récupérateur (tonneau ou non), poules
   { id:"cour", nom:"Cour", img:function(){ var pot = G.ref && G.ref.pot >= 1, eau = G.ref && G.ref.eau >= 1; return "images/piece-cour" + (pot && eau ? "" : pot ? "-pot" : eau ? "-eau" : "-rien") + ".webp"; },
-    l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[ ["images/poules.webp", 600, 637, 810, 800, function(){ return compter("poule") > 0; }] ], zones:[
+    l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:120, y1:800 }, decor:[
+      // Stèles des disparus au pied de la palissade (dessinées en code, prénom gravé)
+      [function(){ return steleSrc(0); }, 598, 540, 662, 650, function(){ return G.dd && G.dd.length > 0; }],
+      [function(){ return steleSrc(1); }, 662, 548, 724, 654, function(){ return G.dd && G.dd.length > 1; }],
+      [function(){ return steleSrc(2); }, 724, 556, 786, 658, function(){ return G.dd && G.dd.length > 2; }],
+      ["images/poules.webp", 600, 637, 810, 800, function(){ return compter("poule") > 0; }] ], zones:[
     ["pPotager",   0, 410, 410, 915, function(){ return ic("ref_pot", "🥕"); }, "Potager", .4],
     ["pRecup",   430, 440, 600, 665, function(){ return ic("ref_eau", "🪣"); }, "Récupérateur", .35],
-    ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3]
+    ["pPoules",  790, 400, 1024, 780, function(){ return ic("poule", "🐔"); }, "Poules", .3],
+    ["pTombes",  600, 520, 785, 660, function(){ return "🕯️"; }, "Tombes", .1, function(){ return G.dd && G.dd.length > 0; }]
   ]},
   // Le bastion du clan (2026-11-10, images Gemini) : ces 3 pièces n'apparaissent que si l'on fait partie d'un clan (si)
   { id:"bastionSalle", nom:"Bastion · grande salle", img:"images/piece-bastion-salle.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:860 }, decor:[], si:function(){ return typeof dansUnClan === "function" && dansUnClan(); }, zones:[
@@ -139,7 +145,7 @@ function placerDecor(dx, dy, s, boite){
   if(boite){ d.style.cssText = "left:" + boite.x + "px;top:" + boite.y + "px;width:" + boite.l + "px;height:" + boite.h + "px;right:auto;bottom:auto;border-radius:12px"; dx -= boite.x; dy -= boite.y; }
   else d.style.cssText = "";
   d.innerHTML = (sceneLieu() ? [] : PIECES[pieceIdx].decor).filter(function(e){ return e[5](); }).map(function(e){
-    return '<img src="' + e[0] + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
+    return '<img src="' + (typeof e[0] === "function" ? e[0]() : e[0]) + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
   }).join("");
 }
 
@@ -305,6 +311,8 @@ document.addEventListener("click", function(e){
   else if(a === "pGardeManger"){ filtreStock = "vivres"; selStock = null; openStock(); }
   else if(a === "pCheminee") openFeu();
   else if(a === "pFoyer") openFoyerClan();
+  else if(a === "pTombes") openTombes();
+  else if(a === "recueillir"){ if(recueillir()){ msgTombes = "🕯️ La famille se recueille en silence. Le moral remonte un peu (+" + BAL.tombes.moral + ")."; render(); if(typeof sauver === "function") sauver(); } openTombes(); }
   else if(a === "pChat"){ if(typeof openChat === "function") openChat(); }
   else if(a === "versSalon"){ hide(); allerPiece(0); }
   else if(a === "feu"){ G.feu = !G.feu; if(!G.feu) G.braises = 0; if(G.feu && typeof son === "function") son("feu"); render(); openFeu(); }
@@ -505,4 +513,32 @@ function openFoyerClan(){
   show('<h2>🔥 Le foyer du bastion</h2><p>Le clan l’entretient jour et nuit : il ne s’éteint jamais. C’est ici que les familles se retrouvent pour les veillées et pour préparer les guerres.</p>'
     + '<p class="sub">Il ne chauffe pas ta maison : ton propre feu s’allume dans la cheminée du salon ou de la chambre (' + (G.feu ? "il est allumé" : "il est éteint") + ').</p>'
     + '<div class="row"><button class="btn alt" data-act="versSalon">🏠 Aller au salon</button><button class="btn" data-act="close">Fermer</button></div>');
+}
+
+/* ---------- Tombes des disparus (2026-11-11, idée validée par Fabien) ----------
+   Une stèle par membre mort au pied de la palissade de la cour (les 3 premiers), la fenêtre les liste tous.
+   Se recueillir : une fois par jour, un peu de moral (BAL.tombes). */
+var msgTombes = "";
+function steleSrc(k){
+  var d = G.dd && G.dd[k], nom = d ? String(d.n).slice(0, 7).replace(/[<>&"]/g, "") : "";
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 54 86">'
+    + '<path d="M7 82 V30 Q7 5 27 5 Q47 5 47 30 V82 Z" fill="#a19d93" stroke="#3b2a1e" stroke-width="3"/>'
+    + '<path d="M12 80 V31 Q12 11 27 11" fill="none" stroke="#c4c0b6" stroke-width="3" stroke-linecap="round" opacity=".7"/>'
+    + '<path d="M27 17 V39 M19 25 H35" stroke="#5d584f" stroke-width="4" stroke-linecap="round"/>'
+    + '<text x="27" y="56" text-anchor="middle" font-family="Georgia,serif" font-size="9" font-weight="bold" fill="#3f3a33">' + nom + '</text>'
+    + '<path d="M2 84 Q10 74 18 81 Q27 72 36 81 Q44 74 52 84 Z" fill="#6f8f3a" stroke="#3b2a1e" stroke-width="2"/>'
+    + '</svg>';
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+function openTombes(){
+  var dd = G.dd || [];
+  var h = '<h2>🕯️ Les tombes</h2><p class="sub">Au fond de la cour, contre la palissade, la famille a enterré ses disparus.</p>';
+  if(msgTombes){ h += '<p class="msg g2">' + msgTombes + '</p>'; msgTombes = ""; }
+  h += dd.length ? '<div class="tombes">' + dd.map(function(d){
+    var x = { nom:d.n, r:d.r, icone:d.ic || "🙂", al:false, hp:0, en:0, faim:0, soif:0 };
+    return '<div class="tombe">' + iconeMembre(x) + '<span class="cl-info"><b>' + echapper(d.n) + '</b><small>' + echapper(d.c || "disparu") + '</small><small>Jour ' + d.j + '</small></span></div>';
+  }).join("") + '</div>' : '<p>Personne n’est mort. Pourvu que ça dure.</p>';
+  if(dd.length) h += '<button class="btn" style="width:100%;margin-top:8px" data-act="recueillir"' + (peutRecueillir() ? "" : " disabled") + '>'
+    + (peutRecueillir() ? "🕯️ Se recueillir (+" + BAL.tombes.moral + " moral)" : "🕯️ Déjà fait aujourd’hui") + '</button>';
+  show(h + BTN_FERMER());
 }

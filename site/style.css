@@ -1469,3 +1469,9 @@ img.ico-img{object-fit:contain;min-width:0;flex-shrink:1;-webkit-user-drag:none;
 .tp-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .tp-bar i{display:block;height:100%;background:#c98a2a}
 .titre-p small{color:var(--mut);white-space:nowrap;font-size:11.5px}
+
+/* Tombes des disparus */
+.tombes{display:flex;flex-direction:column;gap:6px}
+.tombe{display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--bg);border:1.5px solid var(--line)}
+.tombe .portrait{width:48px;height:48px}
+.tombe .cl-info small{display:block;line-height:1.3}

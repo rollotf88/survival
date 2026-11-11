@@ -385,6 +385,9 @@ function exploit(x, k, nb, n){
   TITRES.forEach(function(t){ if(t.k === k && avant < t.n && x.xp[k] >= t.n){ txt = "🏅 " + x.nom + " devient « " + t.nom + " » : " + t.effet + " !"; if(n) n.push(["g2", txt]); } });
   return txt;
 }
+// Tombes de la cour : se recueillir une fois par jour (un peu de moral)
+function peutRecueillir(){ return G.dd && G.dd.length > 0 && G.recueilJour !== G.day; }
+function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day; changerMoral(BAL.tombes.moral); return true; }
 function coutTravail(x){ return BAL.energieCraft - (aTitre(x, "bricoleur") ? BAL.exploits.bricoleur : 0); }
 function coutPour(x, i, voiture){ return Math.max(0, coutEnergie(i, voiture) - remiseEnergie(x)); }
 function peutSortir(x){ return x.al && !x.raid && x.en >= coutMin() - remiseEnergie(x); } // x.raid : volontaire parti au bastion pour le raid de l'immeuble

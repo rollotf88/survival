@@ -289,6 +289,8 @@ var TITRES = [
 ];
 var NOMS_EXPLOITS = { zombies:"zombies abattus", fouilles:"fouilles", crochetages:"serrures crochetées", travaux:"travaux d’atelier", plats:"plats cuisinés", blessures:"blessures graves survécues" };
 BAL.exploits = { eclaireur:5, bricoleur:5, seuilBlessure:20 };
+// Tombes des disparus dans la cour (2026-11-11) : se recueillir une fois par jour
+BAL.tombes = { moral:3 };
 
 /* ---------- Zombies (combat en expédition) ----------
    jour : apparaît à partir de ce jour ; poids : plus il est grand, plus il est fréquent */
