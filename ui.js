@@ -1201,7 +1201,7 @@ var VITRINE = [
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/logo.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des défis quotidiens, une grande horde chaque week-end et un code pour inviter tes amis."]
+  ["images/aube.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des défis quotidiens, une grande horde chaque week-end et un code pour inviter tes amis."]
 ];
 var minuteurVitrine = null;
 function vitrine(){
@@ -1244,12 +1244,13 @@ document.addEventListener("keydown", function(e){
 });
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
-    + '<div class="intro-recit"><p>Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
+    + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
-    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p></div>'
+    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
+    + '<div class="ir-puces"><span>👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span></div></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
-    + '<button class="btn" style="width:100%" data-act="intro">▶ Commencer</button></div>';
+    + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button></div>';
   lancerVitrine();
   if(typeof poserMonde === "function") poserMonde();
 }
