@@ -345,8 +345,8 @@ document.addEventListener("click", function(e){
   else if(a === "piecePrec") allerPiece(pieceIdx - 1);
   else if(a === "pieceSuiv") allerPiece(pieceIdx + 1);
   else if(a === "pieceVa") allerPiece(+b.getAttribute("data-id"));
-  else if(a === "pEtagere"){ guideOnglet = "regles"; guideFiche = null; openGuide(); }
-  else if(a === "pPortraits"){ guideOnglet = "famille"; guideFiche = null; openGuide(); }
+  else if(a === "pEtagere"){ guideOnglet = "regles"; guideVue = null; openGuide(); }
+  else if(a === "pPortraits"){ guideOnglet = "famille"; guideVue = null; openGuide(); }
 });
 
 // Glisser le doigt (ou la souris) de gauche à droite sur l'écran principal pour changer de pièce

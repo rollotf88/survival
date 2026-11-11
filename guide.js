@@ -125,7 +125,7 @@ function caracteristiques(o){
 }
 
 /* ---------- Affichage ---------- */
-var guideOnglet = "regles", guideFiche = null, confirmerNouvelle = false;
+var guideOnglet = "regles", confirmerNouvelle = false;
 var ONGLETS_GUIDE = [["regles","📜","Règles"],["objets","🎒","Objets"],["lieux","🗺️","Lieux"],["zombies","🧟","Zombies"],["famille","👪","Famille"]];
 
 function openMenu(){
@@ -153,43 +153,113 @@ function openMenu(){
   show(h);
 }
 
+/* Le guide en tuiles (2026-11-11, retour de Fabien : « des longs blocs à scroller ») :
+   règles rangées par thème, objets par catégorie, lieux et zombies en tuiles ; chaque tuile ouvre sa fiche.
+   Une recherche en haut filtre les tuiles de l'onglet (et cherche aussi dans le texte des règles). */
+var THEMES_GUIDE = [
+  ["Survivre", "❤️", ["Boire et manger", "L’énergie", "Le froid et le feu", "La nuit", "Les saisons", "Le dernier recours"]],
+  ["Le refuge", "🏠", ["Le refuge", "La cuisine", "Pêche et poules", "La forêt et le bois", "La voiture", "Les tombes"]],
+  ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "L’expérience des survivants"]],
+  ["Progresser", "🏆", ["Score et chapitres", "Les défis", "La grande horde du week-end", "L’héritage"]],
+  ["Les clans", "⚔️", ["Les clans", "Les opérations du clan", "La discussion du clan", "Équipement de guerre", "Le camion du clan"]]
+];
+var guideVue = null, guideCat = null; // guideVue = { t:"regle"|"objet"|"lieu"|"zombie"|"immeuble", id }
+function sansAccents(t){ return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/<[^>]+>/g, " "); }
+function tuileGuide(act, id, ico, nom, q, extra){
+  return '<button class="gtuile' + (extra || "") + '" data-act="' + act + '" data-id="' + id + '" data-q="' + sansAccents(nom + " " + (q || "")).replace(/"/g, "") + '">' + ico + '<small>' + nom + '</small></button>';
+}
+function zombiesGuide(){ return ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse" || z.celebre; }); }
 function openGuide(){
   var h = '<h2>📖 Guide du survivant</h2><div class="tabs onglets">' + ONGLETS_GUIDE.map(function(o){ return '<button class="tab' + (o[0] === guideOnglet ? " on" : "") + '" data-act="gonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
-  if(guideFiche){ h += ficheObjet(guideFiche); }
-  else if(guideOnglet === "regles"){
-    h += reglesGuide().map(function(r){ return '<div class="gsec"><b>' + r[1] + ' ' + r[0] + '</b><p>' + r[2] + '</p></div>'; }).join("");
-  } else if(guideOnglet === "objets"){
-    h += '<p class="sub">Touche un objet pour voir sa fiche.</p>';
-    CATEGORIES.forEach(function(c){
-      var ids = Object.keys(OBJETS).filter(function(id){ return OBJETS[id].cat === c[0]; });
-      if(!ids.length) return;
-      h += '<b class="gcat">' + c[1] + '</b><div class="gobjets">' + ids.map(function(id){ return '<button class="gobj" data-act="gfiche" data-id="' + id + '">' + icone(id) + '<small>' + OBJETS[id].nom + '</small></button>'; }).join("") + '</div>';
-    });
-  } else if(guideOnglet === "lieux"){
-    h += LIEUX.map(function(L){
-      var tags = [DISTANCES[L.distance], "danger " + niveauDanger(L.danger)];
-      if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.secret) tags.push("secret : découvert vers le jour " + L.secret); if(L.jour) tags.push("à partir du jour " + L.jour);
-      return '<div class="gsec"><b>' + iconeLieu(L) + ' ' + L.nom + '</b><p class="sub">' + tags.join(" · ") + '</p><div class="gmini">' + Object.keys(L.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>';
-    }).join("")
-      // L'immeuble du raid (opération de clan) : ses étages, leurs zombies et leur butin
-      + '<div class="gsec"><b>' + ic("cible", "🎯") + ' L’immeuble abandonné <small>· opération de clan</small></b><p class="sub">' + BAL.immeuble.etages.length + ' étages · ' + 4 + ' volontaires du clan · une seule fois par clan · le chef mène le raid</p>'
-      + BAL.immeuble.etages.map(function(E, n){ return '<p class="g-etage"><b>' + (n + 1) + '. ' + E.nom + '</b> ' + E.z.map(function(id){ var T = ZOMBIES.find(function(t){ return t.id === id; }); return '<span class="g-z" title="' + T.nom + '">' + iconeZombie(T) + '</span>'; }).join("")
-        + '</p><div class="gmini">' + Object.keys(E.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div>'; }).join("")
-      + '<p class="sub">Zombies renforcés étage après étage. Butin : ' + BAL.immeuble.sac + ' objets par volontaire debout, ' + BAL.immeuble.remorque + ' de plus avec la remorque du bastion.</p></div>';
-  } else if(guideOnglet === "zombies"){
-    h += ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse" || z.celebre; }).map(function(z){
-      var Et = z.id === "colosse" ? BAL.immeuble.etages[BAL.immeuble.etages.length - 1] : null, pvG = Et ? Math.round(z.pv * Et.pv) : z.pv, dgG = Et ? [z.degats[0] + Et.degats, z.degats[1] + Et.degats] : z.degats;
-      return '<div class="gsec"><b>' + iconeZombie(z) + ' ' + z.nom + '</b><p>' + pvG + ' PV · frappe ' + dgG[0] + ' à ' + dgG[1] + (z.coups ? ' (' + z.coups + ' fois)' : '') + ' · ' + (z.id === "colosse" ? "seulement sur le toit de l’immeuble (opération de clan)" : z.celebre ? "zombie célèbre, à partir du jour " + BAL.celebre.jour : z.jour > 1 ? "apparaît à partir du jour " + z.jour : "dès le premier jour") + (z.desc ? '<br>' + z.desc : '') + '</p></div>';
-    }).join("") + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
+  var V = guideVue, retour = "";
+  if(V){
+    h += ficheGuide(V);
+    retour = { regle:"← Toutes les règles", objet:"← Tous les objets", lieu:"← Tous les lieux", immeuble:"← Tous les lieux", zombie:"← Tous les zombies", trait:"← La famille" }[V.t];
   } else {
-    h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';
-    h += Object.keys(TRAITS).map(function(k){ var T = TRAITS[k]; return '<div class="gsec"><b>' + T.icone + ' ' + T.nom + '</b><p><span class="plus">+ ' + T.plus + '</span><br><span class="moins">− ' + T.moins + '</span></p></div>'; }).join("");
-    h += '<div class="gsec"><b>' + ic("sam", "🧑") + ' Les recrues</b><p>Si un membre meurt, une survivante peut frapper à la porte et prendre sa place (famille de ' + FAMILLE.length + ' au maximum). Elle arrive avec un trait au hasard.</p></div>';
-    h += '<div class="gsec"><b>' + ic("chien", "🐕") + ' Rex, le chien</b><p>Après l’avoir nourri, il reste : +' + BAL.chien.defense + ' de défense la nuit, mais il mange ' + BAL.chien.rations + ' ration chaque soir et part au bout de ' + BAL.chien.nuitsSansManger + ' nuits sans manger.</p></div>';
+    if(guideOnglet !== "famille") h += '<input class="g-cherche" type="search" placeholder="🔍 Chercher dans ' + { regles:"les règles", objets:"les objets", lieux:"les lieux", zombies:"les zombies" }[guideOnglet] + '…" aria-label="Chercher">';
+    if(guideOnglet === "regles"){
+      var R = reglesGuide(), pris = {};
+      var tuile = function(k){ var r = R[k]; pris[k] = 1; return tuileGuide("gregle", k, '<span class="gt-ico">' + r[1] + '</span>', r[0], r[2]); };
+      THEMES_GUIDE.forEach(function(T){
+        var ks = T[2].map(function(t){ return R.findIndex(function(r){ return r[0] === t; }); }).filter(function(k){ return k >= 0; });
+        if(ks.length) h += '<div class="gtheme"><b class="gcat">' + T[1] + ' ' + T[0] + '</b><div class="gtuiles regles">' + ks.map(tuile).join("") + '</div></div>';
+      });
+      var reste = R.map(function(r, k){ return k; }).filter(function(k){ return !pris[k]; });
+      if(reste.length) h += '<div class="gtheme"><b class="gcat">📎 Et aussi</b><div class="gtuiles regles">' + reste.map(tuile).join("") + '</div></div>';
+    } else if(guideOnglet === "objets"){
+      var cats = CATEGORIES.filter(function(c){ return Object.keys(OBJETS).some(function(id){ return OBJETS[id].cat === c[0]; }); });
+      if(!guideCat || !cats.some(function(c){ return c[0] === guideCat; })) guideCat = cats[0][0];
+      h += '<div class="gpuces">' + cats.map(function(c){ return '<button class="gpuce' + (c[0] === guideCat ? " on" : "") + '" data-act="gcat" data-id="' + c[0] + '">' + c[1] + '</button>'; }).join("") + '</div>';
+      h += cats.map(function(c){
+        var ids = Object.keys(OBJETS).filter(function(id){ return OBJETS[id].cat === c[0]; });
+        return '<div class="gtheme gcatobj' + (c[0] === guideCat ? "" : " cache") + '"><div class="gtuiles objets">' + ids.map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom, OBJETS[id].desc); }).join("") + '</div></div>';
+      }).join("");
+    } else if(guideOnglet === "lieux"){
+      h += '<div class="gtheme"><div class="gtuiles lieux">' + LIEUX.map(function(L, i){ return tuileGuide("glieu", i, '<span class="gt-img">' + vignetteLieu(L) + '</span>', L.nom, Object.keys(L.butin).map(function(id){ return OBJETS[id].nom; }).join(" ")); }).join("")
+        + tuileGuide("gimmeuble", 0, '<span class="gt-img"><img class="vign" src="' + BAL.immeuble.exterieur + '" alt=""></span>', "L’immeuble (clan)", "raid opération colosse") + '</div></div>';
+    } else if(guideOnglet === "zombies"){
+      h += '<div class="gtheme"><div class="gtuiles zombies">' + zombiesGuide().map(function(z){ return tuileGuide("gzombie", z.id, '<span class="gt-por">' + iconeZombie(z) + '</span>', z.nom, z.desc, z.celebre ? " celebre" : ""); }).join("") + '</div></div>'
+        + '<p class="sub">Avec les jours, ils arrivent plus souvent à plusieurs. Le bruit (tirs, voiture, porte forcée) attire du monde.</p>';
+    } else {
+      h += '<div class="gsec"><b>👪 La famille</b><p>Au départ, tu peux renommer chacun (10 lettres au plus) et lui choisir un trait de caractère : un atout, mais aussi un défaut.</p></div>';
+      h += '<b class="gcat">Les traits de caractère</b><div class="gtuiles">' + Object.keys(TRAITS).map(function(k){ var T = TRAITS[k]; return tuileGuide("gtrait", k, '<span class="gt-ico">' + T.icone + '</span>', T.nom, T.plus + " " + T.moins); }).join("") + '</div>';
+      h += '<div class="gsec"><b>' + ic("sam", "🧑") + ' Les recrues</b><p>Si un membre meurt, une survivante peut frapper à la porte et prendre sa place (famille de ' + FAMILLE.length + ' au maximum). Elle arrive avec un trait au hasard.</p></div>';
+      h += '<div class="gsec"><b>' + ic("chien", "🐕") + ' Rex, le chien</b><p>Après l’avoir nourri, il reste : +' + BAL.chien.defense + ' de défense la nuit, mais il mange ' + BAL.chien.rations + ' ration chaque soir et part au bout de ' + BAL.chien.nuitsSansManger + ' nuits sans manger.</p></div>';
+    }
+    h += '<p class="sub g-rien cache">Rien ne correspond à ta recherche.</p>';
   }
-  show(h + (guideFiche ? '<div class="row"><button class="btn alt" data-act="gretour">← Tous les objets</button><button class="btn alt" data-act="close">Fermer</button></div>'
+  show(h + (V ? '<div class="row"><button class="btn alt" data-act="gretour">' + retour + '</button><button class="btn alt" data-act="close">Fermer</button></div>'
     : '<div class="row"><button class="btn alt" data-act="revoirastuces" aria-label="Revoir les astuces">💡 Astuces</button><button class="btn" data-act="close">Fermer</button></div>'));
   $("sheet").scrollTop = 0;
+}
+// Recherche : cache les tuiles qui ne correspondent pas (dans les objets, cherche dans toutes les catégories)
+function filtrerGuide(q){
+  q = sansAccents(q).trim();
+  var sh = $("sheet"), n = 0;
+  sh.querySelectorAll(".gtuile").forEach(function(t){ var ok = !q || t.getAttribute("data-q").indexOf(q) >= 0; t.classList.toggle("cache", !ok); if(ok) n++; });
+  sh.querySelectorAll(".gtheme:not(.gcatobj)").forEach(function(T){ T.classList.toggle("cache", !T.querySelector(".gtuile:not(.cache)")); });
+  if(guideOnglet === "objets"){
+    var cats = sh.querySelectorAll(".gcatobj"), idx = [].map.call(sh.querySelectorAll(".gpuce"), function(b){ return b.classList.contains("on"); });
+    cats.forEach(function(T, k){ T.classList.toggle("cache", q ? !T.querySelector(".gtuile:not(.cache)") : !idx[k]); });
+    var pu = sh.querySelector(".gpuces"); if(pu) pu.classList.toggle("estompe", !!q);
+  }
+  var rien = sh.querySelector(".g-rien"); if(rien) rien.classList.toggle("cache", n > 0);
+}
+document.addEventListener("input", function(e){ if(e.target.classList && e.target.classList.contains("g-cherche")) filtrerGuide(e.target.value); });
+// Fiche ouverte depuis une tuile
+function ficheGuide(V){
+  if(V.t === "objet") return ficheObjet(V.id);
+  if(V.t === "regle"){
+    var R = reglesGuide(), r = R[V.id], pre = R[V.id - 1], sui = R[+V.id + 1];
+    return '<div class="gfiche"><h3>' + r[1] + ' ' + r[0] + '</h3><p>' + r[2] + '</p></div>'
+      + '<div class="gnav">' + (pre ? '<button class="lien-retour" data-act="gregle" data-id="' + (V.id - 1) + '">‹ ' + pre[0] + '</button>' : '<span></span>')
+      + (sui ? '<button class="lien-retour" data-act="gregle" data-id="' + (+V.id + 1) + '">' + sui[0] + ' ›</button>' : '') + '</div>';
+  }
+  if(V.t === "lieu"){
+    var L = LIEUX[V.id], img = imageLieu(L);
+    var tags = [DISTANCES[L.distance], "danger " + niveauDanger(L.danger)];
+    if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.bois) tags.push("bois (une hache en main)"); if(L.secret) tags.push("secret : découvert vers le jour " + L.secret); if(L.jour) tags.push("à partir du jour " + L.jour);
+    return (img ? '<img class="gimg" src="' + img + '" alt="">' : '') + '<div class="gfiche"><h3>' + iconeLieu(L) + ' ' + L.nom + '</h3><p class="sub">' + tags.join(" · ") + '</p></div>'
+      + '<b class="gcat">Ce qu’on peut y trouver</b><div class="gtuiles objets">' + Object.keys(L.butin).map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom); }).join("") + '</div>';
+  }
+  if(V.t === "immeuble"){
+    return '<img class="gimg" src="' + BAL.immeuble.exterieur + '" alt=""><div class="gfiche"><h3>' + ic("cible", "🎯") + ' L’immeuble abandonné</h3><p class="sub">Opération de clan · ' + BAL.immeuble.etages.length + ' étages · 4 à 5 volontaires · une seule fois par clan · le chef mène le raid</p></div>'
+      + BAL.immeuble.etages.map(function(E, n){ return '<div class="gsec"><b>' + (n + 1) + '. ' + E.nom + '</b> <span class="g-zs">' + E.z.map(function(id){ var T = ZOMBIES.find(function(t){ return t.id === id; }); return '<span class="g-z" title="' + T.nom + '">' + iconeZombie(T) + '</span>'; }).join("")
+        + '</span><div class="gmini">' + Object.keys(E.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>'; }).join("")
+      + '<p class="sub">Zombies renforcés étage après étage. Butin : ' + BAL.immeuble.sac + ' objets par volontaire debout, ' + BAL.immeuble.remorque + ' de plus avec la remorque du bastion.</p>';
+  }
+  if(V.t === "trait"){
+    var T = TRAITS[V.id];
+    return '<div class="gfiche"><h3>' + T.icone + ' ' + T.nom + '</h3><p><span class="plus">+ ' + T.plus + '</span></p><p><span class="moins">− ' + T.moins + '</span></p></div>';
+  }
+  if(V.t === "zombie"){
+    var z = ZOMBIES.find(function(t){ return t.id === V.id; }), Et = z.id === "colosse" ? BAL.immeuble.etages[BAL.immeuble.etages.length - 1] : null, pvG = Et ? Math.round(z.pv * Et.pv) : z.pv, dgG = Et ? [z.degats[0] + Et.degats, z.degats[1] + Et.degats] : z.degats;
+    var sp = spriteZombie(z);
+    return '<div class="gzfiche">' + (sp ? '<img class="gz-sprite" src="' + sp + '" alt="">' : '<span class="gt-por">' + iconeZombie(z) + '</span>') + '<div class="gfiche"><h3>' + z.nom + '</h3>'
+      + '<div class="tuiles"><div class="tuile"><b>' + pvG + '</b><small>PV</small></div><div class="tuile"><b>' + dgG[0] + '-' + dgG[1] + '</b><small>dégâts' + (z.coups ? ' ×' + z.coups : '') + '</small></div><div class="tuile"><b>' + (z.id === "colosse" ? "toit" : z.celebre ? "j. " + BAL.celebre.jour : "j. " + z.jour) + '</b><small>' + (z.id === "colosse" ? "de l’immeuble" : z.celebre ? "célèbre" : "dès le jour") + '</small></div></div>'
+      + '<p>' + (z.desc || "") + '</p></div></div>';
+  }
+  return "";
 }
 
 function ficheObjet(id){
@@ -215,10 +285,16 @@ document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act"), id = b.getAttribute("data-id");
   if(a === "menu"){ confirmerNouvelle = false; openMenu(); }
-  else if(a === "guide"){ guideFiche = null; openGuide(); }
-  else if(a === "gonglet"){ guideOnglet = id; guideFiche = null; openGuide(); }
-  else if(a === "gfiche"){ guideFiche = id; guideOnglet = "objets"; openGuide(); }
-  else if(a === "gretour"){ guideFiche = null; openGuide(); }
+  else if(a === "guide"){ guideVue = null; openGuide(); }
+  else if(a === "gonglet"){ guideOnglet = id; guideVue = null; openGuide(); }
+  else if(a === "gfiche"){ guideVue = { t:"objet", id:id, de:guideVue }; guideOnglet = guideVue.de && guideVue.de.t === "lieu" ? "lieux" : "objets"; if(guideOnglet === "objets") guideCat = OBJETS[id].cat; openGuide(); }
+  else if(a === "gregle"){ guideVue = { t:"regle", id:+id }; guideOnglet = "regles"; openGuide(); }
+  else if(a === "glieu"){ guideVue = { t:"lieu", id:+id }; openGuide(); }
+  else if(a === "gimmeuble"){ guideVue = { t:"immeuble", id:0 }; openGuide(); }
+  else if(a === "gtrait"){ guideVue = { t:"trait", id:id }; openGuide(); }
+  else if(a === "gzombie"){ guideVue = { t:"zombie", id:id }; openGuide(); }
+  else if(a === "gcat"){ guideCat = id; openGuide(); }
+  else if(a === "gretour"){ guideVue = guideVue && guideVue.de ? guideVue.de : null; openGuide(); }
   else if(a === "menuson"){ basculerSon(); openMenu(); }
   else if(a === "menumusique"){ basculerMusique(); openMenu(); }
   else if(a === "revoirastuces"){ astucesVues = {}; try{ localStorage.removeItem("survival_astuces"); }catch(err){} hide(); render(); }

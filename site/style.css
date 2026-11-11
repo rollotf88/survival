@@ -1551,3 +1551,43 @@ body.pc .chapcourt .ch-saison{display:block;font-size:.85em;opacity:.9}
   body.fond .scene .mc .etats{position:absolute;top:15px;right:3px;flex-direction:column;gap:2px;margin:0}
   body.fond .scene .mc .etats .ico,body.fond .scene .mc .etats img.ico-img,body.fond .scene .mc .etats .zz{width:14px;height:14px;font-size:9px}
 }
+/* Guide du survivant en tuiles (2026-11-11) : thèmes, tuiles qui ouvrent une fiche, recherche */
+.g-cherche{width:100%;box-sizing:border-box;margin:0 0 8px;padding:8px 10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
+.gtheme{margin:0 0 6px}
+.gtheme .gcat{margin:4px 0}
+.gtuiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.gtuiles.objets{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}
+.gtuiles.lieux{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.gtuile{border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:6px 4px 5px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--ink);box-shadow:0 2px 0 var(--line);min-width:0}
+.gtuile:hover{border-color:var(--acc)}
+.gtuile small{font-size:11.5px;line-height:1.15;font-weight:800;text-align:center;overflow-wrap:anywhere}
+.gtuile .gt-ico{font-size:26px;line-height:1}
+.gtuile .gt-ico .ico,.gtuile .gt-ico img.ico-img{width:30px;height:30px}
+.gtuiles.objets .gtuile > .ico,.gtuiles.objets .gtuile > img.ico-img{width:36px;height:36px}
+.gtuile .gt-img{display:block;width:100%;aspect-ratio:16/9;border-radius:8px;overflow:hidden;line-height:0}
+.gtuile .gt-img img.vign{width:100%;height:100%;object-fit:cover}
+.gtuile .gt-img > .ico{width:46px;height:46px;margin:6px auto}
+.gtuile .gt-por .portrait{width:56px;height:56px}
+.gtuile.celebre{border-color:#8a2b22}
+.gtuile.cache,.gtheme.cache,.g-rien.cache{display:none}
+.gpuces{display:flex;gap:5px;overflow-x:auto;padding:0 0 6px;margin:0 0 6px;scrollbar-width:thin}
+.gpuce{flex:0 0 auto;border:2px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink);padding:3px 10px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap}
+.gpuce.on{background:var(--acc);color:var(--accink);border-color:var(--ink)}
+.gpuces.estompe{opacity:.4}
+.gfiche{border:2px solid var(--line);border-radius:12px;background:var(--bg);padding:8px 12px;margin:0 0 8px}
+.gfiche h3{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:6px}
+.gfiche h3 .ico,.gfiche h3 img.ico-img{width:28px;height:28px}
+.gfiche p{margin:4px 0 0;font-size:14.5px;line-height:1.45}
+.gnav{display:flex;justify-content:space-between;gap:8px;margin:0 0 6px;font-size:13px}
+.gimg{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;margin:0 0 8px;border:2px solid var(--bois)}
+.gzfiche{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:end}
+.gzfiche .gz-sprite{height:190px;width:auto;max-width:130px;object-fit:contain;filter:drop-shadow(0 4px 3px rgba(0,0,0,.4))}
+.gzfiche .gt-por .portrait{width:90px;height:90px}
+.gzfiche .tuiles{margin:6px 0}
+.gtraits{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0 8px}
+@media (max-width:420px){ .gzfiche .gz-sprite{height:150px;max-width:96px} }
+.gtuiles.regles{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px}
+.gtuiles.regles .gtuile{flex-direction:row;justify-content:flex-start;gap:7px;padding:5px 8px;text-align:left}
+.gtuiles.regles .gtuile small{text-align:left;font-size:12.5px}
+.gtuiles.regles .gt-ico{font-size:22px;flex:0 0 auto}
+.gtuiles.regles .gt-ico .ico,.gtuiles.regles .gt-ico img.ico-img{width:24px;height:24px}
