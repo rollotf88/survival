@@ -650,7 +650,7 @@ var FEUX_PIECE = {
    Un membre trop fatigué pour sortir se repose dans SON lit (Papa : matelas de gauche, Maman : de droite,
    Léo : lit du bas, Emma : lit du haut). Chaque lit occupé est un morceau découpé dans une retouche Gemini de la
    chambre, posé au-dessus du feu et des fenêtres ; ils se combinent. Les recrues n'ont pas encore leur image. */
-var LITS_CHAMBRE = { "Papa":[98, 540, 452, 790, "papa"], "Maman":[628, 540, 992, 790, "maman"], "Léo":[338, 432, 722, 562, "leo"], "Emma":[330, 250, 722, 352, "emma"] };
+var LITS_CHAMBRE = { "Emma":[330, 250, 722, 352, "emma"], "Léo":[338, 432, 722, 562, "leo"], "Papa":[98, 495, 452, 790, "papa"], "Maman":[628, 495, 992, 790, "maman"] }; // ordre de pose : du fond vers le devant
 function enSortie(x){ var i = G.m.indexOf(x); return !!(G.exp && G.exp.equipe && G.exp.equipe.indexOf(i) >= 0); }
 function auLit(r){ var x = G && G.m && G.m.find(function(y){ return (y.r || y.nom) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x)); }
 (function(){
