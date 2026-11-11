@@ -2002,3 +2002,33 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .siph-tube{position:relative;height:30px;border-radius:999px;background:linear-gradient(180deg,#3a2a1c,#5a4330);border:3px solid var(--bois);box-shadow:inset 0 3px 6px rgba(0,0,0,.5),0 3px 0 var(--line);overflow:hidden}
 .siph-zone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#8fd16a,#4f9a34);opacity:.85}
 .siph-niv{position:absolute;top:-4px;bottom:-4px;width:10px;margin-left:-5px;border-radius:6px;background:linear-gradient(180deg,#ffd76a,#e09a2f);box-shadow:0 0 10px rgba(255,200,80,.9),0 0 0 2px #2b1a08}
+
+/* ---------- Accueil « Partie en cours » sur téléphone (2026-11-11) ---------- */
+.acc-mob h2{margin:0 0 8px}
+.acc-mob .acc-carte{border:2px solid var(--bois);border-radius:16px;background:var(--bg);padding:10px 12px;box-shadow:0 3px 0 var(--line);margin-bottom:10px}
+.acc-mob .mf-titre{margin:0;font-size:11.5px}
+.acc-mob .acc-ligne{display:flex;align-items:baseline;justify-content:space-between;margin:2px 0 8px}
+.acc-mob .acc-jour{font-family:Bangers,system-ui,sans-serif;font-size:36px;line-height:1;letter-spacing:1px;color:var(--bois)}
+.acc-mob .acc-score{font-size:20px;font-weight:900}
+.acc-mob .acc-score small{font-size:12px;font-weight:700;opacity:.7}
+.acc-mob .acc-score .ico,.acc-mob .acc-score img.emo{width:20px;height:20px;vertical-align:-3px}
+.acc-mob .acc-famille{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.acc-mob .acc-m{display:flex;flex-direction:column;align-items:center;gap:1px;text-align:center;min-width:0}
+.acc-mob .acc-por{width:52px;height:52px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 2.5px var(--bois),0 2px 0 3px var(--line);display:grid;place-items:center;font-size:34px;background:var(--card)}
+.acc-mob .acc-por .portrait{width:100%;height:100%;border-radius:0}
+.acc-mob .acc-por .portrait img{width:100%;height:100%;object-fit:cover}
+.acc-mob .acc-m b{font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.5px;font-size:16px;margin-top:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-mob .acc-m small{font-size:11px;opacity:.8;line-height:1.15}
+.acc-mob .acc-m small .ico,.acc-mob .acc-m small img.emo{width:12px;height:12px;vertical-align:-2px}
+.acc-mob .acc-m.mort{opacity:.6}
+.acc-mob .monde-place{margin-bottom:10px}
+.acc-mob .acc-go{width:100%;font-size:19px;padding:13px;border-radius:14px;margin-bottom:8px}
+.acc-mob .acc-sec{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acc-mob .acc-sec .btn{font-size:14.5px;padding:10px 6px;border-radius:12px}
+.acc-mob .acc-nouv{color:var(--bad)}
+.acc-mob .acc-note{display:block;font-size:11.5px;color:var(--mut);text-align:center;margin-top:6px}
+@media (max-height:700px) and (orientation:portrait){.acc-mob .acc-por{width:42px;height:42px}.acc-mob .acc-jour{font-size:30px}.acc-mob .acc-m small{display:none}.acc-mob .acc-note{display:none}}
+@media (orientation:landscape) and (max-height:500px){.acc-mob .acc-por{width:36px;height:36px}.acc-mob .acc-jour{font-size:26px}.acc-mob .acc-m small,.acc-mob .acc-note{display:none}.acc-mob .acc-carte{padding:6px 10px}}
+.acc-mob .acc-ligne{margin:0 0 6px}.acc-mob .acc-carte{margin-bottom:8px}.acc-mob .monde-place{margin-bottom:8px}
+@media (orientation:landscape) and (max-height:500px){.acc-mob{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}.acc-mob .acc-carte{margin:0}.acc-mob .monde-place{display:none}}
+@media (max-height:860px) and (orientation:portrait){.acc-mob .acc-note{display:none}}

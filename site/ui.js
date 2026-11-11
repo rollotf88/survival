@@ -1569,12 +1569,14 @@ if(enCours){
   } else {
   $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
   lancerVitrine();
-  show('<h2>Partie en cours</h2><p>' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + ' · <b>Jour ' + enCours.day + '</b> · ⭐ ' + enCours.score + ' · '
-    + enCours.m.filter(function(x){ return x.al; }).map(function(x){ return iconeMembre(x); }).join(" ") + '</p>'
-    + '<div class="monde-place" data-compact="1"></div>'
-    + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="continuer">▶️ Continuer</button>'
-    + '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guide">📖 Guide du survivant</button>'
-    + '<button class="btn alt" style="width:100%" data-act="nouvelle">🆕 Nouvelle famille (la partie en cours sera perdue)</button>');
+  // Téléphone (2026-11-11, raccord avec la DA) : carte de la partie (jour en grand, score, famille en portraits), gros bouton, deux boutons côte à côte
+  show('<div class="acc-mob"><div class="acc-carte"><p class="mf-titre">Partie en cours · ' + (enCours.seed ? "🏆 classée du " + dateGraine(enCours.seed) : "🎲 libre") + '</p>'
+    + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
+    + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div>'
+    + '<div class="acc-bas"><div class="monde-place" data-compact="1"></div>'
+    + '<button class="btn acc-go" data-act="continuer">▶️ Continuer la partie</button>'
+    + '<div class="acc-sec"><button class="btn alt" data-act="guide">📖 Guide</button><button class="btn alt acc-nouv" data-act="nouvelle">🆕 Nouvelle famille</button></div>'
+    + '<small class="acc-note">Une nouvelle famille efface la partie en cours.</small></div></div>');
   if(typeof poserMonde === "function") poserMonde();
   }
 } else nouvelleFamille();
