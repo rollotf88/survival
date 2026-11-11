@@ -795,18 +795,23 @@ var enVoiture = false, pieceChoisie = null;
 var POS_PIECES = { batterie:[17, 50], roue:[27, 79], courroie:[7, 71] };
 // Onglet Voiture : glisser une pièce du stock sur son emplacement (ou toucher la pièce puis l'emplacement)
 function ongletVoiture(){
+  // Raccord avec la DA (2026-11-11) : état en pastille, dessin dans sa carte, 3 pièces en cases (installée ✔ / manque),
+  // carte de l'essence (jauge épaisse, trajets éloignés possibles, cuve de la station) et bouton de jeu pour le plein
   var V = G.voiture, ok = voitureReparee(), x = artisan();
-  var h = '<p class="sub">' + VOITURE.nom + ' : ' + (ok ? "✅ en état de rouler." : "en panne. Glisse chaque pièce sur son emplacement (" + BAL.energieCraft + " ⚡ au plus reposé" + (x ? "" : " : 😴 tout le monde est trop fatigué") + ").") + '</p>';
-  // Dessin de la voiture (Gemini) avec les emplacements posés à leur place : batterie dans le moteur, roue sur l'essieu, courroie à l'avant
+  var h = '<div class="vt-tete"><b>' + VOITURE.nom + '</b><span class="vt-etat' + (ok ? " ok" : "") + '">' + (ok ? "✅ En état de rouler" : "🔧 En panne") + '</span></div>';
+  if(!ok) h += '<p class="bl-note">Glisse chaque pièce sur son emplacement (' + BAL.energieCraft + ' ⚡ au plus reposé' + (x ? "" : " : 😴 tout le monde est trop fatigué") + ').</p>';
   h += '<div class="garage"><div class="voitimg"><img src="images/voiture-' + (ok ? "ok" : "panne") + '.webp" alt="' + VOITURE.nom + (ok ? " réparée" : " en panne") + '">' + (ok ? "" : VOITURE.pieces.map(function(p){
     var fait = V.installees[p], pos = POS_PIECES[p] || [50, 50];
     return '<button class="pslot' + (fait ? " fait" : "") + (pieceChoisie && !fait ? " attend" : "") + '" style="left:' + pos[0] + '%;top:' + pos[1] + '%" data-slot="' + p + '" data-act="pslot" data-id="' + p + '"' + (fait ? " disabled" : "") + ' aria-label="' + OBJETS[p].nom + (fait ? " : installée" : " : emplacement vide") + '" title="' + OBJETS[p].nom + '"><span class="em">' + (fait ? icone(p) : '<span class="vide">' + icone(p) + '</span>') + '</span></button>';
   }).join("")) + '</div>'
-    + '<p class="pleg">' + VOITURE.pieces.map(function(p){ return icone(p) + ' ' + OBJETS[p].nom + (V.installees[p] ? " ✔" : ""); }).join(" · ") + '</p></div>';
+    + '<div class="vt-pieces">' + VOITURE.pieces.map(function(p){ var f = V.installees[p]; return '<span class="vt-p' + (f ? " ok" : "") + '"><span class="ing2-case">' + icone(p) + (f ? '<i class="pret">✔</i>' : '') + '</span><small>' + (NOM_COURT[p] || OBJETS[p].nom) + '</small></span>'; }).join("") + '</div></div>';
   var dispo = VOITURE.pieces.filter(function(p){ return !V.installees[p] && compter(p) > 0; });
-  if(!ok) h += '<p class="sub">Pièces au refuge :</p><div class="parts">' + (dispo.length ? dispo.map(function(p){ return '<button class="part' + (pieceChoisie === p ? " on" : "") + '" data-piece="' + p + '" data-act="piece" data-id="' + p + '"' + (x ? "" : " disabled") + '>' + icone(p) + '<small>' + OBJETS[p].nom + '</small></button>'; }).join("") : '<small>Aucune pour l’instant. Cherche au Garage auto et à la Zone industrielle.</small>') + '</div>';
-  h += '<p class="sub">⛽ Essence : ' + V.essence + ' / ' + VOITURE.reservoir + ' L</p>' + barre("⛽", Math.round(V.essence / VOITURE.reservoir * 100));
-  h += '<button class="loc" data-act="plein"' + (compter("jerrican") && V.essence < VOITURE.reservoir ? "" : " disabled") + '><b>' + icone("jerrican") + ' Faire le plein</b><small>' + compter("jerrican") + ' jerrican' + (compter("jerrican") > 1 ? "s" : "") + ' au refuge · +' + VOITURE.litresJerrican + ' L chacun</small></button>';
+  if(!ok) h += '<p class="titre-butin">Pièces au refuge</p><div class="parts">' + (dispo.length ? dispo.map(function(p){ return '<button class="part' + (pieceChoisie === p ? " on" : "") + '" data-piece="' + p + '" data-act="piece" data-id="' + p + '"' + (x ? "" : " disabled") + '>' + icone(p) + '<small>' + OBJETS[p].nom + '</small></button>'; }).join("") : '<small>Aucune pour l’instant. Cherche au Garage auto et à la Zone industrielle.</small>') + '</div>';
+  var pc = Math.round(V.essence / VOITURE.reservoir * 100), trajet = VOITURE.litresParDistance * Math.min.apply(null, LIEUX.filter(function(L){ return L.voiture; }).map(function(L){ return L.distance; })), nt = Math.floor(V.essence / trajet);
+  var ist = LIEUX.findIndex(function(L){ return L.cuve; }), cuve = ist >= 0 && typeof cuveLieu === "function" ? cuveLieu(ist) : null;
+  h += '<div class="vt-ess"><span class="ing2-case">' + icone("jerrican") + '</span><span class="vt-ess-t"><span class="vt-ess-l"><b>' + V.essence + '</b> / ' + VOITURE.reservoir + ' L</span><span class="vt-jauge"><i class="' + niveau(pc) + '" style="width:' + pc + '%"></i></span><small>' + (nt ? "≈ " + nt + " trajet" + (nt > 1 ? "s" : "") + " vers une zone éloignée" : "Pas assez pour une zone éloignée (" + trajet + " L)") + (cuve !== null ? " · cuve de la station : " + cuve + " L" : "") + '</small></span></div>';
+  var nj = compter("jerrican"), peut = nj && V.essence < VOITURE.reservoir;
+  h += '<button class="btn btn-jeu vt-plein" data-act="plein"' + (peut ? "" : " disabled") + '>' + icone("jerrican") + ' Faire le plein <small>' + (nj ? nj + " jerrican" + (nj > 1 ? "s" : "") + " · +" + VOITURE.litresJerrican + " L chacun" : "aucun jerrican") + '</small></button>';
   return h;
 }
 var ongletRef = "construire", msgAtelier = "";

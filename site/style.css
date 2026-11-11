@@ -2298,3 +2298,29 @@ ol.classement li > b{min-width:0;overflow:hidden}
 .rf-sol i.apres{background:rgba(70,140,60,.35)}
 .rf-sol i.moy{background:#d98e2b}.rf-sol i.ko,.rf-sol i.bas{background:var(--bad)}
 .rf-sol i.mid{background:#d98e2b}.rf-sol i.lo{background:var(--bad)}
+
+/* ---------- Onglet Voiture (2026-11-11) ---------- */
+.vt-tete{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 6px}
+.vt-tete b{font-size:15px}
+.vt-etat{font-size:12px;font-weight:900;padding:2px 10px;border-radius:999px;border:1.5px solid var(--bad);color:var(--bad);background:var(--bg);white-space:nowrap}
+.vt-etat.ok{border-color:var(--ok);color:var(--ok)}
+.vt-etat .ico,.vt-etat img.emo{width:14px;height:14px;vertical-align:-2px}
+.garage{border-radius:16px;box-shadow:0 3px 0 var(--line)}
+.vt-pieces{display:flex;justify-content:center;gap:14px;margin:6px 0 2px}
+.vt-p{display:flex;flex-direction:column;align-items:center;gap:2px}
+.vt-p .ing2-case{position:relative;width:44px;height:44px}
+.vt-p .ing2-case .ico,.vt-p .ing2-case img.ico-img{width:28px;height:28px}
+.vt-p:not(.ok) .ing2-case > .ico,.vt-p:not(.ok) .ing2-case > img.ico-img{filter:grayscale(1);opacity:.4}
+.vt-p .pret{position:absolute;right:-4px;top:-4px;width:18px;height:18px;border-radius:50%;background:var(--ok);color:#fff;font-style:normal;font-size:11px;font-weight:900;display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
+.vt-p small{font-size:11px;font-weight:800;color:var(--mut)}.vt-p.ok small{color:var(--ink)}
+.vt-ess{display:flex;align-items:center;gap:10px;margin:10px 0 8px;padding:8px 10px;border:2px solid var(--bois);border-radius:16px;background:var(--bg);box-shadow:0 3px 0 var(--line)}
+.vt-ess > .ing2-case{flex:none;width:50px;height:50px}.vt-ess > .ing2-case .ico,.vt-ess > .ing2-case img.ico-img{width:32px;height:32px}
+.vt-ess-t{flex:1;min-width:0}
+.vt-ess-l{font-size:13px;font-weight:800;color:var(--mut)}.vt-ess-l b{font-size:22px;color:var(--ink)}
+.vt-jauge{display:block;height:10px;border-radius:999px;background:rgba(0,0,0,.13);box-shadow:inset 0 1px 1px rgba(0,0,0,.15);overflow:hidden;margin:3px 0}
+.vt-jauge i{display:block;height:100%;border-radius:999px;background:var(--ok)}.vt-jauge i.mid{background:#d98e2b}.vt-jauge i.lo{background:var(--bad)}
+.vt-ess small{display:block;font-size:11.5px;color:var(--mut);line-height:1.25}
+.vt-plein{width:100%;flex-wrap:wrap}
+.vt-plein small{font-size:12px;font-weight:700;opacity:.8}
+.vt-plein .ico,.vt-plein img.ico-img{width:24px;height:24px}
+.garage .pleg{display:none}
