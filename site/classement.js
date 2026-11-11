@@ -543,7 +543,7 @@ var CAMION_BASTION = {
   tourelle:  { nom:"Tourelle", icone:"🎯", ico:"tourelle", effet:function(l){ return l ? "À chaque tour, la tourelle tire sur le défenseur le plus faible (" + Math.round(BAL.assaut.tourelle * l) + " à " + (Math.round(BAL.assaut.tourelle * l) + 2) + " dégâts ; les gilets de l’armurerie adverse la freinent)." : "Pas de tourelle : toute l’attaque repose sur l’équipe."; } }
 };
 function defBastion(k){ return DEF_BASTION[k] || CAMION_BASTION[k]; }
-var etatBastion = null, ongletBastion = "reserve", msgBastion = "";
+var etatBastion = null, ongletBastion = "reserve", msgBastion = "", selDefBastion = null;
 function openBastion(onglet){
   if(onglet) ongletBastion = onglet;
   show('<h2>' + ic("bastion", "🏰") + ' Le bastion</h2><p class="sub">Chargement…</p>' + BTN_FERMER());
@@ -572,17 +572,23 @@ function afficherBastion(){
       var tot = (B.def.parebuffle || 0) + (B.def.blindage || 0) + (B.def.tourelle || 0);
       h += '<img class="camion-img" src="images/camion' + ((B.def.parebuffle && B.def.blindage && B.def.tourelle) ? "-plein" : "") + '.webp" alt="" onerror="this.remove()"><p class="sub">Le camion du clan conduit chaque équipe à l’assaut. Ses améliorations servent à tous les membres.' + (tot ? "" : " Il est encore nu : améliore-le avec la réserve.") + '</p>';
     }
-    h += Object.keys(LISTE).map(function(k){
-      var D = LISTE[k], l = B.def[k] || 0, c = B.couts[k];
-      var manque = c ? Object.keys(c).filter(function(m){ return !((B.reserve[m] || 0) >= c[m]); }) : [];
-      var ing = c ? '<div class="ings2">' + Object.keys(c).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= c[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + c[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>' : '';
-      return '<div class="bast-def"><div class="invfiche"><span class="em">' + ic(D.ico, D.icone) + '</span><span class="eqt"><b>' + D.nom + ' · ' + l + ' / ' + B.max[k] + '</b><small>' + D.effet(l) + '</small></span></div>'
-        + (c ? ing + '<button class="btn" style="width:100%" data-act="bastconstruire" data-id="' + k + '"' + (manque.length ? " disabled" : "") + '>' + (manque.length ? "❌ Il manque des matériaux dans la réserve" : "🔨 Construire avec la réserve") + '</button>' : '<p class="etat ok">⭐ Niveau maximum</p>') + '</div>';
-    }).join("");
+    // Raccord avec la DA (2026-11-11) : une case par défense (niveau en pastille, coche verte si on peut construire), la fiche de la case choisie dessous
+    var cles = Object.keys(LISTE), peut = function(k){ var c = B.couts[k]; return c && Object.keys(c).every(function(m){ return (B.reserve[m] || 0) >= c[m]; }); };
+    if(cles.indexOf(selDefBastion) < 0) selDefBastion = cles.filter(peut)[0] || cles[0];
+    h += '<div class="bd-zone"><div class="bd-grille">' + cles.map(function(k){ var D = LISTE[k], l = B.def[k] || 0, max = B.max[k];
+      return '<button class="bd-case' + (k === selDefBastion ? " sel" : "") + (l >= max ? " max" : "") + '" data-act="bastdef" data-id="' + k + '"><span class="bd-ico">' + ic(D.ico, D.icone) + (peut(k) ? '<i class="pret">✔</i>' : '') + '</span><b>' + D.nom + '</b><span class="bd-niv">' + l + ' / ' + max + '</span></button>'; }).join("") + '</div>';
+    var k0 = selDefBastion, D0 = LISTE[k0], l0 = B.def[k0] || 0, c0 = B.couts[k0], max0 = B.max[k0];
+    var pips = ''; for(var q = 0; q < max0; q++) pips += '<i class="' + (q < l0 ? "on" : "") + '"></i>';
+    h += '<div class="bd-fiche"><div class="bd-tete"><span class="bd-ico grand">' + ic(D0.ico, D0.icone) + '</span><span><b>' + D0.nom + '</b><span class="bd-pips">' + pips + '</span><small>' + D0.effet(l0) + '</small></span></div>';
+    if(c0){
+      h += '<p class="titre-butin">Niveau ' + (l0 + 1) + ' : il faut dans la réserve</p><div class="ings2">' + Object.keys(c0).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= c0[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + c0[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>';
+      h += '<button class="loc btn-jeu bd-go" data-act="bastconstruire" data-id="' + k0 + '"' + (peut(k0) ? "" : " disabled") + '><b>🔨 Construire</b><small>' + (peut(k0) ? "Payé par la réserve du clan" : "Il manque des matériaux dans la réserve") + '</small></button>';
+    } else h += '<p class="etat ok">⭐ Niveau maximum</p>';
+    h += '</div></div>';
   } else {
     h += B.journal.length ? '<div class="fil">' + B.journal.map(function(j){ return '<div class="lj"><span class="lj-ico">📜</span><span class="lj-txt"><b>' + echapper(j.qui) + '</b> ' + echapper(j.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; })) + ' <small>' + quand(j.t) + '</small></span></div>'; }).join("") + '</div>' : '<p>Rien pour l’instant.</p>';
   }
-  show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
+  show('<button class="lien-retour" data-act="clans">← Mon clan</button>' + h + BTN_FERMER());
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
@@ -590,6 +596,7 @@ document.addEventListener("click", function(e){
   var apres = function(d, ok){ if(d.erreur) msgBastion = "❌ " + d.erreur; else { etatBastion = d.bastion; noterTours(etatBastion.def.tours); msgBastion = ok; } render(); if(typeof sauver === "function") sauver(); afficherBastion(); };
   if(a === "bastion") openBastion();
   else if(a === "bastonglet"){ ongletBastion = id; afficherBastion(); }
+  else if(a === "bastdef"){ selDefBastion = id; afficherBastion(); }
   else if(a === "bastdeposer"){
     if(!G || compter(id) < 1) return;
     var o = {}; o[id] = 1;
