@@ -27,3 +27,10 @@ Même style cartoon peint, un panneau d'affichage en liège dans un cadre en boi
 
 ## 8. Le Colosse (le monstre du toit) — à faire avec la planche de référence des zombies
 Joindre `images/sources/reference-zombies.jpg`. Même style que les zombies en pied du jeu : un zombie gigantesque et massif, deux fois plus large qu'un homme, chair gris-vert boursouflée, restes d'un uniforme de chantier (gilet orange déchiré), barres de fer plantées dans le dos, une main énorme qui traîne au sol, regard vide. Vu en pied, de face légèrement de trois quarts, debout, sur FOND VERT UNI (#00FF00) sans ombre ni sol. Format vertical 3:4, le zombie occupe 90 % de la hauteur. Puis, dans un deuxième message : son portrait (tête et épaules) dans le même cadre que les portraits de la planche.
+
+## 9. Les 3 zombies célèbres (la Mariée, le Pompier, le Boucher) — avec la planche de référence des zombies
+Joindre `images/sources/reference-zombies.jpg`. Même style que les zombies en pied du jeu, trois zombies côte à côte, bien séparés, chacun vu en pied, de face légèrement de trois quarts, debout, sur FOND VERT UNI (#00FF00) sans ombre ni sol, ils occupent 90 % de la hauteur :
+1) la Mariée : jeune femme zombie dans une robe de mariée déchirée et tachée, voile en lambeaux, bouquet fané à la main, peau grise, posture penchée en avant comme prête à courir ;
+2) le Pompier : grand zombie dans une tenue de pompier carbonisée (veste épaisse à bandes réfléchissantes, casque cabossé, masque à gaz pendant), une hache à la ceinture, peau gris-vert ;
+3) le Boucher : zombie massif avec un tablier de boucher couvert de sang séché, bras nus musclés, un couperet à la main, crâne chauve, peau gris-vert.
+Format paysage 16:9, aucun texte. Puis, dans un deuxième message : leurs trois portraits (tête et épaules) dans le même cadre que les portraits de la planche, sur la même image.
