@@ -21,8 +21,8 @@ var ZONES_PIECE = [
   ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", .5, function(){ return compter("radio") > 0; }],
   ["oTrophees",  172, 296, 232, 356, function(){ return "🏆"; }, "Trophées", .2, function(){ return G.trophees && G.trophees.length > 0; }],
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
-  ["chapitre",   358, 633, 668, 746, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
-  ["oCartes",    366, 641, 406, 669, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
+  ["chapitre",   358, 648, 668, 781, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
+  ["oCartes",    366, 676, 406, 704, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
   ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .95, function(){ return !!chien(); }]
 ];
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
@@ -33,7 +33,7 @@ var DECOR_PIECE = [
   // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)
   ["images/objet-radio.webp",  771, 192, 823, 234, function(){ return compter("radio") > 0; }],
   ["images/objet-photo.webp",  247, 312, 285, 356, function(){ return compter("photo") > 0; }],
-  ["images/objet-cartes.webp", 366, 641, 406, 669, function(){ return compter("cartes") > 0; }]
+  ["images/objet-cartes.webp", 366, 676, 406, 704, function(){ return compter("cartes") > 0; }]
 ];
 /* ---------- Les pièces de la maison, qu'on fait défiler (glisser du doigt, flèches ou points) ----------
    Chaque pièce : son image, sa taille, sa partie utile (cadre) et ses zones, en pixels de SON image. */
@@ -697,11 +697,12 @@ function dormeurLit(lit){
    (de gauche à droite : Papa, Léo, Emma, Maman). Chaque place est découpée à la silhouette, sans toucher aux coussins. */
 // Version 2 (2026-11-12) : deux images Gemini avec deux personnes espacées, silhouettes recalées chacune sur sa place ;
 // ordre de pose Léo, Papa, Emma, Maman (Papa devant le bras de Léo), puis la table basse et ses objets reposés devant eux
-// Salon sans table basse (2026-11-12, idée de Fabien) : la table est un décor reposé 60 px plus en avant et 5 % plus grande,
+// Salon sans table basse (2026-11-12, idée de Fabien) : la table est un décor reposé 95 px plus en avant et 5 % plus grande,
 // par-dessus les personnes, pour que leurs pieds restent visibles. Papa dans le fauteuil (bottes visibles), Léo et Maman
-// sur le canapé (image Gemini dessinée sur le salon sans table, sans décalage). Emma reviendra avec son image (3e place).
-var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366, 343, 488, 628, "canape-leo"], "Maman":[578, 342, 705, 631, "canape-maman"] };
-var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 571, 671, 751, function(){ return true; }];
+// sur le canapé (image Gemini dessinée sur le salon sans table, sans décalage). Emma (3e place) : image ChatGPT
+// (salon redessiné), découpée le long de son contour et mise à l'échelle (255 px de haut).
+var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366, 343, 488, 628, "canape-leo"], "Emma":[490, 375, 579, 630, "canape-emma"], "Maman":[578, 342, 705, 631, "canape-maman"] };
+var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 786, function(){ return true; }];
 function auSalon(r){
   if(!G || !G.m) return false;
   var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
