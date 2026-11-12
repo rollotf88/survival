@@ -2575,3 +2575,16 @@ body.pc #app .mc .mc-st{margin-top:8px!important}
 @media (max-width:420px), (orientation:landscape) and (max-height:500px){ .tigre-btn .tg-txt{display:none} .tigre-btn{padding-left:8px;padding-right:8px} }
 body.pc .tigre-btn .tg-txt{display:none}
 body.pc .tigre-btn{padding-left:10px;padding-right:10px}
+/* Bilan du refuge : ce qui n'est pas encore construit, en cartes grisées (2026-11-12) */
+.bilan2 .bl.off{opacity:.62;border-style:dashed;box-shadow:none;background:transparent}
+.bilan2 .bl.off .em{filter:grayscale(1)}
+.bilan2 .bl.off .bl-niv{background:var(--card);color:var(--mut)}
+.bilan2 .bl-afaire{margin-top:10px}
+.bl-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.bl-chip{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:6px 4px;border:2px dashed var(--line);border-radius:12px;opacity:.75;min-width:0}
+.bl-chip .em{filter:grayscale(1)}
+.bl-chip .em .ico,.bl-chip .em img,.bl-chip .em svg{width:26px!important;height:26px!important}
+.bl-chip b{font-size:12px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bl-chip small{font-size:10.5px;color:var(--mut);font-weight:700;white-space:nowrap}
+.bl-chip .bl-cout .ico,.bl-chip .bl-cout img{width:12px!important;height:12px!important;vertical-align:-2px}
+@media (orientation:landscape) and (max-height:500px){ .bl-chip{flex-direction:row;gap:5px;padding:4px 6px} .bl-chip .em .ico,.bl-chip .em img,.bl-chip .em svg{width:20px!important;height:20px!important} .bl-chip small:not(.bl-cout){display:none} }

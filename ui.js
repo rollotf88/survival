@@ -903,10 +903,15 @@ function etatTravail(ing, besoin, texteOk){
 // Tout ce qui protège et nourrit le refuge, d'un coup d'œil (en haut de l'onglet Construire)
 function bilanRefuge(){
   // Raccord avec la DA (2026-11-11) : tuiles en haut, une carte par élément (icône dans une case en bois, niveau en pastille)
-  var L = [], ligne = function(icn, titre, detail){ var m = titre.split(" · "); L.push('<div class="bl"><span class="em">' + icn + '</span><span class="eqt"><b>' + m[0] + (m[1] ? ' <span class="bl-niv">' + m[1] + '</span>' : '') + '</b><small>' + detail + '</small></span></div>'); };
+  var L = [], A = [], ligne = function(icn, titre, detail, off){ var m = titre.split(" · "); (off ? A : L).push('<div class="bl' + (off ? " off" : "") + '"><span class="em">' + icn + '</span><span class="eqt"><b>' + m[0] + (m[1] ? ' <span class="bl-niv">' + m[1] + '</span>' : '') + '</b><small>' + detail + '</small></span></div>'); };
+  // Ce qui n'est pas encore construit, en cartes grisées (2026-11-12) : on voit ce que ça rapporterait et ce que ça coûte
+  var aFaire = function(k, gain){ var R = REFUGE[k]; A.push('<span class="bl-chip"><span class="em">' + ic("ref_" + k, R.icone) + '</span><b>' + R.nom.replace("Récupérateur d’eau", "Récupérateur") + '</b><small>' + gain + '</small><small class="bl-cout">' + ic("planche", "🪵") + ' ' + R.cout + '</small></span>'); };
   if(G.ref.barr) ligne(ic("ref_barr", "🧱"), "Barricade · niveau " + G.ref.barr, "+" + G.ref.barr * BAL.defenseBarricade + " de défense la nuit (une attaque perdue en détruit un niveau)");
   if(G.ref.eau) ligne(ic("ref_eau", "🪣"), "Récupérateur d’eau · niveau " + G.ref.eau, "+" + G.ref.eau * REFUGE.eau.parJour + " ration(s) d’eau chaque nuit");
   if(G.ref.pot) ligne(ic("ref_pot", "🥕"), "Potager · niveau " + G.ref.pot, "+" + G.ref.pot * REFUGE.pot.parJour + " ration(s) de nourriture chaque nuit");
+  if(!G.ref.barr) aFaire("barr", "+" + BAL.defenseBarricade + " défense");
+  if(!G.ref.eau) aFaire("eau", "+" + REFUGE.eau.parJour + " eau / nuit");
+  if(!G.ref.pot) aFaire("pot", "+" + REFUGE.pot.parJour + " repas / nuit");
   G.stock.o.filter(function(o){ return OBJETS[o.id].nuit; }).forEach(function(o){
     var p = OBJETS[o.id].nuit;
     ligne(icone(o.id), OBJETS[o.id].nom + " · encore " + o.sol + " nuit" + (o.sol > 1 ? "s" : ""), Math.round(p.chance * 100) + " % de chances chaque nuit : +" + p.rations + " ration(s) " + (p.cat === "eau" ? "d’eau" : "de nourriture"));
@@ -918,8 +923,12 @@ function bilanRefuge(){
   var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour, d = defenseNuit(), boit = nb, mange = nb + (c ? BAL.chien.rations : 0);
   var h = tuiles([["défense de nuit", d, d ? "" : "ko"], ["eau / nuit · " + boit + " bues", "+" + pe, pe >= boit ? "ok" : pe ? "moy" : "ko"], ["repas / nuit · " + mange + " mangés", "+" + pn, pn >= mange ? "ok" : pn ? "moy" : "ko"]]);
   h += '<div class="mf-bloc bilan2"><p class="mf-titre">Ce qui protège et nourrit le refuge</p>';
-  h += L.length ? L.join("") : '<p class="sub">Rien pour l’instant. Construis un récupérateur d’eau ou un potager, ou fabrique une bâche ou un collet à l’atelier.</p>';
-  h += '</div><p class="bl-note">🛡️ Défense ' + d + ' (dont ' + armes + ' grâce aux armes en main). Chaque nuit, la famille boit ' + boit + ' et mange ' + mange + ' rations' + (c ? ' (' + c.nom + ' compris)' : '') + '.</p>';
+  h += L.length ? L.join("") : '<p class="sub">Rien pour l’instant : construis, ou fabrique une bâche ou un collet à l’atelier.</p>';
+  if(A.length) h += '<p class="mf-titre bl-afaire">Pas encore construit</p><div class="bl-chips">' + A.join("") + '</div>';
+  h += '</div>';
+  // La phrase du bas ne dit plus que ce que les tuiles ne disent pas
+  var note = []; if(armes) note.push("🛡️ Dont " + armes + " de défense grâce aux armes en main.");
+  if(note.length) h += '<p class="bl-note">' + note.join(" ") + '</p>';
   return h;
 }
 var selRef = null, bilanOuvert = false;
