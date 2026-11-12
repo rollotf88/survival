@@ -221,7 +221,7 @@ function openLoc(){
       + (radio && celebreIci(i) ? '<span class="cl-celebre" title="' + typeZombie({ id:G.celebre.id }).nom + ' rôde ici">💀 ' + typeZombie({ id:G.celebre.id }).nom + '</span>' : '')
       + (pourquoi && reste ? '<span class="cl-pourquoi">' + pourquoi + '</span>' : '') + '</span>'
       + '<span class="cl-nom">' + L.nom + '</span>'
-      + '<span class="cl-infos"><span class="cl-en">⚡ −' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger">' + (radio ? "danger " : "⚠️ ") + dg[0] + '</span></span>'
+      + '<span class="cl-infos"><span class="cl-en">⚡ −' + coutEnergie(i, auto) + '</span><span class="dg ' + dg[1] + '" title="Danger' + (radio ? " " + dg[0] : " inconnu (il faut une radio)") + '">⚠️ ' + dg[0] + '</span></span>'
       + (icones.length ? '<span class="cl-conds">' + icones.map(function(c){ return '<span class="' + c[1] + '" title="' + c[2] + '">' + c[0] + '</span>'; }).join("") + '</span>' : '')
       + '</button>' });
   });

@@ -2711,3 +2711,10 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 body:not(.pc) .mc .mc-st{padding:1px 4px;letter-spacing:-.1px}
 body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height:11px;margin-right:-1px}
 @media (max-width:380px){ body:not(.pc) .scene .mc small.mc-st,body:not(.pc) .mc .mc-st{font-size:8.8px!important} }
+
+/* Cartes de lieux : « ⚠️ moyen » au lieu de « danger moyen » (coupé sur PC, 2026-11-12) ; en dernier recours la pastille se raccourcit */
+.cl-infos > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cl-infos .cl-en{flex:none}
+.cl-infos{gap:3px;padding-left:4px;padding-right:4px}
+.cl-infos > span{padding:0 5px}
+.cl-infos .ico,.cl-infos img.emo{width:11px;height:11px;margin-right:1px}
