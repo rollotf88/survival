@@ -2588,3 +2588,26 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 .bl-chip small{font-size:10.5px;color:var(--mut);font-weight:700;white-space:nowrap}
 .bl-chip .bl-cout .ico,.bl-chip .bl-cout img{width:12px!important;height:12px!important;vertical-align:-2px}
 @media (orientation:landscape) and (max-height:500px){ .bl-chip{flex-direction:row;gap:5px;padding:4px 6px} .bl-chip .em .ico,.bl-chip .em img,.bl-chip .em svg{width:20px!important;height:20px!important} .bl-chip small:not(.bl-cout){display:none} }
+
+/* ---------- Portrait couronné de la Légende (2026-11-12) ---------- */
+@property --lga{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes lgTourne{to{--lga:360deg}}
+@keyframes lgRespire{0%,100%{opacity:.5;transform:scale(.95)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes lgBalance{0%,100%{transform:translateX(-50%) rotate(-6deg)}50%{transform:translateX(-50%) rotate(4deg) translateY(-2px)}}
+@keyframes lgScintille{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+/* Cartes de la famille */
+.mc.couronnee{border-color:#b8860b!important;box-shadow:0 0 0 2px #f7c948,0 3px 0 #a8841c}
+.mc.couronnee .em{position:relative;isolation:isolate}
+.mc.couronnee .em::before{content:"";position:absolute;inset:-5px;border-radius:15px;z-index:-1;background:conic-gradient(from var(--lga),#fff6c9,#f7c948,#b8860b,#f7c948,#fff6c9,#b8860b,#f7c948);animation:lgTourne 4s linear infinite}
+.mc-couronne{position:absolute;left:50%;top:-17px;width:30px;z-index:2;font-style:normal;transform:translateX(-50%) rotate(-6deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));animation:lgBalance 3s ease-in-out infinite;pointer-events:none}
+.mc-couronne svg{display:block;width:100%;height:auto}
+/* Médaillon (carte de la Légende au classement) */
+.lg-med{position:relative;flex:none;width:var(--t);height:var(--t);margin-top:12px}
+.lg-med img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px #7a4a00}
+.lg-anneau{position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(from var(--lga),#fff6c9,#f7c948,#b8860b,#f7c948,#fff6c9,#b8860b,#f7c948);animation:lgTourne 4s linear infinite}
+.lg-lueur{position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(circle,rgba(247,201,72,.6),transparent 62%);animation:lgRespire 2.6s ease-in-out infinite}
+.lg-cour{position:absolute;left:50%;top:calc(var(--t) * -0.32);width:calc(var(--t) * .5);font-style:normal;transform:translateX(-50%) rotate(-6deg);filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));animation:lgBalance 3s ease-in-out infinite}
+.lg-cour svg{display:block;width:100%;height:auto}
+.lg-eclat{position:absolute;width:9px;height:9px;background:#fff6c9;clip-path:polygon(50% 0,62% 38%,100% 50%,62% 62%,50% 100%,38% 62%,0 50%,38% 38%);animation:lgScintille 2.4s ease-in-out infinite}
+.lg-eclat.e1{right:-6px;top:6px}.lg-eclat.e2{left:-7px;bottom:10px;animation-delay:1s}
+@media (prefers-reduced-motion:reduce){.mc.couronnee .em::before,.mc-couronne,.lg-anneau,.lg-lueur,.lg-cour,.lg-eclat{animation:none}}

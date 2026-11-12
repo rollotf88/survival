@@ -92,7 +92,7 @@ function contenuClassement(d){
 function carteLegende(S){
   var L = S.legende, reste = S.fin ? Math.max(0, Math.ceil((S.fin - Date.now()) / 86400000)) : 0;
   if(!L) return '<div class="lg-carte vide"><span class="lg-ico">' + ic("couronne", "👑") + '</span><span><small>La Légende de ' + moisFr(S.id, true) + '</small><b>Personne… pour l’instant</b><em>Le meilleur score du mois prend la couronne.</em></span></div>';
-  return '<div class="lg-carte' + (L.moi ? " moi" : "") + '"><span class="lg-ico">' + ic("couronne", "👑") + '</span><span><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
+  return '<div class="lg-carte' + (L.moi ? " moi" : "") + '">' + medaillonLegende("images/portrait-tigre.webp", 60) + '<span><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
     + '<em>⭐ ' + L.score + ' points · ' + L.jours + ' jours tenus · règne depuis ' + (L.regne ? L.regne + ' jour' + (L.regne > 1 ? "s" : "") : "aujourd’hui") + '</em></span>'
     + '<span class="lg-fin">' + (reste > 1 ? 'Fin de la saison dans ' + reste + ' jours' : 'Dernier jour de la saison !') + '</span></div>';
 }
@@ -848,6 +848,9 @@ document.addEventListener("click", function(e){
    jauge pendant la partie, paliers annoncés la nuit, écran spécial et colis pour qui la détrône, bandeau pour le détrôné.
    Le serveur (worker/index.js, clé « saison ») remet la couronne en jeu le 1er de chaque mois ; l'ancienne Légende entre au panthéon.
    localStorage : survival_legende (dernière Légende connue), survival_etais_legende (« 1 » si c'était moi). */
+// Couronne dessinée (portrait couronné de la Légende : cartes de la famille, carte du classement)
+var COURONNE_SVG = '<svg viewBox="0 0 64 44"><path d="M4 38 L8 10 L22 24 L32 4 L42 24 L56 10 L60 38 Z" fill="#f7c948" stroke="#5a3a00" stroke-width="3" stroke-linejoin="round"/><rect x="4" y="34" width="56" height="8" rx="2" fill="#e0a33a" stroke="#5a3a00" stroke-width="3"/><circle cx="32" cy="22" r="4" fill="#d6453a" stroke="#5a3a00" stroke-width="2"/><circle cx="16" cy="28" r="3" fill="#3a8fd6" stroke="#5a3a00" stroke-width="2"/><circle cx="48" cy="28" r="3" fill="#3a8fd6" stroke="#5a3a00" stroke-width="2"/></svg>';
+function medaillonLegende(src, taille){ return '<span class="lg-med" style="--t:' + (taille || 64) + 'px"><span class="lg-lueur"></span><span class="lg-anneau"></span><img src="' + src + '" alt=""><i class="lg-cour">' + COURONNE_SVG + '</i><span class="lg-eclat e1"></span><span class="lg-eclat e2"></span></span>'; }
 var LEGENDE = (function(){ try{ return JSON.parse(localStorage.getItem("survival_legende") || "null"); }catch(e){ return null; } })();
 function noterLegende(S){
   var L = S && S.legende ? { pseudo:S.legende.pseudo, score:S.legende.score, jours:S.legende.jours, moi:!!S.legende.moi, saison:S.id } : null;
