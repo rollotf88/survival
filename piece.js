@@ -674,9 +674,19 @@ function dormeurLit(lit){
   if(!G || !G.m) return null;
   var pro = FAMILLE_ORIGINE.filter(function(r){ return LIT_DE[r] === lit; })[0];
   var proVivant = G.m.some(function(y){ return roleDormeur(y) === pro && y.al; });
-  if(proVivant) return auLit(pro) ? pro : null;
+  if(proVivant && auLit(pro)) return pro;
   var rec = G.m.filter(function(y){ return y.al && LIT_DE[roleDormeur(y)] === lit && roleDormeur(y) !== pro; }).map(roleDormeur)[0];
   return rec && auLit(rec) ? rec : null;
+}
+// Un survivant épuisé dont le lit est pris (ex. Yanis quand Papa est vivant) dort dans un lit libre,
+// caché sous la couverture (image ChatGPT 2026-11-12 : une forme sous la couverture dans chaque lit)
+function formeLit(lit){
+  if(!G || !G.m) return false;
+  var places = Object.keys(LITS_CHAMBRE).map(dormeurLit);
+  var sans = G.m.filter(function(y){ var r = roleDormeur(y); return auLit(r) && places.indexOf(r) < 0; }).length;
+  if(!sans) return false;
+  var libres = ["haut", "bas", "gauche", "droite"].filter(function(l){ return !dormeurLit(l); });
+  return libres.indexOf(lit) >= 0 && libres.indexOf(lit) < sans;
 }
 (function(){
   var P = PIECES.find(function(p){ return p.id === "chambre"; }); if(!P) return;
@@ -685,7 +695,8 @@ function dormeurLit(lit){
   // lit vide (couverture pliée, drap bien à plat) ou lit occupé par la bonne personne
   var lits = [];
   Object.keys(LITS_CHAMBRE).forEach(function(lit){ var L = LITS_CHAMBRE[lit];
-    lits.push(["images/personnages/chambre-vide-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return !dormeurLit(lit); }]);
+    lits.push(["images/personnages/chambre-vide-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return !dormeurLit(lit) && !formeLit(lit); }]);
+    lits.push(["images/personnages/chambre-forme-" + lit + ".webp", L[0], L[1], L[2], L[3], function(){ return formeLit(lit); }]);
     Object.keys(LIT_DE).filter(function(r){ return LIT_DE[r] === lit; }).forEach(function(r){ var Z = ZONE_DORMEUR[r] || L;
       lits.push(["images/personnages/chambre-" + DORMEUR_IMG[r] + ".webp", Z[0], Z[1], Z[2], Z[3], function(){ return dormeurLit(lit) === r; }]); });
   });
