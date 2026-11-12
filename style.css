@@ -2568,7 +2568,7 @@ body.pc #app .mc .mc-st{margin-top:8px!important}
 @keyframes tigreSaut{0%{transform:translate(0,0) rotate(-6deg)}45%{transform:translate(85vw,-14vh) rotate(0)}100%{transform:translate(170vw,6vh) rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.tigre-saut{animation:none;left:15vw}}
 .tg-tete{display:flex;align-items:center;gap:12px;margin:0 40px 10px 0}
-.tg-tete img{flex:none;width:72px;height:72px;border-radius:14px;object-fit:cover;box-shadow:0 0 0 3px #b8860b,0 3px 0 var(--line)}
+.tg-tete > img{flex:none;width:72px;height:72px;border-radius:14px;object-fit:cover;box-shadow:0 0 0 3px #b8860b,0 3px 0 var(--line)}
 .tg-tete small{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
 .tg-tete b{display:block;font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.6px;font-size:30px;line-height:1}
 .tg-tete em{display:block;font-style:normal;font-size:12.5px;font-weight:800}
@@ -2785,3 +2785,35 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 .lg-carte > span.lg-course{flex:1 1 100%;font-size:12.5px;font-weight:700;line-height:1.35;padding:6px 9px;border-radius:10px;background:rgba(255,255,255,.45)}
 .lg-carte.vide > span.lg-course{background:var(--card)}
 .lg-carte .lg-course b{display:inline;font-size:inherit;margin:0}
+
+/* ---------- Corrections du 2026-11-12 (retours de Fabien, sur téléphone) ---------- */
+/* Raja : les icônes dans le texte de l'en-tête restent petites */
+.tg-tete > span{min-width:0}
+.tg-tete em img,.tg-tete em .ico{width:1.2em!important;height:1.2em!important;vertical-align:-.2em;box-shadow:none!important;border-radius:0!important}
+/* Cartes de la famille de la Légende : l'anneau doré ne mange plus le prénom */
+.mc.couronnee .em{margin-bottom:7px}
+body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
+.mc.couronnee > div:first-of-type b{position:relative;z-index:1;color:var(--ink);text-shadow:0 1px 0 var(--card),0 0 3px var(--card)}
+/* Fiche d'un clan : l'avatar devant chaque famille */
+.clan-membres .clan-m{grid-template-columns:auto minmax(0,1fr) auto}
+.clan-membres .clan-m > .cm-av{grid-column:1;grid-row:1 / span 2;align-self:center}
+.clan-membres .clan-m .cm-nom,.clan-membres .clan-m > small{grid-column:2}
+.clan-membres .clan-m > .mini{grid-column:3}
+.cm-av{width:34px!important;height:34px!important}
+.ch-av.cm-av{display:inline-grid;place-items:center;border-radius:50%;color:#fff;font-weight:900;font-size:16px}
+.mc-m-b .av-img{width:34px;height:34px}
+.pm-titre{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-right:40px}
+.pm-av{width:44px!important;height:44px!important}
+.ch-av.pm-av{display:inline-grid;place-items:center;border-radius:50%;color:#fff;font-weight:900;font-size:20px}
+/* Classement des clans : les insignes de ligue restent dans leur case, de la marge en bas */
+.cc-l .ligue-ins{margin:0!important;height:26px}
+.cc-ligues{margin-bottom:12px}
+/* Avatar de la Légende du mois : Raja dans un anneau doré qui tourne, lueur et couronne */
+.av-img.av-leg{position:relative;overflow:visible;isolation:isolate;box-shadow:0 0 0 2px #7a4a00,0 0 10px 2px rgba(247,201,72,.75)!important;background:#f7c948;animation:avLegLueur 2.6s ease-in-out infinite}
+.av-img.av-leg::before{content:"";position:absolute;inset:-4px;border-radius:50%;z-index:-1;background:conic-gradient(from var(--lga),#fff6c9,#f7c948,#b8860b,#f7c948,#fff6c9,#b8860b,#f7c948);animation:lgTourne 4s linear infinite}
+.av-img.av-leg img{border-radius:50%}
+.av-leg-cour{position:absolute;left:50%;top:-38%;width:56%;font-style:normal;transform:translateX(-50%) rotate(-6deg);filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));animation:lgBalance 3s ease-in-out infinite;pointer-events:none}
+.av-leg-cour svg{display:block;width:100%;height:auto}
+@keyframes avLegLueur{0%,100%{box-shadow:0 0 0 2px #7a4a00,0 0 6px 1px rgba(247,201,72,.55)}50%{box-shadow:0 0 0 2px #7a4a00,0 0 14px 4px rgba(247,201,72,.9)}}
+.classement li .av-leg,.mc-m-b .av-leg,.clan-m .av-leg,.ch-l .av-leg,.gu-c .av-leg{margin-top:6px}
+@media (prefers-reduced-motion:reduce){.av-img.av-leg,.av-img.av-leg::before,.av-leg-cour{animation:none}}

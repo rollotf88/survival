@@ -75,7 +75,7 @@ function openClassement(message){
 }
 // « ⭐ 271 points · 110 jours » en entier (2026-11-12, demande de Fabien : il y a la place)
 function ptsJours(sc, j){ return '⭐ ' + sc + ' point' + (sc > 1 ? 's' : '') + ' · ' + j + ' jour' + (j > 1 ? 's' : ''); }
-function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }
+function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av", !!e.legende) + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }
 // Onglet « Ce mois-ci » : dire pourquoi sa partie n'y est pas (2026-11-12, retour de Fabien : sa partie à 73 points n'apparaissait pas)
 function pourquoiAbsent(S){
   if(S.monRang) return "";
@@ -470,7 +470,7 @@ function monProfil(){
 }
 function openProfilMembre(i){
   var c = etatClans && etatClans.monClan, m = c && c.membresListe[i]; if(!m) return;
-  var p = m.profil, h = '<h2>' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " <small>(toi)</small>" : "") + '</h2>';
+  var p = m.profil, h = '<h2 class="pm-titre">' + avatarHtml(m.avatar, m.pseudo, "ch-av pm-av") + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? " <small>(toi)</small>" : "") + '</h2>';
   h += '<p class="sub">' + (m.chef ? "Chef du clan « " + echapper(c.nom) + " »" : "Membre du clan « " + echapper(c.nom) + " »") + (m.rejoint ? " depuis " + quand(m.rejoint).replace(/^il y a /, "").replace("à l’instant", "peu") : "") + ' · vu ' + quand(m.vu) + '</p>';
   if(p){
     h += '<p class="titre-butin">🏠 Sa famille</p>' + tuiles([["jour de survie", m.jour || "?"], ["en vie", p.vivants + " / 4", p.vivants >= 3 ? "ok" : p.vivants >= 2 ? "moy" : "ko"], ["record", p.meilleur + " ⭐"]]);
@@ -500,7 +500,7 @@ function openFicheClan(i, depuisClassement){
   var h = '<div class="clan-tete">' + blason(c.blason) + '<span><b>' + echapper(c.nom) + '</b><small>Fondé ' + quand(c.cree).replace("à l’instant", "aujourd’hui") + ' · ' + c.jours + ' jours tenus à eux tous</small>' + badgeLigue(c.trophees) + '</span></div>';
   h += '<p class="clan-desc">' + (c.desc ? "« " + echapper(c.desc) + " »" : '<i>Ce clan n’a pas encore de description.</i>') + '</p>';
   h += tuiles([["joueurs", c.membres + " / 5", plein ? "ko" : "ok"], ["guerres gagnées", b.gagnees || 0], ["trophées", (c.trophees || 0) + " 🏆"]]);
-  h += '<p class="titre-butin">👥 Les familles</p><div class="clan-membres">' + (c.noms || []).map(function(m){ return '<div class="clan-m"><span class="cm-nom">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + '</span><small>Jour ' + (m.jour || "?") + '</small></div>'; }).join("") + '</div>';
+  h += '<p class="titre-butin">👥 Les familles</p><div class="clan-membres">' + (c.noms || []).map(function(m){ return '<div class="clan-m">' + avatarHtml(m.avatar, m.pseudo, "ch-av cm-av") + '<span class="cm-nom">' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + '</span><small>Jour ' + (m.jour || "?") + '</small></div>'; }).join("") + '</div>';
   h += '<div class="row">' + (ok && !d.monClan && !c.moi ? '<button class="btn" data-act="clanrejoindre" data-id="' + echapper(c.id) + '"' + (plein ? " disabled" : "") + '>' + (plein ? "Complet" : "Rejoindre") + '</button>' : '') + '<button class="btn alt" data-act="' + (depuisClassement ? "classementclans" : "clans") + '">Retour</button></div>';
   show(h);
 }
@@ -964,7 +964,7 @@ var HISTOIRE_TIGRE = "Quand les villes sont tombées, le zoo de la ville a été
 function tigreLegende(){ return !!(LEGENDE && LEGENDE.moi); }
 function openTigre(){
   var dispo = tigreLegende() && typeof tigreUtilise === "function" && !(G && G.ph === "game" && tigreUtilise());
-  show('<div class="banniere"><img src="images/tigre-zoo.webp" alt="" onerror="this.parentNode.remove()"></div><div class="tg-tete"><img src="images/portrait-tigre.webp" alt=""><span><small>Le tigre de la Légende</small><b>Raja</b><em>' + (tigreLegende() ? (dispo ? "🐅 Prêt à bondir dans cette partie" : "Il a déjà bondi dans cette partie") : "Il suit la Légende du mois") + '</em></span></div>'
+  show('<div class="banniere"><img src="images/tigre-zoo.webp" alt="" onerror="this.parentNode.remove()"></div><div class="tg-tete"><img src="images/portrait-tigre.webp" alt=""><span><small>Le tigre de la Légende</small><b>Raja</b><em>' + (tigreLegende() ? (dispo ? "Prêt à bondir dans cette partie" : "Il a déjà bondi dans cette partie") : "Il suit la Légende du mois") + '</em></span></div>'
     + '<p class="msg">' + HISTOIRE_TIGRE + '</p>'
     + '<p class="titre-butin">Ce qu’il fait</p><p class="sub">Une fois par partie, dans n’importe quel combat (expédition, raid de l’immeuble, zombie célèbre, assaut de guerre), le bouton « Lâcher le tigre » fait bondir Raja : tous les zombies tombent ; le Colosse et les zombies célèbres perdent ' + Math.round(BAL.tigre.boss * 100) + ' % de leur vie ; en guerre de clans, chaque défenseur perd ' + Math.round(BAL.tigre.guerre * 100) + ' % de sa vie. Détrônée, la Légende perd Raja.</p>'
     + BTN_FERMER());
@@ -1012,7 +1012,12 @@ var AVATARS = [
 function avatarValide(a){ return AVATARS.some(function(g){ return g[1].indexOf(a) >= 0; }); }
 function lireAvatar(){ var a = ""; try{ a = localStorage.getItem("survival_avatar") || ""; }catch(e){} return avatarValide(a) ? a : ""; }
 // Avatar d'un joueur : son portrait choisi, sinon la pastille ronde avec son initiale (comme dans la discussion)
-function avatarHtml(a, pseudo, cls){
+// 2026-11-12 (retour de Fabien) : la Légende du mois a partout l'avatar de la Légende (Raja dans le médaillon doré qui tourne, avec la couronne),
+// à la place du portrait choisi dans le profil : classement, clans, guerre, discussion, menu, profil.
+// estLegende : true/false si on le sait (classement), sinon on compare le pseudo à la Légende connue.
+function avatarHtml(a, pseudo, cls, estLegende){
+  var L = estLegende === undefined ? !!(LEGENDE && pseudo && pseudo === LEGENDE.pseudo) : !!estLegende;
+  if(L) return '<span class="av-img av-leg ' + (cls || "").replace(/\bch-av\b/g, "") + '" aria-hidden="true"><img src="images/portrait-tigre.webp" alt=""><i class="av-leg-cour">' + COURONNE_SVG + '</i></span>';
   if(a && avatarValide(a)) return '<span class="av-img ' + (cls || "") + '" aria-hidden="true"><img src="images/portrait-' + a + '.webp" alt=""></span>';
   if(typeof avatarChat === "function") return avatarChat(pseudo).replace('class="ch-av"', 'class="ch-av ' + (cls || "") + '"');
   return '';

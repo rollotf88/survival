@@ -87,7 +87,7 @@ function afficherChat(defiler){
     var actions = (m.moi || etatChat.chef ? '<button class="ch-act" data-act="chateffacer" data-id="' + m.id + '">' + ic("poubelle", "🗑️") + ' Effacer</button>' : '')
       + (!m.moi ? '<button class="ch-act" data-act="chatsignaler" data-id="' + m.id + '">' + ic("signaler", "🚩") + ' Signaler</button>' : '');
     h += '<div class="ch-l' + (m.moi ? " moi" : "") + (suite ? " suite" : "") + '">'
-      + (m.moi ? '' : (suite ? '<span class="ch-av vide"></span>' : avatarChat(qui)))
+      + (m.moi ? '' : (suite ? '<span class="ch-av vide"></span>' : (typeof avatarHtml === "function" ? avatarHtml(m.avatar, qui, "ch-av") : avatarChat(qui))))
       + '<div class="ch-b' + (m.r ? " rapide" : "") + '" data-act="chatbulle" tabindex="0">'
       + (!m.moi && !suite ? '<span class="ch-qui">' + (m.chef ? ic("couronne", "👑") + " " : "") + echapper(qui) + '</span>' : '')
       + '<span class="ch-txt">' + echapper(m.txt) + '</span><span class="ch-h">' + heureChat(m.t) + '</span>'
