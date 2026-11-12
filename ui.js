@@ -1405,6 +1405,7 @@ function validerSaisie(k){
     if(retour === "clan" && typeof openCreerClan === "function"){ render(); openCreerClan(); return; }
     if(retour === "clans" && typeof openClans === "function"){ render(); openClans("👤 Pseudo enregistré : tu peux rejoindre un clan."); return; }
     if(retour === "profil" && typeof openProfil === "function"){ render(); openProfil("👤 Pseudo enregistré."); return; }
+    if(retour === "classement" && typeof openClassement === "function"){ render(); donneesCl = null; openClassement("👤 Pseudo enregistré : ta partie classée entre au classement du mois."); return; }
     hide(); render(); return;
   }
   k = +k; v = v.slice(0, 10) || FAMILLE[k].nom;

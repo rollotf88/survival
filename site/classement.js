@@ -76,6 +76,16 @@ function openClassement(message){
 // « ⭐ 271 points · 110 jours » en entier (2026-11-12, demande de Fabien : il y a la place)
 function ptsJours(sc, j){ return '⭐ ' + sc + ' point' + (sc > 1 ? 's' : '') + ' · ' + j + ' jour' + (j > 1 ? 's' : ''); }
 function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }
+// Onglet « Ce mois-ci » : dire pourquoi sa partie n'y est pas (2026-11-12, retour de Fabien : sa partie à 73 points n'apparaissait pas)
+function pourquoiAbsent(S){
+  if(S.monRang) return "";
+  var P = partieCourante(), vivante = P && P.m && P.m.some(function(x){ return x.al; });
+  if(!vivante) return "";
+  if(!P.seed) return '<p class="msg">🎲 Ta partie en cours est une <b>partie libre</b> : elle ne compte pas pour le classement. Seules les parties classées y entrent.</p>';
+  if(!lirePseudo()) return '<div class="msg cl-absent"><span>👤 Ta partie classée n’apparaît pas encore : il te faut un <b>pseudo</b> (c’est lui que les autres verront).</span><button class="btn" data-act="saisie" data-id="p" data-retour="classement">Choisir mon pseudo</button></div>';
+  if(!(P.score > 0)) return '<p class="msg">⭐ Ta partie classée entrera au classement dès ton premier point (à la fin de ta première journée).</p>';
+  return '<p class="msg">📡 Ta partie classée (⭐ ' + P.score + ' points) est envoyée au serveur : elle apparaîtra ici dans quelques instants. Sans connexion, elle partira plus tard.</p>';
+}
 function contenuClassement(d){
   var S = d.saison || {};
   if(ongletCl === "pantheon"){
@@ -86,7 +96,7 @@ function contenuClassement(d){
   }
   var liste = ongletCl === "mois" ? S.scores || [] : d.scores || [], total = ongletCl === "mois" ? S.total || 0 : d.total || 0;
   var rang = ongletCl === "mois" ? S.monRang : d.monRang, h = "";
-  if(ongletCl === "mois") h += carteLegende(S);
+  if(ongletCl === "mois") h += carteLegende(S) + pourquoiAbsent(S);
   if(!liste.length) return h + '<p class="msg">' + (ongletCl === "mois" ? "Personne n’a encore de partie classée ce mois-ci : la couronne est à prendre !" : "Personne n’a encore envoyé de score. Sois le premier !") + '</p>';
   h += '<ol class="classement">' + liste.map(ligneCl).join("") + '</ol>';
   if(ongletCl === "toujours" && d.moi && d.monRang > liste.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">' + ptsJours(d.moi.score, d.moi.jours) + '</span></li></ol>';
@@ -96,7 +106,7 @@ function contenuClassement(d){
 function carteLegende(S){
   var L = S.legende, reste = S.fin ? Math.max(0, Math.ceil((S.fin - Date.now()) / 86400000)) : 0;
   if(!L) return '<div class="lg-carte vide"><span class="lg-ico">' + ic("couronne", "👑") + '</span><span><small>La Légende de ' + moisFr(S.id, true) + '</small><b>Personne… pour l’instant</b><em>Le meilleur score du mois prend la couronne.</em></span></div>';
-  return '<div class="lg-carte' + (L.moi ? " moi" : "") + '">' + medaillonLegende("images/portrait-tigre.webp", 60) + '<span><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
+  return '<div class="lg-carte' + (L.moi ? " moi" : "") + '">' + medaillonLegende("images/portrait-tigre.webp", 60) + '<span class="lg-txt"><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
     + '<em>⭐ ' + L.score + ' points · ' + L.jours + ' jours tenus · règne depuis ' + (L.regne ? L.regne + ' jour' + (L.regne > 1 ? "s" : "") : "aujourd’hui") + '</em></span>'
     + '<span class="lg-fin">' + (reste > 1 ? 'Fin de la saison dans ' + reste + ' jours' : 'Dernier jour de la saison !') + '</span></div>';
 }

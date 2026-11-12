@@ -2768,3 +2768,15 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 .cl-live{display:block;font-size:10.5px;font-weight:900;color:#2f8a3a;letter-spacing:.2px}
 @media (prefers-reduced-motion:no-preference){ .cl-live{animation:clLive 2s ease-in-out infinite} }
 @keyframes clLive{50%{opacity:.55}}
+
+/* Classement du mois : pourquoi ma partie n'y est pas (2026-11-12) */
+.msg.cl-absent{display:flex;flex-direction:column;gap:8px}
+.msg.cl-absent .btn{align-self:flex-start;min-height:0;padding:7px 14px}
+
+/* Carte de la Légende (2026-11-12, bug signalé par Fabien : texte écrasé en colonne, pseudo coupé) : le texte prend la place, la fin de saison passe dessous */
+.lg-carte .lg-txt{flex:1 1 150px;min-width:0}
+.lg-carte .lg-txt b{white-space:normal}
+.lg-carte .lg-txt .pcadre{max-width:100%;overflow:visible;white-space:nowrap}
+.lg-carte .lg-fin{flex:0 0 auto;margin-left:auto}
+.lg-carte > span.lg-txt{flex:1 1 150px;min-width:0}
+.lg-carte > span.lg-fin{flex:1 1 100%;text-align:center;margin:2px 0 0}
