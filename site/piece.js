@@ -24,6 +24,7 @@ var ZONES_PIECE = [
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
   ["chapitre",   358, 648, 668, 781, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
   ["oCartes",    366, 676, 406, 704, function(){ return icone("cartes"); }, "Cartes", .5, function(){ return compter("cartes") > 0; }],
+  ["tigre",      834, 556, 1024, 692, function(){ return "🐅"; }, "Raja", .5, function(){ return typeof tigreLegende === "function" && tigreLegende(); }],
   ["chien",      668, 548, 858, 704, function(){ return ic("chien", "🐕"); }, "Rex", .95, function(){ return !!chien(); }]
 ];
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
@@ -31,7 +32,8 @@ var ZONES_PIECE = [
 var DECOR_PIECE = [
   ["images/porte-ouverte.webp", 812, 200, 1024, 624, function(){ return !!G.porteOuverte; }], // acte fou : porte restée ouverte (morceau découpé dans une retouche Gemini, 2026-11-12)
   ["images/icones/trophee.webp", 176, 300, 228, 356, function(){ return G.trophees && G.trophees.length > 0; }], // trophée d'un zombie célèbre abattu, sur la cheminée
-  ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],                  // Rex adopté : couché devant le canapé
+  ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],
+  ["images/tigre-couche.webp", 834, 556, 1024, 692, function(){ return typeof tigreLegende === "function" && tigreLegende(); }], // Raja, le tigre de la Légende du mois                  // Rex adopté : couché devant le canapé
   // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)
   ["images/objet-radio.webp",  771, 192, 823, 234, function(){ return compter("radio") > 0; }],
   ["images/objet-photo.webp",  247, 312, 285, 356, function(){ return compter("photo") > 0; }],
@@ -322,6 +324,7 @@ function openDormir(){
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act");
+  if(a === "tigre"){ if(typeof openTigre === "function") openTigre(); return; }
   if(a === "pFermerPorte" || a === "fermerporte"){ var auLitDejaDit = a === "fermerporte"; G.porteOuverte = false; if(typeof jouerSynth === "function" && SONS_SYNTH.bois) jouerSynth("bois"); if(typeof sauver === "function") sauver(); render();
     if(auLitDejaDit) openDormir(); else show('<h2>🚪 Porte refermée</h2><p class="msg g2">Tu refermes la porte et remets la barre. La maison est de nouveau à l’abri pour la nuit.</p>' + BTN_FERMER()); }
   else if(a === "pTable") openRef("fabriquer");

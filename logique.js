@@ -889,6 +889,24 @@ function actionZombie(z, protege, J){
 function attaqueZombies(protege, J){
   zombiesDebout().forEach(function(z){ if(z.int && z.int.t === "hurle") z.int.t = "mord"; actionZombie(z, protege, J); });
 }
+// Raja, le tigre de la Légende du mois (2026-11-12) : une fois par partie (la partie temporaire du raid compte avec la vraie)
+function maisonTigre(){ return typeof G_MAISON !== "undefined" && G_MAISON ? G_MAISON : G; }
+function tigreUtilise(){ return !!(G.tigreUtilise || maisonTigre().tigreUtilise); }
+function lacherTigre(){
+  var C = G.combat, J = [], guerre = G.exp && G.exp.guerre && !G.exp.raid; if(!C || C.fin) return [];
+  G.tigreUtilise = true; maisonTigre().tigreUtilise = true;
+  J.push(["g2", "🐅 Raja surgit en rugissant et bondit sur " + (guerre ? "les défenseurs" : "les zombies") + " !"]);
+  zombiesDebout().forEach(function(z){
+    var d;
+    if(guerre || z.celebre || z.id === "colosse"){
+      d = Math.ceil(z.pv * (guerre ? BAL.tigre.guerre : BAL.tigre.boss)); z.pv = Math.max(1, z.pv - d);
+      J.push(["g2", "🐅 Raja lacère " + z.nom + " (−" + d + ")."]);
+    } else { z.pv = 0; J.push(["g2", "🐅 Raja terrasse " + z.nom + " !"]); zombieTombe(z, {}, J); }
+  });
+  C.journal = J; verifierFin(J);
+  if(G.exp && G.exp.raid && typeof noterTourRaid === "function") noterTourRaid(J);
+  return J;
+}
 function verifierFin(J){
   var C = G.combat;
   if(!equipeCombat().length){ C.fin = "defaite"; C.resume.push(["b2", "💀 Personne n’est revenu de " + nomLieuCombat() + "."]); }

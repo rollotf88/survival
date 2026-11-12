@@ -890,3 +890,20 @@ function paliersLegende(n){
     [0.5, "👑 Tu as dépassé la moitié du record de la Légende (" + LEGENDE.score + " points)."]];
   for(var i = 0; i < P.length; i++) if(p >= P[i][0]){ if(P[i][0] > deja){ n.unshift(["g2", P[i][1]]); G.legPalier = P[i][0]; } break; }
 }
+
+/* ---------- Raja, le tigre de la Légende (2026-11-12, idée de Fabien) ----------
+   La Légende du mois (et elle seule, tant qu'elle a la couronne) peut lâcher Raja une fois par partie dans un combat :
+   bouton « Lâcher le tigre » (ui.js), effet dans lacherTigre (logique.js), couché au salon (piece.js). */
+var HISTOIRE_TIGRE = "Quand les villes sont tombées, le zoo de la ville a été abandonné du jour au lendemain. Les gardiens ont fui, les cages sont restées fermées. "
+  + "Des semaines plus tard, une survivante a entendu des rugissements derrière les grilles rouillées : un tigre, affamé, qui se jetait contre les barreaux. "
+  + "Chaque nuit, elle est revenue lui glisser un peu de viande, sans jamais ouvrir la cage. Au bout d’un mois, le tigre a cessé de gronder quand elle approchait. "
+  + "Le jour où elle a ouvert la porte, il ne l’a pas dévorée : il l’a suivie. On l’appelle Raja. On dit qu’il ne reste qu’auprès de la plus grande survivante de son temps… "
+  + "et qu’il change de maître le jour où quelqu’un fait mieux qu’elle.";
+function tigreLegende(){ return !!(LEGENDE && LEGENDE.moi); }
+function openTigre(){
+  var dispo = tigreLegende() && typeof tigreUtilise === "function" && !(G && G.ph === "game" && tigreUtilise());
+  show('<div class="banniere"><img src="images/tigre-zoo.webp" alt="" onerror="this.parentNode.remove()"></div><div class="tg-tete"><img src="images/portrait-tigre.webp" alt=""><span><small>Le tigre de la Légende</small><b>Raja</b><em>' + (tigreLegende() ? (dispo ? "🐅 Prêt à bondir dans cette partie" : "Il a déjà bondi dans cette partie") : "Il suit la Légende du mois") + '</em></span></div>'
+    + '<p class="msg">' + HISTOIRE_TIGRE + '</p>'
+    + '<p class="titre-butin">Ce qu’il fait</p><p class="sub">Une fois par partie, dans n’importe quel combat (expédition, raid de l’immeuble, zombie célèbre, assaut de guerre), le bouton « Lâcher le tigre » fait bondir Raja : tous les zombies tombent ; le Colosse et les zombies célèbres perdent ' + Math.round(BAL.tigre.boss * 100) + ' % de leur vie ; en guerre de clans, chaque défenseur perd ' + Math.round(BAL.tigre.guerre * 100) + ' % de sa vie. Détrônée, la Légende perd Raja.</p>'
+    + BTN_FERMER());
+}

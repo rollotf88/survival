@@ -460,7 +460,7 @@ function openCombat(){
     }
   }
   h += fini ? '<button class="btn fin-bouton" style="width:100%" data-act="cfin">' + (G.exp.raid ? (C.fin === "victoire" ? "📦 Fouiller l’étage" : "🏢 Fin du raid") : G.exp.guerre ? (C.fin === "victoire" ? "⭐ Voir le butin" : "Continuer") : C.fin === "victoire" ? "🔍 Fouiller les lieux" : C.fin === "fuite" ? "🏃 Continuer la fouille" : "Continuer") + '</button>'
-    : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button></div>';
+    : '<div class="row"><button class="btn" data-act="ctour">▶️ Jouer</button><button class="btn alt" style="flex:0 0 auto" data-act="cauto">🤖 Auto</button><button class="btn alt" style="flex:0 0 auto" data-act="cfuir">🏃 ' + Math.round(BAL.combat.fuite * 100) + '%</button>' + (typeof tigreLegende === "function" && tigreLegende() ? '<button class="btn tigre-btn" style="flex:0 0 auto" data-act="ctigre" title="' + (tigreUtilise() ? 'Raja a déjà bondi dans cette partie' : 'Lâcher le tigre : une fois par partie') + '"' + (tigreUtilise() ? ' disabled' : '') + '><img src="images/portrait-tigre.webp" alt="Lâcher le tigre"><span class="tg-txt">Tigre</span></button>' : '') + '</div>';
   show(h + '</div></div>'); $("sheet").classList.add("large"); // le combat prend toute la largeur
   if(fini) equipeCombat().forEach(function(x){ var j = G.m.indexOf(x); if(dernierPV && dernierPV.m[j] > x.hp) touche = true; });
   // L'écran tremble quand quelqu'un de la famille est touché
@@ -1511,6 +1511,12 @@ document.addEventListener("click", function(e){
     jouerTour(ch); render(); openCombat(); return;
   }
   else if(a === "cfuir"){ fuir(); render(); openCombat(); return; }
+  else if(a === "ctigre"){ // Raja bondit à travers la scène, puis les zombies tombent
+    if(!(typeof tigreLegende === "function" && tigreLegende()) || tigreUtilise()) return;
+    var t = document.createElement("img"); t.src = "images/tigre-bond.webp"; t.className = "tigre-saut"; document.body.appendChild(t);
+    if(typeof son === "function"){ son("zombie"); son("coup", 450); } if(typeof vibrer === "function") vibrer([80, 40, 160]);
+    setTimeout(function(){ lacherTigre(); render(); openCombat(); }, 750); setTimeout(function(){ t.remove(); }, 1300); return;
+  }
   else if(a === "cauto"){
     // Joue tous les tours ; garde le journal complet pour qu'on voie ce qui s'est passé
     var tout = [], g = 0;
