@@ -317,6 +317,13 @@ function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(con
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 // Changer de pseudo dans un clan (2026-11-12) : une fois tous les 30 jours, jamais pendant une guerre (sinon on ne sait plus qui est qui)
 const PSEUDO_DELAI = 30 * 24 * 3600 * 1000;
+// Après avoir quitté un clan de soi-même : 24 h avant d'en rejoindre ou d'en fonder un autre (2026-11-12, idée de Fabien : pas de saut de clan en clan pendant les guerres)
+const ATTENTE_CLAN = 24 * 3600 * 1000;
+function attenteClan(C, id, now){
+  const t = C.departs && C.departs[id]; if(!t || now - t >= ATTENTE_CLAN) return "";
+  const h = Math.ceil((ATTENTE_CLAN - (now - t)) / 3600000);
+  return "Tu as quitté un clan il y a moins de 24 h : tu pourras en rejoindre ou en fonder un autre dans " + h + " h.";
+}
 function noter(c, qui, txt){ c.journal = c.journal || []; c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const vr = vueRaid(c, id); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
@@ -414,6 +421,7 @@ async function clansPost(request, env){
       if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
       if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour fonder un clan." });
       if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      if(attenteClan(C, id, now)) return reponse({ erreur: attenteClan(C, id, now) });
       const nom = nomPropre(d.nom, 20); if(nom.length < 3) return reponse({ erreur: "Le nom du clan doit faire au moins 3 lettres." });
       if(texteInterdit(nom)) return reponse({ erreur: MSG_NOM_INTERDIT });
       if(Object.values(C.clans).some((c) => c.nom.toLowerCase() === nom.toLowerCase())) return reponse({ erreur: "Ce nom de clan est déjà pris." });
@@ -427,6 +435,7 @@ async function clansPost(request, env){
       if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
       if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour rejoindre un clan." });
       if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      if(attenteClan(C, id, now)) return reponse({ erreur: attenteClan(C, id, now) });
       const c = C.clans[String(d.clan || "")]; if(!c) return reponse({ erreur: "Ce clan n’existe plus." });
       if(c.membres.length >= MAX_CLAN) return reponse({ erreur: "Ce clan est complet (" + MAX_CLAN + " familles)." });
       c.membres.push({ id, pseudo, jour, vu: now, rejoint: now, cadre: cadreDe(d) }); C.parJoueur[id] = c.id; await sauver();
@@ -436,7 +445,7 @@ async function clansPost(request, env){
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       bastionDe(mon);
       if(d.raison === "mort") noter(mon, "💀", "La famille de " + (pseudo || "?") + " est tombée" + (jour ? " au jour " + jour : "") + ". Le clan perd une famille.");
-      else noter(mon, "🚪", (pseudo || "?") + " a quitté le clan.");
+      else { noter(mon, "🚪", (pseudo || "?") + " a quitté le clan."); C.departs = C.departs || {}; Object.keys(C.departs).forEach((k) => { if(now - C.departs[k] >= ATTENTE_CLAN) delete C.departs[k]; }); C.departs[id] = now; } // 24 h avant un autre clan (pas après une mort ni une exclusion)
       mon.membres = mon.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
       if(!mon.membres.length) delete C.clans[mon.id];
       else if(mon.chef === id) mon.chef = mon.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;

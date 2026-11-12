@@ -553,7 +553,7 @@ document.addEventListener("click", function(e){
     if(!lirePseudo()){ show('<h2>⚔️ Rejoindre un clan</h2><p>Choisis d’abord ton pseudo : c’est lui que les autres membres verront.</p><div class="row"><button class="btn" data-act="saisie" data-id="p" data-retour="clans">👤 Mon pseudo</button><button class="btn alt" data-act="clans">Retour</button></div>'); return; }
     appelClans({ action:"rejoindre", clan:id }).then(function(d){ reponse(d, "✅ Bienvenue dans le clan !"); }).catch(function(){ openClans(); });
   }
-  else if(a === "clanquitter"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Vraiment quitter ?"; return; } appelClans({ action:"quitter" }).then(function(d){ reponse(d, "Tu as quitté le clan."); }); }
+  else if(a === "clanquitter"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Vraiment quitter ? Tu devras attendre 24 h avant un autre clan"; return; } appelClans({ action:"quitter" }).then(function(d){ reponse(d, "Tu as quitté le clan. Tu pourras en rejoindre ou en fonder un autre dans 24 h."); }); }
   else if(a === "clanexclure"){ if(!b.classList.contains("confirme")){ b.classList.add("confirme"); b.textContent = "Confirmer"; return; } appelClans({ action:"exclure", cible:id }).then(function(d){ reponse(d, "Membre exclu."); }); }
 });
 

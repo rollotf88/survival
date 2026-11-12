@@ -59,7 +59,7 @@ function reglesGuide(){
       "Chaque membre gagne des titres en faisant vraiment les choses : " + TITRES.map(function(t){ return t.icone + " <b>" + t.nom + "</b> (" + t.n + " " + NOMS_EXPLOITS[t.k] + ") : " + t.effet; }).join(" ; ") + ". " +
       "Les titres et les compteurs se voient dans la fiche du membre (toucher sa carte). Un membre expérimenté vaut de l’or : le perdre fait mal."],
     ["Les clans", ic("bastion", "🏰"),
-      "Dès le jour " + BAL.jourClans + ", ta famille peut fonder ou rejoindre un clan de 5 familles au plus (menu ☰ → Clans). Chacun garde sa maison et sa partie ; le clan ajoute 3 pièces : la grande salle, la salle du trésor et la cour fortifiée. " +
+      "Dès le jour " + BAL.jourClans + ", ta famille peut fonder ou rejoindre un clan de 5 familles au plus (menu ☰ → Clans). Après avoir quitté un clan, il faut attendre 24 h avant d’en rejoindre ou d’en fonder un autre (pas après une exclusion par le chef, ni quand la famille meurt). Chacun garde sa maison et sa partie ; le clan ajoute 3 pièces : la grande salle, la salle du trésor et la cour fortifiée. " +
       "La réserve du clan se remplit avec les dépôts de chacun (vivres, soins, munitions, matériaux) : on peut prendre 5 objets par jour, et au plus 5 de plus que ce qu’on a déposé. Elle paie les défenses : remparts, mines, tours de guet (+1 de défense de nuit pour chaque famille), armurerie et le camion. " +
       "Un clan complet peut partir en guerre contre un autre clan de sa ligue : 3 jours, un assaut par membre et par jour, des étoiles pour gagner et une part de la réserve adverse en butin. Les victoires rapportent des trophées et font monter de ligue (Ferraille, Bronze, Argent, Or, Légende)."],
     ["Les opérations du clan", ic("cible", "🎯"),
