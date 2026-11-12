@@ -701,11 +701,17 @@ function dormeurLit(lit){
 // par-dessus les personnes, pour que leurs pieds restent visibles. Papa dans le fauteuil (bottes visibles), Léo et Maman
 // sur le canapé (image Gemini dessinée sur le salon sans table, sans décalage). Emma (3e place) : image ChatGPT
 // (salon redessiné), découpée le long de son contour et mise à l'échelle (255 px de haut).
-var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366, 343, 488, 628, "canape-leo"], "Emma":[490, 375, 579, 630, "canape-emma"], "Maman":[578, 342, 705, 631, "canape-maman"] };
+var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366, 343, 488, 628, "canape-leo"], "Emma":[490, 375, 579, 630, "canape-emma"], "Maman":[578, 342, 705, 631, "canape-maman"],
+  // Recrues (2026-11-12, image ChatGPT découpée au contour) : à la place du membre qu'elles remplacent, comme pour les lits
+  "Yanis":[74, 372, 348, 732, "fauteuil-yanis"], "Nora":[386, 348, 469, 628, "canape-nora"] };
 var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 786, function(){ return true; }];
 function auSalon(r){
   if(!G || !G.m) return false;
   var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
+  if(FAMILLE_ORIGINE.indexOf(r) < 0){ // une recrue ne prend la place que si son propriétaire n'est plus là
+    var pro = FAMILLE_ORIGINE.filter(function(f){ return LIT_DE[f] === LIT_DE[r]; })[0];
+    if(G.m.some(function(y){ return roleDormeur(y) === pro && y.al; })) return false;
+  }
   return !!(x && x.al && !x.raid && !enSortie(x) && peutSortir(x) && G.sel.indexOf(i) < 0);
 }
 (function(){
