@@ -706,8 +706,23 @@ var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366,
   "Yanis":[74, 372, 348, 732, "fauteuil-yanis"], "Nora":[386, 348, 469, 628, "canape-nora"],
   "Sam":[482, 360, 586, 630, "canape-sam"], "Inès":[599, 348, 684, 631, "canape-ines"] };
 var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 786, function(){ return true; }];
-function auSalon(r){
+// Le cuisinier du jour (2026-11-12, image ChatGPT) : le jour où l'on a cuisiné, Maman est aux fourneaux dans la cuisine
+// (et donc pas sur le canapé). Les autres membres auront leur image plus tard (CUISINIERS).
+var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"] };
+function cuisinierDuJour(){
+  if(!G || !G.m || G.cuisineJour !== G.day) return null;
+  for(var r in CUISINIERS) if(auSalon(r, true)) return r;
+  return null;
+}
+(function(){
+  var P = PIECES.find(function(p){ return p.id === "cuisine"; }); if(!P) return;
+  P.decor = P.decor || [];
+  Object.keys(CUISINIERS).forEach(function(r){ var L = CUISINIERS[r];
+    P.decor.push(["images/personnages/" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return cuisinierDuJour() === r; }]); });
+})();
+function auSalon(r, sansCuisine){
   if(!G || !G.m) return false;
+  if(!sansCuisine && cuisinierDuJour() === r) return false; // aux fourneaux
   var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
   if(FAMILLE_ORIGINE.indexOf(r) < 0){ // une recrue ne prend la place que si son propriétaire n'est plus là
     var pro = FAMILLE_ORIGINE.filter(function(f){ return LIT_DE[f] === LIT_DE[r]; })[0];

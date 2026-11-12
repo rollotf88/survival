@@ -648,7 +648,7 @@ var RENCONTRES = [
         texte:"Un jeune homme s’avance. « Ici, on est trop nombreux. Je viens avec vous. »" },
       { t:"Repartir", effets:{}, texte:"Vous les saluez de loin et reprenez la route." }
     ] } } },
-  { id:"chien", titre:"🐕 Le chien piégé", nom:"Un chien", portrait:"", jour:4, cond:function(){ return !chien(); }, noeuds:{
+  { id:"chien", titre:"🐕 Le chien piégé", nom:"Un chien", portrait:"chienpiege", jour:4, cond:function(){ return !chien(); }, noeuds:{
     debut:{ texte:"Des gémissements sous une voiture : un chien, la patte coincée dans un collet rouillé.", choix:[
       { t:"Le libérer", chance:0.75,
         reussite:{ texte:"Il vous lèche la main, puis vous suit jusqu’au refuge en boitant. Il s’appelle peut-être Rex…", effets:{ chien:true, moral:10 } },
@@ -673,17 +673,17 @@ var LIEUX_AVANT_ETANG = 13;
    livrer : objets à donner depuis le stock (bouton « Livrer ») ;
    aller : il faut revenir vivant d'un lieu donné avant la fin du délai. */
 var MISSIONS = [
-  { id:"medicament", titre:"La fièvre de Lucie", icone:"💊", delai:3,
+  { id:"medicament", titre:"La fièvre de Lucie", icone:"💊", delai:3, portraits:["lucie", "pere"],
     texte:"Chez les voisins, la petite Lucie brûle de fièvre. Son père supplie : un antibiotique ou une trousse de soins, vite.",
     livrer:[{ antibio:1 }, { trousse:1 }],
     recompense:{ planche:6, clous:2 }, moral:10, merci:"Lucie va mieux. Son père vous apporte des planches et des clous de son atelier.",
     echec:"Les volets des voisins sont restés fermés ce matin. Personne n’ose en parler.", moralEchec:-10 },
-  { id:"convoi", titre:"Le convoi", icone:"🚚", delai:3,
+  { id:"convoi", titre:"Le convoi", icone:"🚚", delai:3, portraits:["convoi"],
     texte:"Un convoi de survivants passera bientôt. Ils réparent leurs camions et échangent 10 planches contre une trousse, 2 canettes et un jerrican.",
     livrer:[{ planche:10 }],
     recompense:{ trousse:1, canette:2, jerrican:1 }, moral:5, merci:"Le convoi repart en klaxonnant. Marché conclu !",
     echec:"Le convoi est passé sans s’arrêter.", moralEchec:0 },
-  { id:"detresse", titre:"Appel de détresse", icone:"📻", delai:2,
+  { id:"detresse", titre:"Appel de détresse", icone:"📻", delai:2, portraits:["detresse"],
     texte:"📻 Une voix à la radio : quelqu’un est coincé à LIEU, blessé. Il faut y aller (et revenir vivant) avant la fin du délai.",
     aller:true,
     recompense:{ conserve:4, bouteille:4, bandage:2 }, moral:10, merci:"Vous ramenez le survivant. Il partage ses réserves avant de partir rejoindre sa famille.",

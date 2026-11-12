@@ -2461,3 +2461,20 @@ body.pc #app .chip.chipson .chip-lbl{grid-row:1 / span 2;align-self:center}
   .menugrille .mt b{font-size:14px} .mn-reglages{margin:0 0 6px} .mr{flex-direction:row;justify-content:center;gap:5px;padding:4px} .mr-i img,.mr-i svg,.mr-i .ico{width:16px!important;height:16px!important}
 }
 @media (orientation:landscape) and (max-height:500px){ .menugrille .mt{gap:4px;padding:4px 5px} .mt-i{width:22px;height:22px;box-shadow:inset 0 0 0 1.5px var(--bois)} .mt-i img,.mt-i svg,.mt-i .ico{width:14px!important;height:14px!important} .menugrille .mt b{font-size:13px;letter-spacing:.2px} }
+
+/* Portraits dans le récit d'une mission (2026-11-12) */
+.sheet p.msg.mis-recit{display:flex;align-items:center;gap:10px}
+.mis-pors{flex:none;display:flex}
+.mis-pors img{width:58px;height:58px;border-radius:12px;object-fit:cover;box-shadow:0 0 0 2.5px var(--bois),0 2px 0 var(--line);background:#e8dcc4}
+.mis-pors img + img{margin-left:-14px;transform:rotate(4deg)}
+@media (orientation:landscape) and (max-height:500px){ .mis-pors img{width:44px;height:44px} }
+/* Écran du sac sur PC (2026-11-12, retour de Fabien : texte minuscule dans les onglets des maisons, bouton Bonus trop petit) */
+@media (min-width:1100px) and (min-height:620px){
+  #app:has(> .pk) > .tabs{gap:10px}
+  #app:has(> .pk) > .tabs .tab{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:6px 12px;font-size:17px;font-weight:900;line-height:1.1}
+  #app:has(> .pk) > .tabs .tab small{font-size:12.5px;font-weight:700;opacity:.8;margin-left:2px}
+  #app:has(> .pk) > .tabs .tab img,#app:has(> .pk) > .tabs .tab svg,#app:has(> .pk) > .tabs .tab .ico{width:26px!important;height:26px!important}
+  #app:has(> .pk) > .tabs .tab:disabled{opacity:.7;filter:grayscale(.5)}
+  .pk [data-act="adstart"]{min-height:50px;align-self:stretch;font-size:15px;padding:0 16px}
+  .pk [data-act="adstart"] .ico,.pk [data-act="adstart"] img.emo{width:20px;height:20px;vertical-align:-4px}
+}

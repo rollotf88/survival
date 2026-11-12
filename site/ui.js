@@ -599,7 +599,8 @@ function openMission(){
   var M = mission(); if(!M){ hide(); return; }
   var j = joursMission(), kl = M.livrer ? livraisonPossible() : -1;
   var h = teteInfo(M.icone, "Mission", M.titre, j > 1 ? (kl >= 0 ? "ok" : "moy") : "ko", j / M.delai * 100, j > 1 ? "⏳ Encore " + j + " jours" : "⏳ Dernier jour !");
-  h += '<p class="msg">' + texteMission() + '</p>';
+  // Portraits de la mission (image ChatGPT, 2026-11-12) : Lucie et son père, la cheffe du convoi, le survivant en détresse
+  h += '<p class="msg mis-recit">' + (M.portraits ? '<span class="mis-pors">' + M.portraits.map(function(k){ return '<img src="images/portrait-' + k + '.webp" alt="">'; }).join("") + '</span>' : '') + '<span>' + texteMission() + '</span></p>';
   var rec = []; for(var k in M.recompense) rec.push('<span class="ing2 rec" title="' + OBJETS[k].nom + '"><span class="ing2-case">' + icone(k) + '</span><b>×' + M.recompense[k] + '</b><small>' + (NOM_COURT[k] || OBJETS[k].nom) + '</small></span>');
   if(M.moral) rec.push('<span class="ing2 rec"><span class="ing2-case">😊</span><b>+' + M.moral + '</b><small>moral</small></span>');
   h += '<div class="mf-bloc"><p class="mf-titre">🎁 Récompense</p><div class="ings2">' + rec.join("") + '</div></div>';
@@ -1271,7 +1272,7 @@ function rIntro(){
     + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
-    + '<div class="ir-puces"><span>👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span></div></div>'
+    + '<div class="ir-puces"><span>👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span><span>🎲 Événements uniques</span></div></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
     + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button></div>';
