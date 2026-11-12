@@ -719,11 +719,15 @@ var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366,
 var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 786, function(){ return true; }];
 // Le cuisinier du jour (2026-11-12, image ChatGPT) : le jour où l'on a cuisiné, Maman est aux fourneaux dans la cuisine
 // (et donc pas sur le canapé). Les autres membres auront leur image plus tard (CUISINIERS).
-var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"] };
+// Papa, Léo et Emma ajoutés le 2026-11-12 (images Gemini, cuisine identique : découpe par différence, casserole comprise).
+// Qui cuisine : celui qui a le trait « Cuisinier », sinon Maman, Papa, Léo, Emma (dans cet ordre)
+var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"], "Papa":[140, 234, 464, 777, "cuisine-papa"],
+  "Léo":[140, 227, 468, 779, "cuisine-leo"], "Emma":[140, 237, 479, 780, "cuisine-emma"] };
 function cuisinierDuJour(){
   if(!G || !G.m || G.cuisineJour !== G.day) return null;
-  for(var r in CUISINIERS) if(auSalon(r, true)) return r;
-  return null;
+  var dispo = Object.keys(CUISINIERS).filter(function(r){ return auSalon(r, true); });
+  var chef = dispo.filter(function(r){ var x = G.m.find(function(y){ return roleDormeur(y) === r; }); return x && x.trait === "cuisinier"; })[0];
+  return chef || dispo[0] || null;
 }
 (function(){
   var P = PIECES.find(function(p){ return p.id === "cuisine"; }); if(!P) return;
