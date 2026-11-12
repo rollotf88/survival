@@ -94,3 +94,23 @@ Joindre : `images/refuge-fond-sans-table.webp` + `images/portrait-yanis.webp`, `
 Joindre : `images/refuge-fond-sans-table.webp` + `images/portrait-sam.webp`
 
 > Voici un salon (première image) et le portrait d'un homme (deuxième image). Garde le salon le plus identique possible : même cadrage, même style de dessin, mêmes couleurs, même lumière, pas de table basse. Ajoute UNIQUEMENT cet homme, assis sur le canapé vert, sur la TROISIÈME place en partant de la gauche (juste à gauche du plaid blanc), personne d'autre. Il est assis bien droit, tout entier sur sa place, les coudes sur les genoux ou les mains jointes, sans rien qui dépasse sur les places voisines. Ses jambes descendent normalement et ses DEUX pieds sont entièrement visibles, posés à plat sur le tapis. Même style que le portrait : dessin cartoon peint, contours brun foncé épais et nets tout autour de lui. Aucun texte.
+
+---
+
+## Cuisine et portraits manquants (ChatGPT, 2026-11-12)
+
+### Image C — un cuisinier aux fourneaux (une image par membre, en commençant par Maman)
+Joindre : `images/piece-cuisine.webp` + `images/portrait-maman.webp` (puis la même chose avec Papa, Léo, Emma…)
+
+> Voici une cuisine (première image) et le portrait d'une femme (deuxième image). Garde la cuisine le plus identique possible : même cadrage, même taille, même style de dessin, mêmes couleurs, même lumière. Ajoute UNIQUEMENT cette femme, debout devant la cuisinière, vue de trois quarts, en train de remuer une casserole avec une cuillère en bois. Personne d'autre. Elle est entière, de la tête aux pieds, ses DEUX pieds bien visibles posés au sol, et elle ne cache pas tout le plan de travail. Même style que le portrait : dessin cartoon peint, contours brun foncé épais et nets tout autour d'elle (elle sera découpée). Aucun texte.
+
+### Image P — planche de 6 portraits
+Joindre : `images/portrait-marchand.webp`, `images/portrait-roux.webp` (références de style et de cadrage)
+
+> Crée une planche de portraits dans EXACTEMENT le même style que les images jointes : dessin cartoon peint, contours brun foncé épais, couleurs chaudes un peu usées, même cadrage (buste, visage bien lisible) et même genre de fond. Grille régulière de 3 colonnes × 2 rangées, 6 cases carrées de même taille, séparées par une fine marge unie. Un seul portrait par case. Aucun texte, aucun cadre décoratif.
+> 1. une vieille radio portative posée sur une table, son petit voyant allumé, une lumière verdâtre qui sort du haut-parleur (la « voix à la radio »)
+> 2. un chien bâtard au pelage roux, maigre, la patte prise dans un piège à mâchoires rouillé, les yeux suppliants
+> 3. un père de famille d'une quarantaine d'années, mal rasé, l'air épuisé et inquiet, les mains jointes comme s'il suppliait
+> 4. une femme d'une cinquantaine d'années, casquette et blouson de routier, l'air décidé, chef d'un convoi de survivants
+> 5. un jeune homme blessé au front, une fusée de détresse rouge allumée à la main, qui appelle à l'aide
+> 6. une petite fille de 8 ans couchée dans un lit, fiévreuse, un linge humide sur le front
