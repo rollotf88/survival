@@ -895,10 +895,10 @@ function paliersLegende(n){
    La Légende du mois (et elle seule, tant qu'elle a la couronne) peut lâcher Raja une fois par partie dans un combat :
    bouton « Lâcher le tigre » (ui.js), effet dans lacherTigre (logique.js), couché au salon (piece.js). */
 var HISTOIRE_TIGRE = "Quand les villes sont tombées, le zoo de la ville a été abandonné du jour au lendemain. Les gardiens ont fui, les cages sont restées fermées. "
-  + "Des semaines plus tard, une survivante a entendu des rugissements derrière les grilles rouillées : un tigre, affamé, qui se jetait contre les barreaux. "
-  + "Chaque nuit, elle est revenue lui glisser un peu de viande, sans jamais ouvrir la cage. Au bout d’un mois, le tigre a cessé de gronder quand elle approchait. "
-  + "Le jour où elle a ouvert la porte, il ne l’a pas dévorée : il l’a suivie. On l’appelle Raja. On dit qu’il ne reste qu’auprès de la plus grande survivante de son temps… "
-  + "et qu’il change de maître le jour où quelqu’un fait mieux qu’elle.";
+  + "Des semaines plus tard, un survivant a entendu des rugissements derrière les grilles rouillées : un tigre, affamé, qui se jetait contre les barreaux. "
+  + "Chaque nuit, il est revenu lui glisser un peu de viande, sans jamais ouvrir la cage. Au bout d’un mois, le tigre a cessé de gronder quand il approchait. "
+  + "Le jour où il a ouvert la porte, le tigre ne l’a pas dévoré : il l’a suivi. On l’appelle Raja. On dit qu’il ne reste qu’auprès du plus grand survivant de son temps… "
+  + "et qu’il change de maître le jour où quelqu’un fait mieux que lui.";
 function tigreLegende(){ return !!(LEGENDE && LEGENDE.moi); }
 function openTigre(){
   var dispo = tigreLegende() && typeof tigreUtilise === "function" && !(G && G.ph === "game" && tigreUtilise());
