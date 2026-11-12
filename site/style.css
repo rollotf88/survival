@@ -2660,3 +2660,12 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 .cadre-leg small{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;opacity:.75}
 .cadre-leg em{font-style:normal;font-size:12.5px;font-weight:800;line-height:1.3}
 .pf-regle{display:block;font-size:11px;font-weight:700;color:var(--mut);letter-spacing:0!important;text-transform:none!important}
+
+/* Profil plus compact (2026-11-12, retour de Fabien) */
+.pf-onglets .tab{font-size:14px;padding:6px 4px;min-height:0;line-height:1.1}
+.pf-onglets .tab small{font-size:10.5px}
+.pf-onglets .tab .ico,.pf-onglets .tab img.emo{width:16px!important;height:16px!important;vertical-align:-3px}
+.pf-tuiles .tuile b{font-size:18px}
+.pf-tuiles .tuile small{font-size:10px;line-height:1.15}
+.sheet p.msg.pf-msg{font-size:13.5px;padding:6px 10px;margin:0 0 8px}
+@media (max-width:420px){ .pf-grille{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px} }

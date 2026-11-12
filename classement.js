@@ -16,7 +16,8 @@ function idAppareil(){
   if(!id){ id = ""; for(var k = 0; k < 16; k++) id += "abcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random() * 36)); try{ localStorage.setItem("survival_id", id); }catch(e){} }
   return id;
 }
-function lirePseudo(){ try{ return localStorage.getItem("survival_pseudo") || ""; }catch(e){ return ""; } }
+// Un pseudo interdit enregistré avant le filtre (ou par une vieille fenêtre) ne compte plus : le jeu en redemande un (2026-11-12)
+function lirePseudo(){ var p = ""; try{ p = localStorage.getItem("survival_pseudo") || ""; }catch(e){} return p && typeof texteInterdit === "function" && texteInterdit(p) ? "" : p; }
 function echapper(t){ return String(t).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
 function eme(n){ return n + (n === 1 ? "er" : "e"); }
 
@@ -31,6 +32,7 @@ function openEnvoiScore(){
 function envoyerScore(){
   var pseudo = ($("pseudo").value || "").trim().slice(0, 16);
   if(!pseudo){ $("msgcl").textContent = "Il faut un pseudo."; return; }
+  if(typeof texteInterdit === "function" && texteInterdit(pseudo)){ $("msgcl").textContent = MSG_NOM_INTERDIT; return; }
   try{ localStorage.setItem("survival_pseudo", pseudo); }catch(e){}
   $("msgcl").textContent = "Envoi…";
   fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
@@ -975,8 +977,8 @@ function openProfil(msg){
     + '<div class="pf-tete"><button class="pf-av" data-act="pfonglet" data-id="avatar" aria-label="Changer d’avatar">' + avatarHtml(a, p || "?", "pf-grand") + '<i>Changer</i></button>'
     + '<span class="pf-id"><small>Mon profil</small><b>' + (p ? pseudoCadre(p, cadreActif()) : '<em>Pas encore de pseudo</em>') + '</b>'
     + boutonPseudo(p) + '</span></div>'
-    + (msg ? '<p class="msg g2">' + msg + '</p>' : '')
-    + '<div class="tabs onglets">' + [["profil", "👤 Mon profil", "Mes chiffres"], ["avatar", "🖼️ Avatar", "Choisir un portrait"], ["historique", "📜 Historique", H.length + " partie" + (H.length > 1 ? "s" : "")]].map(function(o){
+    + (msg ? '<p class="msg g2 pf-msg">' + msg + '</p>' : '')
+    + '<div class="tabs onglets pf-onglets">' + [["profil", "👤 Profil", "Mes chiffres"], ["avatar", "🖼️ Avatar", "Un portrait"], ["historique", "📜 Historique", H.length + " partie" + (H.length > 1 ? "s" : "")]].map(function(o){
       return '<button class="tab' + (o[0] === ongletProfil ? " on" : "") + '" data-act="pfonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(ongletProfil === "avatar"){
     h += '<p class="sub">Ton avatar s’affiche dans le classement et dans ton clan. Il reste le même d’une partie à l’autre.</p>';
@@ -988,7 +990,7 @@ function openProfil(msg){
     else h += '<div class="pf-histo">' + H.map(function(x){ var d = new Date(x.t);
       return '<div class="pf-h"><span class="pf-h-d">' + d.getDate() + ' ' + MOIS_FR[d.getMonth()].slice(0, 4).replace(/\.$/, "") + '.</span><span class="pf-h-t"><b>⭐ ' + x.score + ' points</b><small>' + x.jours + ' jour' + (x.jours > 1 ? "s" : "") + ' tenus · ' + x.zombies + ' zombie' + (x.zombies > 1 ? "s" : "") + ' · ' + x.morts + ' mort' + (x.morts > 1 ? "s" : "") + '</small></span><span class="pf-h-m' + (x.classee ? " cl" : "") + '">' + (x.classee ? "Classée" : "Libre") + '</span></div>'; }).join("") + '</div>';
   } else {
-    h += tuiles([["familles", J.parties || 0], ["meilleur score", (J.meilleur || 0) + " ⭐", "ok"], ["plus longue survie", (J.plusLongue || 0) + " j"], ["zombies abattus", J.zombies || 0]]);
+    h += tuiles([["familles", J.parties || 0], ["meilleur score", (J.meilleur || 0) + " ⭐", "ok"], ["plus longue survie", (J.plusLongue || 0) + " j"], ["zombies abattus", J.zombies || 0]]).replace('class="tuiles', 'class="tuiles t4 pf-tuiles');
     h += '<div class="pf-lignes"><button class="loc" data-act="cadres"><b>🖼️ Mon cadre : ' + cad.nom + '</b><small>Débloque de nouveaux cadres avec les succès</small></button>'
       + '<button class="loc" data-act="stats"><b>📊 Toutes mes stats</b><small>Poissons, planches, missions, morts…</small></button></div>';
     h += '<p class="titre-butin">🔗 Retrouver ma partie partout</p><div class="pf-comptes">'
