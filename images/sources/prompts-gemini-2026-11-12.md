@@ -74,3 +74,23 @@ Joindre : `images/refuge-fond-sans-table.webp` (le salon du jeu, sans table, san
 Conseil : dans ChatGPT, ouvrir l'image, outil « Sélectionner » (pinceau), peindre seulement la 3e place du canapé et le tapis juste devant, puis écrire le texte ci-dessous : le reste de l'image ne bouge pas.
 
 > Voici un salon (première image) et le portrait d'une jeune fille (deuxième image). Garde le salon EXACTEMENT identique : même cadrage, même taille (1024 × 1050), même style de dessin, mêmes couleurs, même lumière. Ajoute UNIQUEMENT la jeune fille du portrait, assise sur le canapé vert, sur la TROISIÈME place en partant de la gauche (juste à gauche du plaid blanc). Elle est seule : n'ajoute personne d'autre, les autres places restent vides (d'autres personnages seront ajoutés plus tard par découpage, elle ne doit donc pas déborder sur les places voisines). Elle serre un coussin contre elle, elle est assise bien droite, ses jambes descendent normalement et ses DEUX pieds sont entièrement visibles, posés à plat sur le tapis devant le canapé. Même style que le portrait (dessin cartoon peint, contours brun foncé). Ne déplace ni ne retire aucun coussin ni le plaid, ne change rien d'autre. Pas de table basse. Aucun texte.
+
+---
+
+## Les recrues au salon (ChatGPT, 2026-11-12) : 2 images
+Chaque recrue prend la place du membre qu'elle remplace (comme pour les lits) : Yanis = fauteuil (Papa), Nora = 2e place (Léo), Sam = 3e place (Emma), Inès = 4e place (Maman).
+Claude découpe chaque personne le long de son contour noir : il faut qu'aucune ne touche une autre. Sam est donc seul sur la deuxième image (sa place est entre Nora et Inès).
+
+### Image R1 — Yanis, Nora, Inès
+Joindre : `images/refuge-fond-sans-table.webp` + `images/portrait-yanis.webp`, `images/portrait-nora.webp`, `images/portrait-ines.webp`
+
+> Voici un salon (première image) et les portraits de trois personnes. Garde le salon le plus identique possible : même cadrage, même style de dessin, mêmes couleurs, même lumière, pas de table basse. Ajoute ces trois personnes, et personne d'autre :
+> – l'homme du premier portrait assis dans le FAUTEUIL rouge à gauche, tourné vers le canapé comme quelqu'un qui se repose, une tasse dans les mains ;
+> – la femme du deuxième portrait assise sur le canapé vert, sur la DEUXIÈME place en partant de la gauche, les mains posées sur les genoux ;
+> – la femme du troisième portrait assise sur le canapé, sur la QUATRIÈME place (tout à droite), les bras croisés.
+> La troisième place du canapé reste VIDE. Les trois personnes ne se touchent pas et ne se chevauchent pas : il y a de l'espace autour de chacune (elles seront découpées une par une). Chacune est assise bien droite, en entier : tête, cheveux, bras, jambes et les DEUX pieds bien visibles, posés à plat sur le tapis. Même style que les portraits : dessin cartoon peint, contours brun foncé épais et nets tout autour de chaque personne. Aucun texte.
+
+### Image R2 — Sam
+Joindre : `images/refuge-fond-sans-table.webp` + `images/portrait-sam.webp`
+
+> Voici un salon (première image) et le portrait d'un homme (deuxième image). Garde le salon le plus identique possible : même cadrage, même style de dessin, mêmes couleurs, même lumière, pas de table basse. Ajoute UNIQUEMENT cet homme, assis sur le canapé vert, sur la TROISIÈME place en partant de la gauche (juste à gauche du plaid blanc), personne d'autre. Il est assis bien droit, tout entier sur sa place, les coudes sur les genoux ou les mains jointes, sans rien qui dépasse sur les places voisines. Ses jambes descendent normalement et ses DEUX pieds sont entièrement visibles, posés à plat sur le tapis. Même style que le portrait : dessin cartoon peint, contours brun foncé épais et nets tout autour de lui. Aucun texte.
