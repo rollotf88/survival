@@ -12,7 +12,7 @@ function reglesGuide(){
     ["Boire et manger", ic("bouteille", "💧"),
       "Chaque nuit, chaque membre boit 1 ration d’eau et mange 1 ration de nourriture : ça compense ce qu’il a perdu dans la journée (−" + B.soifParJour + " de soif, −" + B.faimParJour + " de faim). " +
       "Si une jauge est sous " + B.rattrapage + ", il prend une ration de plus, s’il en reste assez pour les autres. " +
-      "Tu peux aussi le faire boire ou manger quand tu veux avec le bouton ＋ de sa carte. Une jauge à 0 fait perdre " + B.degatsFaimSoif + " PV par nuit."],
+      "Tu peux aussi le faire boire ou manger quand tu veux en touchant sa carte, puis « Soigner · boire, manger ». Une jauge à 0 fait perdre " + B.degatsFaimSoif + " PV par nuit."],
     ["L’énergie", "⚡",
       "Une expédition coûte " + (B.energieBase + B.energieParDistance) + " ⚡ (près), " + (B.energieBase + 2 * B.energieParDistance) + " ⚡ (moyen) ou " + (B.energieBase + 3 * B.energieParDistance) + " ⚡ (loin). " +
       "En voiture, seule la fouille coûte (" + B.energieBase + " ⚡). Sous " + B.fatigueSeuil + " ⚡ au départ, on est fatigué : fouille et combat moins bons. " +

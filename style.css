@@ -2739,3 +2739,8 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 .rf-action{display:flex;align-items:center;gap:10px}
 .rf-action .ings2{flex:none;margin:0}
 .rf-action > .btn{flex:1;min-width:0;margin:0}
+
+/* « Où envoyer l’équipe ? » : bouton Soigner sous l’alerte d’un blessé (2026-11-12) */
+.lo-soins{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 8px}
+.btn.lo-soin{flex:1 1 140px;min-height:0;padding:7px 10px;font-size:14px}
+.btn.lo-soin .ico,.btn.lo-soin img.ico-img{width:18px;height:18px;vertical-align:-3px}

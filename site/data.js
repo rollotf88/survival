@@ -915,7 +915,7 @@ var ASTUCES = {
   equipement: "🗡️ Sous chaque membre, 3 cases : arme, outil (lampe, boîte à outils…) et sac. Une case orange avec un « + » : un objet t’attend au stock, touche-la pour l’équiper.",
   lieux:      "🗺️ Chaque lieu contient une vraie liste d’objets qui ne revient jamais. Lieu sombre : prends une lampe. Porte verrouillée : une boîte à outils.",
   combat:     "⚔️ Touche un zombie pour le viser, puis choisis l’action de chacun : frapper, viser la tête, pousser, se protéger… La bulle au-dessus d’un zombie dit ce qu’il va faire. 🤖 Auto joue à ta place.",
-  dormir:     "🌙 Plus personne n’a assez d’énergie : appuie sur Dormir (ou touche le canapé). Chacun mange et boit une ration (touche ＋ sur une carte pour boire ou manger en plus)… et la nuit, ils peuvent attaquer.",
+  dormir:     "🌙 Plus personne n’a assez d’énergie : appuie sur Dormir (ou touche le canapé). Chacun mange et boit une ration (touche une carte puis « Soigner » pour boire ou manger en plus)… et la nuit, ils peuvent attaquer.",
   score:      "⭐ Ton score : 1 point par jour et par membre en vie. Garde toute la famille en vie le plus longtemps possible !",
   atelier:    "🛠️ Le refuge : construis des défenses, fabrique (soins, armes, bâche pour l’eau de pluie…), répare et démonte. Et plus tard, répare la voiture.",
   foret:      "🌲 La forêt : un survivant avec une hache en main coupe du bois (2 ou 3 planches). Les arbres ne repoussent pas, et la hache s’use.",

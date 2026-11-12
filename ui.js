@@ -84,7 +84,8 @@ function locuteurEvenement(ev){
   return null;
 }
 var retourPiece = null; // pièce où revenir à la fermeture de la fenêtre (salon après une expédition, bastion après un assaut)
-function hide(){ $("modal").style.display = "none"; if(G && G.ph === "accueil" && window.htmlAccueil) setTimeout(function(){ if(G.ph === "accueil" && $("modal").style.display === "none"){ show(window.htmlAccueil); if(typeof poserMonde === "function") poserMonde(); } }, 0); /* fermer le guide (ou une autre fenêtre) depuis l'accueil du téléphone y ramène */ if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
+var retourLieux = false;
+function hide(){ $("modal").style.display = "none"; if(retourLieux){ retourLieux = false; if(G && G.ph === "game" && !G.exp) setTimeout(function(){ openLoc(); }, 0); } if(G && G.ph === "accueil" && window.htmlAccueil) setTimeout(function(){ if(G.ph === "accueil" && $("modal").style.display === "none"){ show(window.htmlAccueil); if(typeof poserMonde === "function") poserMonde(); } }, 0); /* fermer le guide (ou une autre fenêtre) depuis l'accueil du téléphone y ramène */ if(retourPiece && typeof allerPieceId === "function"){ var rp = retourPiece; retourPiece = null; allerPieceId(rp); } if(typeof lieuResultat !== "undefined" && lieuResultat !== null){ lieuResultat = null; if(typeof placerPiece === "function") placerPiece(); } if(typeof panneauPieceApresFermeture === "function") panneauPieceApresFermeture(); }
 var BTN_FERMER = function(t){ return '<button class="btn alt' + (t ? "" : " btn-fermer") + '" style="width:100%" data-act="close">' + (t || "Fermer") + '</button>'; };
 
 /* ---------- Écran de départ : le sac ---------- */
@@ -186,7 +187,9 @@ function openLoc(){
   var team = G.sel.map(function(j){ return G.m[j]; });
   // Aide aux débutants : prévenir qu'un membre très blessé risque sa vie en cas de combat
   var bles = team.filter(function(x){ return x.hp < 35; });
-  if(bles.length) h += '<p class="msg b2 lo-alerte">⚠️ <b>' + liste(bles.map(function(x){ return x.nom + " (" + x.hp + " ❤️)"; })) + '</b> ' + (bles.length > 1 ? "sont gravement blessés" : "est gravement blessé" + (estFeminin(bles[0]) ? "e" : "")) + ' : ' + (bles.length > 1 ? "soigne-les" : estFeminin(bles[0]) ? "soigne-la" : "soigne-le") + ' avant de partir (bouton +).</p>';
+  if(bles.length) h += '<p class="msg b2 lo-alerte">⚠️ <b>' + liste(bles.map(function(x){ return x.nom + " (" + x.hp + " ❤️)"; })) + '</b> ' + (bles.length > 1 ? "sont gravement blessés" : "est gravement blessé" + (estFeminin(bles[0]) ? "e" : "")) + ' : ' + (bles.length > 1 ? "soigne-les" : estFeminin(bles[0]) ? "soigne-la" : "soigne-le") + ' avant de partir.</p>'
+    // Un bouton « Soigner » par blessé (2026-11-12, retour de Fabien : le « bouton + » n'existe plus sur téléphone)
+    + '<div class="lo-soins">' + bles.map(function(x){ return '<button class="btn alt lo-soin" data-act="losoin" data-id="' + G.m.indexOf(x) + '">' + ic("trousse", "⛑️") + ' Soigner ' + x.nom + '</button>'; }).join("") + '</div>';
   var porte = function(test){ return team.some(function(x){ return x.eq.outil && test(OBJETS[x.eq.outil.id]); }); };
   var lumiere = porte(function(o){ return o.lumiere === 2; }) ? (compter("pile") > 0 ? "🔦 lampe prête" : "⚠️ lampe sans pile") : porte(function(o){ return o.lumiere === 1; }) ? "🔥 lueur faible" : "⚠️ pas de lumière";
   var ouvre = porte(function(o){ return o.ouvre; }) ? "🔓 de quoi ouvrir" : "⚠️ porte à forcer";
@@ -303,7 +306,7 @@ function panneauApresCombat(C, L){
     h += '<p class="titre-butin">📦 Ici</p><div class="tb-bloc"><b>' + reste + ' objet' + (reste > 1 ? "s" : "") + ' à fouiller</b><small>' + (C.fin === "fuite" ? "Vous avez fui : vous ne rapporterez que la moitié de ce que vous trouverez." : "Ce qui ne rentre pas dans les sacs restera sur place pour une prochaine fois.") + '</small></div>';
   }
   var blesse = vivant.filter(function(x){ return x.hp < 40; });
-  if(blesse.length) h += '<p class="msg">⚠️ ' + liste(blesse.map(function(x){ return x.nom; })) + (blesse.length > 1 ? " sont blessés" : " est blessé" + (estFeminin(blesse[0]) ? "e" : "")) + " : pense à soigner en rentrant (bouton ＋ sur sa carte).</p>";
+  if(blesse.length) h += '<p class="msg">⚠️ ' + liste(blesse.map(function(x){ return x.nom; })) + (blesse.length > 1 ? " sont blessés" : " est blessé" + (estFeminin(blesse[0]) ? "e" : "")) + " : pense à soigner en rentrant (touche sa carte, puis « Soigner »).</p>";
   var casse = vivant.filter(function(x){ return x.eq.arme && x.eq.arme.sol <= 2; });
   if(casse.length) h += '<p class="msg">🔧 L’arme de ' + liste(casse.map(function(x){ return x.nom; })) + ' est presque cassée : répare-la à l’atelier.</p>';
   return h;
@@ -1448,7 +1451,7 @@ function openInfo(id){
     L.push(["", "🌙 Chaque nuit, chacun " + (eau ? "boit" : "mange") + " 1 ration, et 1 de plus si sa jauge tombe sous " + BAL.rattrapage + "."]);
     if(prod) L.push(["g2", ic(eau ? "ref_eau" : "ref_pot", eau ? "🪣" : "🥕") + " " + (eau ? "Le récupérateur" : "Le potager") + " rapporte " + prod + " ration" + (prod > 1 ? "s" : "") + " par nuit."]);
     else L.push(["", (eau ? "🪣 Construis un récupérateur d’eau, fabrique une bâche, ou profite de la pluie." : "🥕 Construis un potager, pêche à l’étang, élève des poules ou pose des collets.")]);
-    L.push(["", "➕ Une ration de plus dans la journée (bouton ＋ d’un membre) ne sert qu’en urgence."]);
+    L.push(["", "➕ Une ration de plus dans la journée (touche un membre, puis « Soigner · boire, manger ») ne sert qu’en urgence."]);
     h += lignesInfo("Bon à savoir", L);
   } else if(id === "soin"){
     var cs = []; for(var k in G.stock.n) if(OBJETS[k].soin) cs.push(caseObjet(k, { act:"aucun", cle:k, n:G.stock.n[k], fixe:true }));
@@ -1456,7 +1459,7 @@ function openInfo(id){
     h = teteInfo(ic("trousse", "⛑️"), "Objets de soin", soinsDispo(), !soinsDispo() ? "ko" : soinsDispo() < blesses ? "moy" : "ok", soinsDispo() / Math.max(1, v * 2) * 100, !soinsDispo() ? "Aucun soin" : soinsDispo() < blesses ? "Trop peu" : "Ça va")
       + tuiles([["blessés", blesses, blesses ? "ko" : "ok"], ["bonus soigneur", bonusSoin() ? "+" + bonusSoin() + " PV" : "—", bonusSoin() ? "ok" : ""], ["repos / nuit", "+" + BAL.regenPV + " PV", ""]])
       + (cs.length ? etageres(cs, 5) : '');
-    L.push(["", "➕ Pour soigner quelqu’un, touche le ＋ de sa carte : le soin le mieux adapté est choisi tout seul."]);
+    L.push(["", "➕ Pour soigner quelqu’un, touche sa carte puis « Soigner » : le soin conseillé est mis en avant."]);
     if(!cs.length) L.push(["b2", "🩹 Aucun soin au refuge : cherche à l’hôpital, au supermarché, ou fabrique des bandages à l’atelier."]);
     h += lignesInfo("Bon à savoir", L);
   } else if(id === "def"){
@@ -1512,6 +1515,7 @@ document.addEventListener("click", function(e){
     if(document.body.classList.contains("pc")){ render(); openMembre(i); return; } }
   else if(a === "mtrait"){ var dt = $("mfTrait"); if(dt){ var cache = dt.classList.toggle("cache"); b.setAttribute("aria-expanded", String(!cache)); b.classList.toggle("ouvert", !cache); } return; }
   else if(a === "soins"){ openSoins(i); return; }
+  else if(a === "losoin"){ retourLieux = true; openSoins(i); return; } // depuis « Où envoyer l’équipe ? » : on y revient en fermant les soins
   else if(a === "heal"){ var qh = String(id).split(":"); soigner(+qh[0], qh[1]); hide(); }
   else if(a === "boire"){ boire(i); hide(); }
   else if(a === "rchoix"){ choisirRencontre(i); render(); openRencontre(); return; }
