@@ -2758,3 +2758,8 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 .rf-action{flex-wrap:wrap}
 .rf-action .ings2{flex:0 1 auto;min-width:0;flex-wrap:wrap}
 .rf-action > .btn,.bd-action > .bd-go{flex:1 1 130px}
+/* Journal du bastion : assauts détaillés (2026-11-12) */
+.bj-clan{display:inline-block;font-size:11px;font-weight:900;padding:0 7px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);color:var(--mut);vertical-align:1px;white-space:nowrap}
+.bj-d{display:block;font-size:11.5px;color:var(--mut);margin-top:1px}
+.bj-et{color:#d9a21b;letter-spacing:1px;margin-right:6px;white-space:nowrap;font-size:12px}
+.bj-et i{font-style:normal;color:var(--line)}

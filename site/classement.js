@@ -627,8 +627,11 @@ function afficherBastion(){
     // Raccord avec la DA (2026-11-11) : regroupé par jour, l'emoji de la ligne sort dans un médaillon coloré (rouge = pillé / perdu, vert = repoussé / construit…), l'heure en petit
     var jourPrec = "";
     h += B.journal.length ? '<div class="bj">' + B.journal.map(function(jl){
+      if(jl.a){ var jr2 = typeof jourChat === "function" ? jourChat(jl.t) : "", sep2 = jr2 !== jourPrec ? '<p class="ch-jour"><span>' + jr2 + '</span></p>' : ""; jourPrec = jr2; return sep2 + ligneAssautClan(jl); }
       var txt = jl.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; });
-      var m = txt.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u), ico = m ? m[1] : "📜"; if(m) txt = txt.slice(m[0].length);
+      var m = txt.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u), ico = m ? m[1] : (jl.qui && emojiSeul(jl.qui) ? jl.qui : "📜"); if(m) txt = txt.slice(m[0].length);
+      if(!m && ico === jl.qui) jl = { t:jl.t, txt:jl.txt }; // l'emoji était rangé dans « qui » : il va dans le médaillon, pas dans le texte (2026-11-12)
+      txt = txt.replace(/^[?] /, "Un membre ").replace("a pillé le bastion (", "a pillé notre bastion ("); txt = pseudosPropres(txt);
       var cls = /pillé|tombée?|quitté|perdu|exclu|détruit/i.test(txt) ? "b2" : /repoussé|gagn|construit|déposé|rejoint|fondé|victoire/i.test(txt) ? "g2" : "";
       var jr = typeof jourChat === "function" ? jourChat(jl.t) : "", sep = jr !== jourPrec ? '<p class="ch-jour"><span>' + jr + '</span></p>' : ""; jourPrec = jr;
       return sep + '<div class="lj bj-l ' + cls + '"><span class="lj-ico">' + ico + '</span><span class="lj-txt">' + (jl.qui ? '<b>' + echapper(jl.qui) + '</b> ' : '') + echapper(txt) + '</span><small class="bj-t">' + quand(jl.t) + '</small></div>';
@@ -764,6 +767,19 @@ function openCadres(msg){
     + '<div class="cadres">' + CADRES.map(function(c){ var ok = cadreDebloque(c);
       return '<button class="cadre-choix' + (c.id === a ? " on" : "") + '" data-act="choixcadre" data-id="' + c.id + '"' + (ok ? "" : " disabled") + '><span class="cadre-ex cadre-' + c.id + '">' + ex + '</span><b>' + c.nom + '</b><small>' + (ok ? (c.id === a ? "✔ Porté" : c.desc) : "🔒 " + c.desc) + '</small></button>'; }).join("") + '</div>'
     + '<p class="sub">Aperçu : ' + pseudoCadre(lirePseudo() || "Ton pseudo", a) + '</p><button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
+}
+// Un mot interdit (pseudo d’avant le filtre) devient « Survivant », comme dans les classements
+function pseudosPropres(t){ return typeof texteInterdit !== "function" ? String(t) : String(t).replace(/[^\s.,;:!?()«»]+/g, function(w){ return texteInterdit(w) ? "Survivant" : w; }); }
+function emojiSeul(t){ return String(t).length <= 4 && !/[A-Za-zÀ-ÿ0-9]/.test(t); }
+// Une ligne d'assaut du journal du bastion (2026-11-12, retour de Fabien : on ne savait pas quel clan avait attaqué qui) : qui, de quel clan, contre qui, étoiles et butin
+function ligneAssautClan(jl){
+  var A = jl.a, pj = function(p){ return '<b>' + echapper(pseudosPropres(p || "Un membre")) + '</b>'; }, clan = '<span class="bj-clan">' + echapper(A.clan || "?") + '</span>';
+  var et = A.etoiles ? '<span class="bj-et">' + "★".repeat(A.etoiles) + "☆".repeat(3 - A.etoiles) + '</span>' : "";
+  var butin = (A.butin || []).map(function(b){ return OBJETS[b[0]] ? (A.sens === "subi" ? "−" : "+") + b[1] + " " + (NOM_COURT[b[0]] || OBJETS[b[0]].nom).toLowerCase() : ""; }).filter(Boolean).join(", ");
+  var bon = A.sens === "subi" ? !A.etoiles : !!A.etoiles, titre, detail;
+  if(A.sens === "subi"){ titre = A.etoiles ? pj(A.par) + ' ' + clan + ' a pillé notre bastion' : pj(A.cible) + ' a repoussé ' + pj(A.par) + ' ' + clan; detail = A.etoiles ? 'en attaquant ' + echapper(A.cible) + (butin ? ' · ' + butin : '') : 'Assaut ennemi repoussé'; }
+  else { titre = A.etoiles ? pj(A.par) + ' a pillé ' + pj(A.cible) + ' ' + clan : pj(A.par) + ' a été repoussé par ' + pj(A.cible) + ' ' + clan; detail = A.etoiles ? 'Notre assaut' + (butin ? ' · ' + butin : '') : 'Assaut raté'; }
+  return '<div class="lj bj-l bj-a ' + (bon ? "g2" : "b2") + '"><span class="lj-ico">' + (A.sens === "subi" && !A.etoiles ? "🛡️" : "⚔️") + '</span><span class="lj-txt">' + titre + '<small class="bj-d">' + et + detail + '</small></span><small class="bj-t">' + quand(jl.t) + '</small></div>';
 }
 function openClassementClans(){
   // Raccord avec la DA (2026-11-12) : retour vers les clans en haut, croix commune, ligues en petites pastilles

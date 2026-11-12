@@ -258,8 +258,8 @@ function botsAttaquent(C, W){
           bastionDe(eux); const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
           Object.keys(eux.reserve).filter((k) => eux.reserve[k] > 0).slice(0, 2).forEach((k) => { const n = Math.min(Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0), Math.max(1, Math.floor(eux.reserve[k] * 0.05 * etoiles)));
             if(n > 0){ eux.reserve[k] -= n; if(!eux.reserve[k]) delete eux.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
-          noter(eux, "⚔️", m.pseudo + " a pillé le bastion (" + etoiles + " ★)");
         }
+        noterAssaut(bastionDe(nous), bastionDe(eux), m.pseudo, cible.pseudo, etoiles, s.butin, s.t);
         change = true;
       }
     });
@@ -324,7 +324,13 @@ function attenteClan(C, id, now){
   const h = Math.ceil((ATTENTE_CLAN - (now - t)) / 3600000);
   return "Tu as quitté un clan il y a moins de 24 h : tu pourras en rejoindre ou en fonder un autre dans " + h + " h.";
 }
-function noter(c, qui, txt){ c.journal = c.journal || []; c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
+function noter(c, qui, txt, ex){ c.journal = c.journal || []; c.journal.unshift(Object.assign({ t: Date.now(), qui, txt }, ex || {})); if(ex && ex.t) c.journal.sort((x, y) => y.t - x.t); c.journal = c.journal.slice(0, 40); }
+// Journal des assauts (2026-11-12) : les deux clans notent l'assaut avec l'attaquant, son clan, la cible, les étoiles et le butin
+function noterAssaut(att, def, par, cible, etoiles, butin, t){
+  const b = (butin || []).slice(0, 4), et = etoiles ? etoiles + " ★" : "repoussé";
+  noter(def, "⚔️", par + " (" + att.nom + ") a attaqué " + cible + " : " + (etoiles ? "bastion pillé, " : "") + et, { a: { sens: "subi", par, clan: att.nom, cible, etoiles, butin: b }, t: t || Date.now() });
+  noter(att, "⚔️", par + " a attaqué " + cible + " (" + def.nom + ") : " + et, { a: { sens: "mene", par, clan: def.nom, cible, etoiles, butin: b }, t: t || Date.now() });
+}
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const vr = vueRaid(c, id); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
   const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
@@ -668,9 +674,8 @@ async function clansPost(request, env){
         const ids = Object.keys(adv.reserve).filter((k) => adv.reserve[k] > 0).sort((x, y) => adv.reserve[y] - adv.reserve[x]).slice(0, 3);
         ids.forEach((k) => { const plafond = Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0); const n = Math.min(plafond, Math.max(1, Math.floor(adv.reserve[k] * 0.05 * s.etoiles)));
           if(n > 0){ adv.reserve[k] -= n; if(!adv.reserve[k]) delete adv.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
-        noter(adv, "⚔️", (pseudo || "?") + " a pillé le bastion (" + s.etoiles + " ★)");
       }
-      noter(bastionDe(mon), "⚔️", (pseudo || "?") + " a attaqué " + s.ciblePseudo + " : " + (s.etoiles ? s.etoiles + " ★" : "repoussé"));
+      { const moi = mon.membres.find((x) => x.id === id); noterAssaut(bastionDe(mon), adv, pseudo || (moi && moi.pseudo) || s.pseudo || "Un membre", s.ciblePseudo || "une famille", s.etoiles, s.butin); }
       await sauver();
       return reponse({ ok: true, etoiles: s.etoiles, butin: s.butin, guerre: vueGuerre(C, W, mon, id) });
     }
