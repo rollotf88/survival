@@ -139,6 +139,7 @@ var MALIN = {
       if(MALIN.peche !== false && !possede(function(o){ return o.peche; }) && fabriquer(R_("canne"))) continue;
       if(compter("piege") < 2 && fabriquer(R_("piege"))) continue;
       if(soinsDispo() < 4 && (fabriquer(R_("trousse")) || fabriquer(R_("bandage")))) continue;
+      if(compter("cocktail") < 2 && fabriquer(R_("cocktail"))) continue; // cocktails Molotov (2026-11-12) : le robot en garde 2 d'avance
       var lumiere = possede(function(o){ return o.lumiere; });
       if(!lumiere && fabriquer(R_("torche"))) continue;
       break;

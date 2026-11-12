@@ -8,7 +8,7 @@
    récupère sa part (et des nouvelles de son volontaire) en ouvrant le bastion.
    Chargé après classement.js (il utilise appelClans, etatBastion, afficherBastion).
    ===================================================================== */
-var KIT_RAID = ["balle", "cartouche", "trousse", "bandage", "antibio", "alcool", "chiffon", "canette"], GEAR_RAID = ["gilet", "casque", "bouclier"];
+var KIT_RAID = ["balle", "cartouche", "cocktail", "trousse", "bandage", "antibio", "canette"], GEAR_RAID = ["gilet", "casque", "bouclier"];
 var G_MAISON = null;          // la vraie partie du chef pendant qu'il joue le raid
 var raidPrep = null;          // préparation du volontaire : { idx, n:{id:q}, o:{id:true} }
 var msgRaid = "";
@@ -159,7 +159,7 @@ function openRaidPret(){
   }).join("");
   var vol = { membre:{ hp:x.hp, en:x.en, eq:{ arme:a ? { id:a.id } : null } }, kit:kitPrep() }, ev = evalEquipeRaid([vol]);
   show('<h2>🎒 Ce que tu confies à ' + x.nom + '</h2><p class="sub">Les munitions, les soins et l’équipement servent à toute l’équipe pendant le raid. Ce qui n’a pas servi te revient après.</p>'
-    + (lignes || '<p class="sub">Rien à confier (munitions, soins, alcool, chiffons, canettes).</p>')
+    + (lignes || '<p class="sub">Rien à confier (munitions, cocktails, soins, canettes).</p>')
     + (gears ? '<p class="titre-butin">🎽 Équipement de guerre</p><div class="raid-gears">' + gears + '</div>' : '')
     + '<p class="sub">Apport de ' + x.nom + ' : ' + Math.round(forceVolontaire(vol)) + ' points de force (une équipe prête en réunit environ ' + BAL.immeuble.seuils.prete + ').</p>'
     + '<div class="row"><button class="btn" data-act="raidenvoyer">🏢 Envoyer ' + x.nom + '</button><button class="btn alt" data-act="raidretour">Retour</button></div>');

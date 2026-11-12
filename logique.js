@@ -851,8 +851,8 @@ function bruit(J, x){
     J.push(["b2", "🔊 Le bruit du tir attire un " + minus(t.nom) + " !"]);
   }
 }
-// Peut-on lancer un cocktail incendiaire ? (1 alcool + 1 chiffon au stock, et un briquet dans la famille)
-function peutCocktail(){ return compter("alcool") > 0 && compter("chiffon") > 0 && possede(function(o){ return o.allume; }); }
+// Peut-on lancer un cocktail Molotov ? (un cocktail au stock, fabriqué à l'atelier, et un briquet dans la famille pour l'allumer)
+function peutCocktail(){ return compter("cocktail") > 0 && possede(function(o){ return o.allume; }); }
 // Un zombie tombe : le Gonflé explose et blesse toute l'équipe
 function zombieTombe(z, protege, J){
   G.combat.abattus = (G.combat.abattus || 0) + 1; if(!(G.exp && G.exp.guerre)) G.stats.zombies = (G.stats.zombies || 0) + 1; // compté pour les stats du joueur (pas les défenseurs d'un bastion)
@@ -942,8 +942,8 @@ function jouerTour(choix){
       c = { a:"frapper", cible:c.cible };
     }
     if(c.a === "cocktail" && peutCocktail()){
-      retirer("alcool", 1); retirer("chiffon", 1);
-      J.push(["g2", "🔥 " + x.nom + " lance un cocktail incendiaire !"]);
+      retirer("cocktail", 1);
+      J.push(["g2", "🔥 " + x.nom + " lance un cocktail Molotov !"]);
       debout.forEach(function(zz){ var d = R(B.cocktail[0], B.cocktail[1]); zz.pv = Math.max(0, zz.pv - d); J.push(["g2", "🔥 " + zz.nom + " brûle : −" + d + (zz.pv ? "" : ", à terre !")]); if(!zz.pv){ zombieTombe(zz, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); } });
       return;
     }

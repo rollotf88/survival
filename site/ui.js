@@ -427,7 +427,7 @@ function openCombat(){
       var tete = Math.round((BAL.combat.tete + (x.trait === "tireur" && a && OBJETS[a.id].munition ? BAL.combat.teteTireur : 0)) * 100);
       var acts = [["frapper", "⚔️", "Frapper"], ["tete", "🎯", "Tête " + tete + "%"], ["pousser", "✋", "Pousser " + Math.round(((vz && typeZombie(vz).lourd) ? BAL.combat.pousserLourd : BAL.combat.pousser) * 100) + "%"], ["proteger", "🛡️", "Protéger"]];
       if(soinOk) acts.push(["soigner", "🩹", "Soigner"]);
-      if(feuOk) acts.push(["cocktail", "🔥", "Cocktail"]);
+      if(feuOk) acts.push(["cocktail", "🔥", "Cocktail ×" + compter("cocktail")]);
       if(acts.every(function(t){ return t[0] !== c; })) c = choixCombat[j] = "frapper";
       return '<div class="cmc' + (perte > 0 ? " blesse" : "") + '"><div class="cmh"><span class="cmp">' + iconeMembre(x) + '</span><span class="cmi"><b>' + x.nom + '</b>' + barre("❤️", x.hp)
         + '<small>' + (a ? icone(a.id) + " " + OBJETS[a.id].nom + " " + a.sol + "/" + OBJETS[a.id].sol + (OBJETS[a.id].munition ? " · " + icone(OBJETS[a.id].munition) + " " + compter(OBJETS[a.id].munition) : "") : "✊ Mains nues") + ' · ' + d[0] + '-' + d[1] + (fatigue(x) ? " · 🥱" : "") + '</small></span>'

@@ -231,7 +231,7 @@ var BAL = {
     pousser: 0.65,           // « Pousser » : 65 % de chances que le zombie perde son attaque...
     pousserLourd: 0.3,       // ...seulement 30 % contre un Costaud
     ecrase: 0.75,            // contre un Costaud, se protéger ne retire qu'un quart des dégâts
-    cocktail: [3, 5],        // cocktail incendiaire (1 alcool + 1 chiffon + un briquet) : dégâts à TOUS les zombies
+    cocktail: [3, 5],        // cocktail Molotov (fabriqué à l'atelier, lancé avec un briquet dans la famille) : dégâts à TOUS les zombies
     soinCombat: true         // « Soigner » utilise un objet de soin sur le membre le plus blessé
   }
 };
@@ -372,6 +372,7 @@ var OBJETS = {
   pistolet:   { nom:"Pistolet", pl:"Pistolets", g:"m", icone:"🔫", cat:"arme", place:1, emplacement:"arme", def:3, degats:[6,9], munition:"balle", sol:30, desc:"Dégâts 6-9 · 1 balle par tir, bruyant" },
   fusil:      { nom:"Fusil de chasse", pl:"Fusils de chasse", g:"m", icone:"🎯", cat:"arme", place:2, emplacement:"arme", def:4, degats:[9,14], munition:"cartouche", sol:25, desc:"Dégâts 9-14 · 1 cartouche par tir, très bruyant" },
   // Munitions : on les trouve en boîtes, rangées à l'unité dans le stock
+  cocktail:   { nom:"Cocktail Molotov", pl:"Cocktails Molotov", g:"m", icone:"🔥", cat:"munition", place:1, empile:true, desc:"Se lance en combat (avec un briquet dans la famille) : brûle tous les zombies. Reste au stock, sans prendre de case d’équipement" },
   balle:      { nom:"Balle", pl:"Balles", g:"f", icone:"🔹", cat:"munition", place:0, empile:true, desc:"Munition du pistolet" },
   cartouche:  { nom:"Cartouche", pl:"Cartouches", g:"f", icone:"🔸", cat:"munition", place:0, empile:true, desc:"Munition du fusil de chasse" },
   boiteBalles:{ nom:"Boîte de balles", pl:"Boîtes de balles", g:"f", icone:"📦", cat:"munition", place:1, empile:true, contient:{ balle:6 }, desc:"6 balles de pistolet" },
@@ -454,7 +455,9 @@ var RECETTES = [
   // Équipement de guerre (ajoutés à la fin pour ne pas décaler les recettes)
   { id:"gilet",    ingredients:{ ferraille:3, chiffon:2, ruban:1 }, besoin:"outils" },
   { id:"casque",   ingredients:{ ferraille:2, ruban:1 } },
-  { id:"bouclier", ingredients:{ planche:2, ferraille:2, clous:2 }, besoin:"outils" }
+  { id:"bouclier", ingredients:{ planche:2, ferraille:2, clous:2 }, besoin:"outils" },
+  // Cocktail Molotov (2026-11-12, idée de Fabien) : fabriqué à l'atelier, gardé au stock, lancé en combat
+  { id:"cocktail", ingredients:{ alcool:1, chiffon:1 } }
 ];
 var REPARATION = { ferraille:1, ruban:1 }; // coût d'une réparation d'arme
 /* ---------- Cuisine : recettes (« eau » = des rations d'eau, pas un objet) ----------
@@ -716,7 +719,7 @@ var MARCHE = {
 var VALEURS = {
   bouteille:2, bidon:8, conserve:2, conserves:8, riz:12, biscuits:4, pates:3, barre:1, ration:4,
   bandage:3, trousse:6, antibio:5, canette:4, planche:1, pile:2, chiffon:1, clous:1, ferraille:2,
-  ruban:2, alcool:2, epingle:1, jerrican:8, boiteBalles:6, boiteCart:6, balle:1, cartouche:1.5,
+  ruban:2, alcool:2, cocktail:3, epingle:1, jerrican:8, boiteBalles:6, boiteCart:6, balle:1, cartouche:1.5,
   batterie:10, roue:10, courroie:8, piege:4, poisson:2, poule:6, canne:5, siphon:4,
   epices:2, huile:2, farine:2, champignons:1, baies:1, herbes:1
 };

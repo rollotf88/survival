@@ -15,7 +15,7 @@ async function testRaid(){
   await serveurFactice();
   nouvellePartie(null); demarrer(); G.ph = "game"; G.day = 40;
   var x = G.m[0]; ajouter("fusil", 1); var f = G.stock.o.find(function(o){ return o.id === "fusil"; }); G.stock.o.splice(G.stock.o.indexOf(f), 1); x.eq.arme = f; f.sol = 20;
-  ajouter("cartouche", 30); ajouter("trousse", 4); ajouter("bandage", 3); ajouter("gilet", 1); ajouter("casque", 1); ajouter("bouclier", 1); ajouter("alcool", 2); ajouter("chiffon", 3);
+  ajouter("cartouche", 30); ajouter("trousse", 4); ajouter("bandage", 3); ajouter("gilet", 1); ajouter("casque", 1); ajouter("bouclier", 1); ajouter("cocktail", 2);
   render();
   var c0 = await appelClans({ action:"creer", nom:"Les Testeurs", blason:3 }), cid = c0.monClan.id;
   var ids = ["autreBBBB2", "autreCCCC3", "autreDDDD4"], ps = ["Bob", "Cleo", "Dan"], armes = ["pistolet", "fusil", "fusil"], mun = { pistolet:"balle", fusil:"cartouche" };
