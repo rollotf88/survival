@@ -17,7 +17,8 @@ var ZONES_PIECE = [
   ["pCanape",    318, 392, 730, 575, function(){ return ic("lune", "🌙"); }, "Dormir", .45],
   ["pCheminee",  155, 355, 320, 530, function(){ return "🔥"; }, "Feu", .5],
   ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .3],
-  ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
+  ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85, function(){ return !G.porteOuverte; }],
+  ["pFermerPorte", 900, 205, 1022, 545, function(){ return "🚪"; }, "Fermer la porte", .5, function(){ return !!G.porteOuverte; }], // acte fou : la porte est restée ouverte
   ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", 1.7, function(){ return compter("radio") > 0; }],
   ["oTrophees",  172, 296, 232, 356, function(){ return "🏆"; }, "Trophées", .2, function(){ return G.trophees && G.trophees.length > 0; }],
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
@@ -222,7 +223,7 @@ function placerPiece(){
     var x = dx + z[1] * s - gx, y = dy + z[2] * s - haut, l = (z[3] - z[1]) * s, h = (z[4] - z[2]) * s;
     var cy = y + h / 2;
     if(cy < 0 || cy > fin - haut || x + l < 0 || x > vw) return ""; // centre hors de la partie visible
-    var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()); // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
+    var invite = (z[0] === "pCanape" && G.m && !G.m.some(peutSortir)) || (z[0] === "pOperations" && typeof opAttention === "function" && opAttention()) || z[0] === "pFermerPorte"; // plus personne ne peut sortir : on invite à dormir ; une opération du clan attend
     return '<button class="zone' + (invite ? " invite" : "") + '" data-act="' + z[0] + '" style="left:' + x + 'px;top:' + y + 'px;width:' + l + 'px;height:' + h + 'px" aria-label="' + z[6] + '"><span class="etiq" style="top:' + (z[7] * 100) + '%' + (z[0] === "chien" && G.m && !G.m.some(peutSortir) ? ';display:none' : '') + '">' + z[6] + '</span></button>'; // texte seul (retour de Fabien : les icônes à côté des étiquettes chargeaient l'image)
   }).join("")
     // Changer de pièce : flèches de chaque côté et points en haut (on peut aussi glisser le doigt)
@@ -310,15 +311,19 @@ function openDormir(){
   if(chien()) L.push(["", ic("chien", "🐕") + " " + chien().nom + " mange 1 ration et monte la garde."]);
   if(compter("poule")) L.push(["", ic("poule", "🐔") + " Les poules boivent " + Math.ceil(compter("poule") / BAL.poules.eauPour) + " ration" + (Math.ceil(compter("poule") / BAL.poules.eauPour) > 1 ? "s" : "") + " d’eau et pondent peut-être."]);
   L.push([d >= f + 2 ? "g2" : d >= f ? "" : "b2", "🧟 Si les zombies viennent : force " + f + " à " + (f + 2) + ", votre défense " + d + (d >= f + 2 ? " : vous tiendrez." : d >= f ? " : ce sera juste." : " : la barricade risque de céder.")]);
+  if(G.porteOuverte) L.unshift(["b2", "🚪 La porte d’entrée est restée ouverte ! Défense −" + BAL.porteOuverte.defense + " et plus de risque d’attaque tant qu’elle n’est pas fermée."]);
   if(sacrificePossible()) L.push(["b2", "💀 Quelqu’un va mourir de faim, et il n’y a plus rien. Il reste une solution, la pire de toutes…"]);
   show('<h2>' + ic("lune", "🌙") + ' Aller dormir ?</h2>' + h + '<p class="titre-butin">🌙 Cette nuit</p>' + puces(L)
+    + (G.porteOuverte ? '<button class="loc btn-jeu" data-act="fermerporte"><b>🚪 Fermer la porte</b><small>Remettre la barre avant de dormir</small></button>' : '')
     + (sacrificePossible() ? '<button class="loc sombre" data-act="sacrifice"><b>🕯️ Le choix impossible</b><small>Sacrifier l’un des vôtres pour que les autres survivent</small></button>' : '')
     + '<div class="row"><button class="btn btn-jeu" data-act="endday">🌙 Dormir</button><button class="btn alt" data-act="close">Pas encore</button></div>' + offrePub("dormir"));
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
   var a = b.getAttribute("data-act");
-  if(a === "pTable") openRef("fabriquer");
+  if(a === "pFermerPorte" || a === "fermerporte"){ var auLitDejaDit = a === "fermerporte"; G.porteOuverte = false; if(typeof jouerSynth === "function" && SONS_SYNTH.bois) jouerSynth("bois"); if(typeof sauver === "function") sauver(); render();
+    if(auLitDejaDit) openDormir(); else show('<h2>🚪 Porte refermée</h2><p class="msg g2">Tu refermes la porte et remets la barre. La maison est de nouveau à l’abri pour la nuit.</p>' + BTN_FERMER()); }
+  else if(a === "pTable") openRef("fabriquer");
   else if(a === "pCuisiner" || a === "pRecettes"){ selRef = null; openRef("cuisine"); }
   else if(a === "pGardeManger"){ filtreStock = "vivres"; selStock = null; openStock(); }
   else if(a === "pCheminee") openFeu();

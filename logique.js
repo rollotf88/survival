@@ -404,7 +404,7 @@ function peutRecueillir(){ return G.dd && G.dd.length > 0 && G.recueilJour !== G
 function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day; changerMoral(BAL.tombes.moral); return true; }
 // Grande horde du week-end (événement mondial, defis.js pose HORDE_MONDIALE) : jamais dans une partie temporaire de raid
 function hordeMondiale(){ return typeof HORDE_MONDIALE !== "undefined" && !!HORDE_MONDIALE && !(G && G.bacASable); }
-function chanceAttaqueNuit(){ var A = BAL.attaqueNuit; return Math.min(A.max + (hordeMondiale() ? 0.1 : 0), A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque + (hordeMondiale() ? BAL.horde.risque : 0)); }
+function chanceAttaqueNuit(){ var A = BAL.attaqueNuit; return (G.porteOuverte ? BAL.porteOuverte.attaque : 0) + Math.min(A.max + (hordeMondiale() ? 0.1 : 0), A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque + (hordeMondiale() ? BAL.horde.risque : 0)); }
 function forceMiniNuit(){ return 1 + Math.floor(G.day / BAL.attaqueNuit.joursParForce) + (hordeMondiale() ? BAL.horde.force : 0); }
 // Saison du jour de jeu (SAISONS, data.js)
 function saison(d){ return SAISONS[Math.floor(((d || G.day) - 1) / BAL.saisons.duree) % SAISONS.length]; }
@@ -1106,6 +1106,7 @@ function finJour(){
   G.reste.eau += pe; G.reste.nour += pn;
   if(pe) n.push(["g2", ic("ref_eau", "🪣") + " Le récupérateur a recueilli " + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]);
   if(pn) n.push(["g2", ic("ref_pot", "🥕") + " Le potager a donné " + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]);
+  if(G.porteOuverte){ n.push(["b2", "🚪 La porte est restée ouverte toute la nuit (défense −" + BAL.porteOuverte.defense + "). Au matin, quelqu’un la referme enfin."]); G.porteOuverte = false; }
   nuitFolie(n);
   nuitMonde(n);
   var moral = 0;
@@ -1125,6 +1126,7 @@ function defenseNuit(){
   if(compter("piege") > 0) d += BAL.piegeDef;
   if(chien()) d += BAL.chien.defense; // le chien monte la garde
   if(typeof BONUS_CLAN_DEF !== "undefined") d += BONUS_CLAN_DEF; // tours de guet du bastion de son clan (classement.js)
+  if(G.porteOuverte) d = Math.max(0, d - BAL.porteOuverte.defense); // la porte est restée ouverte
   return d;
 }
 
@@ -1287,6 +1289,7 @@ function acteFou(x, n){
   } else if(t === 3){
     var v = vivants(), z = v[R(0, v.length - 1)], d3 = R(10, 25), abime = G.ref.barr > 0;
     if(abime) G.ref.barr--;
+    G.porteOuverte = true; // elle reste ouverte tant qu'on ne la referme pas (salon)
     n.push(["b2", "🌀 " + x.nom + " a laissé la porte grande ouverte : des zombies sont entrés ! " + z.nom + " est blessé" + (FEMININS.indexOf(roleDe(z)) >= 0 ? "e" : "") + " (−" + d3 + " PV)" + (abime ? ", la barricade est abîmée" : "") + "."]);
     blesser(z, d3, n, "tué pendant l’attaque de nuit");
   } else {

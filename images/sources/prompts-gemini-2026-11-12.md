@@ -114,3 +114,10 @@ Joindre : `images/portrait-marchand.webp`, `images/portrait-roux.webp` (référe
 > 4. une femme d'une cinquantaine d'années, casquette et blouson de routier, l'air décidé, chef d'un convoi de survivants
 > 5. un jeune homme blessé au front, une fusée de détresse rouge allumée à la main, qui appelle à l'aide
 > 6. une petite fille de 8 ans couchée dans un lit, fiévreuse, un linge humide sur le front
+
+---
+
+## Porte du salon restée ouverte (Gemini, 2026-11-12) : acte de folie « laisse la porte ouverte »
+Joindre : `images/refuge-fond-sans-table.webp`
+
+> Reprends EXACTEMENT cette image (le salon), même cadrage, même taille, même style, même lumière. Change UNIQUEMENT la porte d'entrée en bois à droite : elle est entrouverte vers l'intérieur, et par l'ouverture on voit la nuit dehors, bleutée, avec un peu de brume qui entre sur le plancher juste devant la porte. Ne change absolument rien d'autre dans la pièce (canapé, fauteuil, cheminée, bibliothèque, portemanteau, portraits, tapis, lampe). Aucun personnage, aucun texte.

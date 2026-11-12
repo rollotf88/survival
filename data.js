@@ -90,6 +90,7 @@ var BAL = {
   degatsFroid: 5,           // PV perdus par nuit sans chaleur
   regenPV: 5,               // PV regagnés par nuit si bien nourri
   usureButin: [50, 100],    // les objets trouvés ont entre 50 et 100 % de solidité
+  porteOuverte: { defense: 3, attaque: 0.15 }, // porte laissée ouverte par un acte fou : défense −3 et risque +15 % la nuit suivante si on ne la referme pas
   attaqueNuit: { base: 0.25, parJour: 0.02, max: 0.8,
                  joursParForce: 3,       // la force des attaques monte de 1 tous les N jours
                  casseBarricade: true }, // une attaque perdue détruit un niveau de barricade
