@@ -745,11 +745,14 @@ function badgesEtat(x){
   return b;
 }
 // sansBadges : les cartes de la famille affichent les badges à droite du prénom (sinon ils cachaient la ligne d'état)
-// Visage rongé par la folie (Gemini, 2026-11-12) : images/portrait-<rôle>-fou.webp dès que la folie se voit (fou(x)),
+// Visage rongé par la folie puis visage fatigué (Gemini, 2026-11-12) : images/portrait-<rôle>-fou.webp dès que la folie se voit (fou(x)),
 // sauf si les contenus durs sont coupés ; il redevient normal quand la folie redescend
 function srcPortrait(x){
   var src = PORTRAITS[x.r || x.nom];
+  if(typeof G === "undefined" || !G || G.ph !== "game" || !G.lieux) return src; // écrans de départ : visage normal
   if(src && x.al && typeof fou === "function" && fou(x) && (typeof CONTENUS_SENSIBLES === "undefined" || CONTENUS_SENSIBLES)) return src.replace(".webp", "-fou.webp");
+  // Visage épuisé (Gemini, 2026-11-12) : fatigué (énergie sous le seuil de fatigue) ou trop épuisé pour sortir ; la folie passe avant
+  if(src && x.al && typeof fatigue === "function" && (fatigue(x) || (typeof peutSortir === "function" && !peutSortir(x) && !x.raid))) return src.replace(".webp", "-fatigue.webp");
   return src;
 }
 function portraitMembre(x, sansBadges){
