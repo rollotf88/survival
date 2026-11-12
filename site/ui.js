@@ -612,7 +612,7 @@ function openMembre(i){
   if(!x.al){ show(h + '</div>'); return; }
   h += '<div class="mf-jauges">' + anneauMembre("❤️", "Vie", x.hp) + anneauMembre("⚡", "Énergie", x.en) + anneauMembre(ic("conserve", "🥫"), "Faim", x.faim) + anneauMembre(ic("bouteille", "💧"), "Soif", x.soif)
     + (x.folie ? anneauMembre("🌀", "Folie", x.folie, true) : '') + '</div>';
-  if(fou(x)) h += '<p class="mf-alerte">🌀 Fouille moins bien, actes terribles la nuit ; à 100, ' + (estFeminin(x) ? "elle" : "il") + ' part.</p>';
+  if(fou(x)) h += '<p class="mf-alerte mf-folie">' + (typeof CONTENUS_SENSIBLES === "undefined" || CONTENUS_SENSIBLES ? '<img src="images/folie/regard.webp" alt="">' : '') + '🌀 Fouille moins bien, actes terribles la nuit ; à 100, ' + (estFeminin(x) ? "elle" : "il") + ' part.</p>';
   h += medaillesMembre(x);
   h += '<div class="mf-bloc"><p class="mf-titre">🎒 Équipement</p><div class="slots grands mf-slots">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;
@@ -1013,6 +1013,20 @@ function openRef(onglet){
 /* ---------- Nuit, événements, mort ---------- */
 // Bilan de la nuit plus lisible (2026-11-10, retour de Fabien) : « Papa n'a rien à manger », « Maman n'a rien à manger »…
 // deviennent une seule ligne par besoin, avec son icône (au lieu de 4 lignes rouges avec « ! »)
+// Scène de folie de la nuit (images ChatGPT 2026-11-12, images/folie/) : remplace le bandeau de nuit quand un acte fou a eu lieu
+// (seulement si les contenus durs sont activés) ; reconnu au texte de la ligne écrite par acteFou / nuitFolie (logique.js)
+function sceneFolie(n){
+  if(typeof CONTENUS_SENSIBLES !== "undefined" && !CONTENUS_SENSIBLES) return null;
+  var t = n.map(function(l){ return l[1] || ""; }).join(" | ");
+  if(/a perdu la raison\. Une nuit/.test(t)) return "regard";
+  if(t.indexOf("🌀") < 0) return null;
+  if(/porte grande ouverte/.test(t)) return "porte";
+  if(/frappe violemment/.test(t)) return "frappe";
+  if(/en pleine nuit… et revient/.test(t)) return "dehors";
+  if(/hurlé toute la nuit/.test(t)) return "hurle";
+  if(/mangé en cachette/.test(t)) return "cachette";
+  return null;
+}
 function regrouperNuit(n){
   var faim = [], soif = [], out = [], posF = -1, posS = -1;
   n.forEach(function(l){
@@ -1030,7 +1044,8 @@ function openNuit(n){
   n = regrouperNuit(n);
   // Bandeau : le refuge assiégé s'il y a eu une attaque cette nuit, sinon l'aube calme (griffures sur les planches)
   var attaque = n.some(function(l){ return String(l[1]).indexOf("Attaque de nuit") >= 0; });
-  show('<div class="banniere"><img src="images/' + (attaque ? "nuit" : "aube") + '.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
+  var sf = sceneFolie(n);
+  show('<div class="banniere' + (sf ? ' folie' : '') + '"><img src="images/' + (sf ? "folie/" + sf : attaque ? "nuit" : "aube") + '.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
 }
 function openEvent(ev){
   G.ev = ev; G.evIdx = EVENEMENTS.indexOf(ev);

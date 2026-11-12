@@ -2520,3 +2520,7 @@ body.pc #app .chip.chipson .chip-lbl{grid-row:1 / span 2;align-self:center}
 .se-pills .ico,.se-pills img.emo{width:13px;height:13px;vertical-align:-2px}
 /* Cartes de la famille sur PC : un peu d'air entre le portrait et le statut (2026-11-12, le cadre du portrait touchait la pastille) */
 body.pc #app .mc .mc-st{margin-top:8px!important}
+/* Scènes de folie (2026-11-12) : bandeau du bilan de nuit cadré sur le personnage, portrait halluciné dans la fiche */
+.banniere.folie img{object-position:50% 40%}
+.mf-alerte.mf-folie{display:flex;align-items:center;gap:8px}
+.mf-alerte.mf-folie img{flex:none;width:40px;height:40px;border-radius:10px;object-fit:cover;box-shadow:0 0 0 2px var(--bad)}
