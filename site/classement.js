@@ -752,6 +752,7 @@ function pseudoCadre(p, cadre, estLegende){ var L = estLegende === undefined ? !
 function openCadres(msg){
   var a = cadreActif(), n = nbSuccesSur(), ex = typeof iconeMembre === "function" ? iconeMembre({ nom:"Papa", r:"Papa", icone:"👨", al:true, hp:100, en:100, faim:100, soif:100 }) : "👤";
   show('<h2>🖼️ Mon cadre</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '') + '<p class="sub">Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Débloque les plus beaux avec les succès (' + n + ' débloqués).</p>'
+    + carteCadreLegende()
     + '<div class="cadres">' + CADRES.map(function(c){ var ok = cadreDebloque(c);
       return '<button class="cadre-choix' + (c.id === a ? " on" : "") + '" data-act="choixcadre" data-id="' + c.id + '"' + (ok ? "" : " disabled") + '><span class="cadre-ex cadre-' + c.id + '">' + ex + '</span><b>' + c.nom + '</b><small>' + (ok ? (c.id === a ? "✔ Porté" : c.desc) : "🔒 " + c.desc) + '</small></button>'; }).join("") + '</div>'
     + '<p class="sub">Aperçu : ' + pseudoCadre(lirePseudo() || "Ton pseudo", a) + '</p><button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
@@ -1003,3 +1004,11 @@ document.addEventListener("click", function(e){
   else if(a === "pfonglet"){ ongletProfil = b.getAttribute("data-id"); openProfil(); }
   else if(a === "pfavatar"){ var id = b.getAttribute("data-id"); try{ localStorage.setItem("survival_avatar", id); }catch(err){} ongletProfil = "avatar"; openProfil(id ? "Nouvel avatar choisi. Il apparaîtra dans le classement à ton prochain score envoyé." : "Ton avatar est revenu à l’initiale de ton pseudo."); }
 });
+
+// Le cadre de la Légende dans « Mon cadre » (2026-11-12, idée de Fabien) : en tête, pour donner envie de le gagner ; il ne se choisit pas, il se gagne
+function carteCadreLegende(){
+  var L = LEGENDE, moi = !!(L && L.moi), av = lireAvatar() || "papa";
+  return '<div class="cadre-leg' + (moi ? " porte" : "") + '">' + medaillonLegende("images/portrait-" + av + ".webp", 58)
+    + '<span class="cl-t"><small>Le cadre le plus rare</small><b>' + pseudoCadre(lirePseudo() || "Ton pseudo", cadreActif(), true) + '</b>'
+    + '<em>' + (moi ? "✔ Tu le portes : tu es la Légende du mois. Raja te suit." : "🔒 Réservé à la Légende du mois" + (L ? " (aujourd’hui " + echapper(L.pseudo) + ", " + L.score + " points)" : "") + ". Fais le meilleur score du mois en partie classée pour le porter, avec Raja en prime.") + '</em></span></div>';
+}

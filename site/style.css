@@ -2653,3 +2653,9 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 .pf-comptes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .pf-compte{font:inherit;font-weight:900;padding:8px 4px;border-radius:12px;border:2px dashed var(--line);background:transparent;color:var(--mut)}
 .pf-compte small{display:block;font-size:10.5px;font-weight:700}
+/* « Mon cadre » : le cadre de la Légende en tête (2026-11-12) */
+.cadre-leg{display:flex;align-items:center;gap:16px;padding:16px 12px 12px;margin:0 0 10px;border:2px solid #b8860b;border-radius:14px;background:linear-gradient(135deg,#fff3c4,#f7d774);box-shadow:0 3px 0 #a8841c;color:#3a2a00}
+.cadre-leg:not(.porte){filter:saturate(.75)}
+.cadre-leg .cl-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cadre-leg small{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;opacity:.75}
+.cadre-leg em{font-style:normal;font-size:12.5px;font-weight:800;line-height:1.3}
