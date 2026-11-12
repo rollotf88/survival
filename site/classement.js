@@ -679,11 +679,13 @@ function afficherGuerre(msg){
       + (d.chef ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="guerrechercher">⚔️ Chercher une guerre</button>' : '<p class="sub">Seul le chef peut lancer la recherche d’un adversaire.</p>');
     show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>'); return;
   }
-  h += bandeauGuerre(W) + '<p class="sub">Jour ' + W.jour + ' / 3 · ' + (W.jour < 3 ? "nouveaux assauts dans " + tempsRestant(W.finJour) : "fin de la guerre dans " + tempsRestant(W.fin)) + ' · 🧱 remparts ' + W.eux.remparts + ' · 💣 ' + W.eux.mines + ' mine' + (W.eux.mines > 1 ? "s" : "") + '</p>';
+  // Raccord avec la DA (2026-11-12) : infos en pastilles, familles adverses en cartes (état ou bouton Attaquer)
+  h += bandeauGuerre(W) + '<div class="gu-infos"><span class="gu-i fort">Jour ' + W.jour + ' / 3</span><span class="gu-i">⏳ ' + (W.jour < 3 ? "nouveaux assauts dans " + tempsRestant(W.finJour) : "fin dans " + tempsRestant(W.fin)) + '</span><span class="gu-i">🧱 remparts ' + W.eux.remparts + '</span><span class="gu-i">💣 ' + W.eux.mines + ' mine' + (W.eux.mines > 1 ? "s" : "") + '</span></div>';
   var enJeu = typeof G !== "undefined" && G && G.ph === "game" && !G.cumule;
-  h += '<p class="titre-butin">🎯 Familles adverses</p><div class="clan-liste">' + W.cibles.map(function(c){
-    var raison = !enJeu ? "Pendant une partie" : W.dejaMoi ? "Ton assaut est fait" : c.attaquee ? "Déjà attaquée" : "";
-    return '<div class="clan-l"><span class="cl-info"><b>' + echapper(c.pseudo || "?") + '</b><small>Jour ' + (c.jour || "?") + (c.attaquee ? " · attaquée aujourd’hui" : "") + '</small></span><button class="mini" data-act="guerreattaquer" data-id="' + echapper(c.id) + '"' + (raison ? " disabled title=\"" + raison + "\"" : "") + '>' + (raison && raison !== "Pendant une partie" ? "✔" : "⚔️ Attaquer") + '</button></div>';
+  h += '<p class="titre-butin">🎯 Familles adverses</p><div class="gu-cibles">' + W.cibles.map(function(c){
+    var raison = !enJeu ? "Pendant une partie" : c.attaquee ? "Attaquée aujourd’hui" : W.dejaMoi ? "Ton assaut est fait" : "";
+    return '<div class="gu-c' + (c.attaquee ? " faite" : "") + '">' + avatarHtml(c.avatar, c.pseudo || "?", "gu-av") + '<span class="gu-c-t"><b>' + echapper(c.pseudo || "?") + '</b><small>Jour ' + (c.jour || "?") + '</small></span>'
+      + (raison ? '<span class="gu-etat' + (c.attaquee ? " ok" : "") + '">' + (c.attaquee ? "✔ " : "") + raison + '</span>' : '<button class="btn gu-go" data-act="guerreattaquer" data-id="' + echapper(c.id) + '">⚔️ Attaquer</button>') + '</div>';
   }).join("") + '</div>';
   if(W.dejaMoi) h += '<p class="sub">✅ Tu as lancé ton assaut aujourd’hui. Reviens demain !</p>';
   if(W.assauts.length) h += '<p class="titre-butin">📜 Assauts</p><div class="fil">' + W.assauts.map(function(s){ return '<div class="lj ' + (s.nous ? "bon" : "mauvais") + '"><span class="lj-ico">' + (s.nous ? "⚔️" : "🛡️") + '</span><span class="lj-txt">Jour ' + s.jour + ' : <b>' + echapper(s.qui) + '</b> attaque ' + echapper(s.cible) + ' → ' + (s.etoiles ? "★".repeat(s.etoiles) : "repoussé") + '</span></div>'; }).join("") + '</div>';

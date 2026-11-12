@@ -293,7 +293,7 @@ function vueGuerre(C, W, mon, id){
   return { id: W.id, jour: j, fini: !!W.fini, gagnant: W.gagnant === mon.id ? "nous" : W.gagnant ? "eux" : null, finJour, fin: W.debut + DUREE_GUERRE * JOUR_MS,
     nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp], trophees: mon.trophees || 0, ligue: ligueDe(mon.trophees) }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0, armurerie: (adv.def || {}).armurerie || 0, trophees: adv.trophees || 0, ligue: ligueDe(adv.trophees) },
     gainTrophees: W.trophees ? W.trophees[camp] : null,
-    cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
+    cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, avatar: m.avatar || "", jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
     dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ t: s.t || 0, jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
 }
 
