@@ -29,6 +29,7 @@ var ZONES_PIECE = [
 // Éléments posés sur la pièce selon la partie (images Gemini détourées, 2026-11-09), mêmes coordonnées que les zones
 // [image, x0, y0, x1, y1, condition]
 var DECOR_PIECE = [
+  ["images/porte-ouverte.webp", 812, 200, 1024, 624, function(){ return !!G.porteOuverte; }], // acte fou : porte restée ouverte (morceau découpé dans une retouche Gemini, 2026-11-12)
   ["images/icones/trophee.webp", 176, 300, 228, 356, function(){ return G.trophees && G.trophees.length > 0; }], // trophée d'un zombie célèbre abattu, sur la cheminée
   ["images/rex.webp",      668, 548, 858, 704, function(){ return !!chien(); }],                  // Rex adopté : couché devant le canapé
   // Objets de confort : visibles seulement si on les a (les images de pièce n'en montrent plus)

@@ -33,6 +33,7 @@ var FICHIERS = [
   "images/refuge-fond-propre.webp",
   "images/refuge-fond-eteint-propre.webp",
   "images/refuge-fond-sans-table.webp",
+  "images/porte-ouverte.webp",
   "images/piece-chambre-propre.webp",
   "images/piece-chambre-feu-propre.webp",
   "images/objet-peluche.webp",
