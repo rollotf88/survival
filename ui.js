@@ -936,7 +936,10 @@ function openBilanRefuge(){
 }
 function openRef(onglet){
   astuce("atelier");
-  if(onglet && onglet !== ongletRef){ ongletRef = onglet; selRef = null; }
+  if(onglet && onglet !== ongletRef){ ongletRef = onglet; selRef = null;
+    // La scène suit l'onglet (2026-11-12, idée de Fabien) : cuisine → cuisine, atelier pour fabriquer / réparer / démonter, voiture → garage, construire → cour
+    var PIECE_ONGLET = { cuisine:"cuisine", fabriquer:"atelier", reparer:"atelier", demonter:"atelier", voiture:"garage", construire:"cour" };
+    if(PIECE_ONGLET[onglet] && typeof allerPieceId === "function" && G.ph === "game" && !G.exp) allerPieceId(PIECE_ONGLET[onglet]); }
   var x = artisan();
   var h = '<h2>🏠 Le refuge</h2><div class="tabs onglets">' + ONGLETS.map(function(o){ return '<button class="tab' + (o[0] === ongletRef ? " on" : "") + '" data-act="onglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   if(msgAtelier){ h += '<p class="g2 msg">' + msgAtelier + '</p>'; msgAtelier = ""; }
