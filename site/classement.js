@@ -90,9 +90,9 @@ function contenuClassement(d){
   var S = d.saison || {};
   if(ongletCl === "pantheon"){
     var P = S.pantheon || [];
-    if(!P.length) return '<p class="msg">Le panthéon est encore vide : la première Légende y entrera à la fin du mois.</p>';
-    return '<p class="sub">Chaque mois, la Légende entre au panthéon et la couronne est remise en jeu.</p><ol class="classement pantheon">' + P.map(function(e){
-      return '<li><span class="rang">' + ic("couronne", "👑") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre, false) + '<small class="pth-mois">' + moisFr(e.saison) + ' · a régné ' + e.regne + ' j</small></b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }).join("") + '</ol>';
+    if(!P.length) return '<p class="msg">Le panthéon est encore vide : le n°1 de ce mois y entrera le 1er du mois prochain.</p>';
+    return '<p class="sub">Chaque fin de mois, le n°1 devient la Légende du mois suivant et entre au panthéon.</p><ol class="classement pantheon">' + P.map(function(e){
+      return '<li><span class="rang">' + ic("couronne", "👑") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre, false) + '<small class="pth-mois">' + moisFr(e.saison) + (e.regne != null ? ' · a régné ' + e.regne + ' j' : ' · n°1 du mois') + '</small></b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }).join("") + '</ol>';
   }
   var liste = ongletCl === "mois" ? S.scores || [] : d.scores || [], total = ongletCl === "mois" ? S.total || 0 : d.total || 0;
   var rang = ongletCl === "mois" ? S.monRang : d.monRang, h = "";
@@ -104,12 +104,17 @@ function contenuClassement(d){
   return h + '<p class="sub">' + total + ' joueur' + (total > 1 ? "s" : "") + (ongletCl === "mois" ? " ce mois-ci" : "") + ' · ⭐ = meilleur score d’une partie classée (1 point par jour et par survivant)' + (ongletCl === "mois" ? ' · ● en cours = partie encore en vie, score mis à jour en direct' : '') + '</p>';
 }
 function carteLegende(S){
-  var L = S.legende, reste = S.fin ? Math.max(0, Math.ceil((S.fin - Date.now()) / 86400000)) : 0;
-  if(!L) return '<div class="lg-carte vide"><span class="lg-ico">' + ic("couronne", "👑") + '</span><span><small>La Légende de ' + moisFr(S.id, true) + '</small><b>Personne… pour l’instant</b><em>Le meilleur score du mois prend la couronne.</em></span></div>';
-  return '<div class="lg-carte' + (L.moi ? " moi" : "") + '">' + medaillonLegende("images/portrait-tigre.webp", 60) + '<span class="lg-txt"><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
-    + '<em>⭐ ' + L.score + ' points · ' + L.jours + ' jours tenus · règne depuis ' + (L.regne ? L.regne + ' jour' + (L.regne > 1 ? "s" : "") : "aujourd’hui") + '</em></span>'
-    + '<span class="lg-fin">' + (reste > 1 ? 'Fin de la saison dans ' + reste + ' jours' : 'Dernier jour de la saison !') + '</span></div>';
+  // Depuis le 2026-11-12 (choix de Fabien) : la Légende = le n°1 du mois précédent, elle règne tout ce mois ; le mois en cours est la course à la couronne
+  var L = S.legende, T = S.tete, reste = S.fin ? Math.max(0, Math.ceil((S.fin - Date.now()) / 86400000)) : 0, suiv = moisSuivant(S.id);
+  var h = L ? '<div class="lg-carte' + (L.moi ? " moi" : "") + '">' + medaillonLegende("images/portrait-tigre.webp", 60) + '<span class="lg-txt"><small>La Légende de ' + moisFr(S.id, true) + (L.moi ? ' · c’est toi !' : '') + '</small><b>' + pseudoCadre(L.pseudo, L.cadre, true) + '</b>'
+      + '<em>N°1 de ' + moisFr(L.saison, true) + ' · ⭐ ' + L.score + ' points · ' + L.jours + ' jours tenus</em></span>'
+    : '<div class="lg-carte vide"><span class="lg-ico">' + ic("couronne", "👑") + '</span><span class="lg-txt"><small>La Légende de ' + moisFr(S.id, true) + '</small><b>Personne… pour l’instant</b><em>Le n°1 de ' + moisFr(S.id, true) + ' sera la Légende de ' + suiv + ', couronnée le 1er ' + suiv + '.</em></span>';
+  var course = T ? (T.moi ? '🏁 Tu es en tête de ' + moisFr(S.id, true) + ' (' + T.score + ' points) : garde la tête jusqu’au 1er ' + suiv + ' pour devenir la Légende !'
+      : '🏁 En tête de ' + moisFr(S.id, true) + ' : <b>' + echapper(pseudosPropres(T.pseudo)) + '</b> (' + T.score + ' points), futur(e) Légende de ' + suiv + ' si personne ne fait mieux.')
+    : '🏁 Personne n’est encore en tête de ' + moisFr(S.id, true) + ' : la couronne de ' + suiv + ' est à prendre !';
+  return h + '<span class="lg-course">' + course + '</span><span class="lg-fin">' + (reste > 1 ? 'Couronne remise le 1er ' + suiv + ', dans ' + reste + ' jours' : 'La couronne est remise demain !') + '</span></div>';
 }
+function moisSuivant(id){ var p = String(id || "").split("-"); var m = +p[1] || 1; return MOIS_FR[m % 12]; }
 var MOIS_FR = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 function moisFr(id, court){ var p = String(id || "").split("-"); var m = MOIS_FR[(+p[1] || 1) - 1] || ""; return court ? m : m + " " + (p[0] || ""); }
 
@@ -248,10 +253,12 @@ function remplirMonde(){
       fil.push("🧍 Chaque membre en vie compte : une famille de 4 en vie, c’est 4 survivants.");
       if(d.doyen) fil.push("🕯️ La famille de <b>" + echapper(d.doyen.pseudo || "quelqu’un") + "</b> tient depuis " + d.doyen.jour + " jours.");
       (d.tombes || []).slice(0, 3).forEach(function(t){ fil.push("💀 La famille de <b>" + echapper(t.n || "quelqu’un") + "</b> est tombée au jour " + t.j + "."); });
-      if(d.legende) fil.push("👑 La Légende du mois : <b>" + echapper(d.legende.pseudo) + "</b>, " + d.legende.score + " points. Qui la détrônera ?");
-      if(d.detrone) fil.unshift("👑 <b>" + echapper(d.detrone.nouveau) + "</b> a détrôné " + echapper(d.detrone.ancien) + " après " + d.detrone.regne + " jour" + (d.detrone.regne > 1 ? "s" : "") + " de règne !");
+      if(d.legende) fil.push("👑 La Légende du mois : <b>" + echapper(d.legende.pseudo) + "</b>, n°1 du mois dernier avec " + d.legende.score + " points.");
+      if(d.tete) fil.push("🏁 En tête ce mois-ci : <b>" + echapper(pseudosPropres(d.tete.pseudo)) + "</b>, " + d.tete.score + " points. Qui sera la prochaine Légende ?");
+      if(d.enTete) fil.unshift("🏁 <b>" + echapper(pseudosPropres(d.enTete.nouveau)) + "</b> passe en tête du mois devant " + echapper(pseudosPropres(d.enTete.ancien)) + " !");
       if(d.record) fil.push("🏆 Record de tous les temps : <b>" + echapper(d.record.pseudo) + "</b>, " + d.record.score + " points en " + d.record.jours + " jours.");
       var lg = document.getElementById("m-legende");
+      if(lg && !d.legende && d.tete){ lg.innerHTML = '<span class="ml-ico">' + ic("couronne", "👑") + '</span><span><small>En tête du mois</small><b>' + echapper(pseudosPropres(d.tete.pseudo)) + '</b></span><span class="ml-pts">⭐ ' + d.tete.score + '</span>'; lg.hidden = false; }
       if(lg && d.legende){ lg.innerHTML = '<span class="ml-ico">' + ic("couronne", "👑") + '</span><span><small>La Légende du mois</small><b>' + echapper(d.legende.pseudo) + '</b></span><span class="ml-pts">⭐ ' + d.legende.score + '</span>'; lg.hidden = false; }
       if(d.joueurs) fil.push("👥 " + d.joueurs + " joueur" + (d.joueurs > 1 ? "s ont" : " a") + " déjà tenté leur chance.");
     }
@@ -895,16 +902,23 @@ document.addEventListener("click", function(e){
 var COURONNE_SVG = '<svg viewBox="0 0 64 44"><path d="M4 38 L8 10 L22 24 L32 4 L42 24 L56 10 L60 38 Z" fill="#f7c948" stroke="#5a3a00" stroke-width="3" stroke-linejoin="round"/><rect x="4" y="34" width="56" height="8" rx="2" fill="#e0a33a" stroke="#5a3a00" stroke-width="3"/><circle cx="32" cy="22" r="4" fill="#d6453a" stroke="#5a3a00" stroke-width="2"/><circle cx="16" cy="28" r="3" fill="#3a8fd6" stroke="#5a3a00" stroke-width="2"/><circle cx="48" cy="28" r="3" fill="#3a8fd6" stroke="#5a3a00" stroke-width="2"/></svg>';
 function medaillonLegende(src, taille){ return '<span class="lg-med" style="--t:' + (taille || 64) + 'px"><span class="lg-lueur"></span><span class="lg-anneau"></span><img src="' + src + '" alt=""><i class="lg-cour">' + COURONNE_SVG + '</i><span class="lg-eclat e1"></span><span class="lg-eclat e2"></span></span>'; }
 var LEGENDE = (function(){ try{ return JSON.parse(localStorage.getItem("survival_legende") || "null"); }catch(e){ return null; } })();
+var TETE_MOIS = (function(){ try{ return JSON.parse(localStorage.getItem("survival_tete") || "null"); }catch(e){ return null; } })();
 function noterLegende(S){
-  var L = S && S.legende ? { pseudo:S.legende.pseudo, score:S.legende.score, jours:S.legende.jours, moi:!!S.legende.moi, saison:S.id } : null;
-  var etais = false; try{ etais = localStorage.getItem("survival_etais_legende") === "1"; }catch(e){}
-  // J'étais la Légende et je ne le suis plus : bandeau au lancement
-  if(etais && L && !L.moi && typeof fileSucces !== "undefined"){
-    fileSucces.push({ icone:"👑", titre:"Tu as été détrôné !", nom:L.pseudo + " est la nouvelle Légende avec " + L.score + " points. Reprends ta couronne !" });
+  var L = S && S.legende ? { pseudo:S.legende.pseudo, score:S.legende.score, jours:S.legende.jours, moi:!!S.legende.moi, saison:S.legende.saison, regne:S.id } : null;
+  var T = S && S.tete ? { pseudo:S.tete.pseudo, score:S.tete.score, moi:!!S.tete.moi, saison:S.id } : null;
+  var etais = false, recue = ""; try{ etais = localStorage.getItem("survival_etais_legende") === "1"; recue = localStorage.getItem("survival_legende_colis") || ""; }catch(e){}
+  if(typeof fileSucces !== "undefined"){
+    // Je deviens la Légende (le 1er du mois) : bandeau + colis, une seule fois par couronne
+    if(L && L.moi && recue !== L.saison){
+      ecrireColis(lireColis() + 1); try{ localStorage.setItem("survival_legende_colis", L.saison); }catch(e){}
+      fileSucces.push({ icone:"👑", titre:"Tu es la Légende de " + moisFr(L.regne, true) + " !", nom:"N°1 de " + moisFr(L.saison, true) + " avec " + L.score + " points : couronne, cadre doré et Raja tout le mois. Un colis t’attend." });
+    }
+    // Mon règne est fini
+    else if(etais && !(L && L.moi)) fileSucces.push({ icone:"👑", titre:"Ton règne est terminé", nom:(L ? L.pseudo + " est la Légende de " + moisFr(L.regne, true) + "." : "Pas de Légende ce mois-ci.") + " Finis n°1 du mois pour reprendre la couronne !" });
     if(typeof montrerSucces === "function") montrerSucces();
   }
-  try{ localStorage.setItem("survival_etais_legende", L && L.moi ? "1" : "0"); localStorage.setItem("survival_legende", JSON.stringify(L)); }catch(e){}
-  LEGENDE = L;
+  try{ localStorage.setItem("survival_etais_legende", L && L.moi ? "1" : "0"); localStorage.setItem("survival_legende", JSON.stringify(L)); localStorage.setItem("survival_tete", JSON.stringify(T)); }catch(e){}
+  LEGENDE = L; TETE_MOIS = T;
 }
 function verifierLegende(){
   try{ fetch(adresseClassement() + "?id=" + idAppareil()).then(function(r){ return r.json(); }).then(function(d){ if(d && d.saison) noterLegende(d.saison); }).catch(function(){}); }catch(e){}
@@ -912,28 +926,30 @@ function verifierLegende(){
 setTimeout(verifierLegende, 1500);
 // Réponse du serveur après l'envoi d'un score : couronne gagnée ?
 function resultatLegende(S, el){
-  if(S.devient){
-    ecrireColis(lireColis() + 1);
-    if(el) el.innerHTML = '<span class="go-legende">' + ic("couronne", "👑") + ' Tu es la nouvelle Légende du mois !' + (S.ancien ? ' Tu as détrôné ' + echapper(S.ancien) + '.' : '') + ' Un colis t’attend.</span>';
+  var suiv = TETE_MOIS ? moisSuivant(TETE_MOIS.saison) : "du mois prochain";
+  if(S.devientTete){
+    if(el) el.innerHTML = '<span class="go-legende">' + ic("couronne", "👑") + ' Tu passes en tête du mois' + (S.ancien ? ' devant ' + echapper(S.ancien) : '') + ' ! Garde la tête jusqu’au 1er ' + suiv + ' pour devenir la Légende.</span>';
     if(typeof son === "function") son("succes"); if(typeof vibrer === "function") vibrer([100, 60, 100, 60, 300]);
-  } else if(S.legende && el) el.innerHTML += ' <span class="go-legende">' + ic("couronne", "👑") + ' Tu restes la Légende du mois.</span>';
+  } else if(S.tete && el) el.innerHTML += ' <span class="go-legende">' + ic("couronne", "👑") + ' Tu restes en tête du mois.</span>';
   verifierLegende();
 }
 // Jauge « toi contre la Légende » (partie classée seulement : seules elles comptent)
 function barreLegende(){
-  if(!LEGENDE || !G || !G.seed || G.ph !== "game") return "";
-  if(LEGENDE.moi) return '<div class="lg-jauge moi"><span class="lg-j-t">' + ic("couronne", "👑") + ' Tu es la Légende du mois (' + LEGENDE.score + ' points). Défends ta couronne !</span></div>';
-  var p = Math.min(100, Math.round((G.score || 0) / Math.max(1, LEGENDE.score) * 100));
-  return '<div class="lg-jauge"><span class="lg-j-t">' + ic("couronne", "👑") + ' Légende : <b>' + echapper(LEGENDE.pseudo) + '</b> · ' + LEGENDE.score + ' pts</span><span class="lg-j-bar"><i style="width:' + p + '%"></i></span><small>Toi : ' + (G.score || 0) + ' pts (' + p + ' %)' + (p >= 100 ? ' · tu la dépasses !' : '') + '</small></div>';
+  if(!G || !G.seed || G.ph !== "game") return "";
+  var T = TETE_MOIS, suiv = T ? moisSuivant(T.saison) : "";
+  if(!T) return '<div class="lg-jauge"><span class="lg-j-t">' + ic("couronne", "👑") + ' Personne n’est encore en tête du mois : la prochaine couronne est à prendre !</span></div>';
+  if(T.moi) return '<div class="lg-jauge moi"><span class="lg-j-t">' + ic("couronne", "👑") + ' Tu es en tête du mois (' + T.score + ' points) : garde la tête jusqu’au 1er ' + suiv + ' pour devenir la Légende !</span></div>';
+  var p = Math.min(100, Math.round((G.score || 0) / Math.max(1, T.score) * 100));
+  return '<div class="lg-jauge"><span class="lg-j-t">' + ic("couronne", "👑") + ' En tête du mois : <b>' + echapper(pseudosPropres(T.pseudo)) + '</b> · ' + T.score + ' pts</span><span class="lg-j-bar"><i style="width:' + p + '%"></i></span><small>Toi : ' + (G.score || 0) + ' pts (' + p + ' %)' + (p >= 100 ? ' · tu passes devant !' : '') + '</small></div>';
 }
-// Paliers annoncés dans le bilan de la nuit (une fois chacun par partie)
+// Paliers annoncés dans le bilan de la nuit (une fois chacun par partie) : contre le n°1 du mois
 function paliersLegende(n){
-  if(!LEGENDE || LEGENDE.moi || !G || !G.seed) return;
-  var p = (G.score || 0) / Math.max(1, LEGENDE.score), deja = G.legPalier || 0;
-  var P = [[1, "👑 Tu as dépassé le record de la Légende (" + LEGENDE.pseudo + ", " + LEGENDE.score + " points) ! Tiens bon : la couronne sera à toi à la fin de cette partie."],
-    [0.9, "👑 Plus que " + Math.max(1, LEGENDE.score - G.score) + " points pour détrôner la Légende !"],
-    [0.75, "👑 Tu as fait les trois quarts du chemin vers le record de la Légende."],
-    [0.5, "👑 Tu as dépassé la moitié du record de la Légende (" + LEGENDE.score + " points)."]];
+  var T = TETE_MOIS; if(!T || T.moi || !G || !G.seed) return;
+  var p = (G.score || 0) / Math.max(1, T.score), deja = G.legPalier || 0;
+  var P = [[1, "👑 Tu dépasses " + T.pseudo + " (" + T.score + " points) : tu es en tête du mois ! Garde la tête jusqu’au 1er " + moisSuivant(T.saison) + " pour devenir la Légende."],
+    [0.9, "👑 Plus que " + Math.max(1, T.score - G.score) + " points pour passer en tête du mois !"],
+    [0.75, "👑 Tu as fait les trois quarts du chemin vers la tête du mois."],
+    [0.5, "👑 Tu as dépassé la moitié du score du n°1 du mois (" + T.score + " points)."]];
   for(var i = 0; i < P.length; i++) if(p >= P[i][0]){ if(P[i][0] > deja){ n.unshift(["g2", P[i][1]]); G.legPalier = P[i][0]; } break; }
 }
 

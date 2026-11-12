@@ -1308,7 +1308,7 @@ var VITRINE = [
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/aube.webp", "👑 La Légende du mois", "Chaque mois, le meilleur joueur devient la Légende, couronné devant tous. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de la détrôner !"]
+  ["images/aube.webp", "👑 La Légende du mois", "Le meilleur joueur du mois est couronné Légende pour tout le mois suivant, avec Raja le tigre. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de prendre la couronne !"]
 ];
 var minuteurVitrine = null;
 function vitrine(){

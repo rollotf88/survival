@@ -12,8 +12,8 @@ const CLE = "general", GARDES = 1000;
 async function lireListe(env){ return (await env.CLASSEMENT.get(CLE, { type: "json" })) || []; }
 
 // ---------- La Légende du mois (2026-11-12, idée de Fabien) ----------
-// Clé KV « saison » : { id:"AAAA-MM", scores:[…1000 meilleurs du mois], legende:{id,pseudo,score,jours,cadre,depuis},
-//   annonces:[{t, nouveau, ancien, regne}], pantheon:[{saison, pseudo, score, jours, cadre, regne}] }
+// Clé KV « saison » : { id:"AAAA-MM", scores:[…1000 meilleurs du mois], legende:{id,pseudo,score,jours,cadre,saison,depuis} = n°1 du mois PRÉCÉDENT,
+//   tete:{id,pseudo,score,jours,cadre} = n°1 du mois en cours, annonces:[{t, nouveau, ancien}] (qui passe en tête), pantheon:[{saison, pseudo, score, jours, cadre}] }
 // Le n°1 du mois est « la Légende » ; la couronne est remise en jeu le 1er de chaque mois (l'ancienne Légende entre au panthéon).
 // Les bots de l'admin n'entrent jamais dans la saison (seuls les vrais envois de score y vont).
 const CLE_SAISON = "saison", JOUR_MS_L = 24 * 3600 * 1000;
@@ -22,40 +22,47 @@ function finDuMois(t){ const d = new Date(t); return Date.UTC(d.getUTCFullYear()
 const joursDeRegne = (L, t) => L ? Math.max(0, Math.floor((t - (L.depuis || t)) / JOUR_MS_L)) : 0;
 async function lireSaison(env, now){
   let S = (await env.CLASSEMENT.get(CLE_SAISON, { type: "json" })) || null, change = false;
-  if(!S){ // toute première fois : la saison part des vrais scores déjà enregistrés (sans les bots), pour qu'il y ait tout de suite une Légende
-    const L0 = (await lireListe(env)).filter((e) => !estBot(e.id)).slice(0, GARDES).map((e) => Object.assign({}, e));
-    S = { id: moisCourant(now), scores: L0, legende: null, annonces: [], pantheon: [] }; majLegende(S, now); change = true; }
+  if(!S){ S = { id: moisCourant(now), scores: [], legende: null, tete: null, annonces: [], pantheon: [] }; change = true; }
+  // Depuis le 2026-11-12 (choix de Fabien) : la Légende est le n°1 du mois PRÉCÉDENT ; une ancienne Légende « du mois en cours » (sans champ saison) est oubliée
+  if(S.legende && !S.legende.saison){ S.legende = null; change = true; }
   if(S.id !== moisCourant(now)){
-    if(S.legende) S.pantheon = [{ saison: S.id, pseudo: S.legende.pseudo, score: S.legende.score, jours: S.legende.jours, cadre: S.legende.cadre || "", regne: joursDeRegne(S.legende, finDuMois(Date.parse(S.id + "-01T00:00:00Z"))) }].concat(S.pantheon || []).slice(0, 24);
-    S = { id: moisCourant(now), scores: [], legende: null, annonces: (S.annonces || []).slice(0, 10), pantheon: S.pantheon || [] };
+    // Fin du mois : le n°1 devient la Légende du mois suivant (couronne, cadre doré et Raja tout le mois) et entre au panthéon
+    const top = (S.scores || [])[0];
+    const leg = top ? { id: top.id, pseudo: top.pseudo, score: top.score, jours: top.jours, cadre: top.cadre || "", saison: S.id, depuis: now } : null;
+    const pantheon = leg ? [{ saison: S.id, pseudo: leg.pseudo, score: leg.score, jours: leg.jours, cadre: leg.cadre }].concat(S.pantheon || []).slice(0, 24) : (S.pantheon || []);
+    S = { id: moisCourant(now), scores: [], legende: leg, tete: null, annonces: [], pantheon };
     change = true;
   }
   return { S, change };
 }
-// Met la Légende à jour d'après le n°1 du mois ; note l'annonce quand quelqu'un est détrôné
+// Le n°1 du mois en cours (« en tête », futur(e) Légende) ; note l'annonce quand quelqu'un passe en tête
 function majLegende(S, now){
   const top = S.scores[0];
-  if(!top){ if(S.legende){ S.legende = null; return true; } return false; }
-  if(!S.legende || S.legende.id !== top.id){
-    if(S.legende) S.annonces = [{ t: now, nouveau: top.pseudo, ancien: S.legende.pseudo, regne: joursDeRegne(S.legende, now) }].concat(S.annonces || []).slice(0, 10);
-    S.legende = { id: top.id, pseudo: top.pseudo, score: top.score, jours: top.jours, cadre: top.cadre || "", depuis: now };
+  if(!top){ if(S.tete){ S.tete = null; return true; } return false; }
+  if(!S.tete || S.tete.id !== top.id){
+    if(S.tete) S.annonces = [{ t: now, nouveau: top.pseudo, ancien: S.tete.pseudo }].concat(S.annonces || []).slice(0, 10);
+    S.tete = { id: top.id, pseudo: top.pseudo, score: top.score, jours: top.jours, cadre: top.cadre || "" };
     return true;
   }
-  const L = S.legende; if(L.score !== top.score || L.pseudo !== top.pseudo || L.jours !== top.jours){ L.score = top.score; L.pseudo = top.pseudo; L.jours = top.jours; L.cadre = top.cadre || ""; return true; }
+  const T = S.tete; if(T.score !== top.score || T.pseudo !== top.pseudo || T.jours !== top.jours){ T.score = top.score; T.pseudo = top.pseudo; T.jours = top.jours; T.cadre = top.cadre || ""; return true; }
   return false;
 }
 // Ce que le jeu peut voir de la saison (sans les identifiants des autres joueurs)
 function vueSaison(S, moi, now){
-  const L = S.legende, k = moi ? S.scores.findIndex((e) => e.id === moi) : -1;
+  const L = S.legende, T = S.tete, k = moi ? S.scores.findIndex((e) => e.id === moi) : -1;
   return { id: S.id, fin: finDuMois(now),
-    legende: L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, cadre: L.cadre || "", regne: joursDeRegne(L, now), moi: !!moi && L.id === moi } : null,
+    legende: L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, cadre: L.cadre || "", saison: L.saison, regne: joursDeRegne(L, now), moi: !!moi && L.id === moi } : null,
+    tete: T ? { pseudo: T.pseudo, score: T.score, jours: T.jours, cadre: T.cadre || "", moi: !!moi && T.id === moi } : null,
     scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar, live, t }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!L && id === L.id, enCours: !!live && now - (t || 0) < 3 * JOUR_MS_L })),
     total: S.scores.length, monRang: k >= 0 ? k + 1 : null,
     annonces: (S.annonces || []).slice(0, 5), pantheon: (S.pantheon || []).slice(0, 12) };
 }
 async function retirerDeSaison(env, id){
   const { S } = await lireSaison(env, Date.now()); const k = S.scores.findIndex((e) => e.id === id);
-  if(k >= 0){ S.scores.splice(k, 1); majLegende(S, Date.now()); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S)); }
+  const estLeg = !!S.legende && S.legende.id === id; // l'admin retire un tricheur : il perd aussi sa couronne
+  if(estLeg) S.legende = null;
+  if(k >= 0) S.scores.splice(k, 1);
+  if(k >= 0 || estLeg){ majLegende(S, Date.now()); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S)); }
 }
 
 async function onRequestOptions(){ return new Response("", { headers: ENTETES }); }
@@ -94,17 +101,15 @@ async function onRequestPost({ request, env }){
   await env.CLASSEMENT.put(CLE, JSON.stringify(garde));
   const rang = garde.findIndex((e) => e.id === id) + 1;
   // Saison du mois : même règle (meilleur score du mois par appareil) ; la Légende = le n°1 du mois
-  const now = Date.now(), { S } = await lireSaison(env, now), avant = S.legende ? S.legende.id : null;
+  const now = Date.now(), { S } = await lireSaison(env, now), avant = S.tete ? S.tete.id : null, ancienT = S.tete ? S.tete.pseudo : null;
   const a2 = S.scores.find((e) => e.id === id);
   if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; a2.avatar = avatar; a2.live = false; }
   else S.scores.push({ id, pseudo, score, jours, cadre, avatar });
   S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
-  majLegende(S, now);
-  const legende = !!S.legende && S.legende.id === id, viaJeu = legende && !!S.legende.enJeu, devient = legende && (avant !== id || viaJeu), ancienJeu = viaJeu ? S.legende.ancienPseudo || null : null;
-  if(S.legende && S.legende.id === id){ delete S.legende.enJeu; delete S.legende.ancienPseudo; }
-  await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+  majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+  const tete = !!S.tete && S.tete.id === id, legende = !!S.legende && S.legende.id === id;
   return reponse({ ok: true, rang, total: garde.length, record, meilleur: ancien ? ancien.score : score,
-    saison: { rang: S.scores.findIndex((e) => e.id === id) + 1, legende, devient, ancien: viaJeu ? ancienJeu : devient && S.annonces[0] && S.annonces[0].t === now ? S.annonces[0].ancien : null } });
+    saison: { rang: S.scores.findIndex((e) => e.id === id) + 1, legende, tete, devientTete: tete && avant !== id, ancien: tete && avant !== id ? ancienT : null } });
 }
 
 // ---------- Chiffres du monde : /api/monde ----------
@@ -133,10 +138,10 @@ async function mondeGet(env){
   const eid = idHordeServeur(now); let evt = null;
   if(eid){ let total = 0, part = 0, actifs = 0; for(const id in m.j){ const e = m.j[id]; if(now - e.t < ACTIF) actifs++; if(e.e && e.e.id === eid){ total += e.e.z || 0; part++; } }
     evt = { id: eid, total, participants: part, objectif: Math.max(500, actifs * 100) }; }
-  const { S } = await lireSaison(env, now), L = S.legende, an = (S.annonces || [])[0];
-  const legende = L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, regne: joursDeRegne(L, now) } : null;
-  const detrone = an && now - an.t < 3 * JOUR_MS_L ? an : null;
-  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen, evt, legende, detrone,
+  const { S } = await lireSaison(env, now), L = S.legende, T = S.tete, an = (S.annonces || [])[0];
+  const legende = L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, saison: L.saison } : null, tete = T ? { pseudo: T.pseudo, score: T.score } : null;
+  const enTete = an && now - an.t < 3 * JOUR_MS_L ? an : null;
+  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen, evt, legende, tete, enTete,
     record: r ? { pseudo: r.pseudo, score: r.score, jours: r.jours } : null, tombes: (m.tombes || []).slice(0, 5) });
 }
 async function mondePost(request, env){
@@ -156,15 +161,12 @@ async function mondePost(request, env){
   // (seulement s'il dépasse le meilleur score du mois de cet appareil, pour limiter les écritures)
   const sc = Math.floor(+d.score), jr = entier(d.jour, 400);
   if(d.classee && pseudo && entier(d.vivants, 4) > 0 && sc > 0 && sc <= jr * 4){
-    const { S } = await lireSaison(env, now), e = S.scores.find((x) => x.id === id), cadre = cadreDe(d), avatar = avatarDe(d), avantL = S.legende ? S.legende.id : null, ancienL = S.legende ? S.legende.pseudo : null;
+    const { S } = await lireSaison(env, now), e = S.scores.find((x) => x.id === id), cadre = cadreDe(d), avatar = avatarDe(d);
     if(!e || sc > e.score){
       if(e){ e.score = sc; e.jours = jr; e.pseudo = pseudo; if(cadre) e.cadre = cadre; e.avatar = avatar; e.live = true; e.t = now; }
       else S.scores.push({ id, pseudo, score: sc, jours: jr, cadre, avatar, live: true, t: now });
       S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
-      majLegende(S, now);
-      // Couronne gagnée en cours de partie : on l'annoncera (avec le colis) à la fin de la partie
-      if(S.legende && S.legende.id === id && avantL !== id){ S.legende.enJeu = true; S.legende.ancienPseudo = ancienL; }
-      await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+      majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
     }
   }
   return reponse({ ok: true });
