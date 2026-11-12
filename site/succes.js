@@ -65,7 +65,7 @@ var selSucces = null;
 function openSucces(){
   var n = nbSucces(), N = SUCCES.length;
   var cad = typeof CADRES !== "undefined" ? CADRES.filter(function(c){ return c.min > n; })[0] : null;
-  var prochain = cad ? (cad.min >= 999 ? "Cadre Légende : tout réussir" : "Cadre " + cad.nom + " : encore " + (cad.min - n)) : "Tous les cadres débloqués !";
+  var prochain = cad ? (cad.min >= 999 ? "Cadre Mythique : tout réussir" : "Cadre " + cad.nom + " : encore " + (cad.min - n)) : "Tous les cadres débloqués !";
   var h = teteInfo("🏅", "Succès débloqués", n + " / " + N, n >= N ? "ok" : "moy", n / N * 100, prochain);
   var liste = SUCCES.filter(function(x){ return succesObtenus[x.id]; }).concat(SUCCES.filter(function(x){ return !succesObtenus[x.id]; }));
   var sel = SUCCES.filter(function(x){ return x.id === selSucces; })[0] || SUCCES.filter(function(x){ return !succesObtenus[x.id]; })[0] || liste[0], okSel = !!succesObtenus[sel.id];

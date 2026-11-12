@@ -659,6 +659,7 @@ function openChapitre(){
   var c = chapitreCourant(), p = c.progres ? c.progres() : null;
   var h = '<h2>📖 Chapitre ' + (G.chap + 1) + ' · ' + c.titre + '</h2><p><b>Objectif :</b> ' + c.objectif + '</p>';
   if(p) h += '<div class="jauge">' + barre("🎯", Math.round(Math.min(p[0], p[1]) / p[1] * 100)) + '<small>' + Math.min(p[0], p[1]) + ' / ' + p[1] + ' ' + p[2] + '</small></div>';
+  if(typeof barreLegende === "function") h += barreLegende();
   var rec = []; for(var k in c.recompense) rec.push(icone(k) + " " + nommer(k, c.recompense[k]));
   if(c.moral) rec.push("moral +" + c.moral);
   h += '<p class="sub">🎁 Récompense : ' + (rec.length ? rec.join(", ") : "aucune") + '</p>';
@@ -1044,6 +1045,7 @@ function openNuit(n){
   n = regrouperNuit(n);
   // Bandeau : le refuge assiégé s'il y a eu une attaque cette nuit, sinon l'aube calme (griffures sur les planches)
   var attaque = n.some(function(l){ return String(l[1]).indexOf("Attaque de nuit") >= 0; });
+  if(typeof paliersLegende === "function") paliersLegende(n); // la Légende du mois
   var sf = sceneFolie(n);
   show('<div class="banniere' + (sf ? ' folie' : '') + '"><img src="images/' + (sf ? "folie/" + sf : attaque ? "nuit" : "aube") + '.webp" alt=""></div><h2>Fin du jour ' + (G.day - 1) + '</h2><p class="sub">⭐ +' + vivants().length + ' (un point par survivant) · Score : ' + G.score + '</p>' + puces(n) + '<button class="btn" style="width:100%" data-act="morning">Jour ' + G.day + '</button>');
 }
@@ -1191,6 +1193,7 @@ function tableauPC(){
   if(G.combat && !document.body.classList.contains("scene-petite")){ panneauCombat(); return; }
   var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
   if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
+  if(typeof barreLegende === "function") h += barreLegende();
   if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';
   // Marché du jour : sur PC, une carte avec Marco et ses offres (au lieu du petit bouton sous la scène)
   if(marcheOuvert()){
@@ -1276,7 +1279,7 @@ var VITRINE = [
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/aube.webp", "🏆 Classement et parties du jour", "La même partie pour tous chaque jour, des défis quotidiens, une grande horde chaque week-end et un code pour inviter tes amis."]
+  ["images/aube.webp", "👑 La Légende du mois", "Chaque mois, le meilleur joueur devient la Légende, couronné devant tous. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de la détrôner !"]
 ];
 var minuteurVitrine = null;
 function vitrine(){

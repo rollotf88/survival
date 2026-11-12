@@ -2524,3 +2524,37 @@ body.pc #app .mc .mc-st{margin-top:8px!important}
 .banniere.folie img{object-position:50% 40%}
 .mf-alerte.mf-folie{display:flex;align-items:center;gap:8px}
 .mf-alerte.mf-folie img{flex:none;width:40px;height:40px;border-radius:10px;object-fit:cover;box-shadow:0 0 0 2px var(--bad)}
+
+/* ---------- La Légende du mois (2026-11-12) ---------- */
+.pcadre.legende-mois{background:linear-gradient(90deg,#ffe9a8,#f7c948,#ffe9a8);background-size:200% 100%;animation:legBrille 3s linear infinite;color:#4a3000;border-color:#b8860b}
+@keyframes legBrille{from{background-position:0 0}to{background-position:200% 0}}
+@media (prefers-reduced-motion:reduce){.pcadre.legende-mois{animation:none}}
+.couronne-l{font-style:normal;margin-right:3px}
+.couronne-l .ico,.couronne-l img,.couronne-l svg{width:14px!important;height:14px!important;vertical-align:-2px}
+.lg-carte{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:0 0 10px;border:2px solid #b8860b;border-radius:14px;background:linear-gradient(135deg,#fff3c4,#f7d774);box-shadow:0 3px 0 #a8841c;color:#3a2a00}
+.lg-carte.vide{background:var(--bg);border-color:var(--bois);box-shadow:0 3px 0 var(--line);color:var(--ink)}
+.lg-carte .lg-ico{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 2px #b8860b;font-size:24px}
+.lg-carte .lg-ico .ico,.lg-carte .lg-ico img,.lg-carte .lg-ico svg{width:28px!important;height:28px!important}
+.lg-carte > span:nth-child(2){flex:1;min-width:0}
+.lg-carte small{display:block;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+.lg-carte b{display:block;font-size:18px;margin:2px 0}
+.lg-carte em{display:block;font-style:normal;font-size:12px;font-weight:700}
+.lg-fin{flex:none;font-size:11px;font-weight:900;padding:2px 9px;border-radius:999px;background:rgba(0,0,0,.12)}
+.classement li.leg{background:linear-gradient(90deg,#fff3c4,transparent 80%)}
+.classement.pantheon .pth-mois{display:block;font-size:11px;font-weight:700;color:var(--mut)}
+.lg-jauge{margin:8px 0;padding:7px 10px;border:2px solid #b8860b;border-radius:12px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+.lg-jauge.moi{background:linear-gradient(90deg,#fff3c4,var(--bg))}
+.lg-j-t{display:block;font-size:12.5px;font-weight:700}
+.lg-j-t .ico,.lg-j-t img,.lg-j-t svg{width:15px!important;height:15px!important;vertical-align:-3px}
+.lg-j-bar{display:block;height:8px;margin:5px 0 3px;border-radius:999px;background:rgba(0,0,0,.13);overflow:hidden}
+.lg-j-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#e0b028,#f7c948)}
+.lg-jauge small{font-size:11px;color:var(--mut);font-weight:700}
+.go-legende{display:block;margin-top:4px;font-weight:900;color:#f7c948}
+.go-legende .ico,.go-legende img,.go-legende svg{width:18px!important;height:18px!important;vertical-align:-3px}
+.m-legende{display:flex;align-items:center;gap:8px;margin:6px 0 0;padding:5px 9px;border-radius:12px;background:linear-gradient(90deg,rgba(247,201,72,.25),transparent);border:1.5px solid rgba(247,201,72,.6)}
+.m-legende[hidden]{display:none}
+.m-legende .ml-ico .ico,.m-legende .ml-ico img,.m-legende .ml-ico svg{width:20px!important;height:20px!important}
+.m-legende > span:nth-child(2){flex:1;min-width:0}
+.m-legende small{display:block;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+.m-legende b{display:block;font-size:14px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-legende .ml-pts{flex:none;font-weight:900;font-size:13px}

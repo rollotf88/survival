@@ -39,6 +39,8 @@ function reglesGuide(){
       "Chaque plat brûle " + nommer("planche", B.cuisine.planches) + " et coûte " + B.energieCraft + " ⚡ au cuisinier. Une portion nourrit plus qu’une ration (+35 à +50 de faim au lieu de +30) avec un bonus (moral, PV, énergie), mais les plats se gâtent en 3 nuits (les galettes en 8). La nuit, chacun mange d’abord un plat s’il y en a. Le potager donne parfois des herbes. Le jour où l’on a cuisiné, la cuisinière reste allumée et quelqu’un de la famille est aux fourneaux (le cuisinier s’il y en a un)."],
     ["Le dernier recours", "🕯️",
       "Si la famille meurt de faim et qu’il ne reste vraiment plus rien, une solution terrible peut être proposée au moment de dormir : sacrifier l’un des vôtres (+" + B.sacrifice.viande + " rations). Le moral s’effondre (" + B.sacrifice.moral + ") et la folie s’installe chez les survivants : elle monte chaque nuit (sauf si le moral tient au-dessus de " + B.folie.moralCalme + "), fait fouiller moins bien et pousse à des actes fous (frapper quelqu’un, hurler toute la nuit, sortir seul, laisser la porte ouverte, voler les réserves). À 100, on part pour toujours. Ce contenu peut être coupé dans le menu (Contenus durs). Une porte laissée ouverte par un fou reste ouverte au salon : touche-la pour la refermer, sinon la nuit suivante la défense baisse de " + B.porteOuverte.defense + " et le risque d’attaque augmente."],
+    ["La Légende du mois", "👑",
+      "Le joueur qui a le meilleur score du mois (en partie classée) devient la Légende : une couronne s’affiche à côté de son pseudo partout (classement, clans, discussion) et tout le monde le voit sur l’écran d’accueil. Pendant ta partie classée, une jauge montre où tu en es par rapport à son record, et la nuit t’annonce quand tu passes la moitié, les trois quarts, puis quand tu la dépasses. Celui qui la détrône reçoit un colis, et l’ancienne Légende est prévenue. Le 1er de chaque mois, la couronne est remise en jeu : la Légende du mois entre au panthéon (onglet du classement) avec la durée de son règne."],
     ["Les défis", "🎯",
       "Chaque jour, 3 défis (les mêmes pour tous les joueurs) : abattre des zombies, fouiller, cuisiner, pêcher, couper du bois… Ils avancent dans toutes tes parties. Les 3 réussis rapportent un colis (un largage avec un bonus) ; le grand défi de la semaine en rapporte un autre. Menu ☰ → Défis."],
     ["Les zombies célèbres", "💀",
@@ -170,7 +172,7 @@ var THEMES_GUIDE = [
   ["Survivre", "❤️", ["Boire et manger", "L’énergie", "Le froid et le feu", "La nuit", "Les saisons", "Le dernier recours"]],
   ["Le refuge", "🏠", ["Le refuge", "La cuisine", "Pêche et poules", "La forêt et le bois", "La voiture", "Les tombes"]],
   ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "L’expérience des survivants"]],
-  ["Progresser", "🏆", ["Score et chapitres", "Les défis", "La grande horde du week-end", "L’héritage"]],
+  ["Progresser", "🏆", ["Score et chapitres", "La Légende du mois", "Les défis", "La grande horde du week-end", "L’héritage"]],
   ["Les clans", "⚔️", ["Les clans", "Les opérations du clan", "La discussion du clan", "Équipement de guerre", "Le camion du clan"]]
 ];
 var guideVue = null, guideCat = null; // guideVue = { t:"regle"|"objet"|"lieu"|"zombie"|"immeuble", id }
