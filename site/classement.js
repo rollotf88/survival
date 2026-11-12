@@ -69,11 +69,11 @@ function openClassement(message){
     + '<div class="tabs onglets">' + tabs.map(function(t){ return '<button class="tab' + (t[0] === ongletCl ? " on" : "") + '" data-act="clonglet" data-id="' + t[0] + '">' + t[1] + '<small>' + t[2] + '</small></button>'; }).join("") + '</div>';
   h += donneesCl ? contenuClassement(donneesCl) : '<p class="sub" id="listecl">Chargement…</p>';
   show(h + BTN_FERMER());
-  if(!donneesCl) fetch(adresseClassement() + "?id=" + idAppareil()).then(function(r){ return r.json(); }).then(function(d){
+  if(!donneesCl) (typeof envoyerMonde === "function" ? envoyerMonde(true) : Promise.resolve()).then(function(){ return fetch(adresseClassement() + "?id=" + idAppareil()); }).then(function(r){ return r.json(); }).then(function(d){
     donneesCl = d; if(d.saison) noterLegende(d.saison); if($("listecl")) openClassement();
   }).catch(function(){ var el = $("listecl"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
-function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }
+function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }
 function contenuClassement(d){
   var S = d.saison || {};
   if(ongletCl === "pantheon"){
@@ -85,11 +85,11 @@ function contenuClassement(d){
   var liste = ongletCl === "mois" ? S.scores || [] : d.scores || [], total = ongletCl === "mois" ? S.total || 0 : d.total || 0;
   var rang = ongletCl === "mois" ? S.monRang : d.monRang, h = "";
   if(ongletCl === "mois") h += carteLegende(S);
-  if(!liste.length) return h + '<p class="msg">' + (ongletCl === "mois" ? "Personne n’a encore envoyé de score ce mois-ci : la couronne est à prendre !" : "Personne n’a encore envoyé de score. Sois le premier !") + '</p>';
+  if(!liste.length) return h + '<p class="msg">' + (ongletCl === "mois" ? "Personne n’a encore de partie classée ce mois-ci : la couronne est à prendre !" : "Personne n’a encore envoyé de score. Sois le premier !") + '</p>';
   h += '<ol class="classement">' + liste.map(ligneCl).join("") + '</ol>';
   if(ongletCl === "toujours" && d.moi && d.monRang > liste.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">⭐ ' + d.moi.score + ' · ' + d.moi.jours + ' j</span></li></ol>';
   else if(ongletCl === "mois" && rang > liste.length) h += '<p class="sub">Tu es ' + eme(rang) + ' ce mois-ci.</p>';
-  return h + '<p class="sub">' + total + ' joueur' + (total > 1 ? "s" : "") + (ongletCl === "mois" ? " ce mois-ci" : "") + ' · ⭐ = meilleur score d’une partie classée (1 point par jour et par survivant)</p>';
+  return h + '<p class="sub">' + total + ' joueur' + (total > 1 ? "s" : "") + (ongletCl === "mois" ? " ce mois-ci" : "") + ' · ⭐ = meilleur score d’une partie classée (1 point par jour et par survivant)' + (ongletCl === "mois" ? ' · ● en cours = partie encore en vie, score mis à jour en direct' : '') + '</p>';
 }
 function carteLegende(S){
   var L = S.legende, reste = S.fin ? Math.max(0, Math.ceil((S.fin - Date.now()) / 86400000)) : 0;
@@ -203,6 +203,8 @@ function envoyerMonde(force, fin){
   try{ localStorage.setItem("survival_monde_t", t); }catch(e){}
   var s = statsJoueur(), P = partieCourante(), v = P && !fin ? P.m.filter(function(x){ return x.al; }).length : 0;
   var corps = { id:idAppareil(), pseudo:lirePseudo(), vivants:v, jour:v ? P.day : 0, zombies:s.zombies, morts:s.morts, parties:s.parties };
+  // Classement du mois en direct (2026-11-12) : le score d’une partie classée en cours
+  if(v && P.seed && !P.bacASable){ corps.classee = true; corps.score = P.score || 0; corps.cadre = cadreActif(); corps.avatar = lireAvatar(); }
   if(fin) corps.fin = fin;
   if(typeof lireEvt === "function" && typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE) corps.evt = lireEvt();
   try{ return fetch(adresseMonde(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).catch(function(){}); }catch(e){ return Promise.resolve(); }

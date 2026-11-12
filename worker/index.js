@@ -49,7 +49,7 @@ function vueSaison(S, moi, now){
   const L = S.legende, k = moi ? S.scores.findIndex((e) => e.id === moi) : -1;
   return { id: S.id, fin: finDuMois(now),
     legende: L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, cadre: L.cadre || "", regne: joursDeRegne(L, now), moi: !!moi && L.id === moi } : null,
-    scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!L && id === L.id })),
+    scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar, live, t }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!L && id === L.id, enCours: !!live && now - (t || 0) < 3 * JOUR_MS_L })),
     total: S.scores.length, monRang: k >= 0 ? k + 1 : null,
     annonces: (S.annonces || []).slice(0, 5), pantheon: (S.pantheon || []).slice(0, 12) };
 }
@@ -96,13 +96,15 @@ async function onRequestPost({ request, env }){
   // Saison du mois : même règle (meilleur score du mois par appareil) ; la Légende = le n°1 du mois
   const now = Date.now(), { S } = await lireSaison(env, now), avant = S.legende ? S.legende.id : null;
   const a2 = S.scores.find((e) => e.id === id);
-  if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; a2.avatar = avatar; }
+  if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; a2.avatar = avatar; a2.live = false; }
   else S.scores.push({ id, pseudo, score, jours, cadre, avatar });
   S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
-  majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
-  const legende = !!S.legende && S.legende.id === id, devient = legende && avant !== id;
+  majLegende(S, now);
+  const legende = !!S.legende && S.legende.id === id, viaJeu = legende && !!S.legende.enJeu, devient = legende && (avant !== id || viaJeu), ancienJeu = viaJeu ? S.legende.ancienPseudo || null : null;
+  if(S.legende && S.legende.id === id){ delete S.legende.enJeu; delete S.legende.ancienPseudo; }
+  await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
   return reponse({ ok: true, rang, total: garde.length, record, meilleur: ancien ? ancien.score : score,
-    saison: { rang: S.scores.findIndex((e) => e.id === id) + 1, legende, devient, ancien: devient && S.annonces[0] && S.annonces[0].t === now ? S.annonces[0].ancien : null } });
+    saison: { rang: S.scores.findIndex((e) => e.id === id) + 1, legende, devient, ancien: viaJeu ? ancienJeu : devient && S.annonces[0] && S.annonces[0].t === now ? S.annonces[0].ancien : null } });
 }
 
 // ---------- Chiffres du monde : /api/monde ----------
@@ -150,6 +152,21 @@ async function mondePost(request, env){
   const ids = Object.keys(m.j);
   if(ids.length > MAX_APPAREILS) ids.sort((a, b) => m.j[a].t - m.j[b].t).slice(0, ids.length - MAX_APPAREILS).forEach((k) => delete m.j[k]);
   await env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(m));
+  // Classement du mois en direct (2026-11-12, idée de Fabien) : une partie CLASSÉE en cours y entre avec son score du moment
+  // (seulement s'il dépasse le meilleur score du mois de cet appareil, pour limiter les écritures)
+  const sc = Math.floor(+d.score), jr = entier(d.jour, 400);
+  if(d.classee && pseudo && entier(d.vivants, 4) > 0 && sc > 0 && sc <= jr * 4){
+    const { S } = await lireSaison(env, now), e = S.scores.find((x) => x.id === id), cadre = cadreDe(d), avatar = avatarDe(d), avantL = S.legende ? S.legende.id : null, ancienL = S.legende ? S.legende.pseudo : null;
+    if(!e || sc > e.score){
+      if(e){ e.score = sc; e.jours = jr; e.pseudo = pseudo; if(cadre) e.cadre = cadre; e.avatar = avatar; e.live = true; e.t = now; }
+      else S.scores.push({ id, pseudo, score: sc, jours: jr, cadre, avatar, live: true, t: now });
+      S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
+      majLegende(S, now);
+      // Couronne gagnée en cours de partie : on l'annoncera (avec le colis) à la fin de la partie
+      if(S.legende && S.legende.id === id && avantL !== id){ S.legende.enJeu = true; S.legende.ancienPseudo = ancienL; }
+      await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+    }
+  }
   return reponse({ ok: true });
 }
 
