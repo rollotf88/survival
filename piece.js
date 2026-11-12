@@ -695,7 +695,9 @@ function dormeurLit(lit){
 /* ---------- La famille sur le canapé du salon (2026-11-12, image Gemini) ----------
    Un membre de la famille d'origine au refuge, ni épuisé (il serait au lit), ni choisi pour partir, s'assoit à SA place
    (de gauche à droite : Papa, Léo, Emma, Maman). Chaque place est découpée à la silhouette, sans toucher aux coussins. */
-var PLACES_CANAPE = { "Papa":[330, 340, 464, 624, "papa"], "Léo":[451, 340, 544, 624, "leo"], "Emma":[529, 340, 648, 624, "emma"], "Maman":[612, 340, 727, 624, "maman"] };
+// Version 2 (2026-11-12) : deux images Gemini avec deux personnes espacées, silhouettes recalées chacune sur sa place ;
+// ordre de pose Léo, Papa, Emma, Maman (Papa devant le bras de Léo), puis la table basse et ses objets reposés devant eux
+var PLACES_CANAPE = { "Léo":[427, 354, 538, 574, "leo"], "Papa":[310, 339, 470, 600, "papa"], "Emma":[521, 374, 616, 587, "emma"], "Maman":[610, 353, 710, 615, "maman"] };
 function auSalon(r){
   if(!G || !G.m) return false;
   var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
@@ -707,6 +709,7 @@ function auSalon(r){
   var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
   var places = Object.keys(PLACES_CANAPE).map(function(r){ var L = PLACES_CANAPE[r];
     return ["images/personnages/canape-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auSalon(r); }]; });
+  places.push(["images/personnages/canape-table.webp", 360, 490, 665, 695, function(){ return Object.keys(PLACES_CANAPE).some(auSalon); }]);
   Array.prototype.splice.apply(P.decor, [apres, 0].concat(places));
 })();
 
