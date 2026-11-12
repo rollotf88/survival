@@ -659,19 +659,55 @@ var FEUX_PIECE = {
    Un membre trop fatigué pour sortir se repose dans SON lit (Papa : matelas de gauche, Maman : de droite,
    Léo : lit du bas, Emma : lit du haut). Chaque lit occupé est un morceau découpé dans une retouche Gemini de la
    chambre, posé au-dessus du feu et des fenêtres ; ils se combinent. Les recrues n'ont pas encore leur image. */
-var LITS_CHAMBRE = { "Emma":[330, 250, 722, 352, "emma"], "Léo":[338, 432, 722, 562, "leo"], "Papa":[98, 495, 452, 790, "papa"], "Maman":[628, 495, 992, 790, "maman"] }; // ordre de pose : du fond vers le devant
+// Recrues (2026-11-12, image Gemini) : Sam lit du haut, Nora lit du bas, Yanis matelas de gauche, Inès matelas de droite.
+// Un lit appartient d'abord au membre de la famille d'origine ; une recrue n'y dort que si ce membre n'est plus là.
+var LITS_CHAMBRE = { haut:[330, 250, 722, 352, "emma"], bas:[338, 432, 722, 562, "leo"], gauche:[98, 495, 452, 790, "papa"], droite:[628, 495, 992, 790, "maman"] }; // ordre de pose : du fond vers le devant
+var LIT_DE = { "Emma":"haut", "Léo":"bas", "Papa":"gauche", "Maman":"droite", "Sam":"haut", "Nora":"bas", "Yanis":"gauche", "Inès":"droite" };
+var DORMEUR_IMG = { "Emma":"emma", "Léo":"leo", "Papa":"papa", "Maman":"maman", "Sam":"sam", "Nora":"nora", "Yanis":"yanis", "Inès":"ines" };
+var ZONE_DORMEUR = { "Sam":[330, 212, 722, 352] }; // Sam : un peu plus haut, sinon ses cheveux étaient coupés
+var FAMILLE_ORIGINE = ["Papa", "Maman", "Léo", "Emma"];
 function enSortie(x){ var i = G.m.indexOf(x); return !!(G.exp && G.exp.equipe && G.exp.equipe.indexOf(i) >= 0); }
-function auLit(r){ var x = G && G.m && G.m.find(function(y){ return (y.r || y.nom) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x)); }
+function roleDormeur(y){ return y.r || y.nom; }
+function auLit(r){ var x = G && G.m && G.m.find(function(y){ return roleDormeur(y) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x)); }
+// Qui dort dans ce lit ? le propriétaire d'origine s'il est en vie ; sinon la recrue qui y a sa place
+function dormeurLit(lit){
+  if(!G || !G.m) return null;
+  var pro = FAMILLE_ORIGINE.filter(function(r){ return LIT_DE[r] === lit; })[0];
+  var proVivant = G.m.some(function(y){ return roleDormeur(y) === pro && y.al; });
+  if(proVivant) return auLit(pro) ? pro : null;
+  var rec = G.m.filter(function(y){ return y.al && LIT_DE[roleDormeur(y)] === lit && roleDormeur(y) !== pro; }).map(roleDormeur)[0];
+  return rec && auLit(rec) ? rec : null;
+}
 (function(){
   var P = PIECES.find(function(p){ return p.id === "chambre"; }); if(!P) return;
   P.decor = P.decor || [];
   var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
-  // lit vide (couverture pliée, drap bien à plat : retour de Fabien, les lits d'origine avaient l'air occupés) ou lit occupé
+  // lit vide (couverture pliée, drap bien à plat) ou lit occupé par la bonne personne
   var lits = [];
-  Object.keys(LITS_CHAMBRE).forEach(function(r){ var L = LITS_CHAMBRE[r];
-    lits.push(["images/personnages/chambre-vide-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return !auLit(r); }]);
-    lits.push(["images/personnages/chambre-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auLit(r); }]); });
+  Object.keys(LITS_CHAMBRE).forEach(function(lit){ var L = LITS_CHAMBRE[lit];
+    lits.push(["images/personnages/chambre-vide-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return !dormeurLit(lit); }]);
+    Object.keys(LIT_DE).filter(function(r){ return LIT_DE[r] === lit; }).forEach(function(r){ var Z = ZONE_DORMEUR[r] || L;
+      lits.push(["images/personnages/chambre-" + DORMEUR_IMG[r] + ".webp", Z[0], Z[1], Z[2], Z[3], function(){ return dormeurLit(lit) === r; }]); });
+  });
   Array.prototype.splice.apply(P.decor, [apres, 0].concat(lits));
+})();
+
+/* ---------- La famille sur le canapé du salon (2026-11-12, image Gemini) ----------
+   Un membre de la famille d'origine au refuge, ni épuisé (il serait au lit), ni choisi pour partir, s'assoit à SA place
+   (de gauche à droite : Papa, Léo, Emma, Maman). Chaque place est découpée à la silhouette, sans toucher aux coussins. */
+var PLACES_CANAPE = { "Papa":[330, 340, 464, 624, "papa"], "Léo":[451, 340, 544, 624, "leo"], "Emma":[529, 340, 648, 624, "emma"], "Maman":[612, 340, 727, 624, "maman"] };
+function auSalon(r){
+  if(!G || !G.m) return false;
+  var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
+  return !!(x && x.al && !x.raid && !enSortie(x) && peutSortir(x) && G.sel.indexOf(i) < 0);
+}
+(function(){
+  var P = PIECES.find(function(p){ return p.id === "salon"; }); if(!P) return;
+  P.decor = P.decor || [];
+  var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
+  var places = Object.keys(PLACES_CANAPE).map(function(r){ var L = PLACES_CANAPE[r];
+    return ["images/personnages/canape-" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auSalon(r); }]; });
+  Array.prototype.splice.apply(P.decor, [apres, 0].concat(places));
 })();
 
 /* ---------- Mini-jeu du siphonnage (2026-11-11) ----------
