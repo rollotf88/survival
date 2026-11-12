@@ -1371,6 +1371,7 @@ function rFamille(){
 var apresPseudo = null; // fenêtre à rouvrir après avoir choisi son pseudo
 function openSaisie(k){
   var p = k === "p", v = p ? lirePseudo() : G.famille[+k].nom;
+  if(p && typeof raisonPseudoBloque === "function" && raisonPseudoBloque()){ show('<h2>✏️ Ton pseudo</h2><p class="msg">Tu restes <b>' + echapper(v) + '</b> pour l’instant : ' + raisonPseudoBloque().toLowerCase() + '. On ne peut changer de pseudo qu’une fois tous les 30 jours, et jamais pendant une guerre de clans, pour que chacun sache qui est qui.</p>' + BTN_FERMER()); return; }
   show('<h2>✏️ ' + (p ? "Ton pseudo" : "Prénom de " + FAMILLE[+k].nom) + '</h2><p class="sub">' + (p ? "Il s’affichera dans le classement (pas ton vrai nom). 16 lettres au plus." : "10 lettres au plus.") + '</p>'
     + '<input id="saisie" class="champ grand" maxlength="' + (p ? 16 : 10) + '" autocomplete="off" value="' + echapper(v) + '">'
     + '<p class="msg" id="msgsaisie"></p><div class="row"><button class="btn" data-act="saisieok" data-id="' + k + '">OK</button><button class="btn alt" data-act="close">Annuler</button></div>');
@@ -1380,7 +1381,7 @@ function validerSaisie(k){
   var v = ($("saisie").value || "").replace(/[<>&"]/g, "").trim();
   if(typeof texteInterdit === "function" && texteInterdit(v)){ $("msgsaisie").textContent = MSG_NOM_INTERDIT; return; }
   if(k === "p"){
-    try{ localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){}
+    try{ var ancienP = localStorage.getItem("survival_pseudo") || ""; if(ancienP && ancienP !== v.slice(0, 16)) localStorage.setItem("survival_pseudo_t", Date.now()); localStorage.setItem("survival_pseudo", v.slice(0, 16)); }catch(e){}
     // Pseudo demandé par une autre fenêtre (ex. fonder un clan) : on y revient au lieu de tout fermer
     var retour = apresPseudo; apresPseudo = null;
     if(retour === "clan" && typeof openCreerClan === "function"){ render(); openCreerClan(); return; }

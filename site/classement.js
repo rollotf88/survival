@@ -974,7 +974,7 @@ function openProfil(msg){
   var h = '<button class="lien-retour" data-act="menu">← Menu</button>'
     + '<div class="pf-tete"><button class="pf-av" data-act="pfonglet" data-id="avatar" aria-label="Changer d’avatar">' + avatarHtml(a, p || "?", "pf-grand") + '<i>Changer</i></button>'
     + '<span class="pf-id"><small>Mon profil</small><b>' + (p ? pseudoCadre(p, cadreActif()) : '<em>Pas encore de pseudo</em>') + '</b>'
-    + '<button class="btn alt pf-mini" data-act="saisie" data-id="p" data-retour="profil">✏️ ' + (p ? "Changer de pseudo" : "Choisir un pseudo") + '</button></span></div>'
+    + boutonPseudo(p) + '</span></div>'
     + (msg ? '<p class="msg g2">' + msg + '</p>' : '')
     + '<div class="tabs onglets">' + [["profil", "👤 Mon profil", "Mes chiffres"], ["avatar", "🖼️ Avatar", "Choisir un portrait"], ["historique", "📜 Historique", H.length + " partie" + (H.length > 1 ? "s" : "")]].map(function(o){
       return '<button class="tab' + (o[0] === ongletProfil ? " on" : "") + '" data-act="pfonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
@@ -1011,4 +1011,20 @@ function carteCadreLegende(){
   return '<div class="cadre-leg' + (moi ? " porte" : "") + '">' + medaillonLegende("images/portrait-" + av + ".webp", 58)
     + '<span class="cl-t"><small>Le cadre le plus rare</small><b>' + pseudoCadre(lirePseudo() || "Ton pseudo", cadreActif(), true) + '</b>'
     + '<em>' + (moi ? "✔ Tu le portes : tu es la Légende du mois. Raja te suit." : "🔒 Réservé à la Légende du mois" + (L ? " (aujourd’hui " + echapper(L.pseudo) + ", " + L.score + " points)" : "") + ". Fais le meilleur score du mois en partie classée pour le porter, avec Raja en prime.") + '</em></span></div>';
+}
+
+// Changer de pseudo (2026-11-12, remarque de Fabien : en guerre de clans on ne saurait plus qui est qui) :
+// une fois tous les 30 jours et jamais pendant une guerre ; le premier choix est libre. Le serveur applique la même règle aux clans.
+var PSEUDO_DELAI_J = 30;
+function datePseudo(){ try{ return +localStorage.getItem("survival_pseudo_t") || 0; }catch(e){ return 0; } }
+function raisonPseudoBloque(){
+  if(!lirePseudo()) return "";
+  if(ETAT_GUERRE && ETAT_GUERRE.guerre && typeof dansUnClan === "function" && dansUnClan()) return "Pas pendant une guerre de clans";
+  var reste = Math.ceil((datePseudo() + PSEUDO_DELAI_J * 86400000 - Date.now()) / 86400000);
+  return reste > 0 ? "Prochain changement dans " + reste + " jour" + (reste > 1 ? "s" : "") : "";
+}
+function boutonPseudo(p){
+  var r = raisonPseudoBloque();
+  return '<button class="btn alt pf-mini" data-act="saisie" data-id="p" data-retour="profil"' + (r ? " disabled" : "") + '>✏️ ' + (p ? "Changer de pseudo" : "Choisir un pseudo") + '</button>'
+    + '<small class="pf-regle">' + (r ? r + " · " : "") + (p ? "un changement tous les " + PSEUDO_DELAI_J + " jours, jamais en guerre" : "") + '</small>';
 }

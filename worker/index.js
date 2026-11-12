@@ -315,7 +315,9 @@ const DEFENSES = {
 };
 function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(const k in DEFENSES) c.def[k] = c.def[k] || 0; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
-function noter(c, qui, txt){ c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
+// Changer de pseudo dans un clan (2026-11-12) : une fois tous les 30 jours, jamais pendant une guerre (sinon on ne sait plus qui est qui)
+const PSEUDO_DELAI = 30 * 24 * 3600 * 1000;
+function noter(c, qui, txt){ c.journal = c.journal || []; c.journal.unshift({ t: Date.now(), qui, txt }); c.journal = c.journal.slice(0, 40); }
 function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
 function etatBastion(c, id){ bastionDe(c); const vr = vueRaid(c, id); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
   const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
@@ -399,7 +401,7 @@ async function clansPost(request, env){
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
   const pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(nomPropre(d.pseudo, 16)), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
-  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; m.avatar = avatarDe(d); const pf = profilDe(d); if(pf) m.profil = pf; } }
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo && pseudo !== m.pseudo && !mon.guerre && !(m.pseudoT && now - m.pseudoT < PSEUDO_DELAI)){ noter(mon, m.pseudo, "🏷️ " + m.pseudo + " s’appelle maintenant " + pseudo); m.pseudo = pseudo; m.pseudoT = now; } m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; m.avatar = avatarDe(d); const pf = profilDe(d); if(pf) m.profil = pf; } }
   switch(d.action){
     case "liste": {
       const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);
