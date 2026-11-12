@@ -566,10 +566,10 @@ function noterTours(t){ BONUS_CLAN_DEF = t || 0; try{ localStorage.setItem("surv
 function dansUnClan(){ try{ return localStorage.getItem("survival_mon_clan") === "1"; }catch(e){ return false; } }
 function noterClan(oui){ if(oui) noterStatClan("rejoint", 1, true); var avant = dansUnClan(); try{ localStorage.setItem("survival_mon_clan", oui ? "1" : ""); }catch(e){} if(avant !== !!oui && typeof G !== "undefined" && G && G.ph === "game" && typeof placerPiece === "function") placerPiece(); }
 var DEF_BASTION = {
-  remparts: { nom:"Remparts", icone:"🧱", ico:"remparts", effet:function(l){ return "Protègent le bastion pendant les guerres (niveau " + l + " / 5)."; } },
+  remparts: { nom:"Remparts", icone:"🧱", ico:"remparts", effet:function(l){ return l ? "Pendant une guerre, chaque défenseur a +" + Math.round(BAL.assaut.pvRempart * l) + " PV et frappe plus fort." : "Pas encore de remparts : les défenseurs ne sont pas mieux protégés."; } },
   mines:    { nom:"Mines", icone:"💣", ico:"mine", effet:function(l){ return (l ? l + " mine" + (l > 1 ? "s" : "") + " posée" + (l > 1 ? "s" : "") : "Aucune mine posée") + " : chacune blesse un assaillant pendant une guerre, puis disparaît."; } },
-  armurerie:{ nom:"Armurerie", icone:"🦺", ico:"gilet", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + Math.round(BAL.assaut.armurerieTir * l + 0.01) + " dégâts (" + Math.round(BAL.assaut.armurerieTete * l + 0.01) + " à la tête) et chaque coup " + Math.round(BAL.assaut.armurerieCoup * l + 0.01) + "." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
-  tours:    { nom:"Tours de guet", icone:"🗼", ico:"tour", effet:function(l){ return "+" + l + " de défense de nuit pour chaque famille du clan (niveau " + l + " / 3)."; } }
+  armurerie:{ nom:"Armurerie", icone:"🦺", ico:"gilet", effet:function(l){ return l ? "Les défenseurs portent des gilets : pendant une guerre, chaque tir ennemi perd " + Math.round(BAL.assaut.armurerieTir * l + 0.01) + " dégâts (" + Math.round(BAL.assaut.armurerieTete * l + 0.01) + " à la tête) et chaque coup " + (Math.round(BAL.assaut.armurerieCoup * l + 0.01) ? Math.round(BAL.assaut.armurerieCoup * l + 0.01) : "un peu moins") + "." : "Pas encore d’armurerie : les armes à feu adverses font tous leurs dégâts."; } },
+  tours:    { nom:"Tours de guet", icone:"🗼", ico:"tour", effet:function(l){ return l ? "+" + l + " de défense de nuit pour chaque famille du clan." : "Pas encore de tour : aucune défense de nuit en plus."; } }
 };
 // Camion du clan (2026-11-10) : améliorations payées par la réserve, utiles à chaque assaut des membres
 var CAMION_BASTION = {
@@ -615,10 +615,12 @@ function afficherBastion(){
       return '<button class="bd-case' + (k === selDefBastion ? " sel" : "") + (l >= max ? " max" : "") + '" data-act="bastdef" data-id="' + k + '"><span class="bd-ico">' + ic(D.ico, D.icone) + (peut(k) ? '<i class="pret">✔</i>' : '') + '</span><b>' + D.nom + '</b><span class="bd-niv">' + l + ' / ' + max + '</span></button>'; }).join("") + '</div>';
     var k0 = selDefBastion, D0 = LISTE[k0], l0 = B.def[k0] || 0, c0 = B.couts[k0], max0 = B.max[k0];
     var pips = ''; for(var q = 0; q < max0; q++) pips += '<i class="' + (q < l0 ? "on" : "") + '"></i>';
-    h += '<div class="bd-fiche"><div class="bd-tete"><span class="bd-ico grand">' + ic(D0.ico, D0.icone) + '</span><span><b>' + D0.nom + '</b><span class="bd-pips">' + pips + '</span><small>' + D0.effet(l0) + '</small></span></div>';
+    h += '<div class="bd-fiche"><div class="bd-tete"><span class="bd-ico grand">' + ic(D0.ico, D0.icone) + '</span><span><b>' + D0.nom + '</b><span class="rf-niv"><span class="bd-pips">' + pips + '</span><small>Niveau ' + l0 + ' / ' + max0 + '</small></span>'
+      // Harmonisé avec le refuge (2026-11-12) : l'effet actuel, puis ce que donne le niveau suivant
+      + (l0 ? '<small>' + D0.effet(l0) + '</small>' : '') + (c0 ? '<span class="rf-gain"><b>Niveau ' + (l0 + 1) + ' :</b> ' + D0.effet(l0 + 1) + '</span>' : '') + (!l0 && !c0 ? '<small>' + D0.effet(l0) + '</small>' : '') + '</span></div>';
     if(c0){
-      h += '<p class="titre-butin">Niveau ' + (l0 + 1) + ' : il faut dans la réserve</p><div class="ings2">' + Object.keys(c0).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= c0[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + c0[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>';
-      h += '<button class="loc btn-jeu bd-go" data-act="bastconstruire" data-id="' + k0 + '"' + (peut(k0) ? "" : " disabled") + '><b>🔨 Construire</b><small>' + (peut(k0) ? "Payé par la réserve du clan" : "Il manque des matériaux dans la réserve") + '</small></button>';
+      h += '<p class="titre-butin">Niveau ' + (l0 + 1) + ' : il faut dans la réserve</p><div class="rf-action bd-action"><div class="ings2">' + Object.keys(c0).map(function(m){ var a = B.reserve[m] || 0; return '<span class="ing2 ' + (a >= c0[m] ? "ok" : "ko") + '"><span class="ing2-case">' + icone(m) + '</span><b>' + a + '/' + c0[m] + '</b><small>' + (NOM_COURT[m] || OBJETS[m].nom) + '</small></span>'; }).join("") + '</div>';
+      h += '<button class="loc btn-jeu bd-go" data-act="bastconstruire" data-id="' + k0 + '"' + (peut(k0) ? "" : " disabled") + '><b>🔨 Construire</b><small>' + (peut(k0) ? "Payé par la réserve" : "Il manque des matériaux") + '</small></button></div>';
     } else h += '<p class="etat ok">⭐ Niveau maximum</p>';
     h += '</div></div>';
   } else {
