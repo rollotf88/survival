@@ -2718,3 +2718,6 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 .cl-infos{gap:3px;padding-left:4px;padding-right:4px}
 .cl-infos > span{padding:0 5px}
 .cl-infos .ico,.cl-infos img.emo{width:11px;height:11px;margin-right:1px}
+/* Bilan du refuge : le bouton ne colle plus aux tuiles « Pas encore construit » quand il n’y a pas de phrase dessous (2026-11-12) */
+.bl-go{margin-top:12px}
+.bl-note + .bl-go{margin-top:2px}
