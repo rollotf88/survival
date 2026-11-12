@@ -519,14 +519,31 @@ function openResultat(r){
 }
 
 /* ---------- Équiper un membre ---------- */
+// Raccord avec la DA (2026-11-12) : en-tête du personnage, objet en main en carte (case en bois, nom, caractéristiques
+// en pastilles, solidité colorée, bouton Ranger), objets du stock en cartes avec « Équiper », message utile si rien
+var NOM_EMPLACEMENT = { arme:"Arme", outil:"Outil", sac:"Sac" };
+var AIDE_EMPLACEMENT = { arme:"Fouille les lieux ou fabrique-en une à l’atelier (lance, gourdin clouté…).", outil:"Lampe, torche, canne à pêche… à trouver dehors ou à fabriquer à l’atelier.", sac:"Sacoches et sacs se trouvent en fouillant, ou se fabriquent avec des chiffons." };
+function carteEquip(o, inst, act, id, bouton){
+  var pills = String(o.desc || "").split(" · ").map(function(t){ return '<span>' + t + '</span>'; }).join("");
+  var sol = "";
+  if(inst && inst.sol && o.sol){ var pc = Math.round(inst.sol / o.sol * 100), u = o.nuit ? " nuits" : o.lumiere ? " fouilles" : "";
+    sol = '<span class="se-sol"><span class="se-bar"><i class="' + (pc < 25 ? "lo" : pc < 50 ? "mid" : "") + '" style="width:' + pc + '%"></i></span><small>' + (u ? inst.sol + u : inst.sol + " / " + o.sol) + '</small></span>'; }
+  var tag = act ? 'button' : 'div';
+  return '<' + tag + ' class="se-carte' + (act ? " choix" : "") + '"' + (act ? ' data-act="' + act + '" data-id="' + id + '"' : '') + '><span class="se-case">' + icone(inst ? inst.id : o.id || "") + '</span>'
+    + '<span class="se-t"><b>' + o.nom + '</b><span class="se-pills">' + pills + '</span>' + sol + '</span>' + (bouton || '') + '</' + tag + '>';
+}
 function openSlot(i, slot){
   var x = G.m[i], e = EMPLACEMENTS.find(function(e){ return e[0] === slot; }), o = x.eq[slot];
-  var h = '<h2>' + iconeMembre(x) + ' ' + x.nom + ' : ' + e[2] + '</h2>';
-  h += '<p class="sub">En main : </p>' + (o ? ligneObjet(o.id, 1, o) + '<button class="loc" data-act="unequip" data-id="' + i + ':' + slot + '"><b>↩️ Ranger dans le stock</b></button>' : '<p>Rien.</p>');
+  var de = /^[aeiouyéèêàâîïôûh]/i.test(x.nom) ? "d’" : "de ";
+  var h = '<div class="se-tete"><span class="se-por">' + iconeMembre(x) + '</span><span><small>Équipement</small><b>' + (NOM_EMPLACEMENT[slot] || e[2]) + ' ' + de + x.nom + '</b></span></div>';
+  h += '<p class="mf-titre">En main</p>';
+  h += o ? carteEquip(OBJETS[o.id], o, null, null, '<button class="se-ranger" data-act="unequip" data-id="' + i + ':' + slot + '">↩️ Ranger</button>')
+         : '<div class="se-vide"><span class="se-case">' + e[1] + '</span><span>Rien en main</span></div>';
   var dispo = pourEmplacement(slot);
-  h += '<p class="sub">Dans le stock :</p>';
-  h += dispo.length ? dispo.map(function(d){ return '<button class="loc pick" data-act="equip" data-id="' + i + ':' + slot + ':' + d.uid + '">' + ligneObjet(d.id, 1, d) + '</button>'; }).join("") : '<p>Aucun objet de ce type au refuge.</p>';
-  show(h + BTN_FERMER());
+  h += '<p class="mf-titre">Dans le stock' + (dispo.length ? ' (' + dispo.length + ')' : '') + '</p>';
+  h += dispo.length ? '<div class="se-liste">' + dispo.map(function(d){ return carteEquip(OBJETS[d.id], d, "equip", i + ':' + slot + ':' + d.uid, '<span class="se-go">Équiper</span>'); }).join("") + '</div>'
+    : '<p class="msg">Aucun objet de ce type au refuge. ' + (AIDE_EMPLACEMENT[slot] || '') + '</p>';
+  show('<div class="se">' + h + '</div>' + BTN_FERMER());
 }
 
 /* ---------- Téléphone : barre de famille compacte + fiche du membre ---------- */
