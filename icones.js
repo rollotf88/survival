@@ -745,13 +745,20 @@ function badgesEtat(x){
   return b;
 }
 // sansBadges : les cartes de la famille affichent les badges à droite du prénom (sinon ils cachaient la ligne d'état)
+// Visage rongé par la folie (Gemini, 2026-11-12) : images/portrait-<rôle>-fou.webp dès que la folie se voit (fou(x)),
+// sauf si les contenus durs sont coupés ; il redevient normal quand la folie redescend
+function srcPortrait(x){
+  var src = PORTRAITS[x.r || x.nom];
+  if(src && x.al && typeof fou === "function" && fou(x) && (typeof CONTENUS_SENSIBLES === "undefined" || CONTENUS_SENSIBLES)) return src.replace(".webp", "-fou.webp");
+  return src;
+}
 function portraitMembre(x, sansBadges){
   var b = sansBadges ? [] : badgesEtat(x);
   // Mort : portrait gris, cadre penché et vitre brisée par-dessus
   var brise = x.al ? '' : '<svg class="fissure" viewBox="0 0 100 100" aria-hidden="true"><g fill="none" stroke-linecap="round" stroke-linejoin="round">'
     + '<path d="M58 -2 L50 28 L64 44 L42 66 L54 102 M50 28 L22 36 L4 30 M64 44 L92 52 M42 66 L16 82 M64 44 L70 20" stroke="#1d282c" stroke-width="6"/>'
     + '<path d="M58 -2 L50 28 L64 44 L42 66 L54 102 M50 28 L22 36 L4 30 M64 44 L92 52 M42 66 L16 82 M64 44 L70 20" stroke="#fff" stroke-width="2.5"/></g></svg>';
-  return '<span class="portrait' + (x.al ? "" : " mort") + '"><img src="' + PORTRAITS[x.r || x.nom] + '" alt="">' + brise + (b.length ? '<span class="badges">' + b.join("") + '</span>' : '') + '</span>';
+  return '<span class="portrait' + (x.al ? "" : " mort") + '"><img src="' + srcPortrait(x) + '" alt="">' + brise + (b.length ? '<span class="badges">' + b.join("") + '</span>' : '') + '</span>';
 }
 
 /* ---------- Emojis des textes remplacés par les icônes peintes (2026-11-10, demande de Fabien) ----------
