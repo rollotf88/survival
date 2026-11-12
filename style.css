@@ -2408,3 +2408,24 @@ body:not(.pc) #app .hd-logo{display:block;width:46px;height:46px;flex:0 0 auto;a
 /* Menu ☰ : toutes les icônes à la même taille (peintes, dessinées ou emoji) */
 .menugrille .mt b img,.menugrille .mt b svg,.menugrille .mt b .ico{width:20px!important;height:20px!important;vertical-align:-4px;object-fit:contain}
 @media (orientation:landscape) and (max-height:500px){.menugrille .mt b img,.menugrille .mt b svg,.menugrille .mt b .ico{width:15px!important;height:15px!important;vertical-align:-2px}}
+/* Correctif (2026-11-11) : avec le logo, les pastilles du haut étaient écrasées. Sur téléphone, chapitre et saison l'un sous l'autre ; les icônes des pastilles ne rétrécissent plus */
+body:not(.pc) .chapcourt .ch-btn{font-size:10.5px;padding:0 7px}
+body:not(.pc) .chips .chip img.ico-img,body:not(.pc) .chips .chip svg,body:not(.pc) .chips .chip .ico{flex:none}
+@media (orientation:landscape) and (max-height:500px){body:not(.pc) .chapcourt{flex-direction:row}}
+.zint img.ico-img,.zint svg,.zn img.ico-img,.zn svg{flex:none;width:14px!important;height:14px!important}
+/* Pastilles du haut sur PC (2026-11-11) : l'icône ne rétrécit jamais (elle tombait à 1-8 px) ; le petit nom disparaît quand la place manque */
+.chips .chip > img.ico-img,.chips .chip > svg,.chips .chip > .ico{flex:none!important}
+body.pc #app .chip > img.ico-img{width:22px;height:22px}
+body.pc #app .chip{justify-content:center;min-width:0}
+/* En-tête (2026-11-12, retour de Fabien) : sur téléphone, la saison en icône seule à côté du chapitre ; sur PC, retour à l'en-tête d'avant (texte, saison sur sa ligne) */
+body:not(.pc) .chapcourt .ch-saison .ch-nom{display:none}
+body:not(.pc) .chapcourt .ch-saison{padding:0 6px}
+body.pc .chapcourt{display:block!important;margin-top:2px}
+body.pc .chapcourt .ch-btn{display:inline;padding:0;border:0;background:none;border-radius:0;color:inherit;font-size:inherit;font-weight:800;line-height:inherit;text-shadow:inherit}
+body.pc .chapcourt .ch-saison{display:block!important;font-size:.85em;opacity:.9}
+body.pc .chapcourt .ch-btn:hover{text-decoration:underline}
+/* PC : le petit nom passe sous le chiffre (à côté, il ne tenait qu'en écrasant l'icône à 2 px) */
+body.pc #app .chip:has(.chip-lbl){display:grid!important;grid-template-columns:auto auto;grid-template-rows:auto auto;column-gap:6px;row-gap:0;align-items:center;justify-content:center;line-height:1}
+body.pc #app .chip:has(.chip-lbl) > img.ico-img,body.pc #app .chip:has(.chip-lbl) > svg,body.pc #app .chip:has(.chip-lbl) > .ico{grid-row:1 / span 2;width:22px;height:22px}
+body.pc #app .chip .chip-lbl{grid-column:2;font-size:9.5px!important;letter-spacing:.02em;line-height:1.1;display:block!important}
+@media (max-width:1400px){ body.pc #app .chip .chip-lbl{display:none!important} body.pc #app .chip:has(.chip-lbl){display:flex!important} }

@@ -42,6 +42,9 @@ function controleAffichage(){
   bts.forEach(function(A){ bts.forEach(function(B){ if(A[0] === B[0]) return; var a = A[1], b = B[1], gap = b.top - a.bottom;
     if(gap >= -1 && gap < 6 && Math.min(a.right, b.right) - Math.max(a.left, b.left) > 20) pb.push("Boutons collés : " + nom(A[0]) + " / " + nom(B[0])); }); });
   // 5 bis) icônes peintes agrandies par erreur (une règle « img » d'un cadre qui les étire), images qui débordent de leur carte
+  // Icône écrasée (2026-11-11 : avec le logo, les icônes des pastilles du haut étaient tombées à 4 px)
+  var enAnim = function(e){ for(var p = e; p && p !== document.body; p = p.parentElement){ if(p.getAnimations && p.getAnimations().some(function(an){ return an.playState === "running"; })) return true; } return false; };
+  q("img.ico-img").filter(vis).forEach(function(e){ var r = rect(e); if(r.width > 0 && r.width < 9 && !enAnim(e) && r.height > 0) pb.push("Icône écrasée (" + Math.round(r.width) + " px) : " + (e.alt || e.getAttribute("src").split("/").pop()) + " dans " + nom(e.parentElement)); });
   q("img.ico-img").filter(vis).forEach(function(e){ var r = rect(e), fs = parseFloat(getComputedStyle(e.parentElement).fontSize) || 16; if(r.width > Math.max(70, fs * 3.2)) pb.push("Icône géante : " + (e.alt || e.getAttribute("src").split("/").pop()) + " dans " + nom(e.parentElement)); });
   q("#sheet .carte-lieu, #sheet .op-carte").filter(vis).forEach(function(c){ var rc = rect(c); Array.prototype.forEach.call(c.querySelectorAll("img"), function(i){ var ri = rect(i); if(ri.width && (ri.right > rc.right + 2 || ri.left < rc.left - 2)) pb.push("Image qui déborde de sa carte : " + nom(c)); }); });
   // 6) zone centrale qui déborde
