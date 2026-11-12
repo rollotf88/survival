@@ -688,7 +688,7 @@ var ICONES_IMG = {};
  "carte silhouette de course sapin sommeil ampoule sonHaut musique vibreur bulle cle porte megaphone froid folie " +
  "cuisinier globe automne printemps soleil sablier chrono tele copier partager signaler trombone merci poigneeMain ruine poubelle " +
  "pouce salut pause rejouer maillot tampon " +
- "cleMolette siphon menu plus etoilePleine etoileVide").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
+ "cleMolette siphon menu plus etoilePleine etoileVide tigre").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
 function svgIcone(id){
   if(ICONES_IMG[id]) return '<img class="ico ico-img" src="images/icones/' + id + '.webp" alt="" draggable="false" decoding="async">';
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
@@ -774,7 +774,7 @@ var EMOJI_ICONE = {
   // Planches 11 et 12 (2026-11-11) : les derniers emojis encore affichés
   "👨‍🍳":"cuisinier", "🧑‍🍳":"cuisinier", "🌍":"globe", "🍂":"automne", "🌱":"printemps", "☀":"soleil", "⏳":"sablier", "⏱":"chrono",
   "📺":"tele", "📋":"copier", "📤":"partager", "🚩":"signaler", "📎":"trombone", "🙏":"merci", "🤝":"poigneeMain", "🏚":"ruine", "🗑":"poubelle",
-  "👍":"pouce", "👋":"salut", "⏸":"pause", "🔁":"rejouer", "🎽":"maillot", "💯":"tampon",
+  "👍":"pouce", "👋":"salut", "⏸":"pause", "🔁":"rejouer", "🎽":"maillot", "💯":"tampon", "🐅":"tigre",
   "🧸":"peluche", "🔦":"lampe", "📻":"radio", "🔍":"loupe", "🔎":"loupe", "🔧":"cleMolette", "🧪":"siphon", "☰":"menu", "➕":"plus", "★":"etoilePleine", "☆":"etoileVide", "🛠":"outils", "🧰":"outils", "🩹":"bandage", "💊":"antibio",
   "🥫":"conserve", "💧":"bouteille", "🎒":"sacados", "🐔":"poule", "🥚":"poule", "🐟":"poisson", "🎣":"canne", "🪓":"hache", "🔨":"marteau", "⛽":"jerrican",
   "🛡":"bouclier", "🧱":"ref_barr", "🏰":"bastion", "👑":"couronne", "🥇":"medaille1", "🥈":"medaille2", "🥉":"medaille3", "🏅":"medaille1", "🌙":"lune",
