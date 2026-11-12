@@ -698,7 +698,10 @@ function dormeurLit(lit){
 // Version 2 (2026-11-12) : deux images Gemini avec deux personnes espacées, silhouettes recalées chacune sur sa place ;
 // ordre de pose Léo, Papa, Emma, Maman (Papa devant le bras de Léo), puis la table basse et ses objets reposés devant eux
 // Papa est dans le fauteuil (3e image Gemini : ses bottes sont visibles, ce qui n'était pas possible sur le canapé derrière la table)
-var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[390, 354, 502, 575, "canape-leo"], "Emma":[521, 374, 616, 582, "canape-emma"], "Maman":[606, 353, 714, 621, "canape-maman"] };
+// En attente (2026-11-12) : Léo, Emma et Maman reviendront quand Gemini les aura dessinés sur le salon SANS table
+// (images/refuge-fond-sans-table.webp + table reposée en avant : images/personnages/table-basse.webp) ; leurs anciennes
+// découpes s'arrêtaient au bord de la table (pieds manquants). Seul Papa, dans le fauteuil, est affiché.
+var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"] };
 function auSalon(r){
   if(!G || !G.m) return false;
   var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
@@ -710,7 +713,7 @@ function auSalon(r){
   var apres = 0; P.decor.forEach(function(d, k){ if(typeof d[0] === "string" && (d[0].indexOf("images/barricades/") === 0 || d[0].indexOf("images/feux/") === 0)) apres = k + 1; });
   var places = Object.keys(PLACES_CANAPE).map(function(r){ var L = PLACES_CANAPE[r];
     return ["images/personnages/" + L[4] + ".webp", L[0], L[1], L[2], L[3], function(){ return auSalon(r); }]; });
-  places.push(["images/personnages/canape-table.webp", 360, 490, 665, 695, function(){ return ["Léo", "Emma", "Maman"].some(auSalon); }]);
+  
   Array.prototype.splice.apply(P.decor, [apres, 0].concat(places));
 })();
 
