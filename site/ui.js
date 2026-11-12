@@ -163,7 +163,7 @@ function rGame(){
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
-  $("app").innerHTML = '<div class="row"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"><div class="titre"><h1>Jour ' + G.day + '</h1><div class="chapcourt"><button class="ch-btn" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button><span class="ch-sep"> · </span><button class="ch-btn ch-saison" data-act="saison" aria-label="La saison : comment ça marche">' + saison().ico + '<span class="ch-nom"> ' + saison().nom + '</span></button></div></div><div class="chips">'
+  $("app").innerHTML = '<div class="row"><button class="hd-logo-b" data-act="logo" aria-label="Retour à l’accueil du jeu"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"></button><div class="titre"><h1>Jour ' + G.day + '</h1><div class="chapcourt"><button class="ch-btn" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button><span class="ch-sep"> · </span><button class="ch-btn ch-saison" data-act="saison" aria-label="La saison : comment ça marche">' + saison().ico + '<span class="ch-nom"> ' + saison().nom + '</span></button></div></div><div class="chips">'
     + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
     + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
     + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("trousse", "⛑️") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
@@ -1586,6 +1586,8 @@ document.addEventListener("click", function(e){
   else if(a === "ev"){ var rs = G.ev.choix[i][1](); G.ev = null; G.evIdx = null; render(); show('<h2>Résultat</h2><p>' + rs + '</p>' + BTN_FERMER("Continuer")); finiSiMorts(); return; }
   else if(a === "again"){ var go = $("gameover"); if(go) go.style.display = "none"; nouvelleFamille(); return; }
   else if(a === "continuer"){ reprendre(enCours); enCours = null; return; }
+  // Le logo de l’en-tête ramène à l’accueil (« Partie en cours ») : la partie est sauvegardée puis la page est rechargée (2026-11-12, demande de Fabien). Pas pendant le raid de l’immeuble (partie temporaire, pas sauvegardée)
+  else if(a === "logo"){ if(G && G.bacASable) return; sauver(); location.reload(); return; }
   else if(a === "nouvelle"){ enCours = null; nouvelleFamille(); return; }
   else if(a === "partage"){ copierResultat(b); return; }
   render();
