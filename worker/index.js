@@ -401,6 +401,8 @@ async function clansPost(request, env){
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
   const pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(nomPropre(d.pseudo, 16)), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
+  // Pseudo interdit gardé d'avant le filtre (2026-11-12) : remplacé par « Survivant » dans le clan
+  if(mon) mon.membres.forEach((m) => { if(m.pseudo && texteInterdit(m.pseudo)){ m.pseudo = "Survivant"; C._change = true; } });
   if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo && pseudo !== m.pseudo && !mon.guerre && !(m.pseudoT && now - m.pseudoT < PSEUDO_DELAI)){ noter(mon, m.pseudo, "🏷️ " + m.pseudo + " s’appelle maintenant " + pseudo); m.pseudo = pseudo; m.pseudoT = now; } m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; m.avatar = avatarDe(d); const pf = profilDe(d); if(pf) m.profil = pf; } }
   switch(d.action){
     case "liste": {

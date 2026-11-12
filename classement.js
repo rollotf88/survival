@@ -751,7 +751,7 @@ function cadreMin(c){ return c.id === "legende" ? (typeof SUCCES !== "undefined"
 function cadreDebloque(c){ return nbSuccesSur() >= cadreMin(c); }
 function cadreActif(){ var c = ""; try{ c = localStorage.getItem("survival_cadre") || ""; }catch(e){} var C = CADRES.find(function(x){ return x.id === c; }); return C && cadreDebloque(C) ? c : "bois"; }
 // Le pseudo d'un joueur dans son cadre (classement, clan, guerre)
-function pseudoCadre(p, cadre, estLegende){ var L = estLegende === undefined ? !!(LEGENDE && p && p === LEGENDE.pseudo) : estLegende;
+function pseudoCadre(p, cadre, estLegende){ if(p && typeof texteInterdit === "function" && texteInterdit(p)) p = "Survivant"; var L = estLegende === undefined ? !!(LEGENDE && p && p === LEGENDE.pseudo) : estLegende;
   return '<span class="pcadre cadre-' + (cadre || "bois") + (L ? ' legende-mois' : '') + '">' + (L ? '<i class="couronne-l">' + ic("couronne", "👑") + '</i>' : '') + echapper(p || "?") + '</span>'; }
 function openCadres(msg){
   var a = cadreActif(), n = nbSuccesSur(), ex = typeof iconeMembre === "function" ? iconeMembre({ nom:"Papa", r:"Papa", icone:"👨", al:true, hp:100, en:100, faim:100, soif:100 }) : "👤";
@@ -762,14 +762,16 @@ function openCadres(msg){
     + '<p class="sub">Aperçu : ' + pseudoCadre(lirePseudo() || "Ton pseudo", a) + '</p><button class="btn alt" style="width:100%" data-act="menu">↩️ Menu</button>');
 }
 function openClassementClans(){
-  show('<h2>🏆 Classement des clans</h2><p class="sub" id="listeclans">Chargement…</p><div class="row"><button class="btn alt" data-act="clans">⚔️ Clans</button><button class="btn" data-act="close">Fermer</button></div>');
+  // Raccord avec la DA (2026-11-12) : retour vers les clans en haut, croix commune, ligues en petites pastilles
+  show('<button class="lien-retour" data-act="clans">← Clans</button><h2>🏆 Classement des clans</h2><p class="sub" id="listeclans">Chargement…</p>' + BTN_FERMER());
   appelClans({ action:"classementClans" }).then(function(d){
     var el = $("listeclans"); if(!el) return;
     if(!d.clans || !d.clans.length){ el.textContent = "Aucun clan pour l’instant."; return; }
     classementClansCache = d.clans;
     el.outerHTML = '<ol class="classement clans">' + d.clans.map(function(c, k){
       return '<li class="' + (c.moi ? "moi" : "") + '"><button class="cl-ligne" data-act="clanfichec" data-id="' + k + '" title="Voir le clan"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + blason(c.blason) + '<b>' + echapper(c.nom) + ' <span class="cm-voir">›</span></b><span class="pts">' + badgeLigue(c.trophees, true) + '</span></button></li>';
-    }).join("") + '</ol><p class="sub">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + ' · rangés par trophées de ligue (' + LIGUES.map(function(L, i){ return insigneLigue(i) + ' ' + L.nom; }).join(', ') + ')' + (d.monRang ? " · ton clan est " + eme(d.monRang) : "") + '</p>';
+    }).join("") + '</ol><div class="cc-pied"><span class="cc-p">' + d.total + ' clan' + (d.total > 1 ? "s" : "") + '</span>' + (d.monRang ? '<span class="cc-p moi">Ton clan : ' + eme(d.monRang) + '</span>' : '') + '</div>'
+      + '<p class="titre-butin">Les ligues (trophées)</p><div class="cc-ligues">' + LIGUES.map(function(L, i){ return '<span class="cc-l">' + insigneLigue(i) + '<b>' + L.nom + '</b><small>' + L.min + '+</small></span>'; }).join("") + '</div>';
   }).catch(function(){ var el = $("listeclans"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
 document.addEventListener("click", function(e){
