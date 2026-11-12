@@ -16,9 +16,9 @@ var ZONES_PIECE = [
   ["pPortraits", 328, 210, 692, 338, function(){ return ic("papa", "👪"); }, "Famille", .5],
   ["pCanape",    318, 392, 730, 575, function(){ return ic("lune", "🌙"); }, "Dormir", .45],
   ["pCheminee",  155, 355, 320, 530, function(){ return "🔥"; }, "Feu", .5],
-  ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .12],
+  ["pEtagere",   714, 165, 835, 550, function(){ return "📖"; }, "Guide", .3],
   ["pPorte",     900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85],
-  ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", .5, function(){ return compter("radio") > 0; }],
+  ["oRadio",     771, 192, 823, 234, function(){ return icone("radio"); }, "Radio", 1.7, function(){ return compter("radio") > 0; }],
   ["oTrophees",  172, 296, 232, 356, function(){ return "🏆"; }, "Trophées", .2, function(){ return G.trophees && G.trophees.length > 0; }],
   ["oPhoto",     247, 312, 285, 356, function(){ return icone("photo"); }, "Photo", .5, function(){ return compter("photo") > 0; }],
   ["chapitre",   358, 648, 668, 781, function(){ return "📜"; }, "Histoire", .55], // le livre ouvert sur la table basse : le chapitre et le récit (l'atelier a sa propre pièce)
