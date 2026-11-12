@@ -141,8 +141,9 @@ function openMenu(){
   var r = function(act, ico, nom, actif){ return '<button class="mr' + (actif ? " on" : "") + '" data-act="' + act + '" aria-pressed="' + (actif ? "true" : "false") + '"><span class="mr-i">' + ico + '</span><small>' + nom + '</small><i>' + (actif ? "Oui" : "Non") + '</i></button>'; };
   var rec = Math.max(RECORD || 0, G.score || 0);
   var h = '<h2>☰ Menu</h2>';
-  if(G.ph === "game") h += '<div class="mn-tete"><div><b>Jour ' + jourPartie() + '</b><small>' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : "🎲 Partie libre") + '</small></div>'
-    + '<span class="mn-p">⭐ ' + (G.score || 0) + '<small>score</small></span><span class="mn-p">🏆 ' + rec + '<small>record</small></span></div>';
+  // La carte du haut ouvre « Mon profil » (2026-11-12, idée de Fabien)
+  h += '<button class="mn-tete mn-profil" data-act="profil">' + (typeof avatarHtml === "function" ? avatarHtml(lireAvatar(), lirePseudo() || "?", "mn-av") : '') + '<div><b>Mon profil</b><small>' + (lirePseudo() ? echapper(lirePseudo()) + ' · ' : '') + 'voir et modifier</small></div>'
+    + (G.ph === "game" ? '<span class="mn-p">⭐ ' + (G.score || 0) + '<small>score</small></span><span class="mn-p">🏆 ' + rec + '<small>record</small></span>' : '') + '</button>';
   h += '<div class="menugrille">';
   h += t("guide", "📖", "Guide", "Règles, objets, lieux");
   if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length, hm = typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE;

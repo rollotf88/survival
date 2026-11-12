@@ -172,7 +172,7 @@ function rGame(){
     + '<button class="chip chipson" data-act="menu" aria-label="Menu et guide">☰<small class="chip-lbl">menu</small></button>'
     + '</div><div class="hd-score" title="Score : chaque jour terminé rapporte 1 point par membre en vie"><span class="hs-ico">⭐</span><b>' + (G.score || 0) + '</b><small>score<br>record ' + Math.max(RECORD, G.score || 0) + '</small></div></div>'
     + '<div class="stage scene"><div class="grid2">' + m + '</div><p class="sub aide">Touche 1 ou 2 membres pour fouiller · cases 🗡️ 🔦 🎒 pour équiper · ⚡ = énergie.</p>'
-    + '<div class="row">' + (mission() && !modePC() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() && !modePC() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
+    + '<div class="row">' + (!modePC() && typeof pastilleGuerre === "function" ? pastilleGuerre(false) : '') + (mission() && !modePC() ? '<button class="btn alt' + (livraisonPossible() >= 0 ? " pret" : "") + '" style="flex:0 0 auto" data-act="mission">🎯 ' + mission().titre + ' · ' + joursMission() + ' j</button>' : '') + (marcheOuvert() && !modePC() ? '<button class="btn alt" style="flex:0 0 auto" data-act="marche">' + ic("marco", MARCHE.icone) + ' Marché</button>' : '') + '</div></div>'
     + '<div class="row acts"><button class="btn' + (G.sel.length ? "" : " attente") + '" data-act="fouille">' + ic("loupe", "🔍") + ' Fouiller</button><button class="btn alt" data-act="stock">' + ic("caisse", "📦") + ' Stock</button><button class="btn alt" data-act="refuge">' + ic("marteau", "🛠️") + ' Refuge</button><button class="btn' + (G.m.some(peutSortir) ? " alt" : "") + '" data-act="dormir">' + ic("lune", "🌙") + ' Dormir</button><button class="btn alt bt-pieces' + (typeof alertePieces === "function" && alertePieces() ? " alerte" : "") + '" data-act="pieces" aria-label="Aller dans une pièce" title="Les pièces">' + ic("maisonPavillon", "🏠") + '<span class="bt-pieces-txt">Pièces</span></button></div>';
   tableauPC();
 }
@@ -1204,6 +1204,7 @@ function tableauPC(){
   var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
   if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
   if(typeof barreLegende === "function") h += barreLegende();
+  if(typeof pastilleGuerre === "function") h += pastilleGuerre(true);
   if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';
   // Marché du jour : sur PC, une carte avec Marco et ses offres (au lieu du petit bouton sous la scène)
   if(marcheOuvert()){
@@ -1384,6 +1385,7 @@ function validerSaisie(k){
     var retour = apresPseudo; apresPseudo = null;
     if(retour === "clan" && typeof openCreerClan === "function"){ render(); openCreerClan(); return; }
     if(retour === "clans" && typeof openClans === "function"){ render(); openClans("👤 Pseudo enregistré : tu peux rejoindre un clan."); return; }
+    if(retour === "profil" && typeof openProfil === "function"){ render(); openProfil("👤 Pseudo enregistré."); return; }
     hide(); render(); return;
   }
   k = +k; v = v.slice(0, 10) || FAMILLE[k].nom;

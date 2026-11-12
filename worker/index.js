@@ -49,7 +49,7 @@ function vueSaison(S, moi, now){
   const L = S.legende, k = moi ? S.scores.findIndex((e) => e.id === moi) : -1;
   return { id: S.id, fin: finDuMois(now),
     legende: L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, cadre: L.cadre || "", regne: joursDeRegne(L, now), moi: !!moi && L.id === moi } : null,
-    scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre }) => ({ pseudo, score, jours, cadre: cadre || "", moi: !!moi && id === moi, legende: !!L && id === L.id })),
+    scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!L && id === L.id })),
     total: S.scores.length, monRang: k >= 0 ? k + 1 : null,
     annonces: (S.annonces || []).slice(0, 5), pantheon: (S.pantheon || []).slice(0, 12) };
 }
@@ -68,7 +68,7 @@ async function onRequestGet({ request, env }){
   const k = moi ? liste.findIndex((e) => e.id === moi) : -1, idL = S.legende && S.legende.id;
   return reponse({
     total: liste.length, saison: vueSaison(S, moi, now),
-    scores: liste.slice(0, 50).map(({ pseudo, score, jours, id, cadre }) => ({ pseudo, score, jours, cadre: cadre || "", moi: !!moi && id === moi, legende: !!idL && id === idL })),
+    scores: liste.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!idL && id === idL })),
     monRang: k >= 0 ? k + 1 : null, moi: k >= 0 ? { pseudo: liste[k].pseudo, score: liste[k].score, jours: liste[k].jours, cadre: liste[k].cadre || "" } : null
   });
 }
@@ -86,8 +86,9 @@ async function onRequestPost({ request, env }){
   const ancien = liste.find((e) => e.id === id);
   let record = true;
   const cadre = cadreDe(d);
-  if(ancien){ if(score > ancien.score){ ancien.score = score; ancien.jours = jours; } else record = false; ancien.pseudo = pseudo; if(cadre) ancien.cadre = cadre; }
-  else liste.push({ id, pseudo, score, jours, cadre });
+  const avatar = avatarDe(d);
+  if(ancien){ if(score > ancien.score){ ancien.score = score; ancien.jours = jours; } else record = false; ancien.pseudo = pseudo; if(cadre) ancien.cadre = cadre; ancien.avatar = avatar; }
+  else liste.push({ id, pseudo, score, jours, cadre, avatar });
   liste.sort((a, b) => b.score - a.score || a.jours - b.jours);
   const garde = liste.slice(0, GARDES);
   await env.CLASSEMENT.put(CLE, JSON.stringify(garde));
@@ -95,8 +96,8 @@ async function onRequestPost({ request, env }){
   // Saison du mois : même règle (meilleur score du mois par appareil) ; la Légende = le n°1 du mois
   const now = Date.now(), { S } = await lireSaison(env, now), avant = S.legende ? S.legende.id : null;
   const a2 = S.scores.find((e) => e.id === id);
-  if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; }
-  else S.scores.push({ id, pseudo, score, jours, cadre });
+  if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; a2.avatar = avatar; }
+  else S.scores.push({ id, pseudo, score, jours, cadre, avatar });
   S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
   majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
   const legende = !!S.legende && S.legende.id === id, devient = legende && avant !== id;
@@ -221,6 +222,9 @@ const TROPHEES = { victoire: 30, defaite: -20, nul: 5 };
 function ligueDe(t){ let k = 0; LIGUES.forEach((L, i) => { if((t || 0) >= L.min) k = i; }); return k; }
 const CADRES_OK = ["bois", "bronze", "argent", "or", "legende"];
 const cadreDe = (d) => CADRES_OK.indexOf(String(d.cadre || "")) >= 0 ? String(d.cadre) : "";
+// Avatar choisi dans « Mon profil » (2026-11-12) : seulement un portrait du jeu (pas d'image envoyée par le joueur pour l'instant)
+const AVATARS_OK = "papa maman leo emma sam nora ines yanis marco marchand roux fillette precheur mere chefcamp pillard blesse convoi detresse pere rodeur coureur costaud rampant hurleur gonfle soldat".split(" ");
+const avatarDe = (d) => AVATARS_OK.indexOf(String(d.avatar || "")) >= 0 ? String(d.avatar) : "";
 function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
 // ---------- Bots de test (2026-11-10, demande de Fabien) ----------
 // Créés et supprimés depuis l'administration. Un bot est un faux joueur (id commençant par « bot », m.bot = true).
@@ -381,12 +385,12 @@ async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAG
 const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
 function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
   return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees),
-    desc: c.desc || "", bilan: c.bilan || null, noms: c.membres.map((m) => ({ pseudo: m.pseudo, cadre: m.cadre || "", chef: m.id === c.chef, jour: m.jour || 0 })) }; }
+    desc: c.desc || "", bilan: c.bilan || null, noms: c.membres.map((m) => ({ pseudo: m.pseudo, cadre: m.cadre || "", avatar: m.avatar || "", chef: m.id === c.chef, jour: m.jour || 0 })) }; }
 // Description du clan (2026-11-10) : 200 caractères au plus, écrite par le chef
 const DESC_MAX = 200;
 function descPropre(t){ return String(t || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, DESC_MAX); }
 const DESC_BOTS = ["Clan de test : on défend, on partage, on tient bon.", "Ici on ne laisse personne derrière. Dépose avant de prendre !", "Chasseurs de rôdeurs depuis le premier jour.", "Petit clan tranquille, actif tous les soirs."];
-function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", depose: m.depose || 0, pris: m.pris || 0, profil: m.profil || (m.bot ? (m.profil = profilBot(m.jour || 30)) : null), rejoint: m.rejoint || 0, bot: !!m.bot, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", avatar: m.avatar || "", depose: m.depose || 0, pris: m.pris || 0, profil: m.profil || (m.bot ? (m.profil = profilBot(m.jour || 30)) : null), rejoint: m.rejoint || 0, bot: !!m.bot, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
 async function clansPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -395,7 +399,7 @@ async function clansPost(request, env){
   const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
   const pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(nomPropre(d.pseudo, 16)), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
   const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
-  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; const pf = profilDe(d); if(pf) m.profil = pf; } }
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo) m.pseudo = pseudo; m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; m.avatar = avatarDe(d); const pf = profilDe(d); if(pf) m.profil = pf; } }
   switch(d.action){
     case "liste": {
       const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);

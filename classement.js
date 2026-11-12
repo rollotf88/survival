@@ -34,7 +34,7 @@ function envoyerScore(){
   try{ localStorage.setItem("survival_pseudo", pseudo); }catch(e){}
   $("msgcl").textContent = "Envoi…";
   fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ id:idAppareil(), pseudo:pseudo, score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif() }) })
+    body:JSON.stringify({ id:idAppareil(), pseudo:pseudo, score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif(), avatar:lireAvatar() }) })
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.ok){ $("msgcl").textContent = "Score refusé par le serveur."; return; }
@@ -47,7 +47,7 @@ function envoyerScore(){
 function envoyerScoreAuto(){
   var el = function(){ return $("envoiauto"); };
   fetch(adresseClassement(), { method:"POST", headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ id:idAppareil(), pseudo:lirePseudo(), score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif() }) })
+    body:JSON.stringify({ id:idAppareil(), pseudo:lirePseudo(), score:dernierEnvoi.score, jours:dernierEnvoi.jours, cadre:cadreActif(), avatar:lireAvatar() }) })
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!el()) return;
@@ -71,7 +71,7 @@ function openClassement(message){
     donneesCl = d; if(d.saison) noterLegende(d.saison); if($("listecl")) openClassement();
   }).catch(function(){ var el = $("listecl"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
-function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }
+function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }
 function contenuClassement(d){
   var S = d.saison || {};
   if(ongletCl === "pantheon"){
@@ -189,6 +189,7 @@ function cumulerPartie(){
   STATS_CUMUL.forEach(function(k){ c[k] = (c[k] || 0) + (G.stats[k] || 0); });
   G.cumule = true;
   try{ localStorage.setItem("survival_stats", JSON.stringify(c)); }catch(e){}
+  noterHistorique();
 }
 function adresseMonde(){ return adresseClassement().replace("/api/classement", "/api/monde"); }
 // Renvoie une promesse (résolue même en cas d'échec) pour pouvoir relire les chiffres juste après
@@ -458,7 +459,7 @@ function openProfilMembre(i){
   show(h);
 }
 function appelClans(corps){
-  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif(); corps.profil = monProfil();
+  corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif(); corps.avatar = lireAvatar(); corps.profil = monProfil();
   if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
   return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
 }
@@ -505,7 +506,7 @@ function afficherClans(msg){
       + tuileA("opouvrir", "immeuble", "🎯", "Opération", stOp && stOp.txt ? stOp.txt.replace(/^\S+\s/, "") : "l’immeuble", stOp && stOp.agir ? "chaud" : "")
       + '</div>';
     h += '<p class="titre-butin">👥 Les familles</p><div class="mc-membres">' + c.membresListe.map(function(m, k){
-      return '<div class="mc-m' + (m.moi ? " moi" : "") + '"><button class="mc-m-b" data-act="profilmembre" data-id="' + k + '">' + (typeof avatarChat === "function" ? avatarChat(m.pseudo) : "") + '<span class="mc-m-t"><b>' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? ' <small class="mc-toi">toi</small>' : '') + '</b><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small></span><span class="cm-voir">›</span></button>'
+      return '<div class="mc-m' + (m.moi ? " moi" : "") + '"><button class="mc-m-b" data-act="profilmembre" data-id="' + k + '">' + avatarHtml(m.avatar, m.pseudo, "ch-av mc-av") + '<span class="mc-m-t"><b>' + (m.chef ? ic("couronne", "👑") + " " : "") + pseudoCadre(m.pseudo, m.cadre) + (m.moi ? ' <small class="mc-toi">toi</small>' : '') + '</b><small>Jour ' + (m.jour || "?") + ' · vu ' + quand(m.vu) + ' · 📦 +' + (m.depose || 0) + ' / −' + (m.pris || 0) + '</small></span><span class="cm-voir">›</span></button>'
         + (c.chefId && !m.moi ? '<button class="mc-ex" data-act="clanexclure" data-id="' + echapper(m.vrai) + '" aria-label="Exclure ' + echapper(m.pseudo) + '" title="Exclure">✕</button>' : '') + '</div>';
     }).join("") + '</div>';
     h += '<button class="btn alt btn-jeu" style="width:100%;margin:8px 0" data-act="classementclans">🏆 Classement des clans</button>'
@@ -664,6 +665,7 @@ function bandeauGuerre(W){
     + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b>' + (W.eux.trophees !== undefined ? badgeLigue(W.eux.trophees, true) : '') + '<span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
 }
 function afficherGuerre(msg){
+  noterEtatGuerre(etatGuerre);
   if(etatGuerre && etatGuerre.bilan && etatGuerre.bilan.gagnees) noterStatClan("victoires", etatGuerre.bilan.gagnees, true);
   var d = etatGuerre, W = d.guerre, h = '<h2>⚔️ La guerre</h2>' + (msg ? '<p class="msg ' + (msg.charAt(0) === "❌" ? "" : "g2") + '">' + msg + '</p>' : '');
   if(d.bilan) h += '<p class="sub">Bilan du clan : ' + d.bilan.gagnees + ' victoire' + (d.bilan.gagnees > 1 ? "s" : "") + ', ' + d.bilan.perdues + ' défaite' + (d.bilan.perdues > 1 ? "s" : "") + ', ' + d.bilan.nulles + ' nulle' + (d.bilan.nulles > 1 ? "s" : "") + '.</p>';
@@ -706,7 +708,7 @@ function lancerAssaut(cible){
   }).catch(function(){ openGuerre("❌ " + MSG_HORS_LIGNE); });
 }
 function terminerAssaut(){
-  var b = bilanAssaut();
+  var b = bilanAssaut(); if(ETAT_GUERRE){ ETAT_GUERRE.fait = true; try{ localStorage.setItem("survival_etat_guerre", JSON.stringify(ETAT_GUERRE)); }catch(e){} }
   appelClans({ action:"finAssaut", assaut:b.assaut, victoire:b.victoire, etoiles:b.etoiles }).then(function(d){
     finirAssaut(); var butin = []; retourPiece = typeof dansUnClan === "function" && dansUnClan() ? "bastionSalle" : "salon"; // après un assaut : retour au bastion
     if(!d.erreur && b.etoiles){ noterStatClan("etoiles", b.etoiles); if(b.etoiles >= 3) noterStatClan("assauts3"); }
@@ -910,3 +912,94 @@ function openTigre(){
     + '<p class="titre-butin">Ce qu’il fait</p><p class="sub">Une fois par partie, dans n’importe quel combat (expédition, raid de l’immeuble, zombie célèbre, assaut de guerre), le bouton « Lâcher le tigre » fait bondir Raja : tous les zombies tombent ; le Colosse et les zombies célèbres perdent ' + Math.round(BAL.tigre.boss * 100) + ' % de leur vie ; en guerre de clans, chaque défenseur perd ' + Math.round(BAL.tigre.guerre * 100) + ' % de sa vie. Détrônée, la Légende perd Raja.</p>'
     + BTN_FERMER());
 }
+
+/* ---------- Pastille de guerre sur l'écran principal (2026-11-12, idée de Fabien) ----------
+   À côté de la pastille de mission : « ⚔️ Guerre : ton assaut » tant que je n'ai pas fait mon assaut du jour,
+   ou « ⚔️ Lancer une guerre » pour le chef d'un clan complet qui ne cherche pas encore. État gardé dans survival_etat_guerre,
+   relu au lancement puis toutes les 5 minutes (seulement si je suis dans un clan). */
+var ETAT_GUERRE = (function(){ try{ return JSON.parse(localStorage.getItem("survival_etat_guerre") || "null"); }catch(e){ return null; } })();
+function noterEtatGuerre(d){
+  if(!d || d.erreur) return;
+  var W = d.guerre && !d.guerre.fini ? d.guerre : null;
+  ETAT_GUERRE = { guerre:!!W, fait:!!(W && W.dejaMoi), jour:W ? W.jour : 0, finJour:W ? W.finJour : 0, chef:!!d.chef, complet:!!d.complet, recherche:!!d.recherche, t:Date.now() };
+  try{ localStorage.setItem("survival_etat_guerre", JSON.stringify(ETAT_GUERRE)); }catch(e){}
+  if(typeof G !== "undefined" && G && G.ph === "game" && !document.querySelector("#modal[style*='flex']") && typeof render === "function") render();
+}
+function verifierGuerre(){
+  if(typeof dansUnClan === "function" && !dansUnClan()){ ETAT_GUERRE = null; return; }
+  if(typeof enRaid === "function" && enRaid()) return;
+  try{ appelClans({ action:"guerre" }).then(noterEtatGuerre).catch(function(){}); }catch(e){}
+}
+setTimeout(verifierGuerre, 5000); setInterval(verifierGuerre, 300000);
+function pastilleGuerre(pc){
+  var E = ETAT_GUERRE; if(!E || (typeof dansUnClan === "function" && !dansUnClan())) return "";
+  if(E.finJour && Date.now() > E.finJour){ E.fait = false; } // un nouveau jour de guerre a commencé : nouvel assaut possible
+  var txt = null, sous = "";
+  if(E.guerre && !E.fait){ txt = "⚔️ Guerre : ton assaut"; sous = "Jour " + E.jour + " sur 3 · ton clan compte sur toi"; }
+  else if(!E.guerre && E.chef && E.complet && !E.recherche){ txt = "⚔️ Lancer une guerre"; sous = "Ton clan est complet : inscris-le"; }
+  if(!txt) return "";
+  return pc ? '<button class="loc pret-guerre" data-act="guerre"><b>' + txt + '</b><small>' + sous + '</small></button>'
+    : '<button class="btn alt pret pret-guerre" style="flex:0 0 auto" data-act="guerre">' + txt + '</button>';
+}
+
+/* ---------- Mon profil (2026-11-12, idée de Fabien) ----------
+   Pseudo, avatar (un portrait du jeu, gardé d'une partie à l'autre et visible dans le classement et les clans),
+   cadre, chiffres de toutes les parties, historique des 20 dernières parties, comptes à lier (à venir).
+   localStorage : survival_avatar, survival_historique. Un avatar envoyé par le joueur viendra plus tard (il faudra une modération). */
+var AVATARS = [
+  ["La famille", ["papa", "maman", "leo", "emma"]],
+  ["Les recrues", ["sam", "nora", "ines", "yanis"]],
+  ["Les rencontres", ["marco", "marchand", "roux", "fillette", "precheur", "mere", "chefcamp", "pillard", "blesse", "convoi", "detresse", "pere"]],
+  ["Les zombies", ["rodeur", "coureur", "costaud", "rampant", "hurleur", "gonfle", "soldat"]]
+];
+function avatarValide(a){ return AVATARS.some(function(g){ return g[1].indexOf(a) >= 0; }); }
+function lireAvatar(){ var a = ""; try{ a = localStorage.getItem("survival_avatar") || ""; }catch(e){} return avatarValide(a) ? a : ""; }
+// Avatar d'un joueur : son portrait choisi, sinon la pastille ronde avec son initiale (comme dans la discussion)
+function avatarHtml(a, pseudo, cls){
+  if(a && avatarValide(a)) return '<span class="av-img ' + (cls || "") + '" aria-hidden="true"><img src="images/portrait-' + a + '.webp" alt=""></span>';
+  if(typeof avatarChat === "function") return avatarChat(pseudo).replace('class="ch-av"', 'class="ch-av ' + (cls || "") + '"');
+  return '';
+}
+function lireHistorique(){ try{ return JSON.parse(localStorage.getItem("survival_historique") || "[]") || []; }catch(e){ return []; } }
+function noterHistorique(){
+  if(!G || !G.stats) return;
+  var H = lireHistorique();
+  H.unshift({ t:Date.now(), score:G.score || 0, jours:Math.max(0, G.day - 1), classee:!!G.seed, morts:(G.dd || []).length, zombies:G.stats.zombies || 0 });
+  try{ localStorage.setItem("survival_historique", JSON.stringify(H.slice(0, 20))); }catch(e){}
+}
+var ongletProfil = "profil";
+function openProfil(msg){
+  var p = lirePseudo(), a = lireAvatar(), J = statsJoueur(), H = lireHistorique(), cad = CADRES.find(function(c){ return c.id === cadreActif(); }) || CADRES[0];
+  var h = '<button class="lien-retour" data-act="menu">← Menu</button>'
+    + '<div class="pf-tete"><button class="pf-av" data-act="pfonglet" data-id="avatar" aria-label="Changer d’avatar">' + avatarHtml(a, p || "?", "pf-grand") + '<i>Changer</i></button>'
+    + '<span class="pf-id"><small>Mon profil</small><b>' + (p ? pseudoCadre(p, cadreActif()) : '<em>Pas encore de pseudo</em>') + '</b>'
+    + '<button class="btn alt pf-mini" data-act="saisie" data-id="p" data-retour="profil">✏️ ' + (p ? "Changer de pseudo" : "Choisir un pseudo") + '</button></span></div>'
+    + (msg ? '<p class="msg g2">' + msg + '</p>' : '')
+    + '<div class="tabs onglets">' + [["profil", "👤 Mon profil", "Mes chiffres"], ["avatar", "🖼️ Avatar", "Choisir un portrait"], ["historique", "📜 Historique", H.length + " partie" + (H.length > 1 ? "s" : "")]].map(function(o){
+      return '<button class="tab' + (o[0] === ongletProfil ? " on" : "") + '" data-act="pfonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
+  if(ongletProfil === "avatar"){
+    h += '<p class="sub">Ton avatar s’affiche dans le classement et dans ton clan. Il reste le même d’une partie à l’autre.</p>';
+    h += AVATARS.map(function(g){ return '<p class="titre-butin">' + g[0] + '</p><div class="pf-grille">' + g[1].map(function(id){
+      return '<button class="pf-choix' + (id === a ? " on" : "") + '" data-act="pfavatar" data-id="' + id + '" aria-label="Choisir ce portrait"><img src="images/portrait-' + id + '.webp" alt=""></button>'; }).join("") + '</div>'; }).join("");
+    h += '<button class="lien pf-sans" data-act="pfavatar" data-id="">Revenir à l’initiale de mon pseudo</button>';
+  } else if(ongletProfil === "historique"){
+    if(!H.length) h += '<p class="msg">Ton historique se remplira à la fin de ta première famille.</p>';
+    else h += '<div class="pf-histo">' + H.map(function(x){ var d = new Date(x.t);
+      return '<div class="pf-h"><span class="pf-h-d">' + d.getDate() + ' ' + MOIS_FR[d.getMonth()].slice(0, 4).replace(/\.$/, "") + '.</span><span class="pf-h-t"><b>⭐ ' + x.score + ' points</b><small>' + x.jours + ' jour' + (x.jours > 1 ? "s" : "") + ' tenus · ' + x.zombies + ' zombie' + (x.zombies > 1 ? "s" : "") + ' · ' + x.morts + ' mort' + (x.morts > 1 ? "s" : "") + '</small></span><span class="pf-h-m' + (x.classee ? " cl" : "") + '">' + (x.classee ? "Classée" : "Libre") + '</span></div>'; }).join("") + '</div>';
+  } else {
+    h += tuiles([["familles", J.parties || 0], ["meilleur score", (J.meilleur || 0) + " ⭐", "ok"], ["plus longue survie", (J.plusLongue || 0) + " j"], ["zombies abattus", J.zombies || 0]]);
+    h += '<div class="pf-lignes"><button class="loc" data-act="cadres"><b>🖼️ Mon cadre : ' + cad.nom + '</b><small>Débloque de nouveaux cadres avec les succès</small></button>'
+      + '<button class="loc" data-act="stats"><b>📊 Toutes mes stats</b><small>Poissons, planches, missions, morts…</small></button></div>';
+    h += '<p class="titre-butin">🔗 Retrouver ma partie partout</p><div class="pf-comptes">'
+      + ['Google', 'Apple', 'Steam'].map(function(n){ return '<button class="pf-compte" disabled>' + n + '<small>bientôt</small></button>'; }).join("") + '</div>'
+      + '<p class="sub">Pour l’instant, ta partie est gardée sur cet appareil. Lier un compte permettra de la retrouver sur ton téléphone, ta tablette et ton ordinateur.</p>';
+  }
+  show(h + BTN_FERMER());
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "profil"){ ongletProfil = "profil"; openProfil(); }
+  else if(a === "pfonglet"){ ongletProfil = b.getAttribute("data-id"); openProfil(); }
+  else if(a === "pfavatar"){ var id = b.getAttribute("data-id"); try{ localStorage.setItem("survival_avatar", id); }catch(err){} ongletProfil = "avatar"; openProfil(id ? "Nouvel avatar choisi. Il apparaîtra dans le classement à ton prochain score envoyé." : "Ton avatar est revenu à l’initiale de ton pseudo."); }
+});
