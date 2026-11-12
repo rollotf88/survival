@@ -149,7 +149,7 @@ function rGame(){
   }, 0);
   var mo = G.moral > 60 ? ic("moralBon", "😀") : G.moral > 30 ? ic("moralMoyen", "😐") : ic("moralBas", "😟");
   var m = G.m.map(function(x, i){
-    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 " + causeMort(roleDe(x), "mort") : x.raid ? "🏢 Au bastion" : on ? "✔ Partant" + (estFeminin(x) ? "e" : "") : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" + (estFeminin(x) ? "e" : "") : fatigue(x) ? "🥱 Fatigué" + (estFeminin(x) ? "e" : "") : "Au refuge";
+    var on = G.sel.indexOf(i) >= 0, st = !x.al ? "💀 " + causeMort(roleDe(x), "mort") : x.raid ? "🏢 Bastion" : on ? "✔ Partant" + (estFeminin(x) ? "e" : "") : fou(x) ? "🌀 Folie " + x.folie : !peutSortir(x) ? "😴 Épuisé" + (estFeminin(x) ? "e" : "") : fatigue(x) ? "🥱 Fatigué" + (estFeminin(x) ? "e" : "") : "Au refuge";
     var stc = !x.al ? "mort" : on ? "ok" : fou(x) || !peutSortir(x) ? "bas" : fatigue(x) ? "moy" : ""; // couleur de la pastille d'état
     var aEquiper = x.al && EMPLACEMENTS.some(function(e){ return !x.eq[e[0]] && pourEmplacement(e[0]).length > 0; });
     // Sur téléphone, l'équipement porté s'affiche en petit sous les jauges (la fiche s'ouvre au toucher)

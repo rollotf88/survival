@@ -2706,3 +2706,8 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 /* Logo de l’en-tête cliquable : retour à l’accueil (2026-11-12) */
 .hd-logo-b{all:unset;display:contents;cursor:pointer}
 .hd-logo-b:focus-visible .hd-logo{outline:2px solid var(--accent,#e0a030);outline-offset:2px;border-radius:50%}
+
+/* Pastille d’état des cartes : « Partante », « Fatiguée » tiennent sur téléphone (2026-11-12, retour de Fabien) */
+body:not(.pc) .mc .mc-st{padding:1px 4px;letter-spacing:-.1px}
+body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height:11px;margin-right:-1px}
+@media (max-width:380px){ body:not(.pc) .scene .mc small.mc-st,body:not(.pc) .mc .mc-st{font-size:8.8px!important} }
