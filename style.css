@@ -2516,3 +2516,5 @@ body.pc #app .chip.chipson .chip-lbl{grid-row:1 / span 2;align-self:center}
   .se-t b{font-size:16px} .se-liste{max-height:none}
 }
 @media (orientation:landscape) and (max-height:500px){ .se-pills{flex-wrap:nowrap;overflow:hidden} .se-pills span:nth-child(n+2){display:none} .se-t{gap:2px} .se-ranger{padding:5px 8px;font-size:12px} .se-go{padding:4px 9px;font-size:12px} }
+.se-pills span{white-space:nowrap;font-size:12px}
+.se-pills .ico,.se-pills img.emo{width:13px;height:13px;vertical-align:-2px}

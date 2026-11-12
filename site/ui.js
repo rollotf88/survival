@@ -523,8 +523,23 @@ function openResultat(r){
 // en pastilles, solidité colorée, bouton Ranger), objets du stock en cartes avec « Équiper », message utile si rien
 var NOM_EMPLACEMENT = { arme:"Arme", outil:"Outil", sac:"Sac" };
 var AIDE_EMPLACEMENT = { arme:"Fouille les lieux ou fabrique-en une à l’atelier (lance, gourdin clouté…).", outil:"Lampe, torche, canne à pêche… à trouver dehors ou à fabriquer à l’atelier.", sac:"Sacoches et sacs se trouvent en fouillant, ou se fabriquent avec des chiffons." };
+// Étiquettes courtes tirées des caractéristiques (retour de Fabien : la phrase de description surchargeait la carte)
+function tagsObjet(o){
+  var t = [];
+  if(o.degats) t.push("⚔️ " + o.degats[0] + "-" + o.degats[1]);
+  if(o.def) t.push("🛡️ +" + o.def);
+  if(o.munition) t.push("🔫 Munitions");
+  if(o.coupe) t.push("🪓 Coupe du bois");
+  if(o.lumiere) t.push("🔦 Éclaire");
+  if(o.allume) t.push("🔥 Allume le feu");
+  if(o.ouvre) t.push("🔓 Ouvre les portes");
+  if(o.peche) t.push("🎣 Pêche");
+  if(o.capacite) t.push("🎒 +" + o.capacite + " places");
+  return t;
+}
 function carteEquip(o, inst, act, id, bouton){
-  var pills = String(o.desc || "").split(" · ").map(function(t){ return '<span>' + t + '</span>'; }).join("");
+  var tags = tagsObjet(o);
+  var pills = (tags.length ? tags : [String(o.desc || "").split(" · ")[0]]).map(function(t){ return '<span>' + t + '</span>'; }).join("");
   var sol = "";
   if(inst && inst.sol && o.sol){ var pc = Math.round(inst.sol / o.sol * 100), u = o.nuit ? " nuits" : o.lumiere ? " fouilles" : "";
     sol = '<span class="se-sol"><span class="se-bar"><i class="' + (pc < 25 ? "lo" : pc < 50 ? "mid" : "") + '" style="width:' + pc + '%"></i></span><small>' + (u ? inst.sol + u : inst.sol + " / " + o.sol) + '</small></span>'; }
