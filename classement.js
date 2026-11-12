@@ -73,21 +73,23 @@ function openClassement(message){
     donneesCl = d; if(d.saison) noterLegende(d.saison); if($("listecl")) openClassement();
   }).catch(function(){ var el = $("listecl"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
-function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }
+// « ⭐ 271 points · 110 jours » en entier (2026-11-12, demande de Fabien : il y a la place)
+function ptsJours(sc, j){ return '⭐ ' + sc + ' point' + (sc > 1 ? 's' : '') + ' · ' + j + ' jour' + (j > 1 ? 's' : ''); }
+function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av") + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }
 function contenuClassement(d){
   var S = d.saison || {};
   if(ongletCl === "pantheon"){
     var P = S.pantheon || [];
     if(!P.length) return '<p class="msg">Le panthéon est encore vide : la première Légende y entrera à la fin du mois.</p>';
     return '<p class="sub">Chaque mois, la Légende entre au panthéon et la couronne est remise en jeu.</p><ol class="classement pantheon">' + P.map(function(e){
-      return '<li><span class="rang">' + ic("couronne", "👑") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre, false) + '<small class="pth-mois">' + moisFr(e.saison) + ' · a régné ' + e.regne + ' j</small></b><span class="pts">⭐ ' + e.score + ' · ' + e.jours + ' j</span></li>'; }).join("") + '</ol>';
+      return '<li><span class="rang">' + ic("couronne", "👑") + '</span><b>' + pseudoCadre(e.pseudo, e.cadre, false) + '<small class="pth-mois">' + moisFr(e.saison) + ' · a régné ' + e.regne + ' j</small></b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }).join("") + '</ol>';
   }
   var liste = ongletCl === "mois" ? S.scores || [] : d.scores || [], total = ongletCl === "mois" ? S.total || 0 : d.total || 0;
   var rang = ongletCl === "mois" ? S.monRang : d.monRang, h = "";
   if(ongletCl === "mois") h += carteLegende(S);
   if(!liste.length) return h + '<p class="msg">' + (ongletCl === "mois" ? "Personne n’a encore de partie classée ce mois-ci : la couronne est à prendre !" : "Personne n’a encore envoyé de score. Sois le premier !") + '</p>';
   h += '<ol class="classement">' + liste.map(ligneCl).join("") + '</ol>';
-  if(ongletCl === "toujours" && d.moi && d.monRang > liste.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">⭐ ' + d.moi.score + ' · ' + d.moi.jours + ' j</span></li></ol>';
+  if(ongletCl === "toujours" && d.moi && d.monRang > liste.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">' + ptsJours(d.moi.score, d.moi.jours) + '</span></li></ol>';
   else if(ongletCl === "mois" && rang > liste.length) h += '<p class="sub">Tu es ' + eme(rang) + ' ce mois-ci.</p>';
   return h + '<p class="sub">' + total + ' joueur' + (total > 1 ? "s" : "") + (ongletCl === "mois" ? " ce mois-ci" : "") + ' · ⭐ = meilleur score d’une partie classée (1 point par jour et par survivant)' + (ongletCl === "mois" ? ' · ● en cours = partie encore en vie, score mis à jour en direct' : '') + '</p>';
 }
