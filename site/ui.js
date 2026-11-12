@@ -763,11 +763,11 @@ function caseObjet(id, opt){
     + (opt.pret ? '<span class="pret" aria-hidden="true">✔</span>' : '')
     + (opt.usure != null ? '<span class="usure"><i class="' + niveau(opt.usure) + '" style="width:' + opt.usure + '%"></i></span>' : '') + '</button>';
 }
-function etageres(cases, mini){
-  var n = Math.max(mini || 0, Math.ceil(cases.length / 5) * 5), h = '<div class="etageres">';
+function etageres(cases, mini, sansVide){ // sansVide : pas de cases vides pour compléter la rangée (2026-11-12, onglet Construire)
+  var n = sansVide ? cases.length : Math.max(mini || 0, Math.ceil(cases.length / 5) * 5), h = '<div class="etageres">';
   for(var k = 0; k < n; k += 5){
     h += '<div class="rangee">';
-    for(var j = k; j < k + 5; j++) h += cases[j] || '<span class="islot vide"></span>';
+    for(var j = k; j < Math.min(k + 5, n); j++) h += cases[j] || '<span class="islot vide"></span>';
     h += '</div>';
   }
   return h + '</div>';
@@ -941,6 +941,19 @@ function resumeRefuge(){
   return '<div class="resume rs">' + t(ic("bouclier", "🛡️"), defenseNuit(), "défense", defenseNuit() ? "" : "ko") + t(ic("bouteille", "💧"), "+" + pe, "eau / nuit", pe ? "ok" : "") + t(ic("conserve", "🥫"), "+" + pn, "repas / nuit", pn ? "ok" : "") + t(ic("planche", "🪵"), compter("planche"), "planches", "")
     + '<button class="lien rs-lien" data-act="bilanref">Bilan détaillé ›</button></div>';
 }
+// Fenêtre du refuge (2026-11-12, retour de Fabien) : le résumé tient en une ligne de pastilles, « Bilan › » au bout
+function resumeRefugeLigne(){
+  var pe = G.ref.eau * REFUGE.eau.parJour, pn = G.ref.pot * REFUGE.pot.parJour, d = defenseNuit();
+  var p = function(ico, v, nom, cls){ return '<span class="rl-p' + (cls ? " " + cls : "") + '" title="' + nom + '">' + ico + '<b>' + v + '</b></span>'; };
+  return '<div class="rl">' + p(ic("bouclier", "🛡️"), d, "Défense de nuit", d ? "" : "ko") + p(ic("bouteille", "💧"), "+" + pe, "Eau par nuit", pe ? "ok" : "") + p(ic("conserve", "🥫"), "+" + pn, "Repas par nuit", pn ? "ok" : "") + p(ic("planche", "🪵"), compter("planche"), "Planches", "")
+    + '<button class="lien rl-lien" data-act="bilanref">Bilan ›</button></div>';
+}
+// Ce que rapporte le niveau suivant d'une construction (« Défense 0 → 2 »)
+function gainRefuge(k, l){
+  if(k === "barr") return "+" + (l * BAL.defenseBarricade) + " → <b>+" + ((l + 1) * BAL.defenseBarricade) + "</b> de défense la nuit";
+  var r = REFUGE[k], u = k === "eau" ? "ration" + (r.parJour * (l + 1) > 1 ? "s" : "") + " d’eau" : "ration" + (r.parJour * (l + 1) > 1 ? "s" : "") + " de nourriture";
+  return "+" + (l * r.parJour) + " → <b>+" + ((l + 1) * r.parJour) + "</b> " + u + " par nuit";
+}
 // Le bilan complet du refuge dans sa propre fenêtre (avant : il ne s'affichait que dans l'onglet Construire, et rien ailleurs)
 function openBilanRefuge(){
   show('<h2>🏠 Bilan du refuge</h2>' + bilanRefuge() + '<button class="btn btn-jeu bl-go" data-act="refuge">🛠️ Construire et fabriquer</button>' + BTN_FERMER());
@@ -957,17 +970,19 @@ function openRef(onglet){
   var fiche = "";
   if(ongletRef === "voiture") h += ongletVoiture();
   else if(ongletRef === "construire"){
-    h += resumeRefuge();
+    h += resumeRefugeLigne();
     h += etageres(Object.keys(REFUGE).map(function(k){
       var r = REFUGE[k], l = G.ref[k], mx = l >= r.max, peut = !mx && compter("planche") >= coutAmelioration(k);
       if(selRef === "b:" + k){
         var cout = { planche:coutAmelioration(k) };
         var pips = ''; for(var q = 0; q < r.max; q++) pips += '<i class="' + (q < l ? "on" : "") + '"></i>';
-        fiche = '<div class="invfiche"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + '</b><span class="bd-pips">' + pips + '</span><small>' + r.desc + '</small></span></div>'
-          + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : '<p class="titre-butin">Niveau ' + (l + 1) + ' : il faut</p>' + ingredients(cout) + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="build" data-id="' + k + '"' + (peut ? "" : " disabled") + '>' + (peut ? "🔨 " + (l ? "Améliorer" : "Construire") : "❌ Il manque " + nommer("planche", coutAmelioration(k) - compter("planche"))) + '</button>');
+        var dsc = r.desc.match(/^(.*?)\s*\((.*)\)$/), garde = dsc ? majuscule(dsc[2]) : "";
+        fiche = '<div class="invfiche"><span class="em">' + ic("ref_" + k, r.icone) + '</span><span class="eqt"><b>' + r.nom + '</b><span class="rf-niv"><span class="bd-pips">' + pips + '</span><small>Niveau ' + l + ' / ' + r.max + '</small></span>'
+          + (mx ? '' : '<span class="rf-gain">' + gainRefuge(k, l) + '</span>') + (garde ? '<small class="rf-garde">⚠️ ' + garde + '</small>' : '') + '</span></div>'
+          + (mx ? '<p class="etat ok">⭐ Niveau maximum atteint</p>' : '<p class="titre-butin">Niveau ' + (l + 1) + ' : il faut</p><div class="rf-action">' + ingredients(cout) + '<button class="btn" data-act="build" data-id="' + k + '"' + (peut ? "" : " disabled") + '>' + (peut ? "🔨 " + (l ? "Améliorer" : "Construire") : "❌ Il manque " + nommer("planche", coutAmelioration(k) - compter("planche"))) + '</button></div>');
       }
       return caseObjet(null, { act:"refsel", cle:"b:" + k, sel:selRef === "b:" + k, icone:ic("ref_" + k, r.icone), nom:r.nom, badge:l + "/" + r.max, pret:peut, terne:mx });
-    }), 5);
+    }), 0, true);
   } else {
     if(ongletRef === "fabriquer"){
       // Ce qu'on peut fabriquer tout de suite en premier, marqué d'une coche

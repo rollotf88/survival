@@ -2721,3 +2721,21 @@ body:not(.pc) .mc .mc-st .ico,body:not(.pc) .mc .mc-st img.emo{width:11px;height
 /* Bilan du refuge : le bouton ne colle plus aux tuiles « Pas encore construit » quand il n’y a pas de phrase dessous (2026-11-12) */
 .bl-go{margin-top:12px}
 .bl-note + .bl-go{margin-top:2px}
+
+/* Fenêtre du refuge retouchée (2026-11-12) : résumé en une ligne, fiche plus parlante, matériaux et bouton côte à côte */
+.rl{display:flex;align-items:center;gap:5px;margin:0 0 8px;flex-wrap:wrap}
+.rl-p{display:inline-flex;align-items:center;gap:4px;padding:2px 9px 2px 6px;border:2px solid var(--bois);border-radius:999px;background:var(--bg);box-shadow:0 2px 0 var(--line);font-size:13px}
+.rl-p b{font-weight:900}
+.rl-p.ok b{color:var(--ok)}.rl-p.ko b{color:var(--bad)}
+.rl-p .ico,.rl-p img.ico-img,.rl-p svg{width:18px!important;height:18px!important;flex:none}
+.rl-lien{margin-left:auto;font-size:12.5px;white-space:nowrap}
+.rf-niv{display:flex;align-items:center;gap:7px;margin:2px 0}
+.rf-niv small{font-size:11.5px;font-weight:800;color:var(--mut)}
+.rf-niv .bd-pips{margin:0}
+.rf-gain{display:block;font-size:13px;margin:1px 0}
+.rf-gain b{color:var(--ok)}
+.rf-garde{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
+.rf-garde .ico,.rf-garde img.emo{width:12px;height:12px;vertical-align:-2px}
+.rf-action{display:flex;align-items:center;gap:10px}
+.rf-action .ings2{flex:none;margin:0}
+.rf-action > .btn{flex:1;min-width:0;margin:0}
