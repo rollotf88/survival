@@ -755,7 +755,9 @@ function pseudoCadre(p, cadre, estLegende){ if(p && typeof texteInterdit === "fu
   return '<span class="pcadre cadre-' + (cadre || "bois") + (L ? ' legende-mois' : '') + '">' + (L ? '<i class="couronne-l">' + ic("couronne", "👑") + '</i>' : '') + echapper(p || "?") + '</span>'; }
 function openCadres(msg){
   var a = cadreActif(), n = nbSuccesSur(), ex = typeof iconeMembre === "function" ? iconeMembre({ nom:"Papa", r:"Papa", icone:"👨", al:true, hp:100, en:100, faim:100, soif:100 }) : "👤";
-  show('<h2>🖼️ Mon cadre</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '') + '<p class="sub">Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Débloque les plus beaux avec les succès (' + n + ' débloqués).</p>'
+  show('<h2>🖼️ Mon cadre</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '') + '<p class="sub">Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Les plus beaux se débloquent avec les succès.</p>'
+    + (function(){ var suiv = CADRES.find(function(c){ return !cadreDebloque(c); }), nc = CADRES.filter(cadreDebloque).length; // 2026-11-12 : le chiffre affiché comptait les succès, on croyait que c'était les cadres
+        return '<p class="msg">🏅 Tu as ' + n + ' succès · ' + nc + ' cadre' + (nc > 1 ? "s" : "") + ' débloqué' + (nc > 1 ? "s" : "") + (suiv ? ' · prochain : <b>' + suiv.nom + '</b> dans ' + (cadreMin(suiv) - n) + ' succès' : '') + '</p>'; })()
     + carteCadreLegende()
     + '<div class="cadres">' + CADRES.map(function(c){ var ok = cadreDebloque(c);
       return '<button class="cadre-choix' + (c.id === a ? " on" : "") + '" data-act="choixcadre" data-id="' + c.id + '"' + (ok ? "" : " disabled") + '><span class="cadre-ex cadre-' + c.id + '">' + ex + '</span><b>' + c.nom + '</b><small>' + (ok ? (c.id === a ? "✔ Porté" : c.desc) : "🔒 " + c.desc) + '</small></button>'; }).join("") + '</div>'
