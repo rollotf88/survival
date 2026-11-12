@@ -33,3 +33,18 @@ Joindre : `images/sources/icones-1-gemini.jpg` (référence de style)
 > 6. une étoile vide (seulement le contour, doré)
 
 À la réception : Claude découpe les personnages au pixel près (lits, canapé), branche la scène du siphon, et détoure les 6 icônes (Réparer, kit de siphon, ☰, ➕, ★, ☆).
+
+---
+
+## Canapé, version 2 (2026-11-12) : 2 images, deux personnes ESPACÉES par image
+La première version (les quatre collés) ne se découpait pas proprement : bout de la veste de Maman dans la découpe d'Emma, jambes de Léo et chignon de Maman incomplets.
+
+### Image A — Papa et Emma
+Joindre : `images/refuge-fond-eteint-propre.webp` + `images/portrait-papa.webp`, `images/portrait-emma.webp`
+
+> Reprends EXACTEMENT la première image (le salon), même cadrage, même taille, même style, même lumière. Le canapé vert a quatre places de gauche à droite. Ajoute UNIQUEMENT deux personnes assises, bien séparées par une place vide : l'homme du premier portrait sur la place la plus à GAUCHE, la jeune fille du deuxième portrait sur la TROISIÈME place (au milieu-droite). La deuxième place et la quatrième place restent vides. Chacun est assis bien droit, tout entier sur sa place : la tête, les cheveux, les bras, les jambes et les pieds ne débordent pas sur la place d'à côté et ne se touchent pas. Les jambes et les pieds sont bien visibles, posés au sol devant le canapé, sans toucher la table basse. L'homme tient une tasse, la jeune fille serre un coussin qu'elle a apporté. Ne déplace et ne retire AUCUN coussin ni le plaid du canapé, ne change rien d'autre dans la pièce. Aucun texte.
+
+### Image B — Léo et Maman
+Joindre : `images/refuge-fond-eteint-propre.webp` + `images/portrait-leo.webp`, `images/portrait-maman.webp`
+
+> Reprends EXACTEMENT la première image (le salon), même cadrage, même taille, même style, même lumière. Le canapé vert a quatre places de gauche à droite. Ajoute UNIQUEMENT deux personnes assises, bien séparées par une place vide : l'adolescent du premier portrait sur la DEUXIÈME place (au milieu-gauche), la femme du deuxième portrait sur la place la plus à DROITE. La première place et la troisième place restent vides. Chacun est assis bien droit, tout entier sur sa place : la tête, les cheveux (y compris le chignon), les bras, les jambes et les pieds ne débordent pas sur la place d'à côté et ne se touchent pas. Les jambes et les pieds sont bien visibles, posés au sol devant le canapé, sans toucher la table basse. L'adolescent lit un livre, la femme tient une tasse. Ne déplace et ne retire AUCUN coussin ni le plaid du canapé, ne change rien d'autre dans la pièce. Aucun texte.
