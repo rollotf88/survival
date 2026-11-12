@@ -2429,3 +2429,5 @@ body.pc #app .chip:has(.chip-lbl){display:grid!important;grid-template-columns:a
 body.pc #app .chip:has(.chip-lbl) > img.ico-img,body.pc #app .chip:has(.chip-lbl) > svg,body.pc #app .chip:has(.chip-lbl) > .ico{grid-row:1 / span 2;width:22px;height:22px}
 body.pc #app .chip .chip-lbl{grid-column:2;font-size:9.5px!important;letter-spacing:.02em;line-height:1.1;display:block!important}
 @media (max-width:1400px){ body.pc #app .chip .chip-lbl{display:none!important} body.pc #app .chip:has(.chip-lbl){display:flex!important} }
+/* PC : le bouton Menu n'a pas de chiffre, son nom se centre à côté de l'icône (2026-11-12) */
+body.pc #app .chip.chipson .chip-lbl{grid-row:1 / span 2;align-self:center}
