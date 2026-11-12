@@ -131,24 +131,32 @@ var guideOnglet = "regles", confirmerNouvelle = false;
 var ONGLETS_GUIDE = [["regles","📜","Règles"],["objets","🎒","Objets"],["lieux","🗺️","Lieux"],["zombies","🧟","Zombies"],["famille","👪","Famille"]];
 
 function openMenu(){
-  // Grille compacte : tout tient sans faire défiler, même sur un petit téléphone ou couché
-  var t = function(act, titre, sous){ return '<button class="mt" data-act="' + act + '"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</button>'; };
-  var h = '<h2>☰ Menu</h2><p class="sub">' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : G.ph === "game" ? "🎲 Partie libre" : "") + ' · ⭐ score ' + (G.score || 0) + ' · 🏆 record ' + RECORD + '</p><div class="menugrille">';
-  h += t("guide", "📖 Guide", "Règles, objets, lieux");
-  if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length; h += t("defis", typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? "🌍 Défis" : "🎯 Défis", typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE ? "La horde est là !" : nD + " / 3 aujourd’hui"); }
-  if(typeof openClassement === "function") h += t("classement", "🏆 Classement", "Tous les joueurs");
-  if(typeof openSucces === "function") h += t("succes", "🏅 Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
-  if(typeof openClans === "function") h += t("clans", "⚔️ Clans", jourPartie() >= BAL.jourClans ? "Fonder ou rejoindre" : "Dès le jour " + BAL.jourClans);
+  // Raccord avec la DA (2026-11-12) : carte de la partie (jour, score, record), tuiles avec l'icône dans un médaillon,
+  // réglages en interrupteurs (pastille Oui / Non) ; tout tient sans faire défiler, même sur un petit téléphone ou couché
+  var t = function(act, ico, titre, sous, chaud){ return '<button class="mt' + (chaud ? " chaud" : "") + '" data-act="' + act + '"><span class="mt-i">' + ico + '</span><span class="mt-t"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</span></button>'; };
+  var r = function(act, ico, nom, actif){ return '<button class="mr' + (actif ? " on" : "") + '" data-act="' + act + '" aria-pressed="' + (actif ? "true" : "false") + '"><span class="mr-i">' + ico + '</span><small>' + nom + '</small><i>' + (actif ? "Oui" : "Non") + '</i></button>'; };
+  var rec = Math.max(RECORD || 0, G.score || 0);
+  var h = '<h2>☰ Menu</h2>';
+  if(G.ph === "game") h += '<div class="mn-tete"><div><b>Jour ' + jourPartie() + '</b><small>' + (G.seed ? "🏆 Partie classée du " + dateGraine(G.seed) : "🎲 Partie libre") + '</small></div>'
+    + '<span class="mn-p">⭐ ' + (G.score || 0) + '<small>score</small></span><span class="mn-p">🏆 ' + rec + '<small>record</small></span></div>';
+  h += '<div class="menugrille">';
+  h += t("guide", "📖", "Guide", "Règles, objets, lieux");
+  if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length, hm = typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE;
+    h += t("defis", hm ? "🌍" : "🎯", "Défis", hm ? "La horde est là !" : nD + " / 3 aujourd’hui", hm); }
+  if(typeof openClassement === "function") h += t("classement", "🏆", "Classement", "Tous les joueurs");
+  if(typeof openSucces === "function") h += t("succes", "🏅", "Succès", nbSucces() + " / " + SUCCES.length + " débloqués");
+  if(typeof openClans === "function") h += t("clans", "⚔️", "Clans", jourPartie() >= BAL.jourClans ? "Fonder ou rejoindre" : "Dès le jour " + BAL.jourClans);
   if(typeof openInviter === "function"){
     var nc = lireColis(), nb = lireBonus().length;
-    h += t(nc ? "sacbonus" : "inviter", (nc ? "🪂 " : "🎁 ") + "Inviter", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " bonus gardés");
+    h += t(nc ? "sacbonus" : "inviter", nc ? "🪂" : "🎁", "Inviter", nc ? nc + " colis à ouvrir !" : nb + " / " + MAX_BONUS + " bonus gardés", nc > 0);
   }
-  if(typeof openStats === "function") h += t("stats", "📊 Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
-  h += t("menuson", sonEstActif() ? "🔊 Son" : "🔇 Son", sonEstActif() ? "Activé" : "Coupé");
-  if(typeof basculerMusique === "function" && lectureOgg) h += t("menumusique", musiqueActive() ? "🎵 Musique" : "🔇 Musique", musiqueActive() ? "Activée" : "Coupée");
-  h += t("menusensible", CONTENUS_SENSIBLES ? "🕯️ Contenus" : "🚫 Contenus", CONTENUS_SENSIBLES ? "Durs : activés" : "Durs : coupés");
-  if(typeof basculerVibrations === "function" && navigator.vibrate) h += t("menuvibre", vibrationsActives() ? "📳 Vibrations" : "📴 Vibrations", vibrationsActives() ? "Activées" : "Coupées");
-  if(typeof openAvis === "function") h += t("avis", "💬 Avis / bug", "Signaler, proposer");
+  if(typeof openStats === "function") h += t("stats", "📊", "Mes stats", (typeof statsJoueur === "function" ? statsJoueur().zombies : 0) + " zombies abattus");
+  if(typeof openAvis === "function") h += t("avis", "💬", "Avis / bug", "Signaler, proposer");
+  h += '</div><div class="mn-reglages">';
+  h += r("menuson", "🔊", "Son", sonEstActif());
+  if(typeof basculerMusique === "function" && lectureOgg) h += r("menumusique", "🎵", "Musique", musiqueActive());
+  if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibrations", vibrationsActives());
+  h += r("menusensible", "🕯️", "Contenus durs", CONTENUS_SENSIBLES);
   h += '</div>';
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';
   else h += '<p class="msg">Vraiment ? La partie en cours sera perdue.</p><div class="row"><button class="btn" data-act="menunouvelleok">Oui, recommencer</button><button class="btn alt" data-act="menu">Non</button></div>';
