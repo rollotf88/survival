@@ -725,19 +725,20 @@ var siphonDebut = 0, siphonPeriode = 1300, siphonZone = null;
 function openSiphon(){
   var S = G.siphon; if(!S){ hide(); return; }
   var k = kitSiphon();
-  var h = '<h2>🚗 Une voiture abandonnée</h2><div class="banniere"><img src="images/voiture-panne.webp" alt=""></div>'
+  var h = '<div class="banniere"><img src="images/siphon.webp" alt=""></div><h2>🚗 Une voiture abandonnée</h2>'
     + '<p>Sur le chemin du retour, une vieille voiture est garée de travers, portières ouvertes. Le bouchon du réservoir est encore là… il reste peut-être de l’essence.</p>'
     + (k ? '<p class="sub">' + icone("siphon") + ' Kit de siphonnage : encore ' + k.sol + ' utilisation' + (k.sol > 1 ? "s" : "") + '. Il faut aspirer au bon moment : trop tôt ou trop tard, ça gicle et le bruit attire les zombies.</p>' : '')
     + '<div class="row"><button class="btn" data-act="siphonGo">' + icone("siphon") + ' Siphonner</button><button class="btn alt" data-act="siphonNon">Continuer la route</button></div>';
   show(h);
-  if(typeof poserDansScene === "function" && document.body.classList.contains("pc") && G.siphon.apres) poserDansScene(imageLieu(LIEUX[G.siphon.apres.lieu]));
+  if(typeof poserDansScene === "function" && document.body.classList.contains("pc") && G.siphon.apres) poserDansScene("images/siphon.webp");
 }
 function jeuSiphon(){
   var w = BAL.siphon.fenetre, z0 = 0.18 + Math.random() * (0.64 - w); siphonZone = [z0, z0 + w];
   siphonPeriode = 1100 + Math.random() * 500; siphonDebut = performance.now();
-  show('<h2>⛽ Siphonnage</h2><p class="sub">Appuie sur « Aspirer » quand le niveau est dans la zone verte.</p>'
+  show('<div class="banniere"><img src="images/siphon.webp" alt=""></div><h2>⛽ Siphonnage</h2><p class="sub">Appuie sur « Aspirer » quand le niveau est dans la zone verte.</p>'
     + '<div class="siph"><div class="siph-tube"><span class="siph-zone" style="left:' + (z0 * 100) + '%;width:' + (w * 100) + '%"></span><span class="siph-niv" id="siphNiv"></span></div></div>'
     + '<button class="btn" style="width:100%" data-act="siphonAspire">💨 Aspirer !</button>');
+  if(typeof poserDansScene === "function" && document.body.classList.contains("pc")) poserDansScene("images/siphon.webp"); // la scène de la voiture reste derrière (image ChatGPT, 2026-11-12)
   (function anime(){ var n = $("siphNiv"); if(!n) return; n.style.left = (positionSiphon() * 100) + "%"; requestAnimationFrame(anime); })();
 }
 function positionSiphon(){ var t = ((performance.now() - siphonDebut) % siphonPeriode) / siphonPeriode; return t < 0.5 ? t * 2 : 2 - t * 2; } // va-et-vient
