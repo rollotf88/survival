@@ -703,7 +703,8 @@ function dormeurLit(lit){
 // (salon redessiné), découpée le long de son contour et mise à l'échelle (255 px de haut).
 var PLACES_CANAPE = { "Papa":[120, 352, 362, 717, "fauteuil-papa"], "Léo":[366, 343, 488, 628, "canape-leo"], "Emma":[490, 375, 579, 630, "canape-emma"], "Maman":[578, 342, 705, 631, "canape-maman"],
   // Recrues (2026-11-12, image ChatGPT découpée au contour) : à la place du membre qu'elles remplacent, comme pour les lits
-  "Yanis":[74, 372, 348, 732, "fauteuil-yanis"], "Nora":[386, 348, 469, 628, "canape-nora"] };
+  "Yanis":[74, 372, 348, 732, "fauteuil-yanis"], "Nora":[386, 348, 469, 628, "canape-nora"],
+  "Sam":[482, 360, 586, 630, "canape-sam"], "Inès":[599, 348, 684, 631, "canape-ines"] };
 var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 786, function(){ return true; }];
 function auSalon(r){
   if(!G || !G.m) return false;
