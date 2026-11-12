@@ -48,3 +48,23 @@ Joindre : `images/refuge-fond-eteint-propre.webp` + `images/portrait-papa.webp`,
 Joindre : `images/refuge-fond-eteint-propre.webp` + `images/portrait-leo.webp`, `images/portrait-maman.webp`
 
 > Reprends EXACTEMENT la première image (le salon), même cadrage, même taille, même style, même lumière. Le canapé vert a quatre places de gauche à droite. Ajoute UNIQUEMENT deux personnes assises, bien séparées par une place vide : l'adolescent du premier portrait sur la DEUXIÈME place (au milieu-gauche), la femme du deuxième portrait sur la place la plus à DROITE. La première place et la troisième place restent vides. Chacun est assis bien droit, tout entier sur sa place : la tête, les cheveux (y compris le chignon), les bras, les jambes et les pieds ne débordent pas sur la place d'à côté et ne se touchent pas. Les jambes et les pieds sont bien visibles, posés au sol devant le canapé, sans toucher la table basse. L'adolescent lit un livre, la femme tient une tasse. Ne déplace et ne retire AUCUN coussin ni le plaid du canapé, ne change rien d'autre dans la pièce. Aucun texte.
+
+---
+
+## Salon version 4 (2026-11-12) : le salon SANS la table basse, puis la table reposée par Claude
+Idée de Fabien : la table cachait les pieds et sa teinte changeait selon les découpes. On enlève la table de l'image du salon ; Claude la découpe proprement dans l'image d'origine et la repose UN PEU PLUS EN AVANT sur le tapis, par-dessus tout le reste : les pieds restent visibles. Papa garde le fauteuil (sa découpe ne change pas).
+
+### Image 1 — le salon sans table (à faire en premier)
+Joindre : `images/refuge-fond-eteint-propre.webp`
+
+> Reprends EXACTEMENT cette image (le salon), même cadrage, même taille, même style, même lumière. Retire UNIQUEMENT la table basse en bois et tout ce qui est posé dessus (lanterne, tasse, livres) : à sa place, on voit simplement le tapis et le plancher qui continuent, avec le même motif. Ne change absolument rien d'autre (canapé, coussins, plaid, fauteuil, cheminée, plantes, bibliothèque, porte, portraits, lampe). Aucun texte.
+
+### Image 2 — Léo et Maman (sur l'image 1)
+Joindre : l'IMAGE 1 (le salon sans table) + `images/portrait-leo.webp`, `images/portrait-maman.webp`
+
+> Reprends EXACTEMENT la première image (le salon sans table basse), même cadrage, même taille, même style, même lumière. Le canapé vert a quatre places de gauche à droite. Ajoute UNIQUEMENT deux personnes assises, séparées par une place vide : l'adolescent du premier portrait sur la DEUXIÈME place, la femme du deuxième portrait sur la QUATRIÈME place (tout à droite). Chacun est assis bien droit, tout entier sur sa place, sans déborder sur la place voisine. Leurs jambes descendent normalement et leurs DEUX pieds sont entièrement visibles, posés à plat sur le tapis devant le canapé, jambes non croisées. L'adolescent lit un livre, la femme tient une tasse. Ne déplace et ne retire aucun coussin ni le plaid, ne change rien d'autre dans la pièce. Aucun texte.
+
+### Image 3 — Emma (sur l'image 1)
+Joindre : l'IMAGE 1 (le salon sans table) + `images/portrait-emma.webp`
+
+> Reprends EXACTEMENT la première image (le salon sans table basse), même cadrage, même taille, même style, même lumière. Le canapé vert a quatre places de gauche à droite. Ajoute UNIQUEMENT une jeune fille, celle du portrait, assise sur la TROISIÈME place, tout entière sur cette place. Elle serre un coussin contre elle, ses jambes descendent normalement et ses DEUX pieds sont entièrement visibles, posés à plat sur le tapis devant le canapé. Ne déplace et ne retire aucun coussin ni le plaid, ne change rien d'autre dans la pièce. Aucun texte.
