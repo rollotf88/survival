@@ -2700,3 +2700,5 @@ body.pc .tigre-btn{padding-left:10px;padding-right:10px}
 .cc-l img,.cc-l svg,.cc-l .ico{width:26px!important;height:26px!important;object-fit:contain}
 .cc-l b{font-size:11px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cc-l small{font-size:10px;color:var(--mut);font-weight:700}
+/* Les pièces : 4 par ligne sur téléphone (2026-11-12) */
+@media (max-width:520px){ .pz-grille{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px} .pz-nom{font-size:11.5px;padding:3px 3px;line-height:1.15} .pz-nom small{display:none} }

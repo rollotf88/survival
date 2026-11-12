@@ -604,16 +604,19 @@ function pastillePiece(P){
 }
 function alertePieces(){ return PIECES.some(function(P, k){ return k !== pieceIdx && pieceVisible(k) && pastillePiece(P); }); }
 function openPieces(){
-  var h = '<h2>' + ic("maisonPavillon", "🏠") + ' Les pièces</h2><div class="pz-grille">';
-  PIECES.forEach(function(P, k){
-    if(!pieceVisible(k)) return;
+  // Deux groupes (2026-11-12) : la maison, puis le bastion du clan ; noms courts, 4 tuiles par ligne sur téléphone
+  var tuile = function(P, k){
     var F = P.cadre, cx = ((F.x0 + F.x1) / 2) / P.l * 100, cy = ((F.y0 + F.y1) / 2) / P.h * 100, pa = pastillePiece(P);
-    h += '<button class="pz-v' + (k === pieceIdx ? " ici" : "") + '" data-act="pieceVa2" data-id="' + k + '">'
+    return '<button class="pz-v' + (k === pieceIdx ? " ici" : "") + '" data-act="pieceVa2" data-id="' + k + '">'
       + '<span class="pz-img" style="background-image:url(\'' + imagePiece(P) + '\');background-position:' + cx.toFixed(1) + '% ' + cy.toFixed(1) + '%"></span>'
       + (pa ? '<span class="pz-pastille">' + pa + '</span>' : '')
-      + '<span class="pz-nom">' + P.nom.replace(/^Bastion · /, "Bastion : ") + (k === pieceIdx ? ' <small>(ici)</small>' : '') + '</span></button>';
-  });
-  show(h + '</div>' + BTN_FERMER());
+      + '<span class="pz-nom">' + majuscule(P.nom.replace(/^Bastion · /, "")) + (k === pieceIdx ? ' <small>(ici)</small>' : '') + '</span></button>';
+  };
+  var maison = "", bastion = "";
+  PIECES.forEach(function(P, k){ if(!pieceVisible(k)) return; if(P.id.indexOf("bastion") === 0) bastion += tuile(P, k); else maison += tuile(P, k); });
+  var h = '<h2>' + ic("maisonPavillon", "🏠") + ' Les pièces</h2>' + (bastion ? '<p class="titre-butin">La maison</p>' : '') + '<div class="pz-grille">' + maison + '</div>';
+  if(bastion) h += '<p class="titre-butin">' + ic("bastion", "🏰") + ' Le bastion du clan</p><div class="pz-grille">' + bastion + '</div>';
+  show(h + BTN_FERMER());
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
