@@ -2478,3 +2478,6 @@ body.pc #app .chip.chipson .chip-lbl{grid-row:1 / span 2;align-self:center}
   .pk [data-act="adstart"]{min-height:50px;align-self:stretch;font-size:15px;padding:0 16px}
   .pk [data-act="adstart"] .ico,.pk [data-act="adstart"] img.emo{width:20px;height:20px;vertical-align:-4px}
 }
+/* Écran d'histoire sur PC : 3 pastilles sur une ligne, « Une famille de 4 » seulement sur téléphone (2026-11-12) */
+@media (min-width:1100px) and (min-height:620px){ .ir-puces .ir-famille{display:none} }
+@media (min-width:1100px) and (max-width:1300px) and (min-height:620px){ .panneau.intro .ir-puces{gap:4px} .panneau.intro .ir-puces span{font-size:12px;padding:3px 7px} }

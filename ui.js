@@ -1272,7 +1272,7 @@ function rIntro(){
     + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
-    + '<div class="ir-puces"><span>👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span><span>🎲 Événements uniques</span></div></div>'
+    + '<div class="ir-puces"><span class="ir-famille">👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span><span>🎲 Événements uniques</span></div></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
     + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button></div>';
