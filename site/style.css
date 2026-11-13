@@ -2817,3 +2817,14 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 @keyframes avLegLueur{0%,100%{box-shadow:0 0 0 2px #7a4a00,0 0 6px 1px rgba(247,201,72,.55)}50%{box-shadow:0 0 0 2px #7a4a00,0 0 14px 4px rgba(247,201,72,.9)}}
 .classement li .av-leg,.mc-m-b .av-leg,.clan-m .av-leg,.ch-l .av-leg,.gu-c .av-leg{margin-top:6px}
 @media (prefers-reduced-motion:reduce){.av-img.av-leg,.av-img.av-leg::before,.av-leg-cour{animation:none}}
+
+/* Titre peint (2026-11-13) : l'image « SURVIVAL » + le sous-titre écrit sur le panneau en bois */
+.titre-peint{position:relative;display:block;width:min(88vw,380px);margin:0 auto;container-type:inline-size;line-height:0;font-size:0}
+.titre-peint img{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+.titre-peint .tp-sous{position:absolute;left:50.2%;top:87%;transform:translate(-50%,-50%);white-space:nowrap;line-height:1;
+  font-family:Bangers,system-ui,sans-serif;font-weight:400;letter-spacing:.06em;font-size:5.6cqw;color:#3b230f;text-shadow:0 1px 0 rgba(255,220,170,.55)}
+.tetejeu:has(> .titre-peint){display:block;margin-bottom:6px}
+.accueil > .titre-peint{width:min(80vw,340px);margin-bottom:8px}
+@media (max-height:700px) and (orientation:portrait){ .titre-peint{width:min(70vw,280px)} }
+@media (orientation:landscape) and (max-height:500px){ .titre-peint{width:min(40vw,240px)} .accueil > .titre-peint{width:min(36vw,220px)} }
+@media (min-width:1100px) and (min-height:620px){ .panneau.intro .tetejeu .titre-peint{width:min(100%,460px);margin:0} }

@@ -1349,8 +1349,11 @@ document.addEventListener("keydown", function(e){
   if(!document.getElementById("vitrine") || /INPUT|TEXTAREA/.test((e.target || {}).tagName || "")) return;
   if(e.key === "ArrowRight") decalerVitrine(1); else if(e.key === "ArrowLeft") decalerVitrine(-1);
 });
+// Titre peint (2026-11-13, Leonardo, détouré) : « SURVIVAL » en planches clouées ; le sous-titre est écrit par le jeu
+// sur le panneau en bois vide, pour pouvoir être traduit (le panneau est entre 24 % et 76 % de la largeur, vers 87 % de la hauteur)
+function titrePeint(){ return '<h1 class="titre-peint"><img src="images/titre-survival.webp" alt="SURVIVAL"><span class="tp-sous">Le dernier refuge</span></h1>'; }
 function rIntro(){
-  $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
+  $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu">' + titrePeint() + '</div>'
     + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
     + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
     + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
@@ -1673,7 +1676,7 @@ if(enCours){
   // Sur PC (2026-11-11, retour de Fabien : « fait encore trop mobile ») : un grand panneau en deux colonnes comme l'écran d'histoire
   if(window.matchMedia && matchMedia("(min-width:1100px) and (min-height:620px)").matches){
     document.body.classList.remove("accueil-ouvert");
-    $("app").innerHTML = '<div class="panneau intro accueil-pc"><div class="tetejeu"><img class="logo" src="images/logo.webp" alt=""><div><h1 class="titrejeu">SURVIVAL</h1><p class="sub">Le dernier refuge</p></div></div>'
+    $("app").innerHTML = '<div class="panneau intro accueil-pc"><div class="tetejeu">' + titrePeint() + '</div>'
       + '<div class="intro-recit"><div class="acc-carte"><p class="mf-titre">' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + '</p>'
       + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
       + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div></div>'
@@ -1682,7 +1685,7 @@ if(enCours){
     lancerVitrine();
     if(typeof poserMonde === "function") poserMonde();
   } else {
-  $("app").innerHTML = '<div class="accueil"><img class="logo grand" src="images/logo.webp" alt=""><h1>SURVIVAL</h1><p class="sub">Le dernier refuge</p>' + vitrine() + '</div>';
+  $("app").innerHTML = '<div class="accueil">' + titrePeint() + '' + vitrine() + '</div>';
   lancerVitrine();
   // Téléphone (2026-11-11, raccord avec la DA) : carte de la partie (jour en grand, score, famille en portraits), gros bouton, deux boutons côte à côte
   window.htmlAccueil = '<div class="acc-mob"><div class="acc-carte"><p class="mf-titre acc-titre"><span>Partie en cours</span><span class="acc-type">' + (enCours.seed ? "🏆 Classée · " + dateGraine(enCours.seed) : "🎲 Libre") + '</span></p>'
