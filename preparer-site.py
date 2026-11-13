@@ -14,7 +14,7 @@ for f in FICHIERS: shutil.copy(f, "site/" + f)
 for f in os.listdir("images"):
     if f.endswith((".webp", ".png")): shutil.copy("images/" + f, "site/images/" + f)
 # Illustrations des lieux et des événements (sous-dossiers)
-for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie"]:
+for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie", "lampes"]:
     if os.path.isdir("images/" + sd):
         os.makedirs("site/images/" + sd)
         for f in os.listdir("images/" + sd):

@@ -667,6 +667,24 @@ var FEUX_PIECE = {
   });
 })();
 
+/* ---------- Lampes à pétrole (2026-11-13, idée de Fabien : plus d'électricité dans le monde du jeu) ----------
+   Les ampoules allumées du salon, de l'atelier, du garage et de la réserve sont recouvertes par une lampe à pétrole
+   suspendue et sa lueur, découpées dans des retouches Gemini calées au pixel près sur chaque pièce (images/lampes/).
+   Posées tout en dessous des autres décors (elles ne touchent rien d'autre). Le garage réparé a le même cadrage. */
+var LAMPES_PIECE = {
+  salon:   ["images/lampes/salon.webp",   400, 0, 640, 205],
+  atelier: ["images/lampes/atelier.webp", 400, 0, 640, 205],
+  garage:  ["images/lampes/garage.webp",  300, 60, 470, 352],
+  reserve: ["images/lampes/reserve.webp", 430, 0, 610, 250]
+};
+(function(){
+  Object.keys(LAMPES_PIECE).forEach(function(id){
+    var P = PIECES.find(function(p){ return p.id === id; }); if(!P) return;
+    var liste = id === "salon" ? DECOR_PIECE : (P.decor = P.decor || []);
+    liste.unshift(LAMPES_PIECE[id].concat([function(){ return true; }])); // toujours allumée
+  });
+})();
+
 /* ---------- La famille dans la chambre (2026-11-11, idée de Fabien ; premier essai) ----------
    Un membre trop fatigué pour sortir se repose dans SON lit (Papa : matelas de gauche, Maman : de droite,
    Léo : lit du bas, Emma : lit du haut). Chaque lit occupé est un morceau découpé dans une retouche Gemini de la

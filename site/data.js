@@ -6,7 +6,7 @@
 
 /* Icône d'un objet. Pour l'instant un emoji ; plus tard on renverra ici
    une image ou un SVG, sans toucher au reste du code. */
-function icone(id){ return typeof ICONES_SVG !== "undefined" && ICONES_SVG[id] ? svgIcone(id) : OBJETS[id].icone; }
+function icone(id){ return typeof ICONES_SVG !== "undefined" && (ICONES_SVG[id] || (typeof ICONES_IMG !== "undefined" && ICONES_IMG[id])) ? svgIcone(id) : OBJETS[id].icone; } // une icône peinte suffit (ex. cocktail, sans dessin en code)
 // Pareil pour les membres de la famille (les recrues gardent leur emoji) et les zombies
 var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma", "Sam":"sam", "Nora":"nora", "Inès":"ines", "Yanis":"yanis" };
 // Icône dessinée k si elle existe, sinon l'emoji donné
