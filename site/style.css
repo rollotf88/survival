@@ -2828,3 +2828,9 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 @media (max-height:700px) and (orientation:portrait){ .titre-peint{width:min(70vw,280px)} }
 @media (orientation:landscape) and (max-height:500px){ .titre-peint{width:min(40vw,240px)} .accueil > .titre-peint{width:min(36vw,220px)} }
 @media (min-width:1100px) and (min-height:620px){ .panneau.intro .tetejeu .titre-peint{width:min(100%,460px);margin:0} }
+/* Titre peint plus petit et centré sur PC (2026-11-13, retour de Fabien) */
+.titre-peint{width:min(76vw,320px)}
+.accueil > .titre-peint{width:min(68vw,270px)}
+@media (max-height:700px) and (orientation:portrait){ .titre-peint{width:min(62vw,240px)} .accueil > .titre-peint{width:min(60vw,230px)} }
+@media (orientation:landscape) and (max-height:500px){ .titre-peint{width:min(34vw,210px)} .accueil > .titre-peint{width:min(32vw,190px)} }
+@media (min-width:1100px) and (min-height:620px){ .panneau.intro .tetejeu .titre-peint{width:min(86%,380px);margin:0 auto} }
