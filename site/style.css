@@ -2834,3 +2834,24 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 @media (max-height:700px) and (orientation:portrait){ .titre-peint{width:min(62vw,240px)} .accueil > .titre-peint{width:min(60vw,230px)} }
 @media (orientation:landscape) and (max-height:500px){ .titre-peint{width:min(34vw,210px)} .accueil > .titre-peint{width:min(32vw,190px)} }
 @media (min-width:1100px) and (min-height:620px){ .panneau.intro .tetejeu .titre-peint{width:min(86%,380px);margin:0 auto} }
+
+/* ---------- Survol à la souris (2026-11-13, retour de Fabien : les boutons manquaient de réaction) ----------
+   Seulement avec une souris (pas sur téléphone, où le survol reste « collé » après un toucher).
+   Tout ce qui se touche : curseur main + un peu plus lumineux ; les vrais boutons se soulèvent de 2 px avec une ombre plus marquée. */
+@media (hover:hover) and (pointer:fine){
+  button:not(:disabled), [data-act]{cursor:pointer}
+  button:disabled{cursor:not-allowed}
+  .btn, .loc, .tab, .menugrille .mt, .mf-a, .inv-t, .carte-lieu, .act, .islot, .bd-case, .mr, .sc-m, .gu-c .btn, .lien, .ch-btn{transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, border-color .12s ease}
+  button:not(:disabled):hover, [data-act]:not(button):hover{filter:brightness(1.08)}
+  .btn:not(:disabled):hover, .loc:not(:disabled):hover, .menugrille .mt:hover, .mf-a:not(:disabled):hover, .inv-t:hover,
+  .carte-lieu:not(:disabled):hover, .act:not(:disabled):hover, .bd-case:hover, .mr:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--bois), 0 8px 16px rgba(30,15,5,.22)}
+  .loc:not(:disabled):hover, .menugrille .mt:hover, .carte-lieu:not(:disabled):hover, .bd-case:hover, .inv-t:hover{border-color:#c98a2a}
+  .tab:not(.on):hover{border-color:#c98a2a;transform:translateY(-1px)}
+  .islot[data-act]:hover{transform:translateY(-2px) scale(1.04)}
+  .sc-m:hover .sc-med{transform:scale(1.06)}
+  .lien:hover{text-decoration:underline}
+  .btn:not(:disabled):active, .loc:not(:disabled):active, .menugrille .mt:active, .mf-a:active, .carte-lieu:not(:disabled):active, .act:active, .bd-case:active, .mr:active{transform:translateY(1px);box-shadow:0 1px 0 var(--bois)}
+}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:reduce){
+  .btn:hover, .loc:hover, .menugrille .mt:hover, .mf-a:hover, .inv-t:hover, .carte-lieu:hover, .act:hover, .bd-case:hover, .mr:hover, .tab:hover, .islot:hover{transform:none!important}
+}
