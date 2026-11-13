@@ -752,7 +752,7 @@ var TABLE_SALON = ["images/personnages/table-basse-avant.webp", 348, 606, 671, 7
 // Papa, Léo et Emma ajoutés le 2026-11-12 (images Gemini, cuisine identique : découpe par différence, casserole comprise).
 // Qui cuisine : celui qui a le trait « Cuisinier », sinon Maman, Papa, Léo, Emma, puis les recrues (dans cet ordre)
 var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"], "Papa":[140, 234, 464, 777, "cuisine-papa"],
-  "Léo":[140, 227, 468, 779, "cuisine-leo"], "Emma":[140, 237, 479, 780, "cuisine-emma"],
+  "Léo":[140, 331, 433, 760, "cuisine-leo"], "Emma":[140, 303, 459, 800, "cuisine-emma"], // refaits le 2026-11-13 à leur vraie taille d'enfants (Emma sur une caisse)
   // Recrues (2026-11-12, images Gemini redessinées : découpe au contour, guidée par les silhouettes de la famille)
   "Yanis":[118, 218, 495, 773, "cuisine-yanis"], "Sam":[118, 218, 495, 773, "cuisine-sam"],
   "Inès":[118, 217, 495, 773, "cuisine-ines"], "Nora":[118, 217, 495, 773, "cuisine-nora"] };
