@@ -1829,3 +1829,15 @@ function basculerSon(){
   try{ localStorage.setItem("survival_son", sonActif ? "oui" : "non"); }catch(e){}
   render();
 }
+
+/* ---------- Toucher le voile sombre autour d'une fenêtre (téléphone, 2026-11-14, signalé par Fabien) ----------
+   Avant, le voile couvrait aussi le bouton ☰ du haut : le toucher ne faisait rien, le menu « ne s'ouvrait pas ».
+   Maintenant, sur une fenêtre qu'on peut fermer : toucher le ☰ (sous le voile) ferme la fenêtre et ouvre le menu,
+   toucher ailleurs sur le voile ferme la fenêtre. Les fenêtres sans bouton Fermer (combat, événement, nuit…) ne bougent pas. */
+document.addEventListener("click", function(e){
+  var m = $("modal"); if(e.target !== m || !G || G.ph !== "game" || document.body.classList.contains("pc")) return;
+  var croix = $("sheet") && $("sheet").querySelector('[data-act="close"]'); if(!croix) return;
+  var dessous = document.elementsFromPoint(e.clientX, e.clientY).some(function(el){ return el.closest && el.closest('[data-act="menu"]') && !el.closest("#modal"); });
+  croix.click();
+  if(dessous && typeof openMenu === "function") setTimeout(function(){ if($("modal").style.display === "none"){ confirmerNouvelle = false; openMenu(); } }, 30);
+});

@@ -268,9 +268,18 @@ function remplirMonde(){
     var montrer = function(){ if(!document.getElementById("m-fil")){ clearInterval(minuteurFil); return; } p.classList.remove("on"); setTimeout(function(){ p.innerHTML = fil[k % fil.length]; p.classList.add("on"); k++; }, 250); };
     clearInterval(minuteurFil); montrer(); if(fil.length > 1) minuteurFil = setInterval(montrer, 4000);
   };
+  // 2026-11-14 (signalé par Fabien : parfois « – » partout) : les derniers chiffres connus s'affichent tout de suite,
+  // et la réponse du serveur est attendue 8 s au plus (sinon tes propres chiffres, au lieu de rester bloqué)
+  var cache = null; try{ cache = JSON.parse(localStorage.getItem("survival_monde_cache")); }catch(e){}
+  if(cache && cache.survivants !== undefined) poser(cache);
+  var fini = false, delai = setTimeout(function(){ if(!fini){ fini = true; if(!cache) poser(null); } }, 8000);
   try{
-    fetch(adresseMonde()).then(function(r){ return r.json(); }).then(function(d){ poser(d && d.survivants !== undefined ? d : null); }).catch(function(){ poser(null); });
-  }catch(e){ poser(null); }
+    fetch(adresseMonde(), { cache:"no-store" }).then(function(r){ return r.json(); }).then(function(d){
+      fini = true; clearTimeout(delai); // même en retard, les vrais chiffres remplacent ce qui est affiché
+      if(d && d.survivants !== undefined){ try{ localStorage.setItem("survival_monde_cache", JSON.stringify(d)); }catch(e){} poser(d); }
+      else if(!cache) poser(null);
+    }).catch(function(){ if(fini) return; fini = true; clearTimeout(delai); if(!cache) poser(null); });
+  }catch(e){ if(!cache) poser(null); }
 }
 // Le chiffre monte de 0 à sa valeur (compteur animé)
 function compterJusque(b, n){
@@ -284,7 +293,10 @@ function poserMonde(){
   var pl = document.querySelector(".monde-place"); if(!pl) return;
   pl.outerHTML = panneauMonde(pl.getAttribute("data-compact") === "1");
   var dejaEnvoye = false; try{ dejaEnvoye = !!localStorage.getItem("survival_monde_t"); }catch(e){}
-  envoyerMonde(!dejaEnvoye).then(remplirMonde, remplirMonde);
+  // Les chiffres s'affichent tout de suite ; on les relit une fois l'envoi de sa partie fait (s'il répond dans les 8 s)
+  remplirMonde();
+  var relu = false, relire = function(){ if(!relu){ relu = true; remplirMonde(); } };
+  envoyerMonde(!dejaEnvoye).then(relire, relire); setTimeout(function(){ relu = true; }, 8000);
 }
 poserMonde(); // l'accueil a pu s'afficher avant le chargement de ce fichier
 
