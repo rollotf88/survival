@@ -30,7 +30,8 @@ var IMAGES_LIEUX = { "Forêt":"foret", "Maison voisine":"maison", "Rue des pavil
   "Quincaillerie":"quinc", "Station-service":"station", "Étang":"etang", "Garage auto":"garage",
   "Commissariat":"police", "Zone industrielle":"indus", "Centre commercial":"centre", "Village voisin":"village",
   "Entrepôt logistique":"entrepot", "Base militaire":"base", "École Jules-Ferry":"ecole", "Caserne des pompiers":"caserne",
-  "Péniche du canal":"peniche", "Camping des Pins":"camping", "Clinique vétérinaire":"clinique", "Bunker du survivaliste":"bunker" };
+  "Péniche du canal":"peniche", "Camping des Pins":"camping", "Clinique vétérinaire":"clinique", "Bunker du survivaliste":"bunker",
+  "Zoo abandonné":"zoo", "Aéroport":"aeroport", "Prison":"prison", "Centrale électrique":"centrale" };
 function imageLieu(L){ return typeof ICONES_SVG !== "undefined" && IMAGES_LIEUX[L.nom] ? "images/lieux/" + IMAGES_LIEUX[L.nom] + ".webp" : null; }
 // Petite vignette pour la liste des lieux (sinon l'icône dessinée)
 function vignetteLieu(L){ var i = imageLieu(L); return i ? '<img class="vign" src="' + i + '" alt="">' : iconeLieu(L); }
@@ -45,7 +46,7 @@ function iconeMembre(x, sansBadges){
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
-var SPRITES_ZOMBIES = { rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:1, mariee:1, pompier:1, boucher:1 };
+var SPRITES_ZOMBIES = { pilleur:1, couveuse:1, rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:1, mariee:1, pompier:1, boucher:1 };
 function spriteZombie(z){ var s = SPRITES_ZOMBIES[z.id]; return typeof ICONES_SVG !== "undefined" && s ? (typeof s === "string" ? s : "images/zombies/" + z.id + ".webp") : null; }
 function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
@@ -331,7 +332,13 @@ var ZOMBIES = [
   { id:"mariee",  nom:"La Mariée",  icone:"👰", pv:30, degats:[6, 10], jour:99999, poids:0, coups:2, celebre:true, desc:"Zombie célèbre : dans sa robe déchirée, elle court plus vite que tout le monde et frappe deux fois." },
   { id:"pompier", nom:"Le Pompier", icone:"🧑‍🚒", pv:42, degats:[8, 13], jour:99999, poids:0, armure:2, lourd:true, celebre:true, desc:"Zombie célèbre : son casque et sa veste arrêtent les coups (armure 2), il écrase la protection. Visez la tête !" },
   { id:"boucher", nom:"Le Boucher", icone:"🔪", pv:36, degats:[10, 16], jour:99999, poids:0, celebre:true, desc:"Zombie célèbre : il frappe plus fort que tous les autres. Mieux vaut se protéger ou le repousser." },
-  { id:"colosse", nom:"Colosse", icone:"🧟‍♂️", pv:45, degats:[9, 15], jour:99999, poids:0, lourd:true, armure:1, desc:"Le monstre du toit de l’immeuble : énorme, il écrase la protection et encaisse énormément. Visez la tête !" }
+  { id:"colosse", nom:"Colosse", icone:"🧟‍♂️", pv:45, degats:[9, 15], jour:99999, poids:0, lourd:true, armure:1, desc:"Le monstre du toit de l’immeuble : énorme, il écrase la protection et encaisse énormément. Visez la tête !" },
+  // Zombies de fin de partie (2026-11-14) : jamais dans un assaut ni dans le raid (horsGuerre).
+  // attente:true = pas encore d'image, il n'apparaît pas tant que l'image n'est pas là
+  { id:"pilleur", nom:"Pilleur", icone:"🎒", pv:7, degats:[2, 4], jour:30, poids:1, vole:2, horsGuerre:true, desc:"Il ne mord pas : il arrache 2 objets de votre butin, puis s’enfuit au tour suivant. Abattez-le (ou repoussez-le) avant : vous récupérez tout." },
+  { id:"couveuse", nom:"Couveuse", icone:"🪺", pv:20, degats:[0, 0], jour:45, poids:1, pond:3, horsGuerre:true, desc:"Elle ne mord pas, mais un tour sur deux un Rampant sort de son ventre (3 au plus). À viser en premier ; le feu lui fait deux fois plus mal." },
+  { id:"brule", nom:"Brûlé", icone:"🔥", pv:11, degats:[5, 9], jour:55, poids:1, ignifuge:true, brule:2, horsGuerre:true, attente:true, desc:"Le feu ne lui fait rien, et frapper au corps à corps brûle (−2 PV). Mieux vaut une arme à feu." },
+  { id:"gorille", nom:"Gorille", icone:"🦍", pv:28, degats:[7, 12], jour:99999, poids:0, lourd:true, deuxCibles:true, horsGuerre:true, attente:true, desc:"Un gorille du zoo devenu zombie : il frappe deux personnes à la fois et ne recule presque jamais. On ne le croise qu’au zoo." }
 ];
 function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }
 var DISTANCES = ["", "🚶 Près", "🚶 Moyen", "🚶 Loin", "🚗 Éloigné", "🚗 Très éloigné"];
@@ -573,6 +580,22 @@ var LIEUX = [
 // La forêt (ajoutée à la fin pour ne pas décaler les sauvegardes) : du bois avec une hache, mais des zombies entre les arbres
 LIEUX.push({ nom:"Forêt", icone:"🌲", danger:0.40, distance:2, jour:5, bois:true,
   butin:{ bouteille:1, couverture:1, alcool:1, chiffon:1 } });
+// Lieux de fin de partie (2026-11-14) : riches mais très dangereux, découverts comme les lieux secrets.
+// zombies : poids en plus pour certains zombies dans ce lieu ; gorille : chance qu'un gorille du zoo soit là
+LIEUX.push(
+  { nom:"Zoo abandonné", icone:"🦁", danger:0.6, distance:2, secret:50, gorille:0.35,
+    indice:"📻 Une voix fatiguée à la radio : « Au zoo, les réserves des soigneurs sont intactes… mais quelque chose rôde entre les enclos. »",
+    butin:{ conserve:8, riz:2, pates:4, bouteille:8, bidon:1, trousse:2, antibio:1, bandage:3, couverture:1, chiffon:3, ferraille:2, planche:6, alcool:2 } },
+  { nom:"Aéroport", icone:"✈️", danger:0.65, distance:4, voiture:true, secret:65, zombies:{ coureur:2, pilleur:2 },
+    indice:"Un avion de ligne est passé très bas au-dessus de la ville avant de se poser au loin. Personne n’en est ressorti.",
+    butin:{ jerrican:5, bouteille:10, biscuits:6, barre:6, conserve:6, sacados:1, randonnee:1, cartes:1, peluche:1, trousse:1, pile:3, canette:3 } },
+  { nom:"Prison", icone:"🔒", sombre:true, verrou:true, danger:0.75, distance:3, secret:75, zombies:{ costaud:3, soldat:3 },
+    indice:"Des coups de feu, la nuit, du côté de la prison. Puis plus rien. L’armurerie des gardiens est peut-être encore pleine.",
+    butin:{ pistolet:1, fusil:1, boiteBalles:3, boiteCart:2, barrefer:2, batte:1, gilet:2, casque:2, bouclier:2, conserve:6, bouteille:6, trousse:2 } },
+  { nom:"Centrale électrique", icone:"⚡", sombre:true, verrou:true, danger:0.85, distance:5, voiture:true, secret:85, zombies:{ couveuse:3, rampant:2 },
+    indice:"Sur une carte d’ingénieur, la centrale est entourée : « pièces de rechange, entrepôt B ». Des cocons tapissent ses sous-sols, dit-on.",
+    butin:{ batterie:1, ferraille:8, ruban:4, clous:6, pile:6, planche:8, alcool:2, trousse:1, bidon:2, ration:4 } }
+);
 /* ---------- Rencontres en chemin (façon « livre dont vous êtes le héros ») ----------
    Pendant une fouille, au hasard (au plus une par jour, chacune une fois par partie). Chaque rencontre a des
    « nœuds » : un texte et des choix. Un choix peut avoir une chance de réussite (bonus si un membre de l'équipe a

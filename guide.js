@@ -79,7 +79,7 @@ function reglesGuide(){
       "Elle compte environ " + B.foret.arbres + " planches en tout, et les arbres ne repoussent pas. Chaque sortie use la hache (−" + B.foret.usure + "), et des zombies rôdent entre les arbres : la hache est aussi ta meilleure arme, ménage-la."],
     ["Le monde bouge", "🏴",
       "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. À partir du jour " + B.caches.jour + ", il arrive aussi que des pillards en fuite abandonnent une cache (" + B.caches.taille[0] + " à " + B.caches.taille[1] + " objets) dans un lieu presque vide : écoute la radio et le bilan de la nuit. " +
-      "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. " +
+      "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. Les familles qui tiennent longtemps découvrent aussi des lieux de fin de partie, très riches mais très dangereux : le zoo abandonné (jour 50), l’aéroport (65), la prison (75) et la centrale électrique (85). " +
       "Des missions arrivent aussi, avec un délai : livrer un objet ou aller secourir quelqu’un. Le bouton 🎯 en bas de l’écran les montre."],
     ["La nuit", ic("lune", "🌙"),
       "Des zombies peuvent attaquer, de plus en plus fort avec les jours. Ta défense = armes en main + barricade (+" + B.defenseBarricade + " par niveau) + piège + Rex. " +
@@ -183,7 +183,7 @@ function sansAccents(t){ return String(t).toLowerCase().normalize("NFD").replace
 function tuileGuide(act, id, ico, nom, q, extra){
   return '<button class="gtuile' + (extra || "") + '" data-act="' + act + '" data-id="' + id + '" data-q="' + sansAccents(nom + " " + (q || "")).replace(/"/g, "") + '">' + ico + '<small>' + nom + '</small></button>';
 }
-function zombiesGuide(){ return ZOMBIES.filter(function(z){ return z.jour < 1000 || z.id === "colosse" || z.celebre; }); }
+function zombiesGuide(){ return ZOMBIES.filter(function(z){ return (z.jour < 1000 || z.id === "colosse" || z.id === "gorille" || z.celebre) && !z.attente; }); }
 function openGuide(){
   var h = '<h2>📖 Guide du survivant</h2><div class="tabs onglets">' + ONGLETS_GUIDE.map(function(o){ return '<button class="tab' + (o[0] === guideOnglet ? " on" : "") + '" data-act="gonglet" data-id="' + o[0] + '">' + o[1] + '<small>' + o[2] + '</small></button>'; }).join("") + '</div>';
   var V = guideVue, retour = "";

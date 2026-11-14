@@ -2881,3 +2881,9 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .hg-t{flex:1;min-width:0}.hg-t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hg-t small{font-size:12px;color:var(--mut)}
 .hg-r{flex:none;text-align:right}.hg-r b{display:block;font-size:13px}.hg-c.ok .hg-r b{color:#9a6512}.hg-c.ko .hg-r b{color:var(--bad)}
 .hg-r small{font-size:12px;font-weight:900}.hg-r small.plus{color:var(--ok)}.hg-r small.moins{color:var(--bad)}
+
+/* Pilleur qui s'enfuit (2026-11-14) : il quitte la scène */
+.zc.fui{opacity:0;pointer-events:none}
+.zc.fui.part{animation:zFuit .9s ease-in forwards}
+@keyframes zFuit{0%{opacity:1;transform:none}100%{opacity:0;transform:translateX(140%) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.zc.fui.part{animation:none}}

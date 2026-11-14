@@ -552,6 +552,7 @@ function finExpedition(){
     apresCombatCelebre(n);
     if(C.fin === "fuite") mult *= BAL.combat.butinFuite;
   }
+  var vole = butinVole(C);
   // Fouille : on pioche dans la vraie liste du lieu
   var survivants = team.filter(function(x){ return x.al; });
   survivants.forEach(function(x){ exploit(x, "fouilles", 1, n); });
@@ -560,6 +561,7 @@ function finExpedition(){
     + (G.moral >= BAL.moralHaut ? BAL.moralHautFouille : 0)
     - survivants.filter(fou).length;
   nb = Math.max(survivants.length ? 1 : 0, Math.round(nb * mult));
+  if(vole && survivants.length){ nb = Math.max(0, nb - vole); n.push(["b2", "🎒 Les Pilleurs sont partis avec " + vole + " objet" + (vole > 1 ? "s" : "") + " de votre butin."]); }
   // On pioche nb objets ; les ingrédients de cuisine croisés en chemin viennent en plus (ils ne prennent pas la place d'une trouvaille)
   var trouves = [], kb = 0, pris0 = 0;
   while(kb < lieu.butin.length && pris0 < nb){ if(OBJETS[lieu.butin[kb]].cat !== "ingredient") pris0++; kb++; }
@@ -709,10 +711,12 @@ function finirRencontre(){ var r = G.rencontre && G.rencontre.apres; if(r) r.not
    Spécialités (ZOMBIES dans data.js) : coups (frappe plusieurs fois), lourd (dur à pousser, écrase la protection),
    premier (frappe avant l'équipe), hurle (appelle un zombie un tour sur deux), explose (à sa mort), armure. */
 function tirerZombie(sauf){
-  var types = ZOMBIES.filter(function(z){ return G.day >= z.jour && z.id !== sauf; }), total = 0;
-  types.forEach(function(z){ total += z.poids; });
+  var guerre = G.exp && G.exp.guerre, L = G.exp && !guerre && LIEUX[G.exp.lieu], plus = (L && L.zombies) || {};
+  var types = ZOMBIES.filter(function(z){ return G.day >= z.jour && z.id !== sauf && !z.attente && !(guerre && z.horsGuerre); }), total = 0;
+  var poids = function(z){ return z.poids + (plus[z.id] || 0); };
+  types.forEach(function(z){ total += poids(z); });
   var r = hasard() * total;
-  for(var k = 0; k < types.length; k++){ r -= types[k].poids; if(r < 0) return types[k]; }
+  for(var k = 0; k < types.length; k++){ r -= poids(types[k]); if(r < 0) return types[k]; }
   return types[0];
 }
 function nouveauZombie(t){ return { id:t.id, nom:t.nom, icone:t.icone, pv:t.pv, pvMax:t.pv, degats:t.degats }; }
@@ -755,6 +759,9 @@ function creerCombat(){
   for(var k = 0; k < C.maxEnPlus; k++) if(hasard() < Math.min(0.6, G.day * C.zombieEnPlus + (hordeMondiale() ? BAL.horde.zombieEnPlus : 0))) nb++;
   var zs = [];
   for(var k = 0; k < nb; k++) zs.push(nouveauZombie(tirerZombie()));
+  // Zoo : parfois un gorille entre les enclos
+  var Lz = G.exp && !G.exp.guerre && LIEUX[G.exp.lieu], Tg = ZOMBIES.find(function(t){ return t.id === "gorille"; });
+  if(Lz && Lz.gorille && Tg && !Tg.attente && hasard() < Lz.gorille) zs[0] = nouveauZombie(Tg);
   var cel = G.exp && !G.exp.guerre && celebreIci(G.exp.lieu) ? celebre() : null;
   if(cel){ var Tc = ZOMBIES.find(function(t){ return t.id === cel.id; }), zc = nouveauZombie(Tc); zc.pv = cel.pv; zc.pvMax = cel.pvMax; zc.celebre = true; zs.unshift(zc); if(zs.length > 3) zs.length = 3; }
   var pv0 = {}; equipeCombat().forEach(function(x){ pv0[G.m.indexOf(x)] = x.hp; }); // pour le bilan du combat
@@ -820,17 +827,29 @@ function bilanAssaut(){
 }
 function finirAssaut(){ G.exp = null; G.combat = null; }
 function zombiesDebout(){ return G.combat.zombies.filter(function(z){ return z.pv > 0; }); }
+// Objets que les Pilleurs emportent (ceux qui se sont enfuis, ou encore debout quand l'équipe part)
+function butinVole(C){ var n = 0; (C ? C.zombies : []).forEach(function(z){ if(z.vol && (z.pv > 0 || z.fui)) n += z.vol; }); return n; }
 function equipeCombat(){ return G.exp.equipe.map(function(j){ return G.m[j]; }).filter(function(x){ return x.al; }); }
 // Ce que chaque zombie debout va faire ce tour-ci : { t:"mord" | "hurle", c: index du membre visé }
 function preparerIntentions(){
   var C = G.combat, eq = equipeCombat(); if(!eq.length) return;
   zombiesDebout().forEach(function(z){
     var T = typeZombie(z), x = eq[R(0, eq.length - 1)];
-    z.int = { t:T.hurle && C.tour % 2 === 0 ? "hurle" : "mord", c:G.m.indexOf(x) };
+    z.int = { t:T.hurle && C.tour % 2 === 0 ? "hurle" : T.vole ? (z.vol ? "fuit" : "vole") : T.pond ? (C.tour % 2 === 0 && (z.ponte || 0) < T.pond ? "pond" : "attend") : "mord", c:G.m.indexOf(x) };
+    if(T.deuxCibles && eq.length > 1){ var y = eq.filter(function(m){ return m !== x; }); z.int.c2 = G.m.indexOf(y[R(0, y.length - 1)]); }
   });
 }
+// Ce que la bulle et le panneau disent de l'intention d'un zombie (null = mordre, géré par l'affichage)
+function texteIntention(z){
+  var t = z.int && z.int.t;
+  return t === "hurle" ? { bulle:"📢 Va hurler", phrase:"📢 va hurler pour appeler du renfort" }
+    : t === "vole" ? { bulle:"🎒 Va voler", phrase:"🎒 va arracher " + typeZombie(z).vole + " objets de votre butin" }
+    : t === "fuit" ? { bulle:"🏃 Va s’enfuir", phrase:"🏃 va s’enfuir avec ce qu’il a volé : abattez-le vite !" }
+    : t === "pond" ? { bulle:"🪺 Va pondre", phrase:"🪺 un Rampant va sortir de son ventre" }
+    : t === "attend" ? { bulle:"💤 Gonfle", phrase:"💤 gonfle doucement (un Rampant sortira au tour suivant)" } : null;
+}
 // Dégâts maximum qu'un zombie peut faire à un membre ce tour (pour le robot et l'affichage)
-function menaceZombie(z){ var T = typeZombie(z); return z.int && z.int.t === "hurle" ? 0 : z.degats[1] * (T.coups || 1); }
+function menaceZombie(z){ var T = typeZombie(z); return z.int && z.int.t !== "mord" ? 0 : z.degats[1] * (T.coups || 1); }
 // Renvoie { dg, comment, tir } ; une arme à feu use une munition du stock
 function degatsMembre(x){
   var C = BAL.combat, a = x.eq.arme, d = a ? OBJETS[a.id].degats : C.poings, comment = a ? "avec " + nommer(a.id, 1) : "à mains nues", tir = false;
@@ -873,8 +892,19 @@ function actionZombie(z, protege, J){
     else J.push(["", "📢 " + z.nom + " hurle dans le vide."]);
     return;
   }
+  // Pilleur : il vole, puis s'enfuit ; Couveuse : elle pond un Rampant un tour sur deux
+  if(z.int && z.int.t === "vole"){ z.vol = T.vole; J.push(["b2", "🎒 " + z.nom + " fouille vos sacs et y fourre " + T.vole + " objets du butin !"]); return; }
+  if(z.int && z.int.t === "fuit"){ z.fui = true; z.pv = 0; J.push(["b2", "🏃 " + z.nom + " s’enfuit avec " + z.vol + " objets de votre butin !"]); return; }
+  if(z.int && z.int.t === "pond"){
+    if(zombiesDebout().length < C.maxZombies){ var tr = ZOMBIES.find(function(t){ return t.id === "rampant"; }); G.combat.zombies.push(nouveauZombie(tr)); z.ponte = (z.ponte || 0) + 1; J.push(["b2", "🪺 Un Rampant s’extirpe du ventre de " + z.nom + " !"]); }
+    else J.push(["", "🪺 " + z.nom + " se tord, mais rien ne sort."]);
+    return;
+  }
+  if(z.int && z.int.t === "attend"){ J.push(["", "💤 " + z.nom + " gonfle et palpite."]); return; }
   var eq = equipeCombat(); if(!eq.length) return;
   var x = z.int && G.m[z.int.c] && eq.indexOf(G.m[z.int.c]) >= 0 ? G.m[z.int.c] : eq[R(0, eq.length - 1)];
+  var cibles = [x]; if(T.deuxCibles && z.int && G.m[z.int.c2] && eq.indexOf(G.m[z.int.c2]) >= 0 && G.m[z.int.c2] !== x) cibles.push(G.m[z.int.c2]);
+  cibles.forEach(function(x){
   for(var k = 0; k < (T.coups || 1) && x.al; k++){
     var dg = R(z.degats[0], z.degats[1]);
     if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? BAL.assaut.bouclier : C.protection)));
@@ -884,10 +914,11 @@ function actionZombie(z, protege, J){
     J.push(["b2", iconeZombie(z) + " " + z.nom + " frappe " + x.nom + " (−" + dg + " PV)."]);
     blesser(x, dg, J, (z.celebre ? "tué par " + minus(z.nom) : "tué par un " + minus(z.nom)) + " (" + lieu + ")");
   }
+  });
 }
 // Les zombies debout attaquent (fuite ratée : tout le monde, sans intention de hurler)
 function attaqueZombies(protege, J){
-  zombiesDebout().forEach(function(z){ if(z.int && z.int.t === "hurle") z.int.t = "mord"; actionZombie(z, protege, J); });
+  zombiesDebout().forEach(function(z){ if(z.int && (z.int.t === "hurle" || z.int.t === "pond" || z.int.t === "attend")) z.int.t = typeZombie(z).pond ? "attend" : "mord"; actionZombie(z, protege, J); });
 }
 // Raja, le tigre de la Légende du mois (2026-11-12) : une fois par partie (la partie temporaire du raid compte avec la vraie)
 function maisonTigre(){ return typeof G_MAISON !== "undefined" && G_MAISON ? G_MAISON : G; }
@@ -944,7 +975,7 @@ function jouerTour(choix){
     if(c.a === "cocktail" && peutCocktail()){
       retirer("cocktail", 1);
       J.push(["g2", "🔥 " + x.nom + " lance un cocktail Molotov !"]);
-      debout.forEach(function(zz){ var d = R(B.cocktail[0], B.cocktail[1]); zz.pv = Math.max(0, zz.pv - d); J.push(["g2", "🔥 " + zz.nom + " brûle : −" + d + (zz.pv ? "" : ", à terre !")]); if(!zz.pv){ zombieTombe(zz, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); } });
+      debout.forEach(function(zz){ var Tz = typeZombie(zz), d = Tz.ignifuge ? 0 : R(B.cocktail[0], B.cocktail[1]) * (Tz.pond ? 2 : 1); if(!d){ J.push(["b2", "🔥 " + zz.nom + " ne craint pas le feu."]); return; } zz.pv = Math.max(0, zz.pv - d); J.push(["g2", "🔥 " + zz.nom + " brûle : −" + d + (zz.pv ? "" : ", à terre !")]); if(!zz.pv){ zombieTombe(zz, protege, J); if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); } });
       return;
     }
     if(c.a === "pousser"){
@@ -962,6 +993,8 @@ function jouerTour(choix){
       z.pv = Math.max(0, z.pv - dg);
       J.push(["g2", (r.tir ? "🔫 " + x.nom + " " : "⚔️ " + x.nom + " frappe ") + r.comment + " : " + z.nom + " −" + dg + (arm ? " (gilet)" : "") + (z.pv ? "" : ", à terre !")]);
     }
+    if(dg && T.brule && !r.tir){ J.push(["b2", "🔥 " + x.nom + " se brûle en le frappant (−" + T.brule + " PV)."]); blesser(x, T.brule, J, "tué par un brûlé (" + nomLieuCombat() + ")"); }
+    if(dg && !z.pv && z.vol){ J.push(["g2", "🎒 Vous récupérez les " + z.vol + " objets que " + z.nom + " vous avait volés."]); z.vol = 0; }
     if(dg && !z.pv){ zombieTombe(z, protege, J); if(z.celebre) C.tueurCelebre = j; if(!(G.exp && G.exp.guerre && !G.exp.raid)) exploit(x, "zombies", 1, J); }
     userArme(x, J);
     if(r.tir) bruit(J, x);
@@ -980,8 +1013,8 @@ function tourAuto(){
   var menace = function(x){ var m = 0; zs.forEach(function(z){ if(z.int && G.m[z.int.c] === x) m += menaceZombie(z) * (typeZombie(z).lourd ? 1 : 1); }); return m; };
   var pire = 0; zs.forEach(function(z){ pire += menaceZombie(z); });
   if(!(G.exp && G.exp.raid) && eq.some(function(x){ return x.hp <= pire; }) && zs.length > 1 && !(zs.length >= 3 && peutCocktail())) return fuir(); // raid : le bouton Auto ne fuit pas tout seul (le chef décide)
-  // Cible : le Hurleur qui va hurler, sinon le plus faible
-  var vise = zs.filter(function(z){ return z.int && z.int.t === "hurle"; })[0] || zs.slice().sort(function(a, b){ return a.pv - b.pv; })[0];
+  // Cible : le Hurleur qui va hurler, le Pilleur qui va filer, la Couveuse, sinon le plus faible
+  var vise = zs.filter(function(z){ return z.int && (z.int.t === "hurle" || z.int.t === "fuit"); })[0] || zs.filter(function(z){ return typeZombie(z).pond || z.int && z.int.t === "vole"; })[0] || zs.slice().sort(function(a, b){ return a.pv - b.pv; })[0];
   var cible = G.combat.zombies.indexOf(vise), ch = {}, soin = false, feu = false;
   eq.forEach(function(x){
     var j = G.m.indexOf(x), m = menace(x);
@@ -1225,7 +1258,7 @@ function nuitMonde(n){
   }
 }
 // « le Garage auto », « l’Hôpital », « la Zone industrielle »
-var FEMININS_LIEUX = ["Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire", "Forêt"];
+var FEMININS_LIEUX = ["Prison", "Centrale électrique", "Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire", "Forêt"];
 function leLieu(nom){ return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
 function mission(){ return G.mission ? MISSIONS.filter(function(m){ return m.id === G.mission.id; })[0] : null; }
 function texteMission(){ var M = mission(); return M ? M.texte.replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }

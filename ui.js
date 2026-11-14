@@ -319,7 +319,8 @@ function panneauCombat(){
   var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
   h += '<p class="titre-butin">' + (G.exp && G.exp.guerre && !G.exp.raid ? "🛡️ Les défenseurs" : "🧟 En face") + '</p><div class="pz-liste">' + C.zombies.map(function(z){
     var T = typeZombie(z), cib = z.int && G.m[z.int.c];
-    var fait = !z.pv ? "À terre" : C.fin ? "" : z.int && z.int.t === "hurle" ? "📢 va hurler pour appeler du renfort" : cib ? "🦷 va attaquer " + cib.nom + " (" + z.degats[0] + "-" + z.degats[1] + ")" : "";
+    var ti = texteIntention(z);
+    var fait = z.fui ? "S’est enfui" : !z.pv ? "À terre" : C.fin ? "" : ti ? ti.phrase : cib ? "🦷 va attaquer " + cib.nom + " (" + z.degats[0] + "-" + z.degats[1] + ")" : "";
     return '<div class="pz' + (z.pv ? "" : " mort") + '"><span class="pz-ico">' + iconeZombie(z) + '</span><span class="pz-txt"><b>' + z.nom + '</b> <small>' + z.pv + '/' + z.pvMax + ' PV</small>'
       + '<span class="zpv"><i style="width:' + Math.round(z.pv / z.pvMax * 100) + '%"></i></span>' + (fait ? '<small class="pz-fait">' + fait + '</small>' : '') + '<small>' + T.desc + '</small></span></div>';
   }).join("") + '</div>';
@@ -397,15 +398,16 @@ function openCombat(){
   var touche = false;
   // La scène : le décor du lieu, les zombies debout dessus, la bulle de ce que chacun va faire
   var zs = C.zombies.map(function(z, k){
-    var T = typeZombie(z), avant = dernierPV && dernierPV.z[k] !== undefined ? dernierPV.z[k] : z.pv, perte = avant - z.pv;
+    var T = typeZombie(z), avant = dernierPV && dernierPV.z[k] !== undefined ? dernierPV.z[k] : z.pv, perte = z.fui ? 0 : avant - z.pv, part = z.fui && avant > 0;
     var bulle = "";
     if(z.pv && !fini && z.int){
       var cib = G.m[z.int.c];
-      bulle = z.int.t === "hurle" ? '<span class="zint hurle">📢 Va hurler</span>'
-        : '<span class="zint">' + (T.premier ? "⚡" : "🦷") + (T.coups ? "×" + T.coups : "") + " " + (cib ? cib.nom : "?") + '<small>' + z.degats[0] + "-" + z.degats[1] + '</small></span>';
+      var ti = texteIntention(z), c2 = G.m[z.int.c2];
+      bulle = ti ? '<span class="zint hurle">' + ti.bulle + '</span>'
+        : '<span class="zint">' + (T.premier ? "⚡" : "🦷") + (T.coups ? "×" + T.coups : "") + " " + (cib ? cib.nom : "?") + (c2 ? " + " + c2.nom : "") + '<small>' + z.degats[0] + "-" + z.degats[1] + '</small></span>';
     }
     var sp = spriteZombie(z);
-    return '<button class="zc' + (sp ? " sprite z-" + z.id : "") + (z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (perte > 0 ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + ' aria-label="' + z.nom + ', ' + z.pv + ' PV">'
+    return '<button class="zc' + (sp ? " sprite z-" + z.id : "") + (z.fui ? " fui" + (part ? " part" : "") : z.pv ? "" : " mort") + (k === cibleCombat && z.pv && !fini ? " vise" : "") + (perte > 0 ? " coup" : "") + '" data-act="cible" data-id="' + k + '"' + (z.pv && !fini ? "" : " disabled") + ' aria-label="' + z.nom + ', ' + z.pv + ' PV">'
       + bulle + (sp ? '<span class="zs"><img src="' + sp + '" alt=""></span>' : '<span class="zp">' + iconeZombie(z) + '</span>')
       + '<span class="zn">' + z.nom + (T.armure ? " 🦺" : "") + '</span>'
       + '<span class="zpv"><i style="width:' + Math.round(z.pv / z.pvMax * 100) + '%"></i></span>'
@@ -1299,7 +1301,7 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 /* ---------- Vitrine : ce qui attend le joueur (cartes illustrées qui défilent toutes seules) ---------- */
 var VITRINE = [
   ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
-  ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps."],
+  ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps, jusqu’au zoo abandonné et à la prison."],
   ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège, et des zombies célèbres à traquer."],
   ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
   ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
