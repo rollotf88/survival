@@ -860,6 +860,12 @@ async function adminPost(request, env){
       return repAdmin({ ok: true, version: 1, t: now, donnees });
     }
     case "avis": return repAdmin({ avis: await lireAvis(env) });
+    // Test de l'envoi d'e-mail (2026-11-14) : renvoie la réponse du programme d'envoi du serveur
+    case "testMail": {
+      if(!env.NOTIFIER) return repAdmin({ erreur: "Ce serveur ne sait pas envoyer d’e-mail." });
+      const r = await env.NOTIFIER("✉️ Test d’e-mail ZOMBRIA", "Si tu lis ceci, les e-mails des avis et des signalements arrivent bien.\n\nEnvoyé depuis l’administration le " + new Date(now).toISOString());
+      return repAdmin({ ok: true, envoi: r || null });
+    }
     // Cadeau de l'équipe (2026-11-14) : objets + message, rangés dans « cadeau_<id> » et remis au joueur par /api/cadeau
     case "cadeauEnvoyer": {
       const cible = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);

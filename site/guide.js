@@ -141,7 +141,23 @@ function caracteristiques(o){
 var guideOnglet = "regles", confirmerNouvelle = false;
 var ONGLETS_GUIDE = [["regles","📜","Règles"],["objets","🎒","Objets"],["lieux","🗺️","Lieux"],["zombies","🧟","Zombies"],["famille","👪","Famille"]];
 
+// 2026-11-14 (signalé par Fabien : parfois, après Ctrl+F5, le menu ne s'ouvrait pas sur PC, sans qu'on puisse le reproduire) :
+// si une partie du menu plante (une info pas encore chargée…), le menu s'ouvre quand même, en version simple, et l'erreur
+// est écrite dans la console (F12) pour qu'on la retrouve
 function openMenu(){
+  try{ openMenuComplet(); }
+  catch(err){
+    console.error("Menu :", err);
+    show('<h2>☰ Menu</h2><div class="menugrille">'
+      + '<button class="mt" data-act="guide"><span class="mt-i">📖</span><span class="mt-t"><b>Guide</b></span></button>'
+      + (typeof openClassement === "function" ? '<button class="mt" data-act="classement"><span class="mt-i">🏆</span><span class="mt-t"><b>Classement</b></span></button>' : '')
+      + (typeof openClans === "function" ? '<button class="mt" data-act="clans"><span class="mt-i">⚔️</span><span class="mt-t"><b>Clans</b></span></button>' : '')
+      + (typeof openAvis === "function" ? '<button class="mt" data-act="avis"><span class="mt-i">💬</span><span class="mt-t"><b>Avis / bug</b></span></button>' : '')
+      + '</div><p class="msg b2">Une partie du menu n’a pas pu s’afficher (' + String(err && err.message || err).replace(/[<>&]/g, "") + '). Signale-le avec « Avis / bug ».</p>'
+      + '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button></div>');
+  }
+}
+function openMenuComplet(){
   // Raccord avec la DA (2026-11-12) : carte de la partie (jour, score, record), tuiles avec l'icône dans un médaillon,
   // réglages en interrupteurs (pastille Oui / Non) ; tout tient sans faire défiler, même sur un petit téléphone ou couché
   var t = function(act, ico, titre, sous, chaud){ return '<button class="mt' + (chaud ? " chaud" : "") + '" data-act="' + act + '"><span class="mt-i">' + ico + '</span><span class="mt-t"><b>' + titre + '</b>' + (sous ? '<small>' + sous + '</small>' : '') + '</span></button>'; };

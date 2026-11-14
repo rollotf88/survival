@@ -51,19 +51,27 @@ const KV = {
    Un échec d'envoi ne bloque jamais le jeu. */
 const { spawn } = require("child_process");
 function entete(t){ return "=?UTF-8?B?" + Buffer.from(String(t).replace(/[\r\n]+/g, " ")).toString("base64") + "?="; }
+// Renvoie ce qui s'est passé (pour le bouton « Tester l'e-mail » de l'administration) : programme utilisé, code de sortie, erreurs
+const CHEMINS_SENDMAIL = ["/usr/sbin/sendmail", "/usr/lib/sendmail", "/usr/bin/sendmail"];
 async function notifier(sujet, texte){
-  const a = reglages().AVIS_EMAIL || "contact@zombria.com";
-  const msg = ["From: " + entete("ZOMBRIA") + " <noreply@zombria.com>", "To: " + a, "Subject: " + entete(sujet),
+  const R = reglages(), a = R.AVIS_EMAIL || "contact@zombria.com", de = R.AVIS_EXPEDITEUR || "noreply@zombria.com";
+  const chemin = CHEMINS_SENDMAIL.find((c) => { try{ return fs.existsSync(c); }catch(e){ return false; } });
+  if(!chemin){ console.error("sendmail introuvable"); return { ok: false, erreur: "Programme sendmail introuvable (" + CHEMINS_SENDMAIL.join(", ") + ")" }; }
+  const msg = ["From: " + entete("ZOMBRIA") + " <" + de + ">", "To: " + a, "Subject: " + entete(sujet),
+    "Date: " + new Date().toUTCString(), "Message-ID: <" + Date.now() + "." + Math.random().toString(36).slice(2) + "@zombria.com>",
     "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "",
     Buffer.from(String(texte)).toString("base64").replace(/(.{76})/g, "$1\n")].join("\n");
-  await new Promise((ok) => {
+  return await new Promise((ok) => {
+    let fini = false, sortie = "";
+    const finir = (r) => { if(fini) return; fini = true; r.chemin = chemin; r.de = de; r.a = a; if(!r.ok) console.error("sendmail :", JSON.stringify(r)); ok(r); };
     try{
-      const p = spawn("/usr/sbin/sendmail", ["-t", "-i"]);
-      p.on("error", (e) => { console.error("sendmail :", e.message); ok(); });
-      p.on("close", () => ok());
+      const p = spawn(chemin, ["-t", "-i", "-f", de]);
+      p.stdout.on("data", (d) => { sortie += d; }); p.stderr.on("data", (d) => { sortie += d; });
+      p.on("error", (e) => finir({ ok: false, erreur: e.message }));
+      p.on("close", (code) => finir({ ok: code === 0, code, sortie: sortie.slice(0, 600) }));
       p.stdin.end(msg);
-      setTimeout(ok, 8000);
-    }catch(e){ console.error("sendmail :", e.message); ok(); }
+      setTimeout(() => finir({ ok: false, erreur: "pas de réponse de sendmail en 10 s", sortie: sortie.slice(0, 600) }), 10000);
+    }catch(e){ finir({ ok: false, erreur: e.message }); }
   });
 }
 
