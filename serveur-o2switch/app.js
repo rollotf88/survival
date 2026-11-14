@@ -45,6 +45,28 @@ const KV = {
   }catch(e){ console.error("Import impossible :", e.message); }
 })();
 
+/* ---------- E-mail à l'éditeur quand un joueur envoie un avis ou signale un message (2026-11-14) ----------
+   Par le programme sendmail de l'hébergement (pas de mot de passe, pas de module à installer).
+   Adresse : « AVIS_EMAIL » dans reglages.json, sinon contact@zombria.com (redirigée vers la boîte de Fabien).
+   Un échec d'envoi ne bloque jamais le jeu. */
+const { spawn } = require("child_process");
+function entete(t){ return "=?UTF-8?B?" + Buffer.from(String(t).replace(/[\r\n]+/g, " ")).toString("base64") + "?="; }
+async function notifier(sujet, texte){
+  const a = reglages().AVIS_EMAIL || "contact@zombria.com";
+  const msg = ["From: " + entete("ZOMBRIA") + " <noreply@zombria.com>", "To: " + a, "Subject: " + entete(sujet),
+    "MIME-Version: 1.0", "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "",
+    Buffer.from(String(texte)).toString("base64").replace(/(.{76})/g, "$1\n")].join("\n");
+  await new Promise((ok) => {
+    try{
+      const p = spawn("/usr/sbin/sendmail", ["-t", "-i"]);
+      p.on("error", (e) => { console.error("sendmail :", e.message); ok(); });
+      p.on("close", () => ok());
+      p.stdin.end(msg);
+      setTimeout(ok, 8000);
+    }catch(e){ console.error("sendmail :", e.message); ok(); }
+  });
+}
+
 function reglages(){ try{ return JSON.parse(fs.readFileSync(path.join(ICI, "reglages.json"), "utf8")); }catch(e){ return {}; } }
 
 /* ---------- Le serveur : chaque requête /api/… est passée au même code que sur Cloudflare ---------- */
@@ -63,7 +85,7 @@ http.createServer(async (req, res) => {
     const entetes = new Headers(); Object.keys(req.headers).forEach((h) => { const v = req.headers[h]; if(v !== undefined) entetes.set(h, Array.isArray(v) ? v.join(", ") : v); });
     entetes.set("CF-Connecting-IP", ip);
     const requete = new Request("https://" + hote + chemin, { method: req.method, headers: entetes, body: ["GET", "HEAD"].includes(req.method) || !corps.length ? undefined : corps });
-    const env = { CLASSEMENT: KV, ADMIN_MDP: reglages().ADMIN_MDP || "", ASSETS: { fetch: async () => new Response("Introuvable", { status: 404 }) } };
+    const env = { CLASSEMENT: KV, ADMIN_MDP: reglages().ADMIN_MDP || "", NOTIFIER: notifier, ASSETS: { fetch: async () => new Response("Introuvable", { status: 404 }) } };
     const rep = await worker.fetch(requete, env);
     const h = {}; rep.headers.forEach((v, k) => { h[k] = v; });
     res.writeHead(rep.status, h);

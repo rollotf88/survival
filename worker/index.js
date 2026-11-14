@@ -713,6 +713,7 @@ async function clansPost(request, env){
         infos: { version: "chat", jour, ecran: "", appareil: "", page: "chat du clan" }, lu: false });
       if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
       await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
+      if(env.NOTIFIER) await env.NOTIFIER("🚩 Message signalé dans le clan « " + mon.nom + " »", avis[0].texte + "\n\nSignalé par " + (avis[0].pseudo || "un joueur") + ".\n\nModération : https://zombria.com/admin.html (onglet Avis)");
       return reponse({ ok: true });
     }
     case "classementClans": {
@@ -968,6 +969,10 @@ async function avisPost(request, env){
   if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
   await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
   await env.CLASSEMENT.put(cleLim, String(n + 1), { expirationTtl: 86400 });
+  // E-mail à l'éditeur (2026-11-14, serveur o2switch : env.NOTIFIER envoie par sendmail ; ailleurs, rien)
+  const a0 = avis[0], ETIQ = { bug: "🐞 Bug", idee: "💡 Idée", autre: "💬 Avis" };
+  if(env.NOTIFIER) await env.NOTIFIER((ETIQ[a0.type] || "💬 Avis") + " de " + (a0.pseudo || "un joueur") + " : " + a0.texte.slice(0, 60),
+    a0.texte + "\n\n— " + (a0.pseudo || "sans pseudo") + " (joueur " + a0.joueur + ")" + (a0.infos.version ? "\nInfos : jour " + a0.infos.jour + ", écran " + a0.infos.ecran + ", " + a0.infos.page + "\n" + a0.infos.appareil : "") + "\n\nTous les avis : https://zombria.com/admin.html (onglet Avis)");
   return reponse({ ok: true });
 }
 
