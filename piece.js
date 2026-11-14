@@ -827,3 +827,32 @@ document.addEventListener("click", function(e){
     var r2 = finirSiphon(ok); render(); if(r2){ openResultat(r2); finiSiMorts(); }
   }
 });
+
+/* ---------- Les recrues sans place au salon vont dans la réserve (2026-11-14, idée de Fabien) ----------
+   Une recrue reprend la place d'un membre d'origine (Yanis = Papa, Nora = Léo, Sam = Emma, Inès = Maman) ; quand ce membre
+   est encore en vie, elle n'a pas de place au salon : on la voit dans la réserve (images Gemini, pièce identique, découpe par différence).
+   Inès (à gauche) ne gêne personne ; Yanis, Nora et Sam occupent le même coin : un seul à la fois (Yanis, puis Nora, puis Sam). */
+var RESERVE_RECRUES = {
+  "Inès":  ["images/personnages/reserve-ines.webp", 0, 368, 407, 932, "gauche"],
+  "Yanis": ["images/personnages/reserve-yanis.webp", 360, 287, 613, 893, "centre"],
+  "Nora":  ["images/personnages/reserve-nora.webp", 460, 550, 905, 945, "centre"],
+  "Sam":   ["images/personnages/reserve-sam.webp", 340, 315, 949, 878, "centre"]
+};
+// Cette recrue est-elle dans la réserve ? (au refuge, pas épuisée, pas choisie pour partir, pas aux fourneaux, et sans place au salon)
+function enReserve(r){
+  if(!G || !G.m || !RESERVE_RECRUES[r]) return false;
+  var i = G.m.findIndex(function(y){ return roleDormeur(y) === r; }), x = G.m[i];
+  if(!x || !x.al || x.raid || enSortie(x) || !peutSortir(x) || G.sel.indexOf(i) >= 0) return false;
+  if(cuisinierDuJour() === r || auSalon(r)) return false;
+  // un seul dans le coin du milieu : le premier de la liste qui y a droit
+  var coin = RESERVE_RECRUES[r][5];
+  if(coin === "centre"){ var avant = ["Yanis", "Nora", "Sam"]; for(var k = 0; k < avant.indexOf(r); k++){ var o = avant[k], j = G.m.findIndex(function(y){ return roleDormeur(y) === o; }), xo = G.m[j];
+    if(xo && xo.al && !xo.raid && !enSortie(xo) && peutSortir(xo) && G.sel.indexOf(j) < 0 && cuisinierDuJour() !== o && !auSalon(o)) return false; } }
+  return true;
+}
+(function(){
+  var P = PIECES.find(function(p){ return p.id === "reserve"; }); if(!P) return;
+  P.decor = P.decor || [];
+  Object.keys(RESERVE_RECRUES).forEach(function(r){ var L = RESERVE_RECRUES[r];
+    P.decor.push([L[0], L[1], L[2], L[3], L[4], function(){ return enReserve(r); }]); });
+})();
