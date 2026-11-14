@@ -167,7 +167,7 @@ function rGame(){
           return '<button class="slot' + (o ? " f" : "") + (dispo ? " dispo" : "") + classeUsure(o) + '" data-act="slot" data-id="' + i + ':' + e[0] + '" aria-label="' + e[2] + ' de ' + x.nom + ' : ' + (o ? OBJETS[o.id].nom : dispo ? "vide, un objet est disponible au stock" : "vide") + '"' + (dispo ? ' title="Un objet est disponible au stock"' : '') + '>' + (o ? icone(o.id) : '<span class="vide">' + e[1] + '</span>') + '</button>';
         }).join("") + ((soinsDispo() > 0 && x.hp < 100) || peutBoire(x) || peutPrendreRation(x, "eau") || peutPrendreRation(x, "nour") ? '<button class="slot heal2" data-act="soins" data-id="' + i + '" aria-label="Soigner, faire boire ou manger ' + x.nom + '">＋</button>' : "") + '</div>' : "") + '</div>';
   }).join("");
-  $("app").innerHTML = '<div class="row"><button class="hd-logo-b" data-act="logo" aria-label="Retour à l’accueil du jeu"><img class="hd-logo" src="images/logo.webp" alt="SURVIVAL – Le dernier refuge"></button><div class="titre"><h1>Jour ' + G.day + '</h1><div class="chapcourt"><button class="ch-btn" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button><span class="ch-sep"> · </span><button class="ch-btn ch-saison" data-act="saison" aria-label="La saison : comment ça marche">' + saison().ico + '<span class="ch-nom"> ' + saison().nom + '</span></button></div></div><div class="chips">'
+  $("app").innerHTML = '<div class="row"><button class="hd-logo-b" data-act="logo" aria-label="Retour à l’accueil du jeu"><img class="hd-logo" src="images/logo.webp" alt="ZOMBRIA – Le dernier refuge"></button><div class="titre"><h1>Jour ' + G.day + '</h1><div class="chapcourt"><button class="ch-btn" data-act="chapitre" aria-label="Détail du chapitre">Chapitre ' + (G.chap + 1) + '</button><span class="ch-sep"> · </span><button class="ch-btn ch-saison" data-act="saison" aria-label="La saison : comment ça marche">' + saison().ico + '<span class="ch-nom"> ' + saison().nom + '</span></button></div></div><div class="chips">'
     + '<button class="chip" data-act="info" data-id="eau" aria-label="Rations d’eau : ' + rations("eau") + '">' + ic("bouteille", "💧") + ' ' + rations("eau") + '<small class="chip-lbl">eau</small></button>'
     + '<button class="chip" data-act="info" data-id="nour" aria-label="Rations de nourriture : ' + rations("nour") + '">' + ic("conserve", "🥫") + ' ' + rations("nour") + '<small class="chip-lbl">repas</small></button>'
     + '<button class="chip" data-act="info" data-id="soin" aria-label="Objets de soin : ' + soinsDispo() + '">' + ic("trousse", "⛑️") + ' ' + soinsDispo() + '<small class="chip-lbl">soins</small></button>'
@@ -1171,7 +1171,7 @@ function ecranGameOver(d, nouveau, jour, lv){
 
 // Texte à coller dans un message pour comparer avec ses amis (en attendant un vrai classement en ligne)
 function copierResultat(bouton){
-  var txt = "SURVIVAL – Partie classée du " + dateGraine(G.seed) + " : ma famille a tenu " + (G.day - 1) + " jours, ⭐ " + G.score + " points. Tu fais mieux ?";
+  var txt = "ZOMBRIA – Partie classée du " + dateGraine(G.seed) + " : ma famille a tenu " + (G.day - 1) + " jours, ⭐ " + G.score + " points. Tu fais mieux ?";
   var ok = function(){ bouton.textContent = "✅ Copié ! Colle-le dans un message."; };
   try{ navigator.clipboard.writeText(txt).then(ok, function(){ bouton.textContent = txt; }); }
   catch(e){ bouton.textContent = txt; }
@@ -1357,7 +1357,8 @@ document.addEventListener("keydown", function(e){
 });
 // Titre peint (2026-11-13, Leonardo, détouré) : « SURVIVAL » en planches clouées ; le sous-titre est écrit par le jeu
 // sur le panneau en bois vide, pour pouvoir être traduit (le panneau est entre 24 % et 76 % de la largeur, vers 87 % de la hauteur)
-function titrePeint(){ return '<h1 class="titre-peint"><img src="images/titre-survival.webp" alt="SURVIVAL"><span class="tp-sous">Le dernier refuge</span></h1>'; }
+// 2026-11-14 : le jeu s'appelle maintenant ZOMBRIA (titre Gemini sur fond vert, détouré ; panneau suspendu par des chaînes) ; la lueur de lanterne est en CSS (.titre-peint::before)
+function titrePeint(){ return '<h1 class="titre-peint"><img src="images/titre-zombria.webp" alt="ZOMBRIA"><span class="tp-sous">Le dernier refuge</span></h1>'; }
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu">' + titrePeint() + '</div>'
     + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'

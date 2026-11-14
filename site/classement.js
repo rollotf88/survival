@@ -377,7 +377,7 @@ function openInviter(){
   appelParrainage({ action:"moncode", id:idAppareil() }).then(function(d){ if(d.code){ try{ localStorage.setItem("survival_code", d.code); }catch(e){} poser(d.code, d.n); } })
     .catch(function(){ if(!code){ var m = $("msgcode"); if(m) m.textContent = MSG_HORS_LIGNE; } });
 }
-function texteInvitation(c){ return "Je survis à l’apocalypse dans SURVIVAL – Le dernier refuge 🧟 Rejoins-moi avec mon code " + c + " : on reçoit chacun un colis de ravitaillement ! " + SITE_JEU + "/?code=" + c; }
+function texteInvitation(c){ return "Je survis à l’apocalypse dans ZOMBRIA – Le dernier refuge 🧟 Rejoins-moi avec mon code " + c + " : on reçoit chacun un colis de ravitaillement ! " + SITE_JEU + "/?code=" + c; }
 function openSaisieCode(pre){
   show('<h2>🎟️ Code d’invitation</h2><p class="sub">Tape le code d’un ami (ou un code spécial).</p>'
     + '<input id="champcode" class="champ grand" maxlength="12" autocomplete="off" autocapitalize="characters" value="' + echapper(pre || "") + '" placeholder="Ex. BL615">'
@@ -456,7 +456,7 @@ document.addEventListener("click", function(e){
   else if(a === "caisse") ouvrirCaisse(+id);
   else if(a === "sacbonus") openSacBonus();
   else if(a === "utiliserbonus") utiliserBonus(+id);
-  else if(a === "partagercode"){ var t = texteInvitation(id); if(navigator.share) navigator.share({ title:"SURVIVAL – Le dernier refuge", text:t }).catch(function(){}); else { try{ navigator.clipboard.writeText(t); $("msgcode").textContent = "✅ Message copié : colle-le à tes amis."; }catch(e2){} } }
+  else if(a === "partagercode"){ var t = texteInvitation(id); if(navigator.share) navigator.share({ title:"ZOMBRIA – Le dernier refuge", text:t }).catch(function(){}); else { try{ navigator.clipboard.writeText(t); $("msgcode").textContent = "✅ Message copié : colle-le à tes amis."; }catch(e2){} } }
   else if(a === "copiercode"){ try{ navigator.clipboard.writeText(SITE_JEU + "/?code=" + id); $("msgcode").textContent = "✅ Lien copié !"; }catch(e3){ $("msgcode").textContent = SITE_JEU + "/?code=" + id; } }
 });
 document.addEventListener("keydown", function(e){ if(e.key === "Enter" && e.target && e.target.id === "champcode") validerCode(); });

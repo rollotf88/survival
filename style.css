@@ -2966,3 +2966,13 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .vt-pile > .vt{display:flex;grid-area:1/1;visibility:hidden;animation:none}
 .vt-pile > .vt.on{visibility:visible;animation:vtEntre .5s ease-out}
 @media (prefers-reduced-motion:reduce){.vt-pile > .vt.on{animation:none}}
+
+/* Titre ZOMBRIA (2026-11-14) : sous-titre recalé sur le nouveau panneau suspendu, lueur de lanterne qui respire derrière les lettres
+   (Gemini ne savait pas la dessiner sans ajouter une lampe : elle est faite ici) */
+.titre-peint{isolation:isolate}
+.titre-peint img{position:relative;z-index:1}
+.titre-peint .tp-sous{left:49.6%;top:86%;font-size:6.3cqw;z-index:2}
+.titre-peint::before{content:"";position:absolute;left:18%;right:18%;top:4%;height:58%;z-index:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 55%,rgba(255,206,110,.75),rgba(255,150,40,.38) 45%,rgba(255,120,20,0) 72%);filter:blur(10px);animation:lueurTitre 3.6s ease-in-out infinite alternate}
+@keyframes lueurTitre{from{opacity:.62;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.titre-peint::before{animation:none}}
