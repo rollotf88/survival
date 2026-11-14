@@ -51,11 +51,14 @@ var PIECES = [
     ["pGardeManger", 715, 225, 1022, 660, function(){ return ic("conserve", "🥫"); }, "Garde-manger", .3]
   ]},
   { id:"chambre", nom:"Chambre", img:"images/piece-chambre-propre.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:780 },
-    decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0 && !auLit("Léo"); }] ], zones:[
+    decor:[ ["images/objet-peluche.webp", 405, 395, 476, 495, function(){ return compter("peluche") > 0 && !pelucheRangee(); }],
+      // rangée sur l'étagère du dressing quand Emma n'est plus là, ou quand Léo dort dans ce lit (2026-11-14, idée de Fabien)
+      ["images/objet-peluche.webp", 783, 376, 823, 433, function(){ return compter("peluche") > 0 && pelucheRangee(); }] ], zones:[
     ["pCheminee",   145, 355, 320, 575, function(){ return "🔥"; }, "Feu", .5],
     ["pCanape",     320, 240, 720, 560, function(){ return ic("lune", "🌙"); }, "Dormir", .3],
     ["pConstruire", 445, 520, 635, 760, function(){ return "🕯️"; }, "Bilan du refuge", .55],
-    ["oPeluche",    405, 395, 476, 495, function(){ return icone("peluche"); }, "Peluche", .5, function(){ return compter("peluche") > 0; }],
+    ["oPeluche",    405, 395, 476, 495, function(){ return icone("peluche"); }, "Peluche", .5, function(){ return compter("peluche") > 0 && !pelucheRangee(); }],
+    ["oPeluche",    773, 366, 833, 438, function(){ return icone("peluche"); }, "Peluche", .5, function(){ return compter("peluche") > 0 && pelucheRangee(); }],
     ["pPorte",      900, 205, 1022, 545, function(){ return ic("loupe", "🔍"); }, "Partir", .85]
   ]},
   { id:"reserve", nom:"Réserve", img:"images/piece-reserve.webp", l:1024, h:1050, cadre:{ x0:0, x1:1024, y0:150, y1:770 }, decor:[], zones:[
@@ -853,3 +856,10 @@ function enReserve(r){
   Object.keys(RESERVE_RECRUES).forEach(function(r){ var L = RESERVE_RECRUES[r];
     P.decor.push([L[0], L[1], L[2], L[3], L[4], function(){ return enReserve(r); }]); });
 })();
+
+// La peluche d'Emma : sur le lit tant qu'Emma est là et que Léo n'y dort pas ; sinon rangée sur l'étagère du dressing (2026-11-14)
+function pelucheRangee(){
+  if(!G || !G.m) return false;
+  var emma = G.m.find(function(y){ return roleDormeur(y) === "Emma"; });
+  return !(emma && emma.al) || auLit("Léo");
+}
