@@ -170,6 +170,7 @@ function openMenu(){
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibrations", vibrationsActives());
   h += r("menusensible", "🕯️", "Adulte", CONTENUS_SENSIBLES); // « Contenus durs » était coupé sur téléphone (2026-11-12, choix de Fabien)
   h += '</div>';
+  h += liensLegaux("mn-legal");
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';
   else h += '<p class="msg">Vraiment ? La partie en cours sera perdue.</p><div class="row"><button class="btn" data-act="menunouvelleok">Oui, recommencer</button><button class="btn alt" data-act="menu">Non</button></div>';
   show(h);
@@ -325,3 +326,10 @@ document.addEventListener("click", function(e){
   else if(a === "menunouvelle"){ confirmerNouvelle = true; openMenu(); }
   else if(a === "menunouvelleok"){ confirmerNouvelle = false; nouvelleFamille(); }
 });
+
+/* Liens vers les mentions légales et la politique de confidentialité (2026-11-14) : sur zombria.com (adresse complète,
+   pour que ça marche aussi depuis la version de test claude.ai ou en double-clic) */
+function liensLegaux(cls){
+  var base = typeof SITE_JEU !== "undefined" ? SITE_JEU : "https://zombria.com";
+  return '<p class="liens-legaux ' + (cls || "") + '"><a href="' + base + '/mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a> · <a href="' + base + '/confidentialite.html" target="_blank" rel="noopener">Confidentialité</a></p>';
+}

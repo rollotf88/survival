@@ -2976,3 +2976,9 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
   background:radial-gradient(ellipse at 50% 55%,rgba(255,206,110,.75),rgba(255,150,40,.38) 45%,rgba(255,120,20,0) 72%);filter:blur(10px);animation:lueurTitre 3.6s ease-in-out infinite alternate}
 @keyframes lueurTitre{from{opacity:.62;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.titre-peint::before{animation:none}}
+
+/* Liens légaux (2026-11-14) : petits, discrets, en bas du menu et de l'écran d'histoire */
+.liens-legaux{margin:8px 0 0;text-align:center;font-size:11.5px;line-height:1.3;color:var(--mut)}
+.liens-legaux a{color:var(--mut);text-decoration:underline;text-underline-offset:2px}
+.panneau.intro .liens-legaux{flex:none;margin-top:6px}
+@media (orientation:landscape) and (max-height:500px){ .liens-legaux.mn-legal{margin-top:1px;font-size:10px;line-height:1.1} }

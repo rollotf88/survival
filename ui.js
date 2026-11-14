@@ -1376,7 +1376,7 @@ function rIntro(){
     + '<div class="ir-puces"><span class="ir-famille">👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span><span>🎲 Événements uniques</span></div></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
-    + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button></div>';
+    + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button>' + (typeof liensLegaux === "function" ? liensLegaux("ir-legal") : "") + '</div>';
   // Le fondu en bas du récit disparaît quand on a tout lu (ou quand tout tient sans défiler)
   var rc = document.querySelector(".intro-recit");
   if(rc){ var fondu = function(){ rc.classList.toggle("fin", rc.scrollTop + rc.clientHeight >= rc.scrollHeight - 4); }; rc.addEventListener("scroll", fondu, { passive:true }); setTimeout(fondu, 50); setTimeout(fondu, 600); }
