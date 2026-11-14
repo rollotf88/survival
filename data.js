@@ -10,7 +10,7 @@ function icone(id){ return typeof ICONES_SVG !== "undefined" && (ICONES_SVG[id] 
 // Pareil pour les membres de la famille (les recrues gardent leur emoji) et les zombies
 var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma", "Sam":"sam", "Nora":"nora", "Inès":"ines", "Yanis":"yanis" };
 // Icône dessinée k si elle existe, sinon l'emoji donné
-function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgIcone(k) : emoji; }
+function ic(k, emoji){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[k]) return portraitPNJ(k); return typeof ICONES_SVG !== "undefined" && (ICONES_SVG[k] || ICONES_IMG[k]) ? svgIcone(k) : emoji; }
 // Portraits peints des zombies et de Marco (Gemini, 2026-11-09)
 var PORTRAITS_PNJ = { pilleur:"images/portrait-pilleur.webp", couveuse:"images/portrait-couveuse.webp", brule:"images/portrait-brule.webp", gorille:"images/portrait-gorille.webp", mariee:"images/portrait-mariee.webp", pompier:"images/portrait-pompier.webp", boucher:"images/portrait-boucher.webp", colosse:"images/portrait-colosse.webp", rodeur:"images/portrait-rodeur.webp", coureur:"images/portrait-coureur.webp", costaud:"images/portrait-costaud.webp", marco:"images/portrait-marco.webp",
   defenseur:"images/portrait-pillard.webp", rampant:"images/portrait-rampant.webp", hurleur:"images/portrait-hurleur.webp", gonfle:"images/portrait-gonfle.webp", soldat:"images/portrait-soldat.webp" };
@@ -22,7 +22,8 @@ function portraitPNJ(k){ return '<span class="portrait pnj"><img src="' + PORTRA
 var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue", "Supermarché":"lieuSuper", "Hôpital":"lieuHopital",
   "Quincaillerie":"lieuQuinc", "Station-service":"lieuStation", "Garage auto":"lieuGarage", "Commissariat":"lieuPolice",
   "Zone industrielle":"lieuIndus", "Étang":"lieuEtang", "Centre commercial":"lieuCentre", "Village voisin":"lieuVillage", "École Jules-Ferry":"lieuEcole", "Caserne des pompiers":"lieuCaserne", "Péniche du canal":"lieuPeniche",
-  "Camping des Pins":"lieuCamping", "Clinique vétérinaire":"lieuClinique", "Bunker du survivaliste":"lieuBunker", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase" };
+  "Camping des Pins":"lieuCamping", "Clinique vétérinaire":"lieuClinique", "Bunker du survivaliste":"lieuBunker", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase",
+  "Forêt":"lieuForet", "Zoo abandonné":"lieuZoo", "Aéroport":"lieuAeroport", "Prison":"lieuPrison", "Centrale électrique":"lieuCentrale" };
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
 function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
 // Illustrations peintes des lieux (Gemini, grilles de 4 découpées) : images/lieux/<nom>.webp

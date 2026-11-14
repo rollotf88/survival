@@ -688,7 +688,10 @@ var ICONES_IMG = {};
  "carte silhouette de course sapin sommeil ampoule sonHaut musique vibreur bulle cle porte megaphone froid folie " +
  "cuisinier globe automne printemps soleil sablier chrono tele copier partager signaler trombone merci poigneeMain ruine poubelle " +
  "pouce salut pause rejouer maillot tampon " +
- "cleMolette siphon menu plus etoilePleine etoileVide tigre cocktail").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
+ "cleMolette siphon menu plus etoilePleine etoileVide tigre cocktail " +
+ // Lieux peints (2026-11-14, 2 planches Gemini) : remplacent les dessins en code des lieux
+ "lieuMaison lieuRue lieuSuper lieuHopital lieuQuinc lieuStation lieuEtang lieuGarage lieuPolice lieuIndus lieuCentre lieuVillage lieuEntrepot lieuBase lieuEcole lieuCaserne " +
+ "lieuPeniche lieuCamping lieuClinique lieuBunker lieuForet lieuZoo lieuAeroport lieuPrison lieuCentrale").split(" ").forEach(function(k){ ICONES_IMG[k] = true; });
 function svgIcone(id){
   if(ICONES_IMG[id]) return '<img class="ico ico-img" src="images/icones/' + id + '.webp" alt="" draggable="false" decoding="async">';
   return '<svg class="ico" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="' + COUL.trait + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">' + ICONES_SVG[id] + '</g></svg>';
