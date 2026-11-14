@@ -713,7 +713,7 @@ async function clansPost(request, env){
         infos: { version: "chat", jour, ecran: "", appareil: "", page: "chat du clan" }, lu: false });
       if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
       await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
-      if(env.NOTIFIER) await env.NOTIFIER("🚩 Message signalé dans le clan « " + mon.nom + " »", avis[0].texte + "\n\nSignalé par " + (avis[0].pseudo || "un joueur") + ".\n\nModération : https://zombria.com/admin.html (onglet Avis)");
+      await envoyerMailAvis(env, avis[0], ["🚩 Message signalé dans le clan « " + mon.nom + " »", avis[0].texte + "\n\nSignalé par " + (avis[0].pseudo || "un joueur") + ".\n\nModération : https://zombria.com/admin.html (onglet Avis)"]);
       return reponse({ ok: true });
     }
     case "classementClans": {
@@ -859,10 +859,13 @@ async function adminPost(request, env){
       for(const k of cles){ const v = await env.CLASSEMENT.get(k); if(v !== null && v !== undefined) donnees[k] = v; }
       return repAdmin({ ok: true, version: 1, t: now, donnees });
     }
-    case "avis": return repAdmin({ avis: await lireAvis(env) });
+    case "avis": return repAdmin({ avis: await lireAvis(env), dernierMail: await env.CLASSEMENT.get("dernier_mail", { type: "json" }) });
     // Test de l'envoi d'e-mail (2026-11-14) : renvoie la réponse du programme d'envoi du serveur
     case "testMail": {
       if(!env.NOTIFIER) return repAdmin({ erreur: "Ce serveur ne sait pas envoyer d’e-mail." });
+      // « commeAvis » : exactement le même e-mail qu'un vrai avis (le dernier reçu, sinon un exemple)
+      if(d.commeAvis){ const av = await lireAvis(env), a0 = av.find((x) => (x.infos || {}).version !== "chat") || { type: "bug", texte: "Exemple d’avis envoyé depuis le formulaire du jeu", pseudo: "Testeur", joueur: "test0000", infos: { version: "v1", jour: 12, ecran: "390×844", appareil: "Mozilla/5.0 (navigateur de test)", page: "game" } };
+        return repAdmin({ ok: true, envoi: await envoyerMailAvis(env, a0) }); }
       const r = await env.NOTIFIER("✉️ Test d’e-mail ZOMBRIA", "Si tu lis ceci, les e-mails des avis et des signalements arrivent bien.\n\nEnvoyé depuis l’administration le " + new Date(now).toISOString());
       return repAdmin({ ok: true, envoi: r || null });
     }
@@ -988,6 +991,19 @@ async function cadeauPost(request, env){
   }
   return reponse({ cadeaux: file });
 }
+// Le contenu de l'e-mail d'un avis, et l'envoi : le résultat est gardé (clé « dernier_mail ») et montré dans l'administration
+function mailAvis(a0){
+  const ETIQ = { bug: "🐞 Bug", idee: "💡 Idée", autre: "💬 Avis" }, i = a0.infos || {};
+  return [(ETIQ[a0.type] || "💬 Avis") + " de " + (a0.pseudo || "un joueur") + " : " + a0.texte.slice(0, 60),
+    a0.texte + "\n\n— " + (a0.pseudo || "sans pseudo") + " (joueur " + a0.joueur + ")" + (i.version ? "\nInfos : jour " + i.jour + ", écran " + i.ecran + ", " + i.page + "\n" + i.appareil : "") + "\n\nTous les avis : https://zombria.com/admin.html (onglet Avis)"];
+}
+async function envoyerMailAvis(env, a0, sujetTexte){
+  if(!env.NOTIFIER) return null;
+  const m = sujetTexte || mailAvis(a0);
+  let r; try{ r = await env.NOTIFIER(m[0], m[1]); }catch(e){ r = { ok: false, erreur: String(e && e.message || e) }; }
+  try{ await env.CLASSEMENT.put("dernier_mail", JSON.stringify({ t: Date.now(), sujet: m[0], r: r || null })); }catch(e){}
+  return r;
+}
 async function avisPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -1004,9 +1020,7 @@ async function avisPost(request, env){
   await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
   await env.CLASSEMENT.put(cleLim, String(n + 1), { expirationTtl: 86400 });
   // E-mail à l'éditeur (2026-11-14, serveur o2switch : env.NOTIFIER envoie par sendmail ; ailleurs, rien)
-  const a0 = avis[0], ETIQ = { bug: "🐞 Bug", idee: "💡 Idée", autre: "💬 Avis" };
-  if(env.NOTIFIER) await env.NOTIFIER((ETIQ[a0.type] || "💬 Avis") + " de " + (a0.pseudo || "un joueur") + " : " + a0.texte.slice(0, 60),
-    a0.texte + "\n\n— " + (a0.pseudo || "sans pseudo") + " (joueur " + a0.joueur + ")" + (a0.infos.version ? "\nInfos : jour " + a0.infos.jour + ", écran " + a0.infos.ecran + ", " + a0.infos.page + "\n" + a0.infos.appareil : "") + "\n\nTous les avis : https://zombria.com/admin.html (onglet Avis)");
+  await envoyerMailAvis(env, avis[0]);
   return reponse({ ok: true });
 }
 

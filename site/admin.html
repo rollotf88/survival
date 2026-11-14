@@ -173,7 +173,9 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
     }
     if(onglet === "avis"){
       var TY = { bug:"🐞 Bug", idee:"💡 Idée", autre:"💬 Autre" }, nl = d.avis.filter(function(a){ return !a.lu; }).length;
-      h = '<div class="carte"><div class="row" style="justify-content:space-between"><b>✉️ E-mail à chaque avis</b><button class="alt" id="testMail">Envoyer un e-mail de test</button></div><pre id="resMail" class="sub" style="white-space:pre-wrap;margin:8px 0 0"></pre></div>'
+      h = '<div class="carte"><div class="row" style="justify-content:space-between"><b>✉️ E-mail à chaque avis</b><div class="row"><button class="alt" id="testMail">Envoyer un e-mail de test</button><button class="alt" id="testMailAvis">Tester comme un vrai avis</button></div></div>'
+        + (d.dernierMail ? '<p class="sub" style="margin:8px 0 0">Dernier e-mail d’avis (' + quand(d.dernierMail.t) + ') : ' + (d.dernierMail.r && d.dernierMail.r.ok ? '✅ accepté par le serveur' : '❌ refusé') + ' — ' + esc(d.dernierMail.sujet || "") + '<br><small>' + esc(JSON.stringify(d.dernierMail.r)) + '</small></p>' : '<p class="sub" style="margin:8px 0 0">Aucun e-mail d’avis envoyé depuis la dernière mise à jour du serveur.</p>')
+        + '<pre id="resMail" class="sub" style="white-space:pre-wrap;margin:8px 0 0"></pre></div>'
         + '<p class="sub">' + d.avis.length + ' message' + (d.avis.length > 1 ? "s" : "") + ' (' + nl + ' non lu' + (nl > 1 ? "s" : "") + '), le plus récent en premier. 5 messages par jour et par appareil au plus.</p>'
         + (d.avis.length ? d.avis.map(function(a){ var i = a.infos || {};
             return '<div class="carte"' + (a.lu ? ' style="opacity:.6"' : '') + '><div class="row" style="justify-content:space-between"><b>' + (TY[a.type] || a.type) + ' · ' + esc(a.pseudo || "(sans pseudo)") + '</b><small>' + quand(a.t) + '</small></div>'
@@ -192,14 +194,16 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
         + d.clans.map(function(c){ return '<tr><td><b>' + (c.bot ? "🤖 " : "") + esc(c.nom) + '</b><br><small>' + (c.enGuerre ? "⚔️ en guerre" : c.recherche ? "🔎 cherche une guerre" : "") + '</small></td><td>' + esc(c.chef) + '</td><td class="num">' + c.membres + ' / 5' + (c.bots && !c.bot ? "<br><small>dont " + c.bots + " 🤖</small>" : "") + '</td><td class="num">' + c.jours + '<br><small>🏆 ' + (c.trophees || 0) + ' <button class="alt" style="padding:1px 6px;font-size:11px" data-trophees="' + esc(c.id) + '" data-val="' + (c.trophees || 0) + '">modifier</button></small></td><td style="white-space:normal;min-width:180px">' + esc(c.liste) + '</td><td class="row">' + (c.membres < 5 ? '<button class="alt" data-botscompleter="' + esc(c.id) + '">➕ Bots</button>' : '') + '<button class="danger" data-clansuppr="' + esc(c.id) + '" data-nom="' + esc(c.nom) + '">Dissoudre</button></td></tr>'; }).join("") + '</table></div>';
     }
     $("contenu").innerHTML = h;
-    var tm = $("testMail"); if(tm) tm.addEventListener("click", function(){
+    var testerMail = function(tm, extra){
       tm.disabled = true; $("resMail").textContent = "Envoi en cours…";
-      appel("testMail").then(function(d){ tm.disabled = false;
+      appel("testMail", extra).then(function(d){ tm.disabled = false;
         if(d.erreur){ $("resMail").textContent = "❌ " + d.erreur; return; }
         var r = d.envoi || {};
         $("resMail").textContent = (r.ok ? "✅ Le serveur a accepté l’e-mail (de " + r.de + " vers " + r.a + "). Regarde ta boîte et les spams d’ici quelques minutes." : "❌ Le serveur n’a pas pu envoyer l’e-mail.") + "\n\nDétail technique : " + JSON.stringify(r);
       }).catch(function(){ tm.disabled = false; $("resMail").textContent = "Impossible de joindre le serveur."; });
-    });
+    };
+    var tm1 = $("testMail"); if(tm1) tm1.addEventListener("click", function(){ testerMail(tm1, {}); });
+    var tm2 = $("testMailAvis"); if(tm2) tm2.addEventListener("click", function(){ testerMail(tm2, { commeAvis: true }); });
     var fj = $("formJour"); if(fj) fj.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourClan", { jour:$("jourMin").value }, "Réglage enregistré."); });
     var f = $("formCode"); if(f) f.addEventListener("submit", function(e){ e.preventDefault(); action("codeCreer", { code:$("nouveauCode").value }, "Code créé."); });
   }
