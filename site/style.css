@@ -2910,3 +2910,9 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
   .ir-puces::-webkit-scrollbar{display:none}
   .ir-puces span{flex:none;font-size:12px;padding:3px 9px}
 }
+/* Case d'équipement vide (2026-11-14, signalé par Fabien) : l'emoji de la case (🗡️ 🔦 🎒) devient une icône peinte,
+   qui était réduite à 56 % d'une zone presque vide (minuscule). La zone prend maintenant 56 % de la case et l'icône la remplit. */
+.slot .vide{display:inline-grid;place-items:center;line-height:1}
+.slot .vide img.emo{width:1.1em;height:1.1em}
+.qpeq .slot .vide,.slots.grands .slot .vide{width:56%;height:56%;opacity:.4}
+.qpeq .slot .vide .ico,.slots.grands .slot .vide .ico,.qpeq .slot .vide img.emo,.slots.grands .slot .vide img.emo{width:100%;height:100%}
