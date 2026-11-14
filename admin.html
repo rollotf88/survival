@@ -82,6 +82,18 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   var $ = function(id){ return document.getElementById(id); };
   var esc = function(t){ return String(t == null ? "" : t).replace(/[&<>"']/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); };
   var quand = function(t){ if(!t) return "—"; var m = Math.round((Date.now() - t) / 60000); return m < 60 ? "il y a " + m + " min" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j"; };
+  // Export des données (déménagement vers o2switch) : le fichier est enregistré par le navigateur
+  document.addEventListener("click", function(e){
+    if(!e.target || e.target.id !== "exporter") return;
+    e.target.disabled = true; e.target.textContent = "Préparation…";
+    appel("exporter").then(function(d){
+      e.target.disabled = false; e.target.textContent = "📥 Télécharger les données";
+      if(d.erreur){ message(d.erreur); return; }
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(d)], { type:"application/json" }));
+      a.download = "import.json"; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      message("✅ Fichier import.json téléchargé (" + Object.keys(d.donnees || {}).length + " ensembles de données).");
+    }).catch(function(){ e.target.disabled = false; message("Impossible de joindre le serveur."); });
+  });
   function appel(action, extra){
     var corps = Object.assign({ action:action }, extra || {});
     return fetch("/api/admin", { method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer " + mdp }, body:JSON.stringify(corps) })
@@ -115,6 +127,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         + tuile(d.enPartie, "familles en vie") + tuile(d.survivants, "survivants en vie") + tuile(d.parties, "parties jouées")
         + tuile(d.morts, "morts") + tuile(d.zombies, "zombies abattus") + tuile(d.classement, "au classement")
         + tuile(d.codes, "codes de parrainage") + tuile(d.parrainages, "parrainages réussis") + '</div>';
+      h += '<div class="carte" style="margin-top:12px"><b>📦 Sauvegarde / déménagement</b><p style="margin:6px 0">Télécharge toutes les données du jeu (classement, clans, discussions, codes, avis) dans un fichier. À déposer chez o2switch sous le nom <code>donnees/import.json</code> dans le dossier du serveur.</p><button id="exporter">📥 Télécharger les données</button></div>';
       if(d.tombes && d.tombes.length) h += '<div class="carte" style="margin-top:12px"><b>💀 Dernières familles tombées</b><div class="tableau"><table><tr><th>Pseudo</th><th>Jour</th><th>Score</th><th>Quand</th></tr>'
         + d.tombes.map(function(t){ return '<tr><td>' + esc(t.n || "—") + '</td><td class="num">' + t.j + '</td><td class="num">' + t.s + '</td><td>' + quand(t.t) + '</td></tr>'; }).join("") + '</table></div></div>';
     } else if(onglet === "joueurs"){

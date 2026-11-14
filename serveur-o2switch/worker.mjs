@@ -1,0 +1,1063 @@
+// Worker Cloudflare (gratuit) : sert le jeu (dossier « site ») et le classement général.
+// Classement : le meilleur score de chaque joueur, toutes parties. Adresse : /api/classement
+// GET  /api/classement?id=...  -> les 50 meilleurs + la place du joueur
+// POST /api/classement {id, pseudo, score, jours} -> enregistre (garde le meilleur score par appareil)
+// Les scores sont rangés dans un « KV » Cloudflare relié au projet sous le nom CLASSEMENT.
+
+const ENTETES = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type", "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
+const reponse = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: ENTETES });
+const CLE = "general", GARDES = 1000;
+
+async function lireListe(env){ return (await env.CLASSEMENT.get(CLE, { type: "json" })) || []; }
+
+// ---------- La Légende du mois (2026-11-12, idée de Fabien) ----------
+// Clé KV « saison » : { id:"AAAA-MM", scores:[…1000 meilleurs du mois], legende:{id,pseudo,score,jours,cadre,saison,depuis} = n°1 du mois PRÉCÉDENT,
+//   tete:{id,pseudo,score,jours,cadre} = n°1 du mois en cours, annonces:[{t, nouveau, ancien}] (qui passe en tête), pantheon:[{saison, pseudo, score, jours, cadre}] }
+// Le n°1 du mois est « la Légende » ; la couronne est remise en jeu le 1er de chaque mois (l'ancienne Légende entre au panthéon).
+// Les bots de l'admin n'entrent jamais dans la saison (seuls les vrais envois de score y vont).
+const CLE_SAISON = "saison", JOUR_MS_L = 24 * 3600 * 1000;
+const moisCourant = (t) => new Date(t).toISOString().slice(0, 7);
+function finDuMois(t){ const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1); }
+const joursDeRegne = (L, t) => L ? Math.max(0, Math.floor((t - (L.depuis || t)) / JOUR_MS_L)) : 0;
+async function lireSaison(env, now){
+  let S = (await env.CLASSEMENT.get(CLE_SAISON, { type: "json" })) || null, change = false;
+  if(!S){ S = { id: moisCourant(now), scores: [], legende: null, tete: null, annonces: [], pantheon: [] }; change = true; }
+  // Depuis le 2026-11-12 (choix de Fabien) : la Légende est le n°1 du mois PRÉCÉDENT ; une ancienne Légende « du mois en cours » (sans champ saison) est oubliée
+  if(S.legende && !S.legende.saison){ S.legende = null; change = true; }
+  if(S.id !== moisCourant(now)){
+    // Fin du mois : le n°1 devient la Légende du mois suivant (couronne, cadre doré et Raja tout le mois) et entre au panthéon
+    const top = (S.scores || [])[0];
+    const leg = top ? { id: top.id, pseudo: top.pseudo, score: top.score, jours: top.jours, cadre: top.cadre || "", saison: S.id, depuis: now } : null;
+    const pantheon = leg ? [{ saison: S.id, pseudo: leg.pseudo, score: leg.score, jours: leg.jours, cadre: leg.cadre }].concat(S.pantheon || []).slice(0, 24) : (S.pantheon || []);
+    S = { id: moisCourant(now), scores: [], legende: leg, tete: null, annonces: [], pantheon };
+    change = true;
+  }
+  return { S, change };
+}
+// Le n°1 du mois en cours (« en tête », futur(e) Légende) ; note l'annonce quand quelqu'un passe en tête
+function majLegende(S, now){
+  const top = S.scores[0];
+  if(!top){ if(S.tete){ S.tete = null; return true; } return false; }
+  if(!S.tete || S.tete.id !== top.id){
+    if(S.tete) S.annonces = [{ t: now, nouveau: top.pseudo, ancien: S.tete.pseudo }].concat(S.annonces || []).slice(0, 10);
+    S.tete = { id: top.id, pseudo: top.pseudo, score: top.score, jours: top.jours, cadre: top.cadre || "" };
+    return true;
+  }
+  const T = S.tete; if(T.score !== top.score || T.pseudo !== top.pseudo || T.jours !== top.jours){ T.score = top.score; T.pseudo = top.pseudo; T.jours = top.jours; T.cadre = top.cadre || ""; return true; }
+  return false;
+}
+// Ce que le jeu peut voir de la saison (sans les identifiants des autres joueurs)
+function vueSaison(S, moi, now){
+  const L = S.legende, T = S.tete, k = moi ? S.scores.findIndex((e) => e.id === moi) : -1;
+  return { id: S.id, fin: finDuMois(now),
+    legende: L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, cadre: L.cadre || "", saison: L.saison, regne: joursDeRegne(L, now), moi: !!moi && L.id === moi } : null,
+    tete: T ? { pseudo: T.pseudo, score: T.score, jours: T.jours, cadre: T.cadre || "", moi: !!moi && T.id === moi } : null,
+    scores: S.scores.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar, live, t }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!L && id === L.id, enCours: !!live && now - (t || 0) < 3 * JOUR_MS_L })),
+    total: S.scores.length, monRang: k >= 0 ? k + 1 : null,
+    annonces: (S.annonces || []).slice(0, 5), pantheon: (S.pantheon || []).slice(0, 12) };
+}
+async function retirerDeSaison(env, id){
+  const { S } = await lireSaison(env, Date.now()); const k = S.scores.findIndex((e) => e.id === id);
+  const estLeg = !!S.legende && S.legende.id === id; // l'admin retire un tricheur : il perd aussi sa couronne
+  if(estLeg) S.legende = null;
+  if(k >= 0) S.scores.splice(k, 1);
+  if(k >= 0 || estLeg){ majLegende(S, Date.now()); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S)); }
+}
+
+async function onRequestOptions(){ return new Response("", { headers: ENTETES }); }
+
+async function onRequestGet({ request, env }){
+  if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+  const moi = new URL(request.url).searchParams.get("id") || "";
+  const liste = await lireListe(env), now = Date.now();
+  const { S, change } = await lireSaison(env, now); if(change){ majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S)); }
+  const k = moi ? liste.findIndex((e) => e.id === moi) : -1, idL = S.legende && S.legende.id;
+  return reponse({
+    total: liste.length, saison: vueSaison(S, moi, now),
+    scores: liste.slice(0, 50).map(({ pseudo, score, jours, id, cadre, avatar }) => ({ pseudo, score, jours, cadre: cadre || "", avatar: avatar || "", moi: !!moi && id === moi, legende: !!idL && id === idL })),
+    monRang: k >= 0 ? k + 1 : null, moi: k >= 0 ? { pseudo: liste[k].pseudo, score: liste[k].score, jours: liste[k].jours, cadre: liste[k].cadre || "" } : null
+  });
+}
+
+async function onRequestPost({ request, env }){
+  if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const score = Math.floor(+d.score), jours = Math.floor(+d.jours);
+  const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  // Vérifications simples : un score impossible est refusé (au plus 4 points par jour tenu)
+  if(!pseudo || id.length < 8 || !(jours >= 0 && jours <= 400) || !(score >= 0 && score <= jours * 4))
+    return reponse({ erreur: "score refusé" }, 400);
+  const liste = await lireListe(env);
+  const ancien = liste.find((e) => e.id === id);
+  let record = true;
+  const cadre = cadreDe(d);
+  const avatar = avatarDe(d);
+  if(ancien){ if(score > ancien.score){ ancien.score = score; ancien.jours = jours; } else record = false; ancien.pseudo = pseudo; if(cadre) ancien.cadre = cadre; ancien.avatar = avatar; }
+  else liste.push({ id, pseudo, score, jours, cadre, avatar });
+  liste.sort((a, b) => b.score - a.score || a.jours - b.jours);
+  const garde = liste.slice(0, GARDES);
+  await env.CLASSEMENT.put(CLE, JSON.stringify(garde));
+  const rang = garde.findIndex((e) => e.id === id) + 1;
+  // Saison du mois : même règle (meilleur score du mois par appareil) ; la Légende = le n°1 du mois
+  const now = Date.now(), { S } = await lireSaison(env, now), avant = S.tete ? S.tete.id : null, ancienT = S.tete ? S.tete.pseudo : null;
+  const a2 = S.scores.find((e) => e.id === id);
+  if(a2){ if(score > a2.score){ a2.score = score; a2.jours = jours; } a2.pseudo = pseudo; if(cadre) a2.cadre = cadre; a2.avatar = avatar; a2.live = false; }
+  else S.scores.push({ id, pseudo, score, jours, cadre, avatar });
+  S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
+  majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+  const tete = !!S.tete && S.tete.id === id, legende = !!S.legende && S.legende.id === id;
+  return reponse({ ok: true, rang, total: garde.length, record, meilleur: ancien ? ancien.score : score,
+    saison: { rang: S.scores.findIndex((e) => e.id === id) + 1, legende, tete, devientTete: tete && avant !== id, ancien: tete && avant !== id ? ancienT : null } });
+}
+
+// ---------- Chiffres du monde : /api/monde ----------
+// GET  -> { survivants, familles, morts, zombies, joueurs, parties, record, doyen, tombes }
+// POST {id, pseudo, vivants, jour, zombies, morts, parties, fin?} -> enregistre les totaux de cet appareil
+// Tout est dans la clé « monde » du même KV que le classement.
+const CLE_MONDE = "monde", ACTIF = 3 * 24 * 3600 * 1000, MAX_APPAREILS = 5000;
+const entier = (v, max) => { v = Math.floor(+v); return v >= 0 && v <= max ? v : 0; };
+// Grande horde du week-end : identifiant de l'événement en cours (vendredi 17 h UTC → lundi 5 h UTC), ou "" hors événement
+function idHordeServeur(t){
+  const d = new Date(t), j = d.getUTCDay(), h = d.getUTCHours();
+  const dedans = (j === 5 && h >= 17) || j === 6 || j === 0 || (j === 1 && h < 5); if(!dedans) return "";
+  const v = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((j + 2) % 7)));
+  return "horde-" + v.toISOString().slice(0, 10);
+}
+async function lireMonde(env){ return (await env.CLASSEMENT.get(CLE_MONDE, { type: "json" })) || { j: {}, tombes: [] }; }
+async function mondeGet(env){
+  const m = await lireMonde(env), now = Date.now();
+  let survivants = 0, familles = 0, morts = 0, zombies = 0, joueurs = 0, parties = 0, doyen = null;
+  for(const id in m.j){
+    const e = m.j[id]; joueurs++; morts += e.m || 0; zombies += e.z || 0; parties += e.p || 0;
+    if(e.v > 0 && now - e.t < ACTIF){ survivants += e.v; familles++; if(!doyen || e.d > doyen.jour) doyen = { pseudo: e.n || "", jour: e.d }; }
+  }
+  const liste = await lireListe(env), r = liste[0];
+  // Événement mondial : total des zombies abattus pendant la horde par tous ceux qui ont envoyé leur part
+  const eid = idHordeServeur(now); let evt = null;
+  if(eid){ let total = 0, part = 0, actifs = 0; for(const id in m.j){ const e = m.j[id]; if(now - e.t < ACTIF) actifs++; if(e.e && e.e.id === eid){ total += e.e.z || 0; part++; } }
+    evt = { id: eid, total, participants: part, objectif: Math.max(500, actifs * 100) }; }
+  const { S } = await lireSaison(env, now), L = S.legende, T = S.tete, an = (S.annonces || [])[0];
+  const legende = L ? { pseudo: L.pseudo, score: L.score, jours: L.jours, saison: L.saison } : null, tete = T ? { pseudo: T.pseudo, score: T.score } : null;
+  const enTete = an && now - an.t < 3 * JOUR_MS_L ? an : null;
+  return reponse({ survivants, familles, morts, zombies, joueurs, parties, doyen, evt, legende, tete, enTete,
+    record: r ? { pseudo: r.pseudo, score: r.score, jours: r.jours } : null, tombes: (m.tombes || []).slice(0, 5) });
+}
+async function mondePost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
+  const m = await lireMonde(env), now = Date.now();
+  const eid = idHordeServeur(now), avant = m.j[id] && m.j[id].e;
+  m.j[id] = { v: entier(d.vivants, 4), d: entier(d.jour, 400), n: pseudo, m: entier(d.morts, 100000), z: entier(d.zombies, 1000000), p: entier(d.parties, 10000), t: now };
+  if(eid && d.evt && String(d.evt.id) === eid) m.j[id].e = { id: eid, z: Math.min(2000, entier(d.evt.z, 2000)) }; else if(avant && avant.id === eid) m.j[id].e = avant;
+  if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 400), s: entier(d.fin.score, 1600), t: now }].concat(m.tombes || []).slice(0, 10); }
+  const ids = Object.keys(m.j);
+  if(ids.length > MAX_APPAREILS) ids.sort((a, b) => m.j[a].t - m.j[b].t).slice(0, ids.length - MAX_APPAREILS).forEach((k) => delete m.j[k]);
+  await env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(m));
+  // Classement du mois en direct (2026-11-12, idée de Fabien) : une partie CLASSÉE en cours y entre avec son score du moment
+  // (seulement s'il dépasse le meilleur score du mois de cet appareil, pour limiter les écritures)
+  const sc = Math.floor(+d.score), jr = entier(d.jour, 400);
+  if(d.classee && pseudo && entier(d.vivants, 4) > 0 && sc > 0 && sc <= jr * 4){
+    const { S } = await lireSaison(env, now), e = S.scores.find((x) => x.id === id), cadre = cadreDe(d), avatar = avatarDe(d);
+    if(!e || sc > e.score){
+      if(e){ e.score = sc; e.jours = jr; e.pseudo = pseudo; if(cadre) e.cadre = cadre; e.avatar = avatar; e.live = true; e.t = now; }
+      else S.scores.push({ id, pseudo, score: sc, jours: jr, cadre, avatar, live: true, t: now });
+      S.scores.sort((a, b) => b.score - a.score || a.jours - b.jours); S.scores = S.scores.slice(0, GARDES);
+      majLegende(S, now); await env.CLASSEMENT.put(CLE_SAISON, JSON.stringify(S));
+    }
+  }
+  return reponse({ ok: true });
+}
+
+// ---------- Parrainage : /api/parrainage (POST seulement) ----------
+// {action:"moncode", id}                 -> { code }  (créé la première fois : 2 lettres + 3 chiffres, ex. BL615)
+// {action:"utiliser", id, code, pseudo}  -> { ok, colis } ou { erreur }  (un code d'invitation par appareil ; codes spéciaux à part)
+// {action:"nouvelles", id}               -> { filleuls:[pseudos] }  (les utilisations de mon code depuis la dernière fois, puis on vide)
+// Tout est dans la clé « parrainage » du KV. Codes spéciaux (ex. « 18-25 » pour les bêta-testeurs) : speciaux[code] = { actif, n }
+const CLE_PARR = "parrainage", LETTRES = "ABCDEFGHJKLMNPRSTUVWXYZ";
+async function lireParr(env){
+  const p = (await env.CLASSEMENT.get(CLE_PARR, { type: "json" })) || {};
+  p.codes = p.codes || {}; p.parId = p.parId || {}; p.utilises = p.utilises || {}; p.attente = p.attente || {}; p.spUtilises = p.spUtilises || {};
+  p.speciaux = p.speciaux || { "18-25": { actif: true, n: 0 } };
+  return p;
+}
+const normCode = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12);
+async function parrainagePost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const p = await lireParr(env);
+  if(d.action === "moncode"){
+    let code = p.parId[id];
+    if(!code){
+      do{ code = LETTRES[Math.floor(Math.random() * LETTRES.length)] + LETTRES[Math.floor(Math.random() * LETTRES.length)] + String(Math.floor(Math.random() * 1000)).padStart(3, "0"); }
+      while(p.codes[code] || p.speciaux[code]);
+      p.codes[code] = { id, n: 0 }; p.parId[id] = code;
+      await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+    }
+    return reponse({ code, n: p.codes[code].n });
+  }
+  if(d.action === "utiliser"){
+    const code = normCode(d.code), pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16)) || "Un nouveau joueur";
+    const sp = p.speciaux[code];
+    if(sp){
+      if(!sp.actif) return reponse({ erreur: "Ce code n’est plus actif." });
+      const deja = p.spUtilises[id] || [];
+      if(deja.indexOf(code) >= 0) return reponse({ erreur: "Tu as déjà utilisé ce code." });
+      p.spUtilises[id] = deja.concat([code]); sp.n = (sp.n || 0) + 1;
+      await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+      return reponse({ ok: true, colis: 1, special: true });
+    }
+    const c = p.codes[code];
+    if(!c) return reponse({ erreur: "Ce code n’existe pas." });
+    if(c.id === id) return reponse({ erreur: "C’est ton propre code !" });
+    if(p.utilises[id]) return reponse({ erreur: "Tu as déjà utilisé un code d’invitation." });
+    p.utilises[id] = code; c.n = (c.n || 0) + 1;
+    p.attente[c.id] = (p.attente[c.id] || []).concat([pseudo]).slice(-20);
+    await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p));
+    return reponse({ ok: true, colis: 1 });
+  }
+  if(d.action === "nouvelles"){
+    const f = p.attente[id] || [];
+    if(f.length){ delete p.attente[id]; await env.CLASSEMENT.put(CLE_PARR, JSON.stringify(p)); }
+    return reponse({ filleuls: f });
+  }
+  return reponse({ erreur: "action" }, 400);
+}
+
+// ---------- Guerres de clans (phase 3) ----------
+// Seuls deux clans COMPLETS (5 familles) peuvent se battre. Le chef lance la recherche ; dès qu'un autre clan complet
+// cherche aussi, la guerre commence : 3 jours, chaque jour chaque membre peut lancer 1 assaut contre une famille adverse
+// (combat tactique dans le jeu). Étoiles : 1 pour la victoire, +1 si personne n'est mort, +1 si gagné en 3 tours ou moins.
+// Butin : une petite part de la réserve adverse (jamais plus de 30 % de ce qu'elle avait au début de la guerre).
+const DUREE_GUERRE = 3, JOUR_MS = 24 * 3600 * 1000;
+// Ligues (2026-11-10) : chaque clan a des trophées ; une guerre gagnée +30, perdue −20 (jamais sous 0), nulle +5.
+// On n'affronte qu'un clan de sa ligue, ou de la ligue juste au-dessus / au-dessous si personne d'autre n'attend.
+const LIGUES = [{ nom: "Ferraille", min: 0 }, { nom: "Bronze", min: 100 }, { nom: "Argent", min: 250 }, { nom: "Or", min: 450 }, { nom: "Légende", min: 700 }];
+const TROPHEES = { victoire: 30, defaite: -20, nul: 5 };
+function ligueDe(t){ let k = 0; LIGUES.forEach((L, i) => { if((t || 0) >= L.min) k = i; }); return k; }
+const CADRES_OK = ["bois", "bronze", "argent", "or", "legende"];
+const cadreDe = (d) => CADRES_OK.indexOf(String(d.cadre || "")) >= 0 ? String(d.cadre) : "";
+// Avatar choisi dans « Mon profil » (2026-11-12) : seulement un portrait du jeu (pas d'image envoyée par le joueur pour l'instant)
+// À GARDER IDENTIQUE à AVATARS dans classement.js
+const AVATARS_OK = ("papa maman leo emma sam nora ines yanis marco marchand roux fillette precheur mere chefcamp pillard blesse convoi detresse pere lucie radio chienpiege " +
+  "gardien detenu pilote ingenieure jumeaux medecin musicien chasseur famillesud corbeau officier eclaireur " +
+  "rodeur coureur costaud rampant hurleur gonfle soldat pilleur couveuse brule gorille mariee pompier boucher colosse").split(" ");
+const avatarDe = (d) => AVATARS_OK.indexOf(String(d.avatar || "")) >= 0 ? String(d.avatar) : "";
+function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
+// ---------- Bots de test (2026-11-10, demande de Fabien) ----------
+// Créés et supprimés depuis l'administration. Un bot est un faux joueur (id commençant par « bot », m.bot = true).
+// Les clans de bots cherchent toujours une guerre ; pendant une guerre, chaque bot (ennemi ou équipier) lance
+// tout seul son assaut de chaque jour, avec des étoiles au hasard.
+const PSEUDOS_BOTS = ["Rex_Ranger", "Lili", "MadMax", "Zoé", "Bertrand", "Kader", "Nina", "Tonton", "Jojo", "Sacha", "Hugo", "Lola", "Marius", "Gaby", "Yoyo", "Capu", "Mamie_Ro", "Brico", "Sniper", "Pépé"];
+const NOMS_CLANS_BOTS = ["Les Rôdeurs du Sud", "La Horde Grise", "Les Corbeaux", "Bastion de Fer", "Les Survivants du Lac", "La Meute"];
+const CADRES_BOTS = ["bois", "bronze", "argent", "or", "legende"];
+// Profil d'un membre (2026-11-10) : quelques chiffres envoyés par son jeu, bornés (pas de vraie vérification)
+const CHAMPS_PROFIL = { zombies: 1000000, meilleur: 100000, plusLongue: 1000, parties: 100000, succes: 100, etoiles: 100000, victoires: 10000, depots: 1000000, vivants: 4 };
+function profilDe(d){ const p = d && d.profil; if(!p || typeof p !== "object") return null; const r = {}; for(const k in CHAMPS_PROFIL){ const v = Math.floor(+p[k]); r[k] = v >= 0 ? Math.min(v, CHAMPS_PROFIL[k]) : 0; } return r; }
+function profilBot(jour){ return { zombies: hasardEntier(jour, jour * 4), meilleur: hasardEntier(jour * 2, jour * 4), plusLongue: jour, parties: hasardEntier(1, 30), succes: hasardEntier(3, 22), etoiles: hasardEntier(0, 40), victoires: hasardEntier(0, 8), depots: hasardEntier(0, 200), vivants: hasardEntier(1, 4) }; }
+const hasardEntier = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const idBot = () => "bot" + Math.random().toString(36).slice(2, 12);
+const estBot = (id) => String(id || "").indexOf("bot") === 0;
+function nouveauBot(){ return { id: idBot(), pseudo: PSEUDOS_BOTS[hasardEntier(0, PSEUDOS_BOTS.length - 1)] + hasardEntier(1, 99), jour: hasardEntier(30, 150), vu: Date.now() - hasardEntier(0, 2) * JOUR_MS, rejoint: Date.now(), cadre: CADRES_BOTS[hasardEntier(0, 4)], bot: true, depose: hasardEntier(0, 30), pris: 0 }; }
+function etoilesBot(){ const r = Math.random(); return r < 0.25 ? 0 : r < 0.6 ? 1 : r < 0.85 ? 2 : 3; }
+// Les bots des deux camps lancent leurs assauts manqués (un par jour écoulé). Renvoie true si quelque chose a changé.
+function botsAttaquent(C, W){
+  let change = false; const jMax = Math.min(DUREE_GUERRE, jourGuerre(W)), now = Date.now();
+  ["a", "b"].forEach((camp) => {
+    const nous = C.clans[W[camp]], eux = C.clans[W[camp === "a" ? "b" : "a"]]; if(!nous || !eux) return;
+    nous.membres.filter((m) => m.bot).forEach((m) => {
+      for(let j = 1; j <= jMax; j++){
+        if(W.assauts.some((s) => s.par === m.id && s.jour === j)) continue;
+        const libres = eux.membres.filter((c) => !W.assauts.some((s) => s.cible === c.id && s.jour === j && s.fini !== false)), cible = libres.length ? libres[hasardEntier(0, libres.length - 1)] : null;
+        if(!cible) continue;
+        const etoiles = etoilesBot(), s = { id: "s" + Math.random().toString(36).slice(2, 9), par: m.id, pseudo: m.pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: true, etoiles, butin: [], t: Math.min(now, W.debut + (j - 1) * JOUR_MS + hasardEntier(1, 20) * 3600 * 1000) };
+        W.assauts.push(s); W.etoiles[camp] += etoiles; nous.etoilesTotal = (nous.etoilesTotal || 0) + etoiles;
+        if(etoiles){
+          bastionDe(eux); const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
+          Object.keys(eux.reserve).filter((k) => eux.reserve[k] > 0).slice(0, 2).forEach((k) => { const n = Math.min(Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0), Math.max(1, Math.floor(eux.reserve[k] * 0.05 * etoiles)));
+            if(n > 0){ eux.reserve[k] -= n; if(!eux.reserve[k]) delete eux.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
+        }
+        noterAssaut(bastionDe(nous), bastionDe(eux), m.pseudo, cible.pseudo, etoiles, s.butin, s.t);
+        change = true;
+      }
+    });
+  });
+  return change;
+}
+
+// Résumé d'une guerre terminée, gardé dans chaque clan (2026-11-14 : historique des guerres ; le détail des vieilles guerres finit par être effacé)
+function resumeGuerreClan(C, W, wid, c){
+  const camp = W.a === c.id ? "a" : "b", adv = C.clans[W[camp === "a" ? "b" : "a"]];
+  return { wid, t: W.debut + DUREE_GUERRE * JOUR_MS, contre: adv ? adv.nom : (W.noms && W.noms[camp === "a" ? "b" : "a"]) || "un clan disparu", blason: adv ? adv.blason : 1,
+    nous: W.etoiles[camp] || 0, eux: W.etoiles[camp === "a" ? "b" : "a"] || 0, res: !W.gagnant ? "nulle" : W.gagnant === c.id ? "gagnee" : "perdue", tr: (W.trophees && W.trophees[camp]) || 0 };
+}
+function cloreGuerres(C){
+  const now = Date.now();
+  // Les bots jouent leurs assauts dans les guerres en cours
+  for(const wid in C.guerres){ const W = C.guerres[wid]; if(!W.fini && botsAttaquent(C, W)) C._change = true; }
+  for(const wid in C.guerres){
+    const W = C.guerres[wid]; if(W.fini || now < W.debut + DUREE_GUERRE * JOUR_MS) continue;
+    W.fini = true; W.gagnant = W.etoiles.a > W.etoiles.b ? W.a : W.etoiles.b > W.etoiles.a ? W.b : null;
+    W.trophees = {};
+    ["a", "b"].forEach((camp) => { const c = C.clans[W[camp]]; if(!c) return; const delta = !W.gagnant ? TROPHEES.nul : W.gagnant === c.id ? TROPHEES.victoire : TROPHEES.defaite;
+      const avant = c.trophees || 0; c.trophees = Math.max(0, avant + delta); W.trophees[camp] = c.trophees - avant; });
+    C._change = true;
+    [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.guerre = null; c.historique = [wid].concat(c.historique || []).slice(0, 10);
+      if(c.bot && c.membres.length >= MAX_CLAN){ c.recherche = true; if(C.file.indexOf(c.id) < 0) C.file.push(c.id); }
+      c.bilan = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 }; if(!W.gagnant) c.bilan.nulles++; else if(W.gagnant === cid) c.bilan.gagnees++; else c.bilan.perdues++; });
+    [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.histoG = [resumeGuerreClan(C, W, wid, c)].concat(c.histoG || []).slice(0, 20); });
+    // Fin de la guerre dans le journal des deux clans (2026-11-14, demande de Fabien)
+    ["a", "b"].forEach((camp) => { const c = C.clans[W[camp]], adv = C.clans[W[camp === "a" ? "b" : "a"]]; if(!c) return;
+      const res = !W.gagnant ? "nulle" : W.gagnant === c.id ? "gagnee" : "perdue", nous = W.etoiles[camp] || 0, eux = W.etoiles[camp === "a" ? "b" : "a"] || 0, tr = W.trophees[camp] || 0, contre = adv ? adv.nom : "un clan disparu";
+      bastionDe(c); noter(c, res === "gagnee" ? "🏆" : res === "perdue" ? "💀" : "🤝", "Guerre " + (res === "gagnee" ? "gagnée" : res === "perdue" ? "perdue" : "à égalité") + " contre " + contre + " : " + nous + " ★ contre " + eux + " ★ (" + (tr >= 0 ? "+" : "") + tr + " trophées)",
+        { g: { res, contre, nous, eux, tr }, t: Math.min(now, W.debut + DUREE_GUERRE * JOUR_MS) }); });
+  }
+  // On ne garde que les 30 dernières guerres terminées
+  const finies = Object.keys(C.guerres).filter((w) => C.guerres[w].fini).sort((x, y) => C.guerres[y].debut - C.guerres[x].debut);
+  finies.slice(30).forEach((w) => { delete C.guerres[w]; });
+}
+function vueGuerre(C, W, mon, id){
+  const camp = W.a === mon.id ? "a" : "b", adv = C.clans[camp === "a" ? W.b : W.a] || { nom: "?", blason: 1, membres: [], def: {} };
+  const j = Math.min(DUREE_GUERRE, jourGuerre(W)), finJour = W.debut + j * JOUR_MS;
+  const dejaMoi = W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false);
+  return { id: W.id, jour: j, fini: !!W.fini, gagnant: W.gagnant === mon.id ? "nous" : W.gagnant ? "eux" : null, finJour, fin: W.debut + DUREE_GUERRE * JOUR_MS,
+    nous: { nom: mon.nom, blason: mon.blason, etoiles: W.etoiles[camp], trophees: mon.trophees || 0, ligue: ligueDe(mon.trophees) }, eux: { nom: adv.nom, blason: adv.blason, etoiles: W.etoiles[camp === "a" ? "b" : "a"], remparts: (adv.def || {}).remparts || 0, mines: (adv.def || {}).mines || 0, armurerie: (adv.def || {}).armurerie || 0, trophees: adv.trophees || 0, ligue: ligueDe(adv.trophees) },
+    gainTrophees: W.trophees ? W.trophees[camp] : null,
+    cibles: (adv.membres || []).map((m) => ({ id: m.id, pseudo: m.pseudo, avatar: m.avatar || "", jour: m.jour, attaquee: W.assauts.some((s) => s.cible === m.id && s.jour === j && s.fini !== false) })),
+    dejaMoi, assauts: W.assauts.filter((s) => s.fini !== false).slice(-30).reverse().map((s) => ({ t: s.t || 0, jour: s.jour, qui: s.pseudo, cible: s.ciblePseudo, nous: s.camp === camp, etoiles: s.etoiles, butin: s.butin })) };
+}
+
+// ---------- Bastion du clan (phase 2) : réserve commune, défenses, journal ----------
+// Objets qu'on peut déposer (empilables uniquement) et coût des défenses (payé avec la réserve)
+const DEPOSABLES = ["bidon", "bouteille", "conserve", "conserves", "riz", "pates", "biscuits", "barre", "ration", "poisson", "bandage", "trousse", "antibio", "balle", "cartouche", "planche", "ferraille", "clous", "ruban", "chiffon", "alcool", "pile", "jerrican", "canette", "epices", "huile", "farine"];
+const RETRAITS_JOUR = 5, CREDIT_RESERVE = 5; // on peut prendre au plus 5 objets de plus que ce qu'on a déposé
+const DEFENSES = {
+  remparts: { max: 5, cout: (l) => ({ planche: 6 * (l + 1), ferraille: 2 * (l + 1) }) },
+  mines:    { max: 10, cout: () => ({ ferraille: 2, clous: 2, alcool: 1 }) },
+  tours:    { max: 3, cout: (l) => ({ planche: 8 * (l + 1), clous: 4 * (l + 1) }) },
+  armurerie:{ max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), ruban: 2 * (l + 1), chiffon: 2 * (l + 1) }) },
+  // Camion du clan (2026-11-10) : servent aux assauts de chaque membre
+  parebuffle:{ max: 3, cout: (l) => ({ ferraille: 3 * (l + 1), clous: 3 * (l + 1) }) },
+  blindage:  { max: 3, cout: (l) => ({ ferraille: 4 * (l + 1), planche: 3 * (l + 1), ruban: l + 1 }) },
+  tourelle:  { max: 3, cout: (l) => ({ ferraille: 5 * (l + 1), clous: 2 * (l + 1), ruban: 2 * (l + 1) }) },
+  // Raid de l'immeuble (2026-11-10) : la remorque artisanale ramène beaucoup plus de butin
+  remorque:  { max: 1, cout: () => ({ planche: 12, ferraille: 8, clous: 8, ruban: 4 }) }
+};
+function bastionDe(c){ c.reserve = c.reserve || {}; c.def = c.def || {}; for(const k in DEFENSES) c.def[k] = c.def[k] || 0; c.journal = c.journal || []; c.retraits = c.retraits || {}; return c; }
+const aujourdhui = () => new Date().toISOString().slice(0, 10);
+// Changer de pseudo dans un clan (2026-11-12) : une fois tous les 30 jours, jamais pendant une guerre (sinon on ne sait plus qui est qui)
+const PSEUDO_DELAI = 30 * 24 * 3600 * 1000;
+// Après avoir quitté un clan de soi-même : 24 h avant d'en rejoindre ou d'en fonder un autre (2026-11-12, idée de Fabien : pas de saut de clan en clan pendant les guerres)
+const ATTENTE_CLAN = 24 * 3600 * 1000;
+function attenteClan(C, id, now){
+  const t = C.departs && C.departs[id]; if(!t || now - t >= ATTENTE_CLAN) return "";
+  const h = Math.ceil((ATTENTE_CLAN - (now - t)) / 3600000);
+  return "Tu as quitté un clan il y a moins de 24 h : tu pourras en rejoindre ou en fonder un autre dans " + h + " h.";
+}
+function noter(c, qui, txt, ex){ c.journal = c.journal || []; c.journal.unshift(Object.assign({ t: Date.now(), qui, txt }, ex || {})); if(ex && ex.t) c.journal.sort((x, y) => y.t - x.t); c.journal = c.journal.slice(0, 40); }
+// Journal des assauts (2026-11-12) : les deux clans notent l'assaut avec l'attaquant, son clan, la cible, les étoiles et le butin
+function noterAssaut(att, def, par, cible, etoiles, butin, t){
+  const b = (butin || []).slice(0, 4), et = etoiles ? etoiles + " ★" : "repoussé";
+  noter(def, "⚔️", par + " (" + att.nom + ") a attaqué " + cible + " : " + (etoiles ? "bastion pillé, " : "") + et, { a: { sens: "subi", par, clan: att.nom, cible, etoiles, butin: b }, t: t || Date.now() });
+  noter(att, "⚔️", par + " a attaqué " + cible + " (" + def.nom + ") : " + et, { a: { sens: "mene", par, clan: def.nom, cible, etoiles, butin: b }, t: t || Date.now() });
+}
+function partDe(c, id){ const m = c.membres.find((x) => x.id === id) || {}; return { depose: m.depose || 0, pris: m.pris || 0, credit: (m.depose || 0) + CREDIT_RESERVE - (m.pris || 0) }; }
+function etatBastion(c, id){ bastionDe(c); const vr = vueRaid(c, id); const r = c.retraits[id]; const pris = r && r.jour === aujourdhui() ? r.n : 0;
+  const couts = {}; for(const k in DEFENSES){ c.def[k] = c.def[k] || 0; couts[k] = c.def[k] >= DEFENSES[k].max ? null : DEFENSES[k].cout(c.def[k]); }
+  return { reserve: c.reserve, def: c.def, couts, max: { remparts: 5, mines: 10, tours: 3, armurerie: 3, parebuffle: 3, blindage: 3, tourelle: 3, remorque: 1 }, journal: c.journal.slice(0, 25), retraitsRestants: Math.max(0, Math.min(RETRAITS_JOUR - pris, partDe(c, id).credit)), part: partDe(c, id), deposables: DEPOSABLES, raid: vr }; }
+
+
+/* ---------- Raid de l'immeuble (2026-11-10, idée de Fabien) ----------
+   Une fois par clan. Chaque membre inscrit un volontaire (un survivant de sa famille + ce qu'il lui confie) ;
+   dès que RAID_MIN volontaires sont prêts, le chef lance le raid et le joue (combat tactique, étage par étage).
+   Le résultat (sort de chaque volontaire, butin, replay) est envoyé par le jeu du chef. Chacun récupère ensuite sa part.
+   c.raid = { volontaires:{ id:{pseudo, membre, kit, t} }, pret4, lance:{par, pseudo, t}, fait, res, parts } ; replay : clé KV « raid_<cid> » */
+const RAID_MIN = 4, RAID_MAX = 5, RAID_ATTENTE_CHEF = 48 * 3600e3, RAID_BLOQUE = 2 * 3600e3;
+const KIT_RAID = ["balle", "cartouche", "bandage", "trousse", "antibio", "alcool", "chiffon", "canette"], GEAR_RAID = ["gilet", "casque", "bouclier"];
+function raidDe(c){ c.raid = c.raid || { volontaires: {} }; c.raid.volontaires = c.raid.volontaires || {}; return c.raid; }
+const borne = (v, a, b) => Math.max(a, Math.min(b, Math.floor(+v) || 0));
+const idObjet = (k) => String(k || "").replace(/[^a-zA-Z]/g, "").slice(0, 20);
+// Le survivant envoyé : on ne garde que des données simples et bornées
+function membrePropre(m){
+  m = m || {}; const eq = {};
+  ["arme", "outil", "sac"].forEach((k) => { const o = m.eq && m.eq[k]; if(o && o.id) eq[k] = { id: idObjet(o.id), sol: borne(o.sol, 0, 99), uid: borne(o.uid, 0, 1e9) }; });
+  return { nom: nomPropre(m.nom, 12) || "?", r: nomPropre(m.r, 12), icone: String(m.icone || "").slice(0, 4), trait: idObjet(m.trait), hp: borne(m.hp, 1, 100), en: borne(m.en, 0, 100),
+           faim: borne(m.faim, 0, 100), soif: borne(m.soif, 0, 100), folie: borne(m.folie, 0, 100), idx: borne(m.idx, 0, 7), eq };
+}
+function kitPropre(k){
+  k = k || {}; const n = {}, o = [];
+  KIT_RAID.forEach((id) => { const q = borne(k.n && k.n[id], 0, 40); if(q) n[id] = q; });
+  (Array.isArray(k.o) ? k.o : []).slice(0, 3).forEach((x) => { if(x && GEAR_RAID.indexOf(x.id) >= 0 && !o.some((y) => y.id === x.id)) o.push({ id: x.id, sol: borne(x.sol, 1, 20), uid: borne(x.uid, 0, 1e9) }); });
+  return { n, o };
+}
+function vueRaid(c, id){
+  const R = raidDe(c), vols = Object.keys(R.volontaires).filter((v) => c.membres.some((m) => m.id === v));
+  const now = Date.now(), nb = vols.length, chef = c.chef === id;
+  const lanceBloque = R.lance && R.lance.par !== id && now - R.lance.t < RAID_BLOQUE;
+  const peutLancer = !R.fait && nb >= RAID_MIN && !lanceBloque && (chef || (R.pret4 && now - R.pret4 > RAID_ATTENTE_CHEF) || (R.lance && R.lance.par === id));
+  const part = R.parts && R.parts[id];
+  return { fait: !!R.fait, min: RAID_MIN, max: RAID_MAX, nb, chef, peutLancer, remorque: (c.def && c.def.remorque) || 0,
+    attenteChef: R.pret4 && !R.fait ? Math.max(0, R.pret4 + RAID_ATTENTE_CHEF - now) : null,
+    lance: R.lance && !R.fait ? { pseudo: R.lance.pseudo, t: R.lance.t, moi: R.lance.par === id } : null,
+    volontaires: vols.map((v) => { const x = R.volontaires[v]; return { moi: v === id, pseudo: x.pseudo, t: x.t, membre: { nom: x.membre.nom, r: x.membre.r, hp: x.membre.hp, en: x.membre.en, trait: x.membre.trait, eq: x.membre.eq }, kit: x.kit }; }),
+    res: R.res || null, maPart: part && !part.recupere ? part : null, aRecupere: !!(part && part.recupere), participe: !!part };
+}
+
+
+/* ---------- Chat du clan (2026-11-11, demande de Fabien) ----------
+   Les 100 derniers messages de chaque clan, dans la clé KV « chat_<cid> » (un seul envoi = une écriture).
+   Messages rapides (CHAT_RAPIDES, mêmes textes que chat.js), gros mots masqués, 1 message toutes les 3 s par joueur,
+   le chef efface, chacun signale (le message part dans les avis de l'administration).
+   Partie bien séparée : sur l'hébergeur définitif, elle sera refaite avec une vraie base de données. */
+const CHAT_MAX = 100, CHAT_LONG = 200, CHAT_DELAI = 3000;
+const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un volontaire pour le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🤝 Regardez mon offre d’échange !", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
+async function lireChat(env, cid){ return (await env.CLASSEMENT.get("chat_" + cid, { type: "json" })) || []; }
+/* ---------- Échanges entre membres du clan (2026-11-14, demande de Fabien) ----------
+   Une offre « je donne … contre … » se poste dans la discussion. Limites : 3 objets au plus de chaque côté,
+   seulement les objets déposables (vivres, soins, munitions, matériaux), un échange (proposé OU accepté) toutes les 8 h
+   par joueur, une seule offre ouverte à la fois, et on ne peut pas demander plus de 1,5 fois la valeur de ce qu'on donne.
+   Ce qui est donné est mis de côté à la publication (retiré du stock du joueur) ; à l'acceptation, celui qui accepte reçoit
+   tout de suite, celui qui a proposé reçoit à sa prochaine visite de la discussion (c.livraisons). Une offre non prise
+   pendant 24 h expire et ce qui était mis de côté revient à son auteur. Pas de vraie vérification des stocks (anti-triche : plus tard). */
+const ECH_MAX = 3, ECH_DELAI = 8 * 3600e3, ECH_DUREE = 24 * 3600e3, ECH_RATIO = 1.5;
+const ECH_VALEURS = { bouteille:2, bidon:8, conserve:2, conserves:8, riz:12, biscuits:4, pates:3, barre:1, ration:4, poisson:2, bandage:3, trousse:6, antibio:5,
+  balle:1, cartouche:1.5, planche:1, ferraille:2, clous:1, ruban:2, chiffon:1, alcool:2, pile:2, jerrican:8, canette:4, epices:2, huile:2, farine:2 };
+function objetsEch(o){
+  const r = {}; let n = 0;
+  for(const k in (o || {})){ const q = Math.floor(+o[k]); if(!(q > 0) || DEPOSABLES.indexOf(k) < 0) continue; r[k] = q; n += q; }
+  return n >= 1 && n <= ECH_MAX ? r : null;
+}
+const valeurEch = (o) => Object.keys(o || {}).reduce((t, k) => t + (ECH_VALEURS[k] || 1) * o[k], 0);
+function livrer(c, id, objets, txt, now){ c.livraisons = c.livraisons || {}; (c.livraisons[id] = c.livraisons[id] || []).push({ objets, txt, t: now }); }
+// Prépare les échanges du clan et fait expirer les vieilles offres (renvoie true si quelque chose a changé)
+function echangesDe(c, now){
+  c.echanges = c.echanges || []; c.echT = c.echT || {}; c.livraisons = c.livraisons || {};
+  let change = false;
+  c.echanges.forEach((e) => { if(e.etat === "ouvert" && now - e.t > ECH_DUREE){ e.etat = "expire"; livrer(c, e.par, e.donne, "Ton offre d’échange a expiré : ce que tu proposais te revient.", now); change = true; } });
+  if(c.echanges.length > 30){ c.echanges = c.echanges.filter((e, k) => e.etat === "ouvert" || k >= c.echanges.length - 30); change = true; }
+  return change;
+}
+const attenteEch = (c, id, now) => Math.max(0, ((c.echT || {})[id] || 0) + ECH_DELAI - now);
+function vueChat(liste, mon, id){
+  const now = Date.now(), ech = {};
+  (mon.echanges || []).forEach((e) => { ech[e.eid] = { eid: e.eid, qui: e.qui, moi: e.par === id, donne: e.donne, veut: e.veut, t: e.t, fin: e.t + ECH_DUREE, etat: e.etat, preneur: e.pqui || "", jePrends: e.preneur === id }; });
+  return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef, ech: m.ech || null })),
+           echanges: ech, echAttente: attenteEch(mon, id, now), echMax: ECH_MAX, echRatio: ECH_RATIO,
+           journal: (mon.journal || []).slice(0, 25).map((j) => ({ t: j.t, qui: j.qui, txt: j.txt })), chef: mon.chef === id, nom: mon.nom, blason: mon.blason || 1, membres: (mon.membres || []).length };
+}
+
+// ---------- Clans : /api/clans (POST) — phase 1 des guerres de clans ----------
+// {action:"liste", id}                               -> { jourMin, clans:[résumés], monClan:{détail} | null }
+// {action:"creer", id, pseudo, jour, nom, blason}    -> crée un clan (le créateur en est le chef)
+// {action:"rejoindre", id, pseudo, jour, clan}       -> rejoint un clan qui a de la place (5 au maximum)
+// {action:"quitter", id}                             -> quitte (si le chef part, le plus ancien devient chef ; un clan vide disparaît)
+// {action:"exclure", id, cible}                      -> le chef exclut un membre
+// Accès à partir du jour `jourMinClan` de sa partie (30 depuis le 2026-11-10, réglable dans l'administration : clé KV « reglages »).
+const CLE_CLANS = "clans", CLE_REGLAGES = "reglages", MAX_CLAN = 5, BLASONS_OK = 12;
+async function lireClans(env){ const c = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {}; c.clans = c.clans || {}; c.parJoueur = c.parJoueur || {}; c.guerres = c.guerres || {}; c.file = c.file || []; cloreGuerres(c); return c; }
+async function lireReglages(env){ const r = (await env.CLASSEMENT.get(CLE_REGLAGES, { type: "json" })) || {}; if(!(r.jourMinClan >= 1)) r.jourMinClan = 30; return r; }
+const nomPropre = (t, n) => String(t || "").replace(/[^\p{L}\p{N} _\-'.!]/gu, "").replace(/\s+/g, " ").trim().slice(0, n);
+function resumeClan(c){ const chef = c.membres.find((m) => m.id === c.chef) || c.membres[0] || {};
+  return { id: c.id, nom: c.nom, blason: c.blason, membres: c.membres.length, chef: chef.pseudo || "", jours: c.membres.reduce((t, m) => t + (m.jour || 0), 0), cree: c.cree, trophees: c.trophees || 0, ligue: ligueDe(c.trophees),
+    desc: c.desc || "", bilan: c.bilan || null, noms: c.membres.map((m) => ({ pseudo: m.pseudo, cadre: m.cadre || "", avatar: m.avatar || "", chef: m.id === c.chef, jour: m.jour || 0 })) }; }
+// Description du clan (2026-11-10) : 200 caractères au plus, écrite par le chef
+const DESC_MAX = 200;
+function descPropre(t){ return String(t || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, DESC_MAX); }
+const DESC_BOTS = ["Clan de test : on défend, on partage, on tient bon.", "Ici on ne laisse personne derrière. Dépose avant de prendre !", "Chasseurs de rôdeurs depuis le premier jour.", "Petit clan tranquille, actif tous les soirs."];
+function detailClan(c, moi){ return Object.assign(resumeClan(c), { tours: (c.def && c.def.tours) || 0, enGuerre: !!c.guerre, recherche: !!c.recherche, bilan: c.bilan || null, chefId: c.chef === moi, membresListe: c.membres.map((m) => ({ id: m.id === moi ? "moi" : m.id.slice(0, 6), vrai: m.id, pseudo: m.pseudo, cadre: m.cadre || "", avatar: m.avatar || "", depose: m.depose || 0, pris: m.pris || 0, profil: m.profil || (m.bot ? (m.profil = profilBot(m.jour || 30)) : null), rejoint: m.rejoint || 0, bot: !!m.bot, jour: m.jour, vu: m.vu, chef: m.id === c.chef, moi: m.id === moi })) }); }
+async function clansPost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const C = await lireClans(env), R = await lireReglages(env), now = Date.now();
+  const sauver = () => env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+  const pseudo = (function(p){ return texteInterdit(p) ? "" : p; })(nomPropre(d.pseudo, 16)), jour = Math.max(0, Math.min(2000, Math.floor(+d.jour) || 0));
+  const monCid = C.parJoueur[id], mon = monCid ? C.clans[monCid] : null;
+  // Pseudo interdit gardé d'avant le filtre (2026-11-12) : remplacé par « Survivant » dans le clan
+  if(mon) mon.membres.forEach((m) => { if(m.pseudo && texteInterdit(m.pseudo)){ m.pseudo = "Survivant"; C._change = true; } });
+  if(mon){ const m = mon.membres.find((x) => x.id === id); if(m && (jour || pseudo)){ if(jour) m.jour = jour; if(pseudo && pseudo !== m.pseudo && !mon.guerre && !(m.pseudoT && now - m.pseudoT < PSEUDO_DELAI)){ noter(mon, m.pseudo, "🏷️ " + m.pseudo + " s’appelle maintenant " + pseudo); m.pseudo = pseudo; m.pseudoT = now; } m.vu = now; const cd = cadreDe(d); if(cd) m.cadre = cd; m.avatar = avatarDe(d); const pf = profilDe(d); if(pf) m.profil = pf; } }
+  switch(d.action){
+    case "liste": {
+      const liste = Object.values(C.clans).map(resumeClan).sort((a, b) => b.jours - a.jours).slice(0, 100);
+      if(mon || C._change) await sauver(); // garde la dernière visite du membre (inactivité visible du chef) et les assauts des bots
+      return reponse({ jourMin: R.jourMinClan, clans: liste, monClan: mon ? detailClan(mon, id) : null });
+    }
+    case "creer": {
+      if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
+      if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour fonder un clan." });
+      if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      if(attenteClan(C, id, now)) return reponse({ erreur: attenteClan(C, id, now) });
+      const nom = nomPropre(d.nom, 20); if(nom.length < 3) return reponse({ erreur: "Le nom du clan doit faire au moins 3 lettres." });
+      if(texteInterdit(nom)) return reponse({ erreur: MSG_NOM_INTERDIT });
+      if(Object.values(C.clans).some((c) => c.nom.toLowerCase() === nom.toLowerCase())) return reponse({ erreur: "Ce nom de clan est déjà pris." });
+      const blason = Math.max(1, Math.min(BLASONS_OK, Math.floor(+d.blason) || 1));
+      let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
+      C.clans[cid] = { id: cid, nom, blason, chef: id, cree: now, membres: [{ id, pseudo, jour, vu: now, rejoint: now, cadre: cadreDe(d) }] };
+      C.parJoueur[id] = cid; await sauver();
+      return reponse({ ok: true, monClan: detailClan(C.clans[cid], id) });
+    }
+    case "rejoindre": {
+      if(mon) return reponse({ erreur: "Tu fais déjà partie d’un clan." });
+      if(jour < R.jourMinClan) return reponse({ erreur: "Il faut avoir tenu " + R.jourMinClan + " jours pour rejoindre un clan." });
+      if(!pseudo) return reponse({ erreur: "Choisis d’abord un pseudo." });
+      if(attenteClan(C, id, now)) return reponse({ erreur: attenteClan(C, id, now) });
+      const c = C.clans[String(d.clan || "")]; if(!c) return reponse({ erreur: "Ce clan n’existe plus." });
+      if(c.membres.length >= MAX_CLAN) return reponse({ erreur: "Ce clan est complet (" + MAX_CLAN + " familles)." });
+      c.membres.push({ id, pseudo, jour, vu: now, rejoint: now, cadre: cadreDe(d) }); C.parJoueur[id] = c.id; await sauver();
+      return reponse({ ok: true, monClan: detailClan(c, id) });
+    }
+    case "quitter": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon);
+      // Échanges (2026-11-14) : une offre encore ouverte est annulée et ce qui était mis de côté revient (ce que le jeu range s'il le peut)
+      const rendus = {}; (mon.echanges || []).forEach((e) => { if(e.par === id && e.etat === "ouvert"){ e.etat = "annule"; for(const k in e.donne) rendus[k] = (rendus[k] || 0) + e.donne[k]; } });
+      (((mon.livraisons || {})[id]) || []).forEach((l) => { for(const k in l.objets) rendus[k] = (rendus[k] || 0) + l.objets[k]; }); if(mon.livraisons) delete mon.livraisons[id];
+      d._rendus = Object.keys(rendus).length ? rendus : null;
+      if(d.raison === "mort") noter(mon, "💀", "La famille de " + (pseudo || "?") + " est tombée" + (jour ? " au jour " + jour : "") + ". Le clan perd une famille.");
+      else { noter(mon, "🚪", (pseudo || "?") + " a quitté le clan."); C.departs = C.departs || {}; Object.keys(C.departs).forEach((k) => { if(now - C.departs[k] >= ATTENTE_CLAN) delete C.departs[k]; }); C.departs[id] = now; } // 24 h avant un autre clan (pas après une mort ni une exclusion)
+      mon.membres = mon.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
+      if(!mon.membres.length) delete C.clans[mon.id];
+      else if(mon.chef === id) mon.chef = mon.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
+      await sauver(); return reponse({ ok: true, ech: d._rendus ? { ajouter: d._rendus, msgs: ["Ton offre d’échange est annulée : ce que tu proposais te revient."] } : null });
+    }
+    case "bastion": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      await sauver(); return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "deposer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const o = d.objets || {}, liste = [];
+      const moi = mon.membres.find((x) => x.id === id);
+      for(const k in o){ const n = Math.floor(+o[k]); if(DEPOSABLES.indexOf(k) < 0 || !(n >= 1 && n <= 500)) continue; mon.reserve[k] = (mon.reserve[k] || 0) + n; liste.push(n + " " + k); if(moi) moi.depose = (moi.depose || 0) + n; }
+      if(!liste.length) return reponse({ erreur: "Rien à déposer." });
+      noter(mon, pseudo || "?", "a déposé " + liste.join(", ")); await sauver();
+      return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "retirer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const k = String(d.objet || ""), n = Math.floor(+d.n) || 1;
+      const r = mon.retraits[id] && mon.retraits[id].jour === aujourdhui() ? mon.retraits[id] : { jour: aujourdhui(), n: 0 };
+      if(r.n + n > RETRAITS_JOUR) return reponse({ erreur: "Tu as déjà pris " + r.n + " objets aujourd’hui (" + RETRAITS_JOUR + " au maximum par jour)." });
+      if(!(mon.reserve[k] >= n)) return reponse({ erreur: "Il n’y en a plus assez dans la réserve." });
+      if(partDe(mon, id).credit < n) return reponse({ erreur: "Tu as déjà pris " + CREDIT_RESERVE + " objets de plus que ce que tu as déposé : dépose d’abord quelque chose dans la réserve." });
+      const moiR = mon.membres.find((x) => x.id === id); if(moiR) moiR.pris = (moiR.pris || 0) + n;
+      mon.reserve[k] -= n; if(!mon.reserve[k]) delete mon.reserve[k];
+      r.n += n; mon.retraits[id] = r; noter(mon, pseudo || "?", "a pris " + n + " " + k); await sauver();
+      return reponse({ ok: true, objet: k, n, bastion: etatBastion(mon, id) });
+    }
+    case "construire": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const k = String(d.def || ""), D = DEFENSES[k];
+      if(!D) return reponse({ erreur: "défense" }, 400);
+      if(mon.def[k] >= D.max) return reponse({ erreur: "Niveau maximum atteint." });
+      const cout = D.cout(mon.def[k]);
+      for(const m in cout) if(!(mon.reserve[m] >= cout[m])) return reponse({ erreur: "Il manque des matériaux dans la réserve." });
+      for(const m in cout){ mon.reserve[m] -= cout[m]; if(!mon.reserve[m]) delete mon.reserve[m]; }
+      mon.def[k]++; noter(mon, pseudo || "?", "a construit : " + k + " (niveau " + mon.def[k] + ")"); await sauver();
+      return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidPret": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon);
+      if(R.fait) return reponse({ erreur: "L’immeuble a déjà été pillé par le clan." });
+      if(R.lance && now - R.lance.t < RAID_BLOQUE) return reponse({ erreur: "Le raid est en cours : impossible de changer les volontaires." });
+      if(!R.volontaires[id] && Object.keys(R.volontaires).length >= RAID_MAX) return reponse({ erreur: "Il y a déjà " + RAID_MAX + " volontaires." });
+      R.volontaires[id] = { pseudo, membre: membrePropre(d.membre), kit: kitPropre(d.kit), t: now };
+      const nb = Object.keys(R.volontaires).length; if(nb >= RAID_MIN && !R.pret4) R.pret4 = now;
+      noter(mon, "🏢", (pseudo || "?") + " envoie " + R.volontaires[id].membre.nom + " pour le raid de l’immeuble (" + nb + " / " + RAID_MIN + ")");
+      await sauver(); return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidRetrait": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon), v = R.volontaires[id];
+      if(!v) return reponse({ erreur: "Tu n’as pas de volontaire inscrit." });
+      if(R.lance && now - R.lance.t < RAID_BLOQUE) return reponse({ erreur: "Le raid est en cours : ton volontaire ne peut plus se retirer." });
+      delete R.volontaires[id]; if(Object.keys(R.volontaires).length < RAID_MIN) R.pret4 = null;
+      noter(mon, "🏢", (pseudo || "?") + " retire son volontaire du raid");
+      await sauver(); return reponse({ ok: true, kit: v.kit, bastion: etatBastion(mon, id) });
+    }
+    case "raidLancer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon), V = vueRaid(mon, id);
+      if(!V.peutLancer) return reponse({ erreur: R.fait ? "L’immeuble a déjà été pillé." : V.nb < RAID_MIN ? "Il faut " + RAID_MIN + " volontaires prêts." : V.lance ? "Le raid est déjà en cours (lancé par " + (V.lance.pseudo || "?") + ")." : "Seul le chef peut lancer le raid (ou n’importe qui, 48 h après que l’équipe est prête)." });
+      R.lance = { par: id, pseudo, t: now };
+      await sauver();
+      const vols = Object.keys(R.volontaires).filter((v) => mon.membres.some((m) => m.id === v)).map((v) => ({ id: v, pseudo: R.volontaires[v].pseudo, membre: R.volontaires[v].membre, kit: R.volontaires[v].kit }));
+      return reponse({ ok: true, volontaires: vols, remorque: mon.def.remorque || 0, clan: mon.nom });
+    }
+    case "raidFin": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const R = raidDe(mon);
+      if(R.fait) return reponse({ erreur: "L’immeuble a déjà été pillé." });
+      if(!R.lance || R.lance.par !== id) return reponse({ erreur: "Ce n’est pas toi qui as lancé le raid." });
+      const r = d.resultat || {}, vols = Object.keys(R.volontaires).filter((v) => mon.membres.some((m) => m.id === v));
+      // Butin rapporté : objets connus seulement, bornés
+      const butin = {}; let total = 0;
+      for(const k in (r.butin || {})){ const q = borne(r.butin[k], 0, 60), kk = idObjet(k); if(q && kk && total + q <= 200){ butin[kk] = (butin[kk] || 0) + q; total += q; } }
+      // 30 % pour la réserve (objets déposables), le reste partagé entre les volontaires, chacun son tour
+      const parts = {}; vols.forEach((v) => { parts[v] = { objets: {}, membre: null, kit: { n: {}, o: [] }, recupere: false }; });
+      const reserve = {}; let tour = 0;
+      Object.keys(butin).sort().forEach((k) => { let q = butin[k];
+        if(DEPOSABLES.indexOf(k) >= 0){ const pr = Math.round(q * 0.3); if(pr){ reserve[k] = pr; mon.reserve[k] = (mon.reserve[k] || 0) + pr; q -= pr; } }
+        for(let i = 0; i < q; i++){ const v = vols[tour++ % vols.length]; parts[v].objets[k] = (parts[v].objets[k] || 0) + 1; } });
+      // Sort de chaque volontaire et ce qui reste de son kit
+      vols.forEach((v) => { const s = (r.volontaires || {})[v] || {};
+        parts[v].membre = { al: !!s.al, hp: borne(s.hp, 0, 100), en: borne(s.en, 0, 100), cause: String(s.cause || "").replace(/[<>]/g, "").slice(0, 120), eq: membrePropre({ eq: s.eq }).eq };
+        parts[v].kit = kitPropre(s.kit); parts[v].pseudo = R.volontaires[v].pseudo; parts[v].nom = R.volontaires[v].membre.nom; parts[v].idx = R.volontaires[v].membre.idx; });
+      const etages = borne(r.etages, 0, 9), max = borne(r.max, 1, 9), morts = vols.filter((v) => !parts[v].membre.al).map((v) => parts[v].nom + " (" + (parts[v].pseudo || "?") + ")");
+      R.fait = true; R.parts = parts;
+      R.res = { t: now, par: pseudo, etages, max, total, reserve, morts, issue: String(r.issue || "").slice(0, 20), perdu: borne(r.perdu, 0, 500),
+        equipe: vols.map((v) => ({ pseudo: parts[v].pseudo, nom: parts[v].nom, al: parts[v].membre.al, r: R.volontaires[v].membre.r })) };
+      noter(mon, "🏢", "Raid de l’immeuble mené par " + (pseudo || "?") + " : " + etages + " étage" + (etages > 1 ? "s" : "") + " sur " + max + ", " + total + " objets ramenés" + (morts.length ? ". Tombé" + (morts.length > 1 ? "s" : "") + " : " + morts.join(", ") : ", aucun mort") + ".");
+      // Le replay est gardé à part (il peut être gros)
+      let rp = "[]"; try{ rp = JSON.stringify(r.replay || []); }catch(e){} if(rp.length > 300000) rp = "[]";
+      await env.CLASSEMENT.put("raid_" + mon.id, rp);
+      await sauver(); return reponse({ ok: true, bastion: etatBastion(mon, id) });
+    }
+    case "raidRecuperer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const R = raidDe(mon), p = R.parts && R.parts[id];
+      if(!p) return reponse({ erreur: "Tu n’as pas participé au raid." });
+      if(p.recupere) return reponse({ erreur: "Tu as déjà récupéré ta part." });
+      p.recupere = true; await sauver();
+      return reponse({ ok: true, part: p, res: R.res });
+    }
+    case "raidReplay": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const rp = await env.CLASSEMENT.get("raid_" + mon.id, { type: "json" });
+      return reponse({ ok: true, replay: rp || [], res: raidDe(mon).res || null });
+    }
+    case "chat": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); let change = echangesDe(mon, now), recus = [];
+      // Livraisons des échanges (seulement si le jeu peut les ranger dans une vraie partie : « prendre »)
+      if(d.prendre && mon.livraisons[id] && mon.livraisons[id].length){ recus = mon.livraisons[id]; delete mon.livraisons[id]; change = true; }
+      if(change || C._change) await sauver();
+      const aj = {}; recus.forEach((l) => { for(const k in l.objets) aj[k] = (aj[k] || 0) + l.objets[k]; });
+      return reponse(Object.assign({ ok: true, ech: recus.length ? { ajouter: aj, msgs: recus.map((l) => l.txt) } : null }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "echProposer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const donne = objetsEch(d.donne), veut = objetsEch(d.veut);
+      if(!donne || !veut) return reponse({ erreur: "Choisis de 1 à " + ECH_MAX + " objets à donner et de 1 à " + ECH_MAX + " à demander." });
+      if(valeurEch(veut) > ECH_RATIO * valeurEch(donne)) return reponse({ erreur: "Échange trop déséquilibré : tu demandes beaucoup plus que ce que tu donnes." });
+      if(mon.echanges.some((e) => e.par === id && e.etat === "ouvert")) return reponse({ erreur: "Tu as déjà une offre en cours : attends qu’elle soit prise, ou annule-la." });
+      const att = attenteEch(mon, id, now); if(att) return reponse({ erreur: "Un échange toutes les 8 h : le prochain dans " + Math.ceil(att / 3600e3) + " h." });
+      const eid = "e" + Math.random().toString(36).slice(2, 9);
+      mon.echanges.push({ eid, par: id, qui: pseudo || "?", donne, veut, t: now, etat: "ouvert" }); mon.echT[id] = now;
+      const liste = await lireChat(env, mon.id);
+      liste.push({ id: "m" + Math.random().toString(36).slice(2, 9), t: now, par: id, qui: pseudo || "?", cadre: cadreDe(d) || "", txt: "🤝 propose un échange", r: false, ech: eid });
+      while(liste.length > CHAT_MAX) liste.shift();
+      await sauver(); await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(liste));
+      return reponse(Object.assign({ ok: true, ech: { retirer: donne } }, vueChat(liste, mon, id)));
+    }
+    case "echAccepter": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const e = mon.echanges.find((x) => x.eid === String(d.eid || ""));
+      if(!e || e.etat !== "ouvert") return reponse({ erreur: "Cette offre n’est plus disponible." });
+      if(e.par === id) return reponse({ erreur: "C’est ta propre offre." });
+      const att = attenteEch(mon, id, now); if(att) return reponse({ erreur: "Un échange toutes les 8 h : le prochain dans " + Math.ceil(att / 3600e3) + " h." });
+      e.etat = "fait"; e.preneur = id; e.pqui = pseudo || "?"; e.tFait = now; mon.echT[id] = now;
+      livrer(mon, e.par, e.veut, (pseudo || "Un membre") + " a accepté ton échange.", now);
+      noter(mon, pseudo || "Un membre", "🤝 " + (pseudo || "Un membre") + " a fait un échange avec " + e.qui);
+      await sauver();
+      return reponse(Object.assign({ ok: true, ech: { ajouter: e.donne, retirer: e.veut, msgs: ["Échange fait avec " + e.qui + "."] } }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "echAnnuler": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const e = mon.echanges.find((x) => x.eid === String(d.eid || ""));
+      if(!e || e.etat !== "ouvert" || e.par !== id) return reponse({ erreur: "Cette offre ne peut plus être annulée." });
+      e.etat = "annule"; delete mon.echT[id]; // annuler rend aussi le droit d'échanger tout de suite
+      await sauver();
+      return reponse(Object.assign({ ok: true, ech: { ajouter: e.donne, msgs: ["Offre annulée : ce que tu proposais te revient."] } }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "chatEnvoyer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const liste = await lireChat(env, mon.id);
+      const dernier = liste.filter((m) => m.par === id).pop();
+      if(dernier && now - dernier.t < CHAT_DELAI) return reponse({ erreur: "Doucement ! Attends quelques secondes entre deux messages." });
+      let txt, rapide = false;
+      if(d.rapide !== undefined && CHAT_RAPIDES[Math.floor(+d.rapide)]){ txt = CHAT_RAPIDES[Math.floor(+d.rapide)]; rapide = true; }
+      else {
+        txt = String(d.texte || "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, CHAT_LONG);
+        if(!txt) return reponse({ erreur: "Message vide." });
+        txt = masquerInterdits(txt);
+        if(texteInterdit(txt)) return reponse({ erreur: "Message refusé (insulte ou mot blessant)." });
+      }
+      liste.push({ id: "m" + Math.random().toString(36).slice(2, 9), t: now, par: id, qui: pseudo || "?", cadre: cadreDe(d) || "", txt, r: rapide });
+      while(liste.length > CHAT_MAX) liste.shift();
+      await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(liste));
+      return reponse(Object.assign({ ok: true }, vueChat(liste, mon, id)));
+    }
+    case "chatEffacer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); const liste = await lireChat(env, mon.id), m = liste.find((x) => x.id === String(d.mid || ""));
+      if(!m) return reponse({ erreur: "Message introuvable." });
+      if(mon.chef !== id && m.par !== id) return reponse({ erreur: "Seul le chef peut effacer le message d’un autre." });
+      const reste = liste.filter((x) => x !== m); await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(reste));
+      return reponse(Object.assign({ ok: true }, vueChat(reste, mon, id)));
+    }
+    case "chatSignaler": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const liste = await lireChat(env, mon.id), m = liste.find((x) => x.id === String(d.mid || ""));
+      if(!m) return reponse({ erreur: "Message introuvable." });
+      const avis = await lireAvis(env);
+      avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: now, type: "autre", texte: "🚩 Message signalé dans le clan « " + mon.nom + " » : « " + m.txt + " » (écrit par " + m.qui + ")", pseudo: texteAvis(pseudo, 16), joueur: id.slice(0, 8),
+        infos: { version: "chat", jour, ecran: "", appareil: "", page: "chat du clan" }, lu: false });
+      if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
+      await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
+      return reponse({ ok: true });
+    }
+    case "classementClans": {
+      const tous = Object.values(C.clans).map((c) => { const b = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 };
+        return Object.assign(resumeClan(c), { gagnees: b.gagnees, perdues: b.perdues, nulles: b.nulles, etoiles: c.etoilesTotal || 0, moi: !!mon && mon.id === c.id }); })
+        .sort((x, y) => y.trophees - x.trophees || y.gagnees - x.gagnees || y.etoiles - x.etoiles);
+      const k = mon ? tous.findIndex((c) => c.id === mon.id) : -1;
+      return reponse({ clans: tous.slice(0, 50), monRang: k >= 0 ? k + 1 : null, total: tous.length });
+    }
+    case "guerre": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      const W = mon.guerre ? C.guerres[mon.guerre] : null;
+      // Historique des guerres : repris des guerres encore en mémoire la première fois (clans d'avant le 2026-11-14)
+      if(!mon.histoG){ mon.histoG = (mon.historique || []).filter((w) => C.guerres[w] && C.guerres[w].fini).map((w) => resumeGuerreClan(C, C.guerres[w], w, mon)).slice(0, 20); C._change = true; }
+      if(C._change) await sauver();
+      return reponse({ ok: true, complet: mon.membres.length >= MAX_CLAN, chef: mon.chef === id, recherche: !!mon.recherche, bilan: mon.bilan || null,
+        guerre: W ? vueGuerre(C, W, mon, id) : null,
+        derniere: !W && mon.historique && C.guerres[mon.historique[0]] ? vueGuerre(C, C.guerres[mon.historique[0]], mon, id) : null,
+        histo: mon.histoG || [] });
+    }
+    case "chercherGuerre": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      if(mon.chef !== id) return reponse({ erreur: "Seul le chef peut lancer une guerre." });
+      if(mon.membres.length < MAX_CLAN) return reponse({ erreur: "Il faut " + MAX_CLAN + " familles dans le clan pour partir en guerre." });
+      if(mon.guerre) return reponse({ erreur: "Le clan est déjà en guerre." });
+      C.file = C.file.filter((cid) => C.clans[cid] && C.clans[cid].recherche && !C.clans[cid].guerre && C.clans[cid].membres.length >= MAX_CLAN && cid !== mon.id);
+      // Adversaire de la même ligue de préférence, sinon de la ligue voisine ; le plus proche en trophées
+      const maLigue = ligueDe(mon.trophees);
+      const candidats = C.file.filter((cid) => Math.abs(ligueDe(C.clans[cid].trophees) - maLigue) <= 1)
+        .sort((x, y) => Math.abs(ligueDe(C.clans[x].trophees) - maLigue) - Math.abs(ligueDe(C.clans[y].trophees) - maLigue) || Math.abs((C.clans[x].trophees || 0) - (mon.trophees || 0)) - Math.abs((C.clans[y].trophees || 0) - (mon.trophees || 0)));
+      if(candidats.length){
+        C.file = C.file.filter((cid) => cid !== candidats[0]);
+        const autre = C.clans[candidats[0]], wid = "w" + Math.random().toString(36).slice(2, 9);
+        C.guerres[wid] = { id: wid, a: autre.id, b: mon.id, debut: now, etoiles: { a: 0, b: 0 }, assauts: [], pris: { a: {}, b: {} }, depart: { a: Object.assign({}, autre.reserve || {}), b: Object.assign({}, mon.reserve || {}) } };
+        autre.guerre = mon.guerre = wid; autre.recherche = mon.recherche = false;
+        noter(bastionDe(autre), "⚔️", "La guerre contre « " + mon.nom + " » commence !"); noter(bastionDe(mon), "⚔️", "La guerre contre « " + autre.nom + " » commence !");
+        await sauver(); return reponse({ ok: true, debut: true });
+      }
+      mon.recherche = true; C.file.push(mon.id); await sauver();
+      return reponse({ ok: true, attente: true });
+    }
+    case "annulerRecherche": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef peut annuler." });
+      mon.recherche = false; C.file = C.file.filter((cid) => cid !== mon.id); await sauver(); return reponse({ ok: true });
+    }
+    case "debutAssaut": {
+      if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
+      const W = C.guerres[mon.guerre], j = jourGuerre(W); if(W.fini || j > DUREE_GUERRE) return reponse({ erreur: "La guerre est terminée." });
+      const camp = W.a === mon.id ? "a" : "b", adv = C.clans[camp === "a" ? W.b : W.a];
+      if(!adv) return reponse({ erreur: "Le clan adverse n’existe plus." });
+      if(W.assauts.some((s) => s.par === id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Tu as déjà lancé ton assaut aujourd’hui. Reviens demain !" });
+      const cible = adv.membres.find((m) => m.id === String(d.cible || "")); if(!cible) return reponse({ erreur: "Cette famille n’est plus dans le clan adverse." });
+      if(W.assauts.some((s) => s.cible === cible.id && s.jour === j && s.fini !== false)) return reponse({ erreur: "Cette famille a déjà été attaquée aujourd’hui." });
+      bastionDe(mon); bastionDe(adv); const mines = Math.min(3, adv.def.mines || 0); adv.def.mines -= mines;
+      W.assauts = W.assauts.filter((s) => !(s.par === id && s.fini === false)); // un assaut abandonné ne compte pas
+      const sid = "s" + Math.random().toString(36).slice(2, 9);
+      W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
+      if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
+      await sauver();
+      return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 30, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines, camion: { parebuffle: mon.def.parebuffle || 0, blindage: mon.def.blindage || 0, tourelle: mon.def.tourelle || 0 } });
+    }
+    case "finAssaut": {
+      if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
+      const W = C.guerres[mon.guerre], s = W.assauts.find((x) => x.id === String(d.assaut || "") && x.par === id && x.fini === false);
+      if(!s) return reponse({ erreur: "Assaut introuvable." });
+      const camp = s.camp, adv = bastionDe(C.clans[camp === "a" ? W.b : W.a] || { reserve: {} });
+      s.fini = true; s.etoiles = d.victoire ? Math.max(1, Math.min(3, Math.floor(+d.etoiles) || 1)) : 0;
+      // On garde la meilleure attaque par cible et par jour : seules les étoiles en plus comptent
+      W.etoiles[camp] += s.etoiles; s.t = now; mon.etoilesTotal = (mon.etoilesTotal || 0) + s.etoiles;
+      if(s.etoiles){
+        const dep = W.depart[camp === "a" ? "b" : "a"] || {}, pris = W.pris[camp];
+        const ids = Object.keys(adv.reserve).filter((k) => adv.reserve[k] > 0).sort((x, y) => adv.reserve[y] - adv.reserve[x]).slice(0, 3);
+        ids.forEach((k) => { const plafond = Math.floor((dep[k] || 0) * 0.3) - (pris[k] || 0); const n = Math.min(plafond, Math.max(1, Math.floor(adv.reserve[k] * 0.05 * s.etoiles)));
+          if(n > 0){ adv.reserve[k] -= n; if(!adv.reserve[k]) delete adv.reserve[k]; pris[k] = (pris[k] || 0) + n; s.butin.push([k, n]); } });
+      }
+      { const moi = mon.membres.find((x) => x.id === id); noterAssaut(bastionDe(mon), adv, pseudo || (moi && moi.pseudo) || s.pseudo || "Un membre", s.ciblePseudo || "une famille", s.etoiles, s.butin); }
+      await sauver();
+      return reponse({ ok: true, etoiles: s.etoiles, butin: s.butin, guerre: vueGuerre(C, W, mon, id) });
+    }
+    case "description": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut changer la description." });
+      if(texteInterdit(d.desc)) return reponse({ erreur: "Cette description n’est pas autorisée (insulte ou mot blessant)." });
+      mon.desc = descPropre(d.desc); await sauver(); return reponse({ ok: true, monClan: detailClan(mon, id) });
+    }
+    case "exclure": {
+      if(!mon || mon.chef !== id) return reponse({ erreur: "Seul le chef du clan peut exclure un membre." });
+      const cible = String(d.cible || ""); if(cible === id) return reponse({ erreur: "Pour partir, utilise « Quitter le clan »." });
+      if(!mon.membres.some((m) => m.id === cible)) return reponse({ erreur: "Ce membre n’est plus dans le clan." });
+      mon.membres = mon.membres.filter((m) => m.id !== cible); delete C.parJoueur[cible];
+      await sauver(); return reponse({ ok: true, monClan: detailClan(mon, id) });
+    }
+  }
+  return reponse({ erreur: "action" }, 400);
+}
+
+// ---------- Administration : /api/admin (POST, réservé à Fabien) ----------
+// Le mot de passe est un « secret » Cloudflare nommé ADMIN_MDP, choisi et saisi par Fabien dans le tableau de bord
+// Cloudflare (il n'est écrit nulle part dans le code). Chaque demande l'envoie dans l'en-tête Authorization (HTTPS).
+// Protection contre les essais au hasard : après 5 mauvais mots de passe, l'adresse est bloquée 15 minutes.
+// Pas d'en-tête CORS : seule la page admin.html du site peut appeler ces routes depuis un navigateur.
+const ENTETES_ADMIN = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" };
+const repAdmin = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: ENTETES_ADMIN });
+async function empreinte(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)))); }
+async function memeMdp(a, b){ const x = await empreinte(a), y = await empreinte(b); let d = 0; for(let i = 0; i < x.length; i++) d |= x[i] ^ y[i]; return d === 0; }
+// Mot de passe PROVISOIRE (demande de Fabien, 2026-11-09, en attendant son propre hébergeur) : utilisé tant que le
+// secret ADMIN_MDP n'existe pas. À remplacer avant une vraie sortie : n'importe qui peut deviner « 123456 ».
+const MDP_PROVISOIRE = "123456";
+async function adminPost(request, env){
+  const mdpAdmin = env.ADMIN_MDP || MDP_PROVISOIRE;
+  const ip = request.headers.get("CF-Connecting-IP") || "inconnue", cleEchecs = "admin_echecs_" + ip;
+  const echecs = +(await env.CLASSEMENT.get(cleEchecs)) || 0;
+  if(echecs >= 5) return repAdmin({ erreur: "Trop d’essais. Réessaie dans 15 minutes." }, 429);
+  const mdp = (request.headers.get("Authorization") || "").replace(/^Bearer /, "");
+  if(!mdp || !(await memeMdp(mdp, mdpAdmin))){
+    await env.CLASSEMENT.put(cleEchecs, String(echecs + 1), { expirationTtl: 900 });
+    return repAdmin({ erreur: "Mot de passe incorrect." }, 401);
+  }
+  let d; try{ d = await request.json(); }catch(e){ return repAdmin({ erreur: "données" }, 400); }
+  const now = Date.now(), JOUR = 24 * 3600 * 1000;
+  const monde = await lireMonde(env), liste = await lireListe(env), parr = await lireParr(env);
+  const ecrireMonde = () => env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(monde));
+  const ecrireListe = () => env.CLASSEMENT.put(CLE, JSON.stringify(liste));
+  const ecrireParr = () => env.CLASSEMENT.put(CLE_PARR, JSON.stringify(parr));
+  const joueurs = () => Object.keys(monde.j).map((id) => { const e = monde.j[id], s = liste.find((x) => x.id === id);
+    return { id, pseudo: e.n || (s && s.pseudo) || "", vivants: e.v, jour: e.d, morts: e.m || 0, zombies: e.z || 0, parties: e.p || 0, vu: e.t, score: s ? s.score : null, code: parr.parId[id] || null, filleuls: parr.parId[id] && parr.codes[parr.parId[id]] ? parr.codes[parr.parId[id]].n : 0 }; })
+    .sort((a, b) => b.vu - a.vu);
+  switch(d.action){
+    case "resume": {
+      const js = joueurs();
+      return repAdmin({ joueurs: js.length, actifs24h: js.filter((j) => now - j.vu < JOUR).length, actifs7j: js.filter((j) => now - j.vu < 7 * JOUR).length,
+        enPartie: js.filter((j) => j.vivants > 0 && now - j.vu < 3 * JOUR).length, survivants: js.filter((j) => now - j.vu < 3 * JOUR).reduce((t, j) => t + j.vivants, 0),
+        morts: js.reduce((t, j) => t + j.morts, 0), zombies: js.reduce((t, j) => t + j.zombies, 0), parties: js.reduce((t, j) => t + j.parties, 0),
+        classement: liste.length, codes: Object.keys(parr.codes).length, parrainages: Object.keys(parr.utilises).length,
+        speciaux: Object.keys(parr.speciaux).map((c) => ({ code: c, actif: !!parr.speciaux[c].actif, n: parr.speciaux[c].n || 0 })),
+        tombes: monde.tombes || [] });
+    }
+    case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500) });
+    // Export de toutes les données (2026-11-14 : déménagement vers zombria.com chez o2switch) : { clé : valeur en texte }
+    case "exporter": {
+      const cles = [CLE, CLE_SAISON, CLE_MONDE, CLE_PARR, CLE_CLANS, CLE_REGLAGES, CLE_AVIS], C = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {};
+      Object.keys(C.clans || {}).forEach((cid) => { cles.push("chat_" + cid, "raid_" + cid); });
+      const donnees = {};
+      for(const k of cles){ const v = await env.CLASSEMENT.get(k); if(v !== null && v !== undefined) donnees[k] = v; }
+      return repAdmin({ ok: true, version: 1, t: now, donnees });
+    }
+    case "avis": return repAdmin({ avis: await lireAvis(env) });
+    case "avisLu": { const av = await lireAvis(env), a = av.find((x) => x.aid === d.aid); if(!a) return repAdmin({ erreur: "introuvable" }, 404); a.lu = !a.lu; await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
+    case "avisSupprimer": { const av = (await lireAvis(env)).filter((x) => x.aid !== d.aid); await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
+    case "classement": return repAdmin({ scores: liste.slice(0, 200) });
+    case "supprimerJoueur": {
+      const id = String(d.id || ""); if(!id) return repAdmin({ erreur: "id" }, 400);
+      delete monde.j[id]; const k = liste.findIndex((e) => e.id === id); if(k >= 0) liste.splice(k, 1);
+      await ecrireMonde(); if(k >= 0) await ecrireListe(); await retirerDeSaison(env, id);
+      return repAdmin({ ok: true });
+    }
+    case "supprimerScore": {
+      const k = liste.findIndex((e) => e.id === String(d.id || "")); if(k < 0) return repAdmin({ erreur: "introuvable" }, 404);
+      liste.splice(k, 1); await ecrireListe(); await retirerDeSaison(env, String(d.id || "")); return repAdmin({ ok: true });
+    }
+    case "clans": {
+      const C = await lireClans(env), R = await lireReglages(env);
+      if(C._change) await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      return repAdmin({ jourMin: R.jourMinClan, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { bot: !!c.bot, bots: c.membres.filter((m) => m.bot).length, enGuerre: !!c.guerre, recherche: !!c.recherche, liste: c.membres.map((m) => (m.bot ? "🤖 " : "") + m.pseudo + " (j" + m.jour + ")").join(", ") })) });
+    }
+    case "botsCreer": {
+      const C = await lireClans(env), n = Math.max(1, Math.min(3, Math.floor(+d.clans) || 1)), now2 = Date.now(), noms = [];
+      for(let k = 0; k < n; k++){
+        let cid; do{ cid = "c" + Math.random().toString(36).slice(2, 9); }while(C.clans[cid]);
+        let nom = NOMS_CLANS_BOTS[hasardEntier(0, NOMS_CLANS_BOTS.length - 1)]; while(Object.values(C.clans).some((c) => c.nom === nom)) nom = nom.replace(/ \d+$/, "") + " " + hasardEntier(2, 99);
+        const membres = []; for(let j = 0; j < MAX_CLAN; j++){ const b = nouveauBot(); membres.push(b); C.parJoueur[b.id] = cid; }
+        C.clans[cid] = { id: cid, nom, blason: hasardEntier(1, 12), chef: membres[0].id, cree: now2, membres, bot: true, desc: DESC_BOTS[hasardEntier(0, DESC_BOTS.length - 1)], recherche: true, trophees: Math.max(0, Math.floor(+d.trophees) >= 0 && d.trophees !== undefined && d.trophees !== "" ? Math.floor(+d.trophees) : hasardEntier(0, 300)),
+          reserve: { planche: hasardEntier(20, 60), conserve: hasardEntier(5, 20), bidon: hasardEntier(1, 5), ferraille: hasardEntier(4, 15), clous: hasardEntier(4, 15), balle: hasardEntier(0, 20) },
+          def: { remparts: hasardEntier(0, 3), mines: hasardEntier(0, 5), tours: hasardEntier(0, 2), armurerie: hasardEntier(0, 2), parebuffle: hasardEntier(0, 2), blindage: hasardEntier(0, 2), tourelle: hasardEntier(0, 2) }, journal: [], retraits: {} };
+        C.file.push(cid); noms.push(nom);
+      }
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      // Les bots apparaissent aussi au classement général (pour voir leurs cadres)
+      const L = await lireListe(env);
+      Object.values(C.clans).filter((c) => c.bot).forEach((c) => c.membres.forEach((m) => { if(!L.some((e) => e.id === m.id)){ const j = m.jour; L.push({ id: m.id, pseudo: m.pseudo, score: hasardEntier(j, j * 3), jours: j, cadre: m.cadre }); } }));
+      L.sort((a, b) => b.score - a.score || a.jours - b.jours); await env.CLASSEMENT.put(CLE, JSON.stringify(L.slice(0, GARDES)));
+      return repAdmin({ ok: true, noms });
+    }
+    case "clanTrophees": {
+      const C = await lireClans(env), c = C.clans[String(d.clan || "")], t = Math.floor(+d.trophees);
+      if(!c) return repAdmin({ erreur: "introuvable" }, 404);
+      if(!(t >= 0 && t <= 5000)) return repAdmin({ erreur: "Entre 0 et 5000." }, 400);
+      c.trophees = t; await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C)); return repAdmin({ ok: true });
+    }
+    case "botsCompleter": {
+      const C = await lireClans(env), c = C.clans[String(d.clan || "")];
+      if(!c) return repAdmin({ erreur: "introuvable" }, 404);
+      let ajoutes = 0; while(c.membres.length < MAX_CLAN){ const b = nouveauBot(); c.membres.push(b); C.parJoueur[b.id] = c.id; ajoutes++; }
+      bastionDe(c); noter(c, "🤖", ajoutes + " bot" + (ajoutes > 1 ? "s ont" : " a") + " rejoint le clan (test).");
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      return repAdmin({ ok: true, ajoutes });
+    }
+    case "botsSupprimer": {
+      const C = await lireClans(env); let nb = 0;
+      // Guerres avec un clan de bots : effacées, l'autre clan est libéré
+      for(const wid in C.guerres){ const W = C.guerres[wid], A = C.clans[W.a], B = C.clans[W.b];
+        if((A && A.bot) || (B && B.bot)){ [A, B].forEach((c) => { if(c && c.guerre === wid) c.guerre = null; }); delete C.guerres[wid]; } }
+      for(const cid in C.clans){
+        const c = C.clans[cid], bots = c.membres.filter((m) => m.bot || estBot(m.id));
+        bots.forEach((m) => { delete C.parJoueur[m.id]; nb++; });
+        c.membres = c.membres.filter((m) => !(m.bot || estBot(m.id)));
+        if(!c.membres.length || c.bot){ c.membres.forEach((m) => { delete C.parJoueur[m.id]; }); delete C.clans[cid]; continue; }
+        if(!c.membres.some((m) => m.id === c.chef)) c.chef = c.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
+        // une guerre en cours où des bots attaquaient : leurs assauts restent comptés
+      }
+      C.file = C.file.filter((cid) => C.clans[cid]);
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
+      const L = await lireListe(env), L2 = L.filter((e) => !estBot(e.id)); if(L2.length !== L.length) await env.CLASSEMENT.put(CLE, JSON.stringify(L2));
+      return repAdmin({ ok: true, supprimes: nb });
+    }
+    case "reglageJourClan": {
+      const R = await lireReglages(env), j = Math.floor(+d.jour);
+      if(!(j >= 1 && j <= 1000)) return repAdmin({ erreur: "Entre 1 et 1000 jours." }, 400);
+      R.jourMinClan = j; await env.CLASSEMENT.put(CLE_REGLAGES, JSON.stringify(R)); return repAdmin({ ok: true });
+    }
+    case "clanSupprimer": {
+      const C = await lireClans(env), c = C.clans[String(d.clan || "")]; if(!c) return repAdmin({ erreur: "introuvable" }, 404);
+      c.membres.forEach((m) => { delete C.parJoueur[m.id]; }); delete C.clans[c.id];
+      await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C)); return repAdmin({ ok: true });
+    }
+    case "codeCreer": {
+      const c = normCode(d.code); if(c.length < 3) return repAdmin({ erreur: "Code trop court (3 caractères au moins)." }, 400);
+      if(parr.speciaux[c] || parr.codes[c]) return repAdmin({ erreur: "Ce code existe déjà." }, 400);
+      parr.speciaux[c] = { actif: true, n: 0 }; await ecrireParr(); return repAdmin({ ok: true });
+    }
+    case "codeBasculer": { const c = normCode(d.code); if(!parr.speciaux[c]) return repAdmin({ erreur: "introuvable" }, 404); parr.speciaux[c].actif = !parr.speciaux[c].actif; await ecrireParr(); return repAdmin({ ok: true }); }
+    case "codeSupprimer": { const c = normCode(d.code); if(!parr.speciaux[c]) return repAdmin({ erreur: "introuvable" }, 404); delete parr.speciaux[c]; await ecrireParr(); return repAdmin({ ok: true }); }
+  }
+  return repAdmin({ erreur: "action" }, 400);
+}
+
+/* ---------- Avis des joueurs (2026-11-10) : bugs, idées, remarques envoyés depuis le menu du jeu ----------
+   Clé KV « avis » = liste des 500 derniers messages (le plus récent en premier). 5 messages par jour et par appareil. Lus dans l'admin. */
+const CLE_AVIS = "avis", AVIS_MAX = 500, AVIS_PAR_JOUR = 5, TYPES_AVIS = ["bug", "idee", "autre"];
+async function lireAvis(env){ return (await env.CLASSEMENT.get(CLE_AVIS, { type: "json" })) || []; }
+function texteAvis(t, max){ return String(t || "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/[<>]/g, " ").trim().slice(0, max); }
+async function avisPost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const texte = texteAvis(d.texte, 1000);
+  if(texte.length < 5) return reponse({ erreur: "Écris un peu plus (5 lettres au moins)." });
+  const cleLim = "avis_lim_" + id, n = +(await env.CLASSEMENT.get(cleLim)) || 0;
+  if(n >= AVIS_PAR_JOUR) return reponse({ erreur: "Tu as déjà envoyé " + AVIS_PAR_JOUR + " messages aujourd’hui. Merci ! Réessaie demain." });
+  const inf = d.infos && typeof d.infos === "object" ? d.infos : {};
+  const avis = await lireAvis(env);
+  avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: Date.now(), type: TYPES_AVIS.indexOf(d.type) >= 0 ? d.type : "autre", texte, pseudo: texteAvis(d.pseudo, 16), joueur: id.slice(0, 8),
+    infos: { version: texteAvis(inf.version, 40), jour: Math.floor(+inf.jour) || 0, ecran: texteAvis(inf.ecran, 20), appareil: texteAvis(inf.appareil, 160), page: texteAvis(inf.page, 40) }, lu: false });
+  if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
+  await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
+  await env.CLASSEMENT.put(cleLim, String(n + 1), { expirationTtl: 86400 });
+  return reponse({ ok: true });
+}
+
+/* ---------- Modération des noms : copie de moderation.js (garder les deux listes identiques) ---------- */
+const MOTS_INTERDITS = {
+  // cherchés n'importe où (assez longs pour ne pas se cacher dans des mots normaux)
+  partout: ["connard", "connasse", "salope", "salopard", "salaud", "enculé", "enculer", "enculeur", "putain", "pétasse", "pouffiasse", "grognasse", "bâtard", "batard",
+    "niquer", "nique ta", "niquetamere", "fils de pute", "filsdepute", "branleur", "branlette", "suceur", "suceuse", "enfoiré", "emmerdeur", "trouduc", "trou du cul",
+    "tapette", "tarlouze", "pédale", "gouine", "nègre", "négro", "bougnoule", "youpin", "chinetoque", "bamboula", "sale arabe", "sale noir", "sale juif",
+    "pédophile", "pedophile", "violeur", "zoophile", "nécrophile", "inceste", "hitler", "terroriste", "daech", "jihad", "djihad",
+    "fuck", "motherfucker", "bitch", "faggot", "whore", "asshole", "cocksucker", "porno",
+    // ajoutés depuis la liste LDNOOBW (fr et en, licence CC BY 4.0), triée à la main
+    "bigornette", "bloblos", "brackmard", "branlage", "branler", "branleuse", "brouter le cresson", "chiottes", "clitoris", "cramouille", "emmerdant", "emmerder", "emmerdeuse", "enculeurs", "fille de pute", "grogniasse", "la putain de ta mère", "merdeuse", "merdeux", "nique ta race", "palucher", "pousse-crotte", "sac à foutre", "sac à merde", "tringler", "troncher", "zigounette", "acrotomophilia", "alabama hot pocket", "alaskan pipeline", "anilingus", "apeshit", "arsehole", "assmunch", "auto erotic", "babeland", "baby batter", "baby juice", "ball gravy", "ball sack", "bangbros", "bangbus", "barely legal", "barenaked", "bastard", "bastardo", "beaners", "beaver cleaver", "beaver lips", "beastiality", "bestiality", "big breasts", "big knockers", "big tits", "birdlock", "bitches", "black cock", "blowjob", "blow your load", "blue waffle", "blumpkin", "bollocks", "brown showers", "bulldyke", "bullet vibe", "bullshit", "bung hole", "buttcheeks", "butthole", "camel toe", "camgirl", "camslut", "camwhore", "carpet muncher", "chocolate rosebuds", "circlejerk", "cleveland steamer", "clover clamps", "clusterfuck", "coprolagnia", "coprophilia", "cornhole", "creampie", "cumshot", "cumshots", "cunnilingus", "date rape", "deep throat", "dendrophilia", "dingleberry", "dingleberries", "dirty sanchez", "doggie style", "doggy style", "dog style", "dominatrix", "donkey punch", "double dong", "double penetration", "dp action", "dry hump", "eat my ass", "ejaculation", "erotism", "fellatio", "fingerbang", "foot fetish", "fuck buttons", "fucktards", "fudge packer", "futanari", "gangbang", "genitals", "giant cock", "girls gone wild", "golden shower", "goregasm", "group sex", "hand job", "homoerotic", "intercourse", "jail bait", "jiggerboo", "kinbaku", "kinkster", "leather restraint", "leather straight jacket", "lemon party", "livesex", "make me come", "masturbate", "masturbation", "menage a trois", "missionary position", "mound of venus", "mr hands", "muff diver", "nawashi", "neonazi", "nimphomania", "nsfw images", "nymphomania", "octopussy", "omorashi", "one cup two girls", "one guy one jar", "paedophile", "pedobear", "phone sex", "piece of shit", "pole smoker", "ponyplay", "poontang", "poop chute", "pornography", "raghead", "raging boner", "reverse cowgirl", "rosy palm", "rusty trombone", "schlong", "sexually", "sexuality", "shaved beaver", "shaved pussy", "shemale", "shibari", "shitblimp", "slanteye", "sodomize", "splooge moose", "spread legs", "strip club", "suicide girls", "swastika", "threesome", "thumbzilla", "towelhead", "tribadism", "tub girl", "two girls one cup", "upskirt", "urethra play", "urophilia", "venus mound", "vibrator", "vorarephilia", "voyeurweb", "wetback", "wet dream", "white power", "worldsex", "wrinkled starfish", "yellow showers", "zoophilia"],
+  // seulement comme mot entier
+  mot: ["con", "conne", "cul", "pute", "putes", "bite", "zob", "chatte", "couille", "couilles", "merde", "chier", "nique", "ntm", "fdp", "pd", "pédé", "pede",
+    "salop", "naze", "nazi", "nazis", "kkk", "ss", "viol", "sexe", "sex", "porn", "shit", "cunt", "dick", "cock", "slut", "fag", "ass", "rape", "negro", "nigger", "nigga", "niger", "heil", "pussy", "rapist",
+    // ajoutés depuis la liste LDNOOBW (fr et en, licence CC BY 4.0)
+    "bander", "chiasse", "clito", "étron", "foutre", "jouir", "MALPT", "suce", "trique", "anal", "anus", "ball gag", "ball kicking", "ball licking", "ball sucking", "bbw", "bdsm", "beaner", "bimbos", "boner", "boob", "boobs", "bukkake", "busty", "cialis", "clit", "cocks", "coons", "cum", "cumming", "darkie", "dildo", "dolcett", "dommes", "dvda", "ecchi", "fecal", "felch", "feltch", "female squirting", "femdom", "figging", "fisting", "footjob", "frotting", "fuckin", "fucking", "gay sex", "goatcx", "goatse", "gokkun", "goodpoop", "goo girl", "g-spot", "guro", "hentai", "honkey", "hooker", "horny", "incest", "jack off", "jerk off", "jigaboo", "jizz", "juggs", "kike", "knobbing", "male squirting", "masturbating", "milf", "muffdiving", "nambla", "nig nog", "nsfw", "nutten", "nympho", "orgasm", "orgy", "paki", "pegging", "penis", "pikey", "pissing", "piss pig", "poof", "poon", "punany", "prince albert piercing", "pthc", "pubes", "queaf", "queef", "quim", "raping", "rectum", "rimjob", "rimming", "sadism", "scissoring", "semen", "sexcam", "sexo", "sexual", "shitty", "shota", "smut", "sodomy", "spic", "splooge", "spooge", "spunk", "tea bagging", "tits", "titties", "titty", "tosser", "tranny", "tushy", "twat", "twink", "vagina", "viagra", "voyuer", "vulva", "wank", "yaoi", "yiffy", "turlute", "strap on"]
+};
+function normaliserMod(t){
+  return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/7/g, "t").replace(/8/g, "b").replace(/@/g, "a").replace(/\$/g, "s").replace(/[!|]/g, "i");
+}
+let listeModPrete = null;
+// Lettres répétées : « reduit1 » les ramène à une seule (connnnard -> conard), « reduit2 » à deux au plus (boooob -> boob).
+// Un mot court qui contient une lettre doublée (boob, ass, kkk, ss) n'est cherché qu'avec reduit2 : sinon « bob » ou « as » seraient refusés.
+function reduit1(w){ return w.replace(/(.)\1+/g, "$1"); }
+function reduit2(w){ return w.replace(/(.)\1{2,}/g, "$1$1"); }
+function preparerListeMod(){
+  var lettres = function(w){ return normaliserMod(w).replace(/[^a-z]/g, ""); };
+  listeModPrete = {
+    partout: MOTS_INTERDITS.partout.map(function(w){ return reduit1(lettres(w)); }).filter(function(w){ return w.length >= 3; }),
+    mot: MOTS_INTERDITS.mot.map(function(w){ var b = lettres(w), dbl = /(.)\1/.test(b); return { dbl:dbl, f:dbl ? reduit2(b) : reduit1(b) }; })
+  };
+}
+// true si le texte contient un mot interdit
+function texteInterdit(t){
+  if(!listeModPrete) preparerListeMod();
+  var n = normaliserMod(String(t || "").replace(/([a-zà-ÿ])([A-Z])/g, "$1 $2")), tout = n.replace(/[^a-z]/g, ""), colle = reduit1(tout);
+  var mots = n.split(/[^a-z]+/).filter(Boolean);
+  if(listeModPrete.partout.some(function(w){ return colle.indexOf(w) >= 0; })) return true;
+  return listeModPrete.mot.some(function(w){
+    var red = w.dbl ? reduit2 : reduit1;
+    return mots.some(function(m){ return red(m) === w.f; }) || red(tout) === w.f;
+  });
+}
+const MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant). Choisis-en un autre.";
+// Chat du clan : chaque mot interdit est remplacé par des étoiles (le reste du message passe)
+function masquerInterdits(t){ return String(t || "").replace(/[^\s.,;:!?()"'«»]+/g, function(w){ return texteInterdit(w) ? "★".repeat(Math.max(3, Math.min(8, w.length))) : w; }); }
+
+// Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
+export default {
+  async fetch(request, env){
+    const url = new URL(request.url);
+    if(url.pathname === "/api/classement"){
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "GET") return onRequestGet({ request, env });
+      if(request.method === "POST") return onRequestPost({ request, env });
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/admin"){
+      if(!env.CLASSEMENT) return repAdmin({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "POST") return adminPost(request, env);
+      return repAdmin({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/clans"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return clansPost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/parrainage"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return parrainagePost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/avis"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return avisPost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/monde"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "GET") return mondeGet(env);
+      if(request.method === "POST") return mondePost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    return env.ASSETS.fetch(request);
+  }
+};

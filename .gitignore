@@ -2,3 +2,7 @@
 __pycache__/
 *.tmp
 node_modules/
+# Serveur o2switch : données des joueurs, mot de passe admin et fichiers de redémarrage restent sur o2switch, jamais dans GitHub
+serveur-o2switch/donnees/
+serveur-o2switch/reglages.json
+serveur-o2switch/tmp/

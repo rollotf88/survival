@@ -850,6 +850,14 @@ async function adminPost(request, env){
         tombes: monde.tombes || [] });
     }
     case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500) });
+    // Export de toutes les données (2026-11-14 : déménagement vers zombria.com chez o2switch) : { clé : valeur en texte }
+    case "exporter": {
+      const cles = [CLE, CLE_SAISON, CLE_MONDE, CLE_PARR, CLE_CLANS, CLE_REGLAGES, CLE_AVIS], C = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {};
+      Object.keys(C.clans || {}).forEach((cid) => { cles.push("chat_" + cid, "raid_" + cid); });
+      const donnees = {};
+      for(const k of cles){ const v = await env.CLASSEMENT.get(k); if(v !== null && v !== undefined) donnees[k] = v; }
+      return repAdmin({ ok: true, version: 1, t: now, donnees });
+    }
     case "avis": return repAdmin({ avis: await lireAvis(env) });
     case "avisLu": { const av = await lireAvis(env), a = av.find((x) => x.aid === d.aid); if(!a) return repAdmin({ erreur: "introuvable" }, 404); a.lu = !a.lu; await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
     case "avisSupprimer": { const av = (await lireAvis(env)).filter((x) => x.aid !== d.aid); await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }

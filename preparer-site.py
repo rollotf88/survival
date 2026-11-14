@@ -21,6 +21,11 @@ for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "ico
             if f.endswith(".webp"): shutil.copy("images/" + sd + "/" + f, "site/images/" + sd + "/" + f)
 for f in os.listdir("sons"): shutil.copy("sons/" + f, "site/sons/" + f)
 
+# Hébergement o2switch (2026-11-14) : le .htaccess du jeu (https, nom zombria.com, sw.js jamais en cache)
+shutil.copy("htaccess-o2switch.txt", "site/.htaccess")
+# Le serveur Node.js d'o2switch fait tourner le même code que le Worker Cloudflare : copie à jour
+shutil.copy("worker/index.js", "serveur-o2switch/worker.mjs")
+
 # Nouvelle version du cache hors connexion (date + heure)
 version = "survival-" + time.strftime("%Y%m%d-%H%M")
 sw = open("site/sw.js", encoding="utf-8").read()
