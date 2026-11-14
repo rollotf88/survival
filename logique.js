@@ -269,7 +269,7 @@ function cuisiner(r){
   x.en -= coutTravail(x);
   for(var k in rec.ingredients){ if(k === "eau") prendreRations("eau", rec.ingredients[k]); else consommer(k, rec.ingredients[k]); }
   retirer("planche", BAL.cuisine.planches);
-  ajouter(rec.id, n, 1); G.cuisineJour = G.day; G.stats.plats = (G.stats.plats || 0) + n;
+  ajouter(rec.id, n, 1); G.cuisineJour = G.day; G.cuisinierR = x.r || x.nom; // qui a vraiment cuisiné : c'est lui qu'on voit aux fourneaux (2026-11-14) G.stats.plats = (G.stats.plats || 0) + n;
   var tt = exploit(x, "plats");
   return x.nom + " cuisine " + nommer(rec.id, n) + "." + (tt ? " " + tt : "");
 }

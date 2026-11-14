@@ -698,7 +698,7 @@ var ZONE_DORMEUR = { "Sam":[330, 212, 722, 352] }; // Sam : un peu plus haut, si
 var FAMILLE_ORIGINE = ["Papa", "Maman", "Léo", "Emma"];
 function enSortie(x){ var i = G.m.indexOf(x); return !!(G.exp && G.exp.equipe && G.exp.equipe.indexOf(i) >= 0); }
 function roleDormeur(y){ return y.r || y.nom; }
-function auLit(r){ var x = G && G.m && G.m.find(function(y){ return roleDormeur(y) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x)); }
+function auLit(r){ var x = G && G.m && G.m.find(function(y){ return roleDormeur(y) === r; }); return !!(x && x.al && !x.raid && !enSortie(x) && !peutSortir(x) && !(G.cuisinierR === r && cuisinierDuJour() === r)); } // le cuisinier du jour reste aux fourneaux, pas au lit
 // Qui dort dans ce lit ? le propriétaire d'origine s'il est en vie ; sinon la recrue qui y a sa place
 function dormeurLit(lit){
   if(!G || !G.m) return null;
@@ -758,6 +758,9 @@ var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"], "Papa":[140, 2
   "Inès":[118, 217, 495, 773, "cuisine-ines"], "Nora":[118, 217, 495, 773, "cuisine-nora"] };
 function cuisinierDuJour(){
   if(!G || !G.m || G.cuisineJour !== G.day) return null;
+  // Celui qui a vraiment cuisiné aujourd'hui, même épuisé par le travail (2026-11-14, signalé par Fabien : Léo cuisinait mais n'apparaissait pas)
+  if(G.cuisinierR && CUISINIERS[G.cuisinierR]){ var c = G.m.find(function(y){ return roleDormeur(y) === G.cuisinierR; });
+    if(c && c.al && !c.raid && !enSortie(c)) return G.cuisinierR; }
   var dispo = Object.keys(CUISINIERS).filter(function(r){ return auSalon(r, true); });
   var chef = dispo.filter(function(r){ var x = G.m.find(function(y){ return roleDormeur(y) === r; }); return x && x.trait === "cuisinier"; })[0];
   return chef || dispo[0] || null;
