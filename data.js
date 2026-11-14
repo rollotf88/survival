@@ -46,9 +46,11 @@ function iconeMembre(x, sansBadges){
   var k = ICONE_MEMBRE[r]; return k && typeof ICONES_SVG !== "undefined" && ICONES_SVG[k] ? svgMembre(k, x) : x.icone;
 }
 // Zombies en pied, détourés (Gemini sur fond vert, 2026-11-10) : posés directement sur le décor du combat, sans cadre
-var SPRITES_ZOMBIES = { pilleur:1, couveuse:1, rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:1, mariee:1, pompier:1, boucher:1 };
+var SPRITES_ZOMBIES = { pilleur:1, couveuse:1, brule:1, gorille:1, rodeur:1, coureur:1, costaud:1, rampant:1, hurleur:1, gonfle:1, soldat:1, defenseur:1, colosse:1, mariee:1, pompier:1, boucher:1 };
 function spriteZombie(z){ var s = SPRITES_ZOMBIES[z.id]; return typeof ICONES_SVG !== "undefined" && s ? (typeof s === "string" ? s : "images/zombies/" + z.id + ".webp") : null; }
-function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id); return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
+function iconeZombie(z){ if(typeof ICONES_SVG !== "undefined" && PORTRAITS_PNJ[z.id]) return portraitPNJ(z.id);
+  // Pas encore de portrait (zombies de fin de partie, 2026-11-14) : le haut de son image en pied
+  if(typeof ICONES_SVG !== "undefined" && SPRITES_ZOMBIES[z.id]) return '<span class="portrait pnj sprite-p"><img src="images/zombies/' + z.id + '.webp" alt=""></span>'; return typeof ICONES_SVG !== "undefined" && ICONES_SVG[z.id] ? svgIcone(z.id) : z.icone; }
 
 /* ---------- Équilibrage : les chiffres faciles à modifier ---------- */
 var BAL = {
@@ -337,8 +339,8 @@ var ZOMBIES = [
   // attente:true = pas encore d'image, il n'apparaît pas tant que l'image n'est pas là
   { id:"pilleur", nom:"Pilleur", icone:"🎒", pv:7, degats:[2, 4], jour:30, poids:1, vole:2, horsGuerre:true, desc:"Il ne mord pas : il arrache 2 objets de votre butin, puis s’enfuit au tour suivant. Abattez-le (ou repoussez-le) avant : vous récupérez tout." },
   { id:"couveuse", nom:"Couveuse", icone:"🪺", pv:20, degats:[0, 0], jour:45, poids:1, pond:3, horsGuerre:true, desc:"Elle ne mord pas, mais un tour sur deux un Rampant sort de son ventre (3 au plus). À viser en premier ; le feu lui fait deux fois plus mal." },
-  { id:"brule", nom:"Brûlé", icone:"🔥", pv:11, degats:[5, 9], jour:55, poids:1, ignifuge:true, brule:2, horsGuerre:true, attente:true, desc:"Le feu ne lui fait rien, et frapper au corps à corps brûle (−2 PV). Mieux vaut une arme à feu." },
-  { id:"gorille", nom:"Gorille", icone:"🦍", pv:28, degats:[7, 12], jour:99999, poids:0, lourd:true, deuxCibles:true, horsGuerre:true, attente:true, desc:"Un gorille du zoo devenu zombie : il frappe deux personnes à la fois et ne recule presque jamais. On ne le croise qu’au zoo." }
+  { id:"brule", nom:"Brûlé", icone:"🔥", pv:11, degats:[5, 9], jour:55, poids:1, ignifuge:true, brule:2, horsGuerre:true, desc:"Le feu ne lui fait rien, et frapper au corps à corps brûle (−2 PV). Mieux vaut une arme à feu." },
+  { id:"gorille", nom:"Gorille", icone:"🦍", pv:28, degats:[7, 12], jour:99999, poids:0, lourd:true, deuxCibles:true, horsGuerre:true, desc:"Un gorille du zoo devenu zombie : il frappe deux personnes à la fois et ne recule presque jamais. On ne le croise qu’au zoo." }
 ];
 function typeZombie(z){ return ZOMBIES.find(function(t){ return t.id === z.id; }) || ZOMBIES[0]; }
 var DISTANCES = ["", "🚶 Près", "🚶 Moyen", "🚶 Loin", "🚗 Éloigné", "🚗 Très éloigné"];

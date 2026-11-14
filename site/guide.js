@@ -271,7 +271,7 @@ function ficheGuide(V){
     var z = ZOMBIES.find(function(t){ return t.id === V.id; }), Et = z.id === "colosse" ? BAL.immeuble.etages[BAL.immeuble.etages.length - 1] : null, pvG = Et ? Math.round(z.pv * Et.pv) : z.pv, dgG = Et ? [z.degats[0] + Et.degats, z.degats[1] + Et.degats] : z.degats;
     var sp = spriteZombie(z);
     return '<div class="gzfiche">' + (sp ? '<img class="gz-sprite" src="' + sp + '" alt="">' : '<span class="gt-por">' + iconeZombie(z) + '</span>') + '<div class="gfiche"><h3>' + z.nom + '</h3>'
-      + '<div class="tuiles"><div class="tuile"><b>' + pvG + '</b><small>PV</small></div><div class="tuile"><b>' + dgG[0] + '-' + dgG[1] + '</b><small>dégâts' + (z.coups ? ' ×' + z.coups : '') + '</small></div><div class="tuile"><b>' + (z.id === "colosse" ? "toit" : z.celebre ? "j. " + BAL.celebre.jour : "j. " + z.jour) + '</b><small>' + (z.id === "colosse" ? "de l’immeuble" : z.celebre ? "célèbre" : "dès le jour") + '</small></div></div>'
+      + '<div class="tuiles"><div class="tuile"><b>' + pvG + '</b><small>PV</small></div><div class="tuile"><b>' + dgG[0] + '-' + dgG[1] + '</b><small>dégâts' + (z.coups ? ' ×' + z.coups : '') + '</small></div><div class="tuile"><b>' + (z.id === "colosse" ? "toit" : z.id === "gorille" ? "zoo" : z.celebre ? "j. " + BAL.celebre.jour : "j. " + z.jour) + '</b><small>' + (z.id === "colosse" ? "de l’immeuble" : z.id === "gorille" ? "seulement" : z.celebre ? "célèbre" : "dès le jour") + '</small></div></div>'
       + '<p>' + (z.desc || "") + '</p></div></div>';
   }
   return "";

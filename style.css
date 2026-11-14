@@ -2887,3 +2887,8 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .zc.fui.part{animation:zFuit .9s ease-in forwards}
 @keyframes zFuit{0%{opacity:1;transform:none}100%{opacity:0;transform:translateX(140%) rotate(8deg)}}
 @media (prefers-reduced-motion:reduce){.zc.fui.part{animation:none}}
+
+/* Zombies de fin de partie (2026-11-14) : taille sur la scène */
+.zc.sprite.z-couveuse .zs img,.zc.sprite.z-gorille .zs img{height:64cqh}
+@container (max-height:190px){.zc.sprite.z-couveuse .zs img,.zc.sprite.z-gorille .zs img{height:54cqh}}
+.portrait.pnj.sprite-p{background:#2b2420}.portrait.pnj.sprite-p img{object-fit:cover;object-position:50% 0}
