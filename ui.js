@@ -1366,6 +1366,10 @@ function rIntro(){
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
     + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button></div>';
+  // Le fondu en bas du récit disparaît quand on a tout lu (ou quand tout tient sans défiler)
+  var rc = document.querySelector(".intro-recit");
+  if(rc){ var fondu = function(){ rc.classList.toggle("fin", rc.scrollTop + rc.clientHeight >= rc.scrollHeight - 4); }; rc.addEventListener("scroll", fondu, { passive:true }); setTimeout(fondu, 50); setTimeout(fondu, 600); }
+  if(typeof defilementHorizontal === "function"){ var pu = document.querySelector(".ir-puces"); if(pu) defilementHorizontal(pu); }
   lancerVitrine();
   if(typeof poserMonde === "function") poserMonde();
 }

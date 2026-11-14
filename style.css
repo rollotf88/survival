@@ -368,9 +368,9 @@ ol.classement .pts{color:var(--mut);font-size:13px;white-space:nowrap}
 .portrait .fissure{position:absolute;inset:0;width:100%;height:100%;border-radius:22%;pointer-events:none}
 .portrait.mort img{filter:grayscale(1) brightness(.7) contrast(1.1)}
 /* ---------- Succès ---------- */
-#bandeauSucces{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-140%);z-index:7;display:flex;align-items:center;gap:10px;
-  padding:8px 16px 8px 10px;max-width:calc(100% - 32px);box-sizing:border-box;background:var(--card);color:var(--ink);border:3px solid var(--acc);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .35s ease;pointer-events:none}
-#bandeauSucces.on{transform:translate(-50%,0)}
+#bandeauSucces{position:fixed;left:16px;right:16px;margin-inline:auto;width:fit-content;top:calc(10px + env(safe-area-inset-top,0px));transform:translateY(-140%);z-index:7;display:flex;align-items:center;gap:10px;
+  padding:8px 16px 8px 10px;max-width:min(520px,calc(100% - 32px));box-sizing:border-box;background:var(--card);color:var(--ink);border:3px solid var(--acc);border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .35s ease;pointer-events:none}
+#bandeauSucces.on{transform:translateY(0)}
 #bandeauSucces .em{font-size:30px;line-height:1}
 #bandeauSucces small{display:block;color:var(--mut);font-size:11px;font-weight:800}
 #bandeauSucces b{display:block;font-size:15px}
@@ -2892,3 +2892,21 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .zc.sprite.z-couveuse .zs img,.zc.sprite.z-gorille .zs img{height:64cqh}
 @container (max-height:190px){.zc.sprite.z-couveuse .zs img,.zc.sprite.z-gorille .zs img{height:54cqh}}
 .portrait.pnj.sprite-p{background:#2b2420}.portrait.pnj.sprite-p img{object-fit:cover;object-position:50% 0}
+
+/* Écran d'histoire sur téléphone (2026-11-14, retour de Fabien : texte coupé, impossible de faire défiler, pastilles sur 3 lignes)
+   Le panneau tient dans l'écran : le récit a son propre ascenseur (fondu en bas tant qu'il reste du texte), la vitrine et le bouton restent visibles.
+   Les pastilles tiennent sur une seule ligne qu'on fait glisser. */
+@media (max-width:1099px), (max-height:619px){
+  .panneau.intro{display:flex;flex-direction:column;max-height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+  .panneau.intro > *{flex:none}
+  .panneau.intro .intro-recit{flex:1 1 auto;min-height:150px;overflow-y:auto;overscroll-behavior:contain;padding-right:4px;
+    -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 34px),transparent)}
+  .panneau.intro .intro-recit.fin{-webkit-mask-image:none;mask-image:none}
+  .panneau.intro .ir-premier{font-size:1.06em}
+  /* Très grande police : tout le panneau défile aussi, le bouton reste collé en bas */
+  .panneau.intro > .ir-go{position:sticky;bottom:0;z-index:2;box-shadow:0 -6px 10px color-mix(in srgb,var(--card) 85%,transparent),0 3px 0 rgba(20,10,4,.35)}
+  .ir-puces{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:3px;margin-right:-4px;
+    -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+  .ir-puces::-webkit-scrollbar{display:none}
+  .ir-puces span{flex:none;font-size:12px;padding:3px 9px}
+}
