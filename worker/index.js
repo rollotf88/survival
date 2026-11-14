@@ -242,7 +242,10 @@ function ligueDe(t){ let k = 0; LIGUES.forEach((L, i) => { if((t || 0) >= L.min)
 const CADRES_OK = ["bois", "bronze", "argent", "or", "legende"];
 const cadreDe = (d) => CADRES_OK.indexOf(String(d.cadre || "")) >= 0 ? String(d.cadre) : "";
 // Avatar choisi dans « Mon profil » (2026-11-12) : seulement un portrait du jeu (pas d'image envoyée par le joueur pour l'instant)
-const AVATARS_OK = "papa maman leo emma sam nora ines yanis marco marchand roux fillette precheur mere chefcamp pillard blesse convoi detresse pere rodeur coureur costaud rampant hurleur gonfle soldat".split(" ");
+// À GARDER IDENTIQUE à AVATARS dans classement.js
+const AVATARS_OK = ("papa maman leo emma sam nora ines yanis marco marchand roux fillette precheur mere chefcamp pillard blesse convoi detresse pere lucie radio chienpiege " +
+  "gardien detenu pilote ingenieure jumeaux medecin musicien chasseur famillesud corbeau officier eclaireur " +
+  "rodeur coureur costaud rampant hurleur gonfle soldat pilleur couveuse brule gorille mariee pompier boucher colosse").split(" ");
 const avatarDe = (d) => AVATARS_OK.indexOf(String(d.avatar || "")) >= 0 ? String(d.avatar) : "";
 function jourGuerre(W){ return Math.floor((Date.now() - W.debut) / JOUR_MS) + 1; }
 // ---------- Bots de test (2026-11-10, demande de Fabien) ----------

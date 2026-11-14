@@ -1037,9 +1037,12 @@ function pastilleGuerre(pc){
 var AVATARS = [
   ["La famille", ["papa", "maman", "leo", "emma"]],
   ["Les recrues", ["sam", "nora", "ines", "yanis"]],
-  ["Les rencontres", ["marco", "marchand", "roux", "fillette", "precheur", "mere", "chefcamp", "pillard", "blesse", "convoi", "detresse", "pere"]],
-  ["Les zombies", ["rodeur", "coureur", "costaud", "rampant", "hurleur", "gonfle", "soldat"]]
+  ["Les rencontres", ["marco", "marchand", "roux", "fillette", "precheur", "mere", "chefcamp", "pillard", "blesse", "convoi", "detresse", "pere", "lucie", "radio", "chienpiege",
+    "gardien", "detenu", "pilote", "ingenieure", "jumeaux", "medecin", "musicien", "chasseur", "famillesud", "corbeau", "officier", "eclaireur"]],
+  ["Les zombies", ["rodeur", "coureur", "costaud", "rampant", "hurleur", "gonfle", "soldat", "pilleur", "couveuse", "brule", "gorille"]],
+  ["Les zombies célèbres", ["mariee", "pompier", "boucher", "colosse"]]
 ];
+// RÈGLE : un portrait ajouté ici doit aussi être ajouté à AVATARS_OK dans worker/index.js (le serveur refuse les autres)
 function avatarValide(a){ return AVATARS.some(function(g){ return g[1].indexOf(a) >= 0; }); }
 function lireAvatar(){ var a = ""; try{ a = localStorage.getItem("survival_avatar") || ""; }catch(e){} return avatarValide(a) ? a : ""; }
 // Avatar d'un joueur : son portrait choisi, sinon la pastille ronde avec son initiale (comme dans la discussion)
