@@ -8,7 +8,7 @@
 # Rien n'est jamais supprimé sur le serveur (pas de --delete) : les données des joueurs (donnees/), le mot de passe
 # (reglages.json), .well-known et api ne sont jamais touchés.
 # Identifiants dans les « Secrets » du dépôt GitHub (jamais dans le code) :
-#   FTP_HOTE, FTP_JEU_UTILISATEUR, FTP_JEU_MDP, FTP_SERVEUR_UTILISATEUR, FTP_SERVEUR_MDP
+#   FTP_HOTE (le nom de la machine o2switch, ex. magpie.o2switch.net : c'est le nom du certificat FTP), FTP_JEU_UTILISATEUR, FTP_JEU_MDP, FTP_SERVEUR_UTILISATEUR, FTP_SERVEUR_MDP
 # (Premier essai avec SamKirkland/FTP-Deploy-Action : « ECONNRESET (data socket) » avec le FTPS d'o2switch.)
 name: Envoi vers o2switch
 
@@ -30,6 +30,21 @@ jobs:
       - name: Installer lftp
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
+      # Le serveur FTP d'o2switch n'envoie que son propre certificat (Let's Encrypt), sans le certificat intermédiaire :
+      # on va chercher cet intermédiaire à l'adresse officielle écrite dans le certificat (« CA Issuers »), puis lftp
+      # vérifie toute la chaîne normalement avec les autorités du système. Marche aussi après un renouvellement.
+      - name: Compléter la chaîne du certificat FTP
+        env:
+          HOTE: ${{ secrets.FTP_HOTE }}
+        run: |
+          echo | openssl s_client -starttls ftp -connect "$HOTE:21" -servername "$HOTE" 2>/dev/null | openssl x509 > /tmp/feuille.pem
+          URL=$(openssl x509 -in /tmp/feuille.pem -noout -text | grep -o 'CA Issuers - URI:[^ ]*' | head -1 | sed 's/CA Issuers - URI://')
+          echo "Certificat intermédiaire : $URL"
+          curl -fsSL "$URL" -o /tmp/inter.bin
+          openssl x509 -inform DER -in /tmp/inter.bin -out /tmp/inter.pem 2>/dev/null || cp /tmp/inter.bin /tmp/inter.pem
+          cat /etc/ssl/certs/ca-certificates.crt /tmp/inter.pem > /tmp/ca-o2switch.pem
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted /tmp/inter.pem /tmp/feuille.pem
+
       - name: Le jeu (zombria.com)
         env:
           HOTE: ${{ secrets.FTP_HOTE }}
@@ -41,6 +56,7 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ftp:passive-mode true
+          set ssl:ca-file /tmp/ca-o2switch.pem
           set net:max-retries 6
           set net:reconnect-interval-base 5
           set net:timeout 40
@@ -62,6 +78,7 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ftp:passive-mode true
+          set ssl:ca-file /tmp/ca-o2switch.pem
           set net:max-retries 6
           set net:reconnect-interval-base 5
           set net:timeout 40
