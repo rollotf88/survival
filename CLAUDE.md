@@ -25,6 +25,7 @@ Jeu de survie 2D (cartoon, post-apocalyptique) jouable dans le navigateur, desti
 
 ## Version en ligne (test sur téléphone)
 - Lien privé : https://claude.ai/artifact/CRHRodmpWgrpSNamCHHGqP (publié le 2026-11-08). Seul Fabien peut l'ouvrir ; pour le faire tester, il le partage lui-même via le menu Partager de la page
+- Limite : 512 fichiers par version sur claude.ai (atteinte le 2026-11-14). Retirés de la version claude.ai ce jour-là (inutilisés) : anciennes images de la chambre et du salon (`piece-chambre`, `-feu`, `-feu-propre`, `refuge-fond-eteint`, `-propre`, `-eteint-propre`), `personnages/canape-table`, et les 4 fonds `images/combat/` (secours : chaque lieu a son image). Pour retirer un fichier : `files` avec la valeur null
 - Pour mettre à jour : republier `publication-en-ligne.html` sur cette même adresse (`url`) avec les fichiers `style.css`, `data.js`, `icones.js`, `logique.js`, `ui.js`, `guide.js`, `piece.js` (et les images / sons s'ils ont changé). La sauvegarde et le record des joueurs sont gardés sur leur appareil
 
 ## Version installable (site)
