@@ -653,8 +653,12 @@ function finirSiphon(reussi){
 /* ---------- Rencontres en chemin ---------- */
 function lancerRencontre(equipe, res){
   var B = BAL.rencontres; G.rencontresFaites = G.rencontresFaites || [];
-  if(G.rencontre || G.day < B.jour || G.jourRencontre === G.day || hasard() >= B.chance) return;
-  var ok = RENCONTRES.filter(function(r){ return G.day >= (r.jour || 1) && (!r.cond || r.cond()) && G.rencontresFaites.indexOf(r.id) < 0; });
+  if(G.rencontre || G.day < B.jour || G.jourRencontre === G.day) return;
+  var nomLieu = res && LIEUX[res.lieu] ? LIEUX[res.lieu].nom : "";
+  var ok = RENCONTRES.filter(function(r){ return G.day >= (r.jour || 1) && (!r.cond || r.cond()) && G.rencontresFaites.indexOf(r.id) < 0 && (!r.lieu || r.lieu === nomLieu); });
+  var ici = ok.filter(function(r){ return r.lieu; }); // une rencontre propre à ce lieu passe avant les autres
+  if(hasard() >= (ici.length ? B.lieuChance : G.day >= B.tard ? B.chanceTard : B.chance)) return;
+  if(ici.length) ok = ici;
   if(!ok.length) return;
   var r = ok[R(0, ok.length - 1)];
   G.rencontre = { id:r.id, noeud:"debut", equipe:equipe.slice(), apres:res, texte:null, lignes:[] };
@@ -681,6 +685,8 @@ function appliquerEffets(e, L){
     var ls = LIEUX.map(function(L2, i){ return i; }).filter(function(i){ return LIEUX[i].secret && !(G.decouverts && G.decouverts[i]); });
     if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; L.push(["g2", "📍 Nouveau lieu découvert : " + LIEUX[ls[0]].nom + "."]); }
   }
+  if(e.soigne){ eq.forEach(function(x){ x.hp = Math.min(100, x.hp + e.soigne); }); L.push(["g2", "🩹 L’équipe est soignée (+" + e.soigne + " PV chacun)."]); }
+  if(e.essence && G.voiture){ var place = VOITURE.reservoir - G.voiture.essence, dans = Math.min(place, e.essence), nj = Math.floor((e.essence - dans) / VOITURE.litresJerrican); G.voiture.essence += dans; if(nj) ajouter("jerrican", nj); L.push(["g2", "⛽ +" + e.essence + " L d’essence" + (dans ? " (réservoir : " + G.voiture.essence + " L)" : "") + (nj ? ", " + nommer("jerrican", nj) + " remplis" : "") + "."]); }
   if(e.energie){ eq.forEach(function(x){ x.en = Math.max(0, x.en - e.energie); }); L.push(["b2", "⚡ −" + e.energie + " d’énergie pour l’équipe."]); }
   if(e.folie) eq.forEach(function(x){ x.folie = Math.min(100, (x.folie || 0) + e.folie); });
   if(e.moral){ changerMoral(e.moral); L.push([e.moral > 0 ? "g2" : "b2", (e.moral > 0 ? "😊 Moral +" : "😟 Moral ") + e.moral + "."]); }
@@ -1391,7 +1397,12 @@ function echanger(k){
 function evenementDuMatin(){
   if(alea("matin") >= 0.6) return null;
   var dispo = EVENEMENTS.filter(function(e){ return !e.si || e.si(); });
+  // 2026-11-14 : moins de répétitions. Un événement vu il y a moins de BAL.evenements.pause jours est mis de côté (s'il en reste d'autres)
+  G.evVus = G.evVus || {};
+  var frais = dispo.filter(function(e){ var d = G.evVus[EVENEMENTS.indexOf(e)]; return d === undefined || G.day - d >= BAL.evenements.pause; });
+  if(frais.length) dispo = frais;
   var ev = dispo[aleaR("evenement", 0, dispo.length - 1)];
+  G.evVus[EVENEMENTS.indexOf(ev)] = G.day;
   G.evCible = null; G.evIcone = null;
   if(ev.prep) ev.prep();
   return ev;

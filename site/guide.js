@@ -81,6 +81,9 @@ function reglesGuide(){
       "À partir du jour " + B.pillards.jour + ", des pillards passent parfois la nuit et vident une partie d’un lieu que tu n’as pas fini : ne traîne pas. À partir du jour " + B.caches.jour + ", il arrive aussi que des pillards en fuite abandonnent une cache (" + B.caches.taille[0] + " à " + B.caches.taille[1] + " objets) dans un lieu presque vide : écoute la radio et le bilan de la nuit. " +
       "De nouveaux lieux secrets se découvrent avec le temps (jour 10, 15, 20…), " + B.avanceRadio + " jours plus tôt si tu as une radio. Les familles qui tiennent longtemps découvrent aussi des lieux de fin de partie, très riches mais très dangereux : le zoo abandonné (jour 50), l’aéroport (65), la prison (75) et la centrale électrique (85). " +
       "Des missions arrivent aussi, avec un délai : livrer un objet ou aller secourir quelqu’un. Le bouton 🎯 en bas de l’écran les montre."],
+    ["Événements et rencontres", "🎲",
+      "Presque chaque matin, un événement frappe à la porte : un inconnu blessé, des pillards, un orage… À toi de choisir (le premier choix est toujours le plus prudent). Un même événement ne revient pas avant " + BAL.evenements.pause + " jours. Après le jour 30, de nouveaux dangers apparaissent : épidémie, convoi militaire, bande organisée, meute de chiens… " +
+      "En rentrant d’une fouille, l’équipe fait parfois une rencontre : un dialogue où chaque choix compte, parfois avec un 🎲 pourcentage de chances (plus élevé si quelqu’un de l’équipe a le bon trait). Chaque rencontre n’arrive qu’une fois par partie, et certaines n’ont lieu que dans un lieu précis, comme le zoo, la prison, l’aéroport ou la centrale."],
     ["La nuit", ic("lune", "🌙"),
       "Des zombies peuvent attaquer, de plus en plus fort avec les jours. Ta défense = armes en main + barricade (+" + B.defenseBarricade + " par niveau) + piège + Rex. " +
       "Une attaque perdue blesse quelqu’un, fait perdre de la nourriture et détruit un niveau de barricade. Sans couverture ni briquet, la nuit est glaciale."],
@@ -174,7 +177,7 @@ function openMenu(){
 var THEMES_GUIDE = [
   ["Survivre", "❤️", ["Boire et manger", "L’énergie", "Le froid et le feu", "La nuit", "Les saisons", "Le dernier recours"]],
   ["Le refuge", "🏠", ["Le refuge", "La cuisine", "Pêche et poules", "La forêt et le bois", "La voiture", "Les tombes"]],
-  ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "L’expérience des survivants"]],
+  ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "Événements et rencontres", "L’expérience des survivants"]],
   ["Progresser", "🏆", ["Score et chapitres", "La Légende du mois", "Le tigre de la Légende", "Les défis", "La grande horde du week-end", "L’héritage"]],
   ["Les clans", "⚔️", ["Les clans", "Les opérations du clan", "La discussion du clan", "Équipement de guerre", "Le camion du clan"]]
 ];

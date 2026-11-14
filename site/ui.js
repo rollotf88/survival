@@ -74,6 +74,9 @@ function locuteurEvenement(ev){
     case "🧔 Un marchand louche": return [PNJ.marchand, "marchand"];
     case "🚪 Un survivant blessé": return [PNJ.blesse, "blesse"];
     case "🏴 Des pillards": return [PNJ.pillard, "pillard"];
+    case "🏴 La bande des Corbeaux": return ["Le chef des Corbeaux", "corbeau"];
+    case "🎖️ Un convoi militaire": return ["L’officier", "officier"];
+    case "👁️ L’éclaireur sur le toit": return ["L’éclaireur", "eclaireur"];
     case "👵 La vieille voisine": return [PNJ.roux, "roux"];
     case "🚪 On frappe à la porte": return G.evCible ? [G.evCible, iconeMembre({ nom:G.evCible, icone:G.evIcone, al:true, hp:100, en:100, faim:100, soif:100 })] : null;
     case "🤒 La fièvre": return m(membre(G.evCible));

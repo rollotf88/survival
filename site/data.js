@@ -130,7 +130,8 @@ var BAL = {
     moral: -25               // ...mais le moral s'effondre
   },    // mais la nuit suivante, ce membre récupère 20 de moins
   // Rencontres en chemin : une chance à chaque fouille, au plus une par jour
-  rencontres: { jour:3, chance:0.1, bonusTrait:0.2 },
+  evenements: { pause:15 }, // un événement du matin ne revient pas avant 15 jours (s’il en reste d’autres)
+  rencontres: { jour:3, chance:0.1, bonusTrait:0.2, chanceTard:0.15, tard:30, lieuChance:0.5 },  // après le jour « tard », chance plus faible pour que les rencontres durent ; dans le lieu d’une rencontre « lieu », chance plus forte
   debutDoux: { jours:5, degats:0.6 }, // les 5 premiers jours, les zombies font 40 % de dégâts en moins (pour les débutants, 2026-11-10)
   jourClans: 30,            // jour de survie pour accéder aux clans (affichage ; le vrai réglage est sur le serveur, modifiable dans l'admin)
   // Assauts des guerres de clans (lissés le 2026-11-10 par simulation)
@@ -687,6 +688,94 @@ var RENCONTRES = [
       { t:"Le laisser", effets:{ moral:-6 }, texte:"Ses gémissements résonnent longtemps." }
     ] } } }
 ];
+/* ---------- Rencontres de fin de partie (2026-11-14) ----------
+   jour 30 et plus ; « lieu » = seulement en revenant de ce lieu (elle passe alors avant les autres).
+   Nouveaux effets : soigne (PV rendus à l'équipe), essence (litres dans le réservoir, le surplus en jerricans). */
+RENCONTRES.push(
+  { id:"gardien", titre:"🐅 Le gardien du zoo", nom:"Le vieux gardien", portrait:"gardien", jour:50, lieu:"Zoo abandonné", noeuds:{
+    debut:{ texte:"Près de l’enclos vide des tigres, un vieil homme en uniforme délavé jette des graines aux pigeons. « Vous cherchez Raja ? Il est parti. C’est moi qui le nourrissais à travers les barreaux… »", choix:[
+      { t:"Écouter son histoire", suite:"histoire", effets:{}, texte:"Il s’assoit sur un banc et sourit pour la première fois depuis longtemps." },
+      { t:"Partager un repas avec lui (2 rations)", cond:function(){ return rations("nour") >= 2; }, sans:"Pas assez de nourriture", effets:{ nour:2, objets:{ trousse:1, antibio:1 }, moral:10 },
+        texte:"Il mange lentement, puis vous tend la trousse de la clinique du zoo. « Prenez. Moi, je n’en ai plus besoin. »" }
+    ] },
+    histoire:{ texte:"« Un soir, Raja a brisé sa cage. Il ne m’a pas attaqué : il est parti vers la ville, comme s’il cherchait quelqu’un. On dit qu’il ne suit que les plus grands survivants… ceux qu’on appelle les Légendes. »", choix:[
+      { t:"Le remercier", effets:{ moral:12 }, texte:"« Survivez assez longtemps, et peut-être qu’il viendra à vous. » Vous repartez le cœur plus léger." },
+      { t:"Lui proposer de venir au refuge", cond:function(){ return vivants().length < FAMILLE.length; }, sans:"La famille est au complet", effets:{ moral:6, objets:{ conserves:1 } },
+        texte:"Il secoue la tête. « Ma place est ici, avec mes bêtes. » Il vous donne un lot de conserves de la réserve des soigneurs." }
+    ] } } },
+  { id:"detenu", titre:"⛓️ Le détenu oublié", nom:"Le détenu", portrait:"detenu", jour:75, lieu:"Prison", noeuds:{
+    debut:{ texte:"Au fond d’un couloir, une main maigre sort d’entre les barreaux. « Ils sont partis sans ouvrir ma cellule… Ça fait des semaines. Par pitié. »", choix:[
+      { t:"Lui glisser de l’eau et partir", effets:{ eau:1, moral:3, objets:{ boiteBalles:1 } }, texte:"Il boit d’un trait. « La clé de l’armurerie est sous le bureau du gardien-chef. » Vous y trouvez une boîte de balles." },
+      { t:"Ouvrir la cellule", chance:0.55, trait:"costaud",
+        reussite:{ texte:"Il pleure en sortant. « Je vous dois la vie. » Il vous mène à l’armurerie des gardiens avant de disparaître.", effets:{ objets:{ gilet:1, fusil:1, boiteCart:1 }, moral:10 } },
+        echec:{ texte:"À peine sorti, il se jette sur vous avec une lame de fortune et s’enfuit dans les couloirs.", effets:{ pv:25, cause:"tué par un détenu en fuite", moral:-8 } } },
+      { t:"Passer votre chemin", effets:{ moral:-8 }, texte:"Ses appels vous poursuivent jusqu’à la sortie." }
+    ] } } },
+  { id:"pilote", titre:"✈️ La pilote blessée", nom:"La pilote", portrait:"pilote", jour:65, lieu:"Aéroport", noeuds:{
+    debut:{ texte:"Dans le cockpit d’un petit avion, une femme en uniforme se tient la jambe. « J’ai posé l’appareil comme j’ai pu… Je connais un dépôt de carburant intact, si vous m’aidez. »", choix:[
+      { t:"La soigner (1 objet de soin)", cond:function(){ return soinsDispo() > 0; }, sans:"Aucun objet de soin", effets:{ soins:1, essence:15, decouvrir:true, moral:8 },
+        texte:"Elle serre les dents pendant le pansement, puis vous guide jusqu’à une cuve cachée et vous parle d’un autre endroit encore intact." },
+      { t:"Lui laisser de l’eau", effets:{ eau:2, moral:4 }, texte:"« Merci… Je tiendrai. » Elle vous regarde partir depuis le cockpit." },
+      { t:"Fouiller l’avion pendant qu’elle somnole", effets:{ objets:{ jerrican:2, canette:2 }, moral:-12 }, texte:"Vous repartez avec deux jerricans et des canettes. Elle ne s’est pas réveillée." }
+    ] } } },
+  { id:"ingenieure", titre:"⚙️ L’ingénieure de la centrale", nom:"L’ingénieure", portrait:"ingenieure", jour:85, lieu:"Centrale électrique", noeuds:{
+    debut:{ texte:"Une femme en casque de chantier bricole un générateur à la lueur d’une lampe. « Si je le relance, j’éclaire tout le quartier une nuit. Il me manque des bras… et du courage. »", choix:[
+      { t:"L’aider à relancer le générateur", chance:0.5, trait:"agile",
+        reussite:{ texte:"Le générateur rugit ! Elle rit aux éclats et vous donne tout ce qu’elle avait mis de côté.", effets:{ energie:20, objets:{ batterie:1, pile:4, ruban:2 }, moral:15 } },
+        echec:{ texte:"Une étincelle, un claquement : le court-circuit vous projette contre un mur.", effets:{ energie:20, pv:20, cause:"tué par un court-circuit à la centrale" } } },
+      { t:"Lui laisser des piles et partir", cond:function(){ return compter("pile") >= 2; }, sans:"Pas assez de piles", effets:{ perdre:{ pile:2 }, objets:{ ferraille:3, clous:3 }, moral:4 }, texte:"« Ça m’aidera. » Elle vous donne de la ferraille et des clous en échange." },
+      { t:"Repartir sans traîner", effets:{}, texte:"Le bruit des machines vous suit jusqu’à la grille." }
+    ] } } },
+  { id:"jumeaux", titre:"👦👧 Les jumeaux de la voiture", nom:"Les jumeaux", portrait:"jumeaux", jour:30, noeuds:{
+    debut:{ texte:"Dans une voiture aux vitres couvertes de dessins, deux enfants identiques vous fixent. « Maman a dit d’attendre ici. Ça fait longtemps. »", choix:[
+      { t:"Les conduire au camp des survivants (2 rations)", cond:function(){ return rations("nour") >= 2; }, sans:"Pas assez de nourriture", effets:{ nour:2, energie:10, moral:12 }, texte:"Ils vous tiennent la main tout le long du chemin. Au camp, on les accueille comme des rois." },
+      { t:"Leur laisser à manger et revenir plus tard", effets:{ nour:1, moral:4 }, texte:"Ils partagent la boîte en deux, parfaitement. Quand vous repassez, la voiture est vide." },
+      { t:"Fouiller la voiture", effets:{ objets:{ canette:1, biscuits:2 }, moral:-15 }, texte:"Ils pleurent sans bruit pendant que vous prenez leurs biscuits." }
+    ] } } },
+  { id:"medecin", titre:"🩺 Le médecin de la pharmacie", nom:"Le médecin", portrait:"medecin", jour:35, noeuds:{
+    debut:{ texte:"Derrière le comptoir d’une pharmacie barricadée, un homme en blouse sale vous braque avec une seringue. « Je soigne. Contre de quoi manger. Rien n’est gratuit. »", choix:[
+      { t:"Faire soigner l’équipe (3 rations)", cond:function(){ return rations("nour") >= 3; }, sans:"Pas assez de nourriture", effets:{ nour:3, soigne:40 }, texte:"Il recoud, désinfecte, bande. Ses mains ne tremblent pas. Vous ressortez comme neufs." },
+      { t:"Lui acheter des médicaments (2 rations d’eau)", cond:function(){ return rations("eau") >= 2; }, sans:"Pas assez d’eau", effets:{ eau:2, objets:{ antibio:1, bandage:2 } }, texte:"Il compte les cachets un par un, puis vous les glisse dans un sachet." },
+      { t:"Repartir", effets:{}, texte:"« Revenez quand vous saignerez. » La porte se referme." }
+    ] } } },
+  { id:"peage", titre:"🌉 Le pont à péage", nom:"Le péagiste", portrait:"pillard", jour:40, noeuds:{
+    debut:{ texte:"Des voitures en travers bloquent le pont. Un homme armé fait les cent pas. « Péage : 3 rations par tête. Ou vous faites le tour par la rivière. »", choix:[
+      { t:"Faire le grand détour par la rivière", effets:{ energie:25 }, texte:"La rivière est glacée, le détour interminable. Mais personne ne vous a tiré dessus." },
+      { t:"Payer le péage (3 rations)", cond:function(){ return rations("nour") >= 3; }, sans:"Pas assez de nourriture", effets:{ nour:3 }, texte:"Il compte les boîtes et lève la barrière avec un sourire édenté." },
+      { t:"Forcer le passage", chance:0.5, trait:"costaud",
+        reussite:{ texte:"Vous le désarmez avant qu’il ait compris. Sous son abri, ses « péages » des dernières semaines !", effets:{ objets:{ conserves:1, bouteille:4, pistolet:1 }, moral:8 } },
+        echec:{ texte:"Il tire. La balle vous touche avant que vous ne battiez en retraite.", effets:{ pv:30, cause:"tué au pont à péage", energie:25 } } }
+    ] } } },
+  { id:"violon", titre:"🎻 Le violoniste des ruines", nom:"Le violoniste", portrait:"musicien", jour:45, noeuds:{
+    debut:{ texte:"Au milieu d’une place dévastée, un vieil homme joue du violon. Les notes résonnent entre les façades. Les zombies, au loin, semblent tendre l’oreille.", choix:[
+      { t:"L’écouter quelques minutes", chance:0.75,
+        reussite:{ texte:"Pendant un instant, le monde d’avant revient. Vous repartez les larmes aux yeux.", effets:{ moral:15, energie:10 } },
+        echec:{ texte:"La musique a attiré un rôdeur dans votre dos.", effets:{ moral:8, pv:15, cause:"tué en écoutant un violon" } } },
+      { t:"Lui donner à manger (1 ration)", cond:function(){ return rations("nour") >= 1; }, sans:"Pas de nourriture", effets:{ nour:1, moral:12 }, texte:"Il vous joue un air rien que pour vous, puis vous souhaite bonne chance." },
+      { t:"Le faire taire avant que ça attire la horde", effets:{ moral:-10 }, texte:"Il range son violon sans un mot. Le silence est pire que tout." }
+    ] } } },
+  { id:"chasseur", titre:"🏹 Le chasseur solitaire", nom:"Le chasseur", portrait:"chasseur", jour:50, noeuds:{
+    debut:{ texte:"Un homme en tenue de camouflage dépèce un lapin au bord d’un chemin. « La forêt nourrit ceux qui savent regarder. Je peux vous apprendre… contre quelques balles. »", choix:[
+      { t:"Échanger 4 balles contre deux collets", cond:function(){ return compter("balle") >= 4; }, sans:"Pas assez de balles", effets:{ perdre:{ balle:4 }, objets:{ collet:2 } }, texte:"Il vous montre comment les poser près des terriers. « Patience. Toujours. »" },
+      { t:"Partager son repas", effets:{ moral:6, objets:{ herbes:2, champignons:2 } }, texte:"Le lapin grillé a un goût de paradis. Il vous indique où cueillir herbes et champignons." },
+      { t:"Le saluer et continuer", effets:{}, texte:"Il hoche la tête sans lever les yeux de son couteau." }
+    ] } } },
+  { id:"helico", titre:"🚁 L’hélicoptère écrasé", nom:"", portrait:"", jour:60, noeuds:{
+    debut:{ texte:"Une épave d’hélicoptère fume encore au milieu d’un champ. Des caisses frappées d’une croix rouge sont éparpillées autour. De l’essence goutte du réservoir.", choix:[
+      { t:"Ramasser seulement les caisses éparpillées", effets:{ objets:{ bandage:2, bouteille:3 } }, texte:"Vous ramassez ce qui traîne dans l’herbe sans vous approcher de l’épave." },
+      { t:"Fouiller l’épave", chance:0.55,
+        reussite:{ texte:"Dans la soute : du matériel médical, une arme et des munitions. Une vraie fortune !", effets:{ objets:{ trousse:2, antibio:1, fusil:1, boiteCart:1 }, moral:10 } },
+        echec:{ texte:"Le réservoir s’embrase pendant que vous fouillez. Vous sortez de justesse.", effets:{ pv:30, cause:"tué dans l’explosion d’un hélicoptère", objets:{ bandage:1 } } } }
+    ] } } },
+  { id:"caravane", titre:"🛻 La famille en route vers le sud", nom:"Le père de famille", portrait:"famillesud", jour:55, noeuds:{
+    debut:{ texte:"Un pick-up chargé jusqu’au toit s’arrête à votre hauteur. Un homme, sa femme et une adolescente. « On descend vers le sud, il paraît qu’il y a un camp près de la mer. Vous venez ? »", choix:[
+      { t:"Leur souhaiter bonne route", effets:{ moral:4 }, texte:"L’adolescente vous fait un signe par la vitre arrière, jusqu’à ce que le pick-up disparaisse." },
+      { t:"Échanger du carburant (1 jerrican) contre des vivres", cond:function(){ return compter("jerrican") > 0; }, sans:"Pas de jerrican", effets:{ perdre:{ jerrican:1 }, objets:{ conserves:1, bidon:1 }, moral:5 }, texte:"« Avec ça, on arrivera peut-être. » Ils vous laissent un lot de conserves et un bidon d’eau." },
+      { t:"Demander si quelqu’un veut rester avec vous", cond:function(){ return vivants().length < FAMILLE.length; }, sans:"La famille est au complet", effets:{ recruter:["Nora", "👩"], moral:8 },
+        texte:"Après une longue discussion à voix basse, une jeune femme qui voyageait avec eux descend du pick-up. « Le sud, c’est un rêve. Ici, au moins, il y a vous. »" }
+    ] } } }
+);
+
 // Ingrédients de cuisine ajoutés au butin des lieux (2026-11-09)
 // Équipement de guerre à trouver (2026-11-10)
 var GUERRE_LIEUX = { "Commissariat":{ gilet:1, casque:1 }, "Base militaire":{ gilet:2, casque:1, bouclier:1 }, "Caserne des pompiers":{ casque:1 } };
@@ -933,6 +1022,86 @@ var EVENEMENTS = [
     ["La manger tout de suite", function(){ G.reste.nour += BAL.poules.viande; return "Ce soir, c’est poulet : +" + BAL.poules.viande + " rations de nourriture."; }]
   ]}
 ];
+// ----- Événements de fin de partie (2026-11-14) : plus durs, seulement après le jour 30. Ajoutés à la fin (les sauvegardes gardent le numéro de l'événement) -----
+EVENEMENTS.push(
+  { titre:"🦠 Une épidémie dans le quartier", si:function(){ return G.day >= 30; },
+    texte:"Des voisins toussent à s’en déchirer la gorge. Une maladie se propage de maison en maison. Il faudrait désinfecter le refuge… ou croiser les doigts.", choix:[
+    ["Désinfecter le refuge (1 alcool ou 1 objet de soin)", function(){
+      if(compter("alcool") > 0){ retirer("alcool", 1); return "Vous frottez chaque recoin à l’alcool. La maladie passe à côté de vous. 🧴"; }
+      var s = retirerSoin(); if(s) return "Faute d’alcool, vous utilisez " + nommer(s, 1) + " pour désinfecter. La maladie passe à côté de vous.";
+      var v = vivants(), x = v[R(0, v.length - 1)], n = []; blesser(x, 15, n, "mort de la maladie du quartier");
+      return "Vous n’avez rien pour désinfecter. " + x.nom + " tombe malade (−15 PV)." + (n.length ? " " + n[0][1] : ""); }],
+    ["Croiser les doigts", function(){
+      if(hasard() < 0.5) return "La toux s’éloigne. Vous avez eu de la chance.";
+      var n = [], noms = [];
+      vivants().forEach(function(x){ if(hasard() < 0.5){ blesser(x, 20, n, "mort de la maladie du quartier"); noms.push(x.nom); } });
+      if(!noms.length){ var x = vivants()[0]; blesser(x, 20, n, "mort de la maladie du quartier"); noms.push(x.nom); }
+      return "La maladie entre au refuge : " + liste(noms) + " " + (noms.length > 1 ? "tombent malades" : "tombe malade") + " (−20 PV)." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+  ]},
+  { titre:"🎖️ Un convoi militaire", si:function(){ return G.day >= 35; },
+    texte:"Des camions kaki s’arrêtent devant le refuge. Un officier fatigué descend : « Réquisition. Vos vivres serviront à tenir la ligne. » Ses soldats ont l’air aussi affamés que vous.", choix:[
+    ["Donner 2 rations d’eau et 2 de nourriture", function(){ var e = prendreRations("eau", 2), f = prendreRations("nour", 2); changerMoral(-3); return "Vous donnez " + e + " rations d’eau et " + f + " de nourriture. L’officier salue et le convoi repart. Moral −3."; }],
+    ["Échanger 6 planches contre des munitions", function(){
+      if(compter("planche") < 6){ var pf = prendreRations("nour", 4); return "Vous n’avez pas 6 planches. L’officier perd patience et ses soldats prennent " + pf + " rations de nourriture."; }
+      retirer("planche", 6); ajouter("boiteBalles", 1); ajouter("boiteCart", 1); return "« Des planches ? On en manque pour les barricades. » Marché conclu : −6 planches, +1 boîte de balles, +1 boîte de cartouches."; }],
+    ["Cacher vos réserves et faire les pauvres", function(){
+      if(hasard() < 0.5){ changerMoral(5); return "Les soldats fouillent sans conviction et repartent bredouilles. Moral +5."; }
+      var f = prendreRations("nour", 8); changerMoral(-10); return "Ils trouvent la cachette. Furieux, ils emportent " + f + " rations de nourriture. Moral −10."; }]
+  ]},
+  { titre:"🌨️ La tempête de neige", si:function(){ return G.day >= 30 && estSaison("hiver"); },
+    texte:"Le vent hurle toute la nuit. La neige s’entasse contre les portes et le froid traverse les murs.", choix:[
+    ["Brûler 2 planches pour tenir", function(){
+      if(compter("planche") < 2){ var n = []; vivants().forEach(function(x){ x.en = Math.max(0, x.en - 15); blesser(x, 5, n, "mort de froid pendant la tempête"); }); return "Il n’y a pas assez de planches. Toute la famille grelotte (−15 ⚡, −5 PV chacun)." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }
+      retirer("planche", 2); changerMoral(3); return "Le feu crépite toute la nuit. Serrés autour, vous racontez des histoires d’avant. −2 planches, moral +3."; }],
+    ["Se serrer sous les couvertures", function(){
+      var n = [], couv = compter("couverture") * 2;
+      vivants().forEach(function(x, k){ x.en = Math.max(0, x.en - 15); if(k >= couv) blesser(x, 8, n, "mort de froid pendant la tempête"); });
+      return "La nuit est longue et glacée : −15 ⚡ pour tout le monde" + (couv < vivants().length ? ", et ceux sans couverture perdent 8 PV" : "") + "." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+  ]},
+  { titre:"🏴 La bande des Corbeaux", si:function(){ return G.day >= 45; },
+    texte:function(){ return "Une dizaine de pillards organisés encerclent le refuge, menés par un chef au manteau noir : « La moitié de vos vivres, et on vous laisse en paix pour l’hiver. » (Votre défense de nuit : " + defenseNuit() + ")"; }, choix:[
+    ["Payer (la moitié de la nourriture, 8 rations au plus)", function(){ var p = prendreRations("nour", Math.min(8, Math.ceil(rations("nour") / 2))); changerMoral(-8); return "Vous leur donnez " + p + " rations. Le chef sourit. « Sage décision. » Moral −8."; }],
+    ["Leur offrir des munitions à la place", function(){
+      var m = compter("boiteBalles") ? "boiteBalles" : compter("boiteCart") ? "boiteCart" : compter("balle") >= 6 ? "balle" : compter("cartouche") >= 6 ? "cartouche" : null;
+      if(!m){ var p = prendreRations("nour", Math.ceil(rations("nour") / 2)); changerMoral(-12); return "Vous n’avez pas de munitions à offrir. Vexés, ils prennent " + p + " rations. Moral −12."; }
+      retirer(m, OBJETS[m].empile && (m === "balle" || m === "cartouche") ? 6 : 1); return "Le chef soupèse " + (m === "balle" || m === "cartouche" ? "les munitions" : "la boîte") + ". « Ça ira. » Ils repartent sans toucher à vos vivres."; }],
+    ["Se battre", function(){
+      var force = 6 + Math.floor(G.day / 4) + R(0, 3), df = defenseNuit(), n = [];
+      if(df >= force){ ajouter("boiteBalles", 1); ajouter("conserves", 1); ajouter("trousse", 1); changerMoral(15); return "Les Corbeaux se brisent sur vos défenses (force " + force + " contre " + df + ") ! Dans leur fuite, ils abandonnent un lot de conserves, une trousse et une boîte de balles. Moral +15."; }
+      var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(20, 35), n, "tué par la bande des Corbeaux"); });
+      if(G.ref.barr > 0) G.ref.barr--;
+      var p = prendreRations("nour", Math.ceil(rations("nour") / 2));
+      return "Ils sont trop nombreux (force " + force + " contre " + df + "). La barricade cède, il y a des blessés, et ils emportent " + p + " rations." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+  ]},
+  { titre:"👁️ L’éclaireur sur le toit", si:function(){ return G.day >= 40; },
+    texte:"Depuis l’aube, un homme observe le refuge à la jumelle, couché sur un toit voisin. Un éclaireur… mais de quel groupe ?", choix:[
+    ["Rester discrets et barricader les fenêtres (−1 planche)", function(){ if(compter("planche") > 0){ retirer("planche", 1); return "Vous clouez une planche de plus. À midi, l’éclaireur a disparu."; } return "Sans planche à clouer, vous restez loin des fenêtres. À midi, l’éclaireur a disparu."; }],
+    ["Lui faire signe de descendre", function(){
+      if(hasard() < 0.55){ ajouter("bouteille", 3); var ls = LIEUX.map(function(L, i){ return i; }).filter(function(i){ return LIEUX[i].secret && !(G.decouverts && G.decouverts[i]); }); var t = "";
+        if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; t = " Il vous parle d’un endroit encore intact : 📍 " + LIEUX[ls[0]].nom + "."; }
+        changerMoral(5); return "Il descend, méfiant, puis partage de l’eau (+3 bouteilles)." + t + " Moral +5."; }
+      var p = prendreRations("nour", 3); return "Il fait un signe… à d’autres. Le temps de comprendre, des inconnus ont filé avec " + p + " rations de nourriture."; }],
+    ["Tenter de le capturer", function(){
+      var v = vivants(), n = [];
+      if(hasard() < 0.5){ ajouter("pistolet", 1); ajouter("balle", 4); changerMoral(-5); return "Vous le surprenez sur le toit. Il jure qu’il était seul et vous laisse son pistolet et 4 balles pour repartir libre. Moral −5."; }
+      var x = v[R(0, v.length - 1)]; blesser(x, 25, n, "tué en poursuivant un éclaireur"); return x.nom + " glisse sur le toit en le poursuivant (−25 PV). L’éclaireur s’enfuit." + (n.length ? " " + n[0][1] : ""); }]
+  ]},
+  { titre:"🐺 La meute", si:function(){ return G.day >= 50; },
+    texte:"Des chiens retournés à l’état sauvage tournent autour du refuge, les côtes saillantes. Ils grattent à la porte de la réserve.", choix:[
+    ["Leur jeter 3 rations pour qu’ils partent", function(){ var p = prendreRations("nour", 3); if(p >= 3) return "Ils se battent pour la viande, puis disparaissent dans la nuit."; var n = [], v = vivants(), x = v[R(0, v.length - 1)]; blesser(x, 15, n, "tué par une meute de chiens"); return "Ce n’est pas assez : la meute force l’entrée et mord " + x.nom + " (−15 PV) avant de s’enfuir." + (n.length ? " " + n[0][1] : ""); }],
+    ["Les effrayer avec le feu (1 alcool + 1 chiffon)", function(){
+      if(compter("alcool") < 1 || compter("chiffon") < 1){ var pm = prendreRations("nour", 2); return "Il vous manque de quoi faire une torche. Les chiens finissent par partir… avec " + pm + " rations."; }
+      retirer("alcool", 1); retirer("chiffon", 1); return "La torche enflammée les fait détaler en couinant. La nuit redevient calme."; }],
+    ["Les chasser à la hache et au bâton", function(){
+      var df = defenseNuit(), n = [];
+      if(df >= 8 || hasard() < 0.35){ G.reste.nour = (G.reste.nour || 0) + 6; changerMoral(-3); return "Après une lutte brutale, la meute s’enfuit en laissant deux bêtes derrière elle : +6 rations de viande. Moral −3."; }
+      var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(12, 22), n, "tué par une meute de chiens"); }); return "La meute est trop nombreuse : des morsures partout avant qu’elle ne s’enfuie." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+  ]}
+);
+// Images des événements de fin de partie : scènes provisoires (images Gemini demandées)
+IMAGES_EVENEMENTS["🦠 Une épidémie dans le quartier"] = "fievre"; IMAGES_EVENEMENTS["🎖️ Un convoi militaire"] = "horde"; IMAGES_EVENEMENTS["🌨️ La tempête de neige"] = "orage";
+IMAGES_EVENEMENTS["🏴 La bande des Corbeaux"] = "pillards"; IMAGES_EVENEMENTS["👁️ L’éclaireur sur le toit"] = "horde"; IMAGES_EVENEMENTS["🐺 La meute"] = "chien";
+
 var RECRUES = [ { nom:"Sam", icone:"🧑" }, { nom:"Nora", icone:"👩‍🦱" }, { nom:"Inès", icone:"👱‍♀️" }, { nom:"Yanis", icone:"🧔" } ];
 
 /* ---------- Astuces de première partie ----------

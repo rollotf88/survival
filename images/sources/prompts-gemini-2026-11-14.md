@@ -57,3 +57,39 @@ Voici les zombies de mon jeu (planche jointe). Crée un nouveau zombie dans EXAC
 Joindre la grille de portraits existants (par exemple `images/sources/portraits-celebres-gemini.jpg`) et les 4 images en pied reçues.
 
 Fais une grille 2 × 2 de portraits (tête et épaules) de ces 4 zombies, dans le même style et le même cadrage que les portraits joints : fond sombre uni, visage bien éclairé, contour brun foncé épais. Dans l'ordre : en haut à gauche le Pilleur, en haut à droite la Couveuse, en bas à gauche le Brûlé, en bas à droite le Gorille. Aucun texte.
+
+---
+
+# Événements et rencontres de fin de partie (ajoutés le 2026-11-14)
+
+En attendant, les nouveaux événements utilisent des scènes existantes, et les nouvelles rencontres n'ont pas de portrait (le médaillon est caché).
+
+## D. Les 12 portraits (une seule image, grille 4 × 3)
+
+Joindre une grille de portraits existante (par exemple `images/sources/pnj-2-gemini.jpg` ou `images/sources/portraits-rencontres-missions-chatgpt.webp`) comme référence de style.
+
+Fais une grille de 4 colonnes × 3 rangées de portraits (tête et épaules) de survivants d'un monde post-apocalyptique, dans EXACTEMENT le même style et le même cadrage que les portraits joints : dessin cartoon peint, contour brun foncé épais, couleurs chaudes et usées, fond sombre uni, visage bien éclairé. Aucun texte. Dans l'ordre, de gauche à droite puis de haut en bas :
+1. un vieux gardien de zoo, uniforme vert délavé avec un écusson de tigre, casquette, barbe blanche, regard doux et triste
+2. un détenu maigre et mal rasé, combinaison orange déchirée, derrière des barreaux rouillés
+3. une pilote d'avion d'une quarantaine d'années, veste de pilote et casque audio autour du cou, visage écorché mais déterminé
+4. une ingénieure en casque de chantier jaune, lunettes de protection relevées, visage noirci de cambouis, sourire malin
+5. deux jumeaux de 8 ans (un garçon et une fille) serrés l'un contre l'autre, visages sales, grands yeux inquiets
+6. un médecin d'une cinquantaine d'années, blouse blanche tachée, stéthoscope, regard dur et fatigué
+7. un vieux violoniste aux cheveux blancs en bataille, manteau élimé, violon contre l'épaule, yeux fermés
+8. un chasseur en tenue de camouflage, bonnet, visage buriné, arc sur l'épaule
+9. un père de famille d'une quarantaine d'années, casquette et chemise à carreaux, au volant d'un pick-up (on voit le cadre de la vitre)
+10. le chef d'une bande de pillards, long manteau noir avec des plumes de corbeau sur les épaules, cicatrice, sourire inquiétant
+11. un officier militaire épuisé, béret, uniforme kaki poussiéreux, barbe de plusieurs jours
+12. un éclaireur jeune et maigre, foulard sur le bas du visage, jumelles autour du cou, capuche
+
+## E. Les 6 scènes des événements (une seule image, grille 3 × 2, format 16:9 pour chaque case)
+
+Joindre `images/evenements/pillards.webp` et `images/evenements/orage.webp` comme référence de style.
+
+Fais une grille de 3 colonnes × 2 rangées de scènes pour un jeu de survie post-apocalyptique, dans EXACTEMENT le même style que les images jointes : dessin cartoon peint, contours brun foncé épais, couleurs chaudes et usées. Chaque case est une scène au format paysage 16:9, vue depuis le refuge de la famille (une maison de banlieue barricadée). Aucun texte, aucune marque. Dans l'ordre :
+1. une épidémie : une rue du quartier, des draps blancs aux fenêtres, une croix rouge peinte sur une porte, un voisin qui tousse dans un mouchoir
+2. un convoi militaire : deux camions kaki arrêtés devant la maison barricadée, des soldats fatigués qui attendent, un officier qui frappe à la porte
+3. une tempête de neige : la maison barricadée sous la neige, les fenêtres éclairées par un feu, le vent qui soulève la neige
+4. une bande de pillards organisés : une dizaine de silhouettes armées en manteaux sombres autour de la maison, au crépuscule, leur chef au premier plan avec des plumes de corbeau sur les épaules
+5. un éclaireur : un homme couché sur un toit voisin qui observe la maison à la jumelle, vu de derrière la fenêtre barricadée
+6. une meute : des chiens sauvages maigres qui rôdent autour de la maison la nuit, les yeux brillants dans l'obscurité
