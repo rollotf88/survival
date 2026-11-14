@@ -6,6 +6,8 @@
 
 /* Icône d'un objet. Pour l'instant un emoji ; plus tard on renverra ici
    une image ou un SVG, sans toucher au reste du code. */
+// Traduction : trad() vient de langue.js ; sans lui (simulation), le texte français est rendu tel quel
+var trad = typeof trad === "function" ? trad : function(fr, v){ return v ? String(fr).replace(/\{(\w+)\}/g, function(m, k){ return v[k] != null ? v[k] : m; }) : fr; };
 function icone(id){ return typeof ICONES_SVG !== "undefined" && (ICONES_SVG[id] || (typeof ICONES_IMG !== "undefined" && ICONES_IMG[id])) ? svgIcone(id) : OBJETS[id].icone; } // une icône peinte suffit (ex. cocktail, sans dessin en code)
 // Pareil pour les membres de la famille (les recrues gardent leur emoji) et les zombies
 var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma", "Sam":"sam", "Nora":"nora", "Inès":"ines", "Yanis":"yanis" };
@@ -901,125 +903,130 @@ var IMAGES_EVENEMENTS = { "🚪 Un survivant blessé":"frappe", "🧔 Un marchan
 /* ---------- Événements à dilemmes (le matin) ----------
    Chaque choix est une fonction qui modifie le jeu et renvoie le texte du résultat. */
 var EVENEMENTS = [
+  // Traduction (2026-11-14) : chaque phrase passe par trad() (valeurs entre accolades) ; titre, texte et libellés des choix
+  // sont traduits à l'affichage (ui.js) : le titre français reste la clé de IMAGES_EVENEMENTS et des portraits
   { titre:"🚪 Un survivant blessé", texte:"Un inconnu frappe à la porte, il saigne. Il supplie qu’on le soigne.", choix:[
     ["Le soigner (−1 objet de soin)", function(){
-      var s = retirerSoin(); if(!s) return "Vous n’avez rien pour le soigner. Il repart en titubant.";
+      var s = retirerSoin(); if(!s) return trad("Vous n’avez rien pour le soigner. Il repart en titubant.");
       ajouter("conserve", 2);
-      return "Vous utilisez " + nommer(s, 1) + ". Il guérit et vous laisse 2 boîtes de conserve avant de repartir. 🥫"; }],
-    ["Le chasser", function(){ changerMoral(-10); return "Vous fermez la porte. Ses cris résonnent longtemps. Moral −10."; }]
+      return trad("Vous utilisez {soin}. Il guérit et vous laisse 2 boîtes de conserve avant de repartir. 🥫", { soin:nommer(s, 1) }); }],
+    ["Le chasser", function(){ changerMoral(-10); return trad("Vous fermez la porte. Ses cris résonnent longtemps. Moral −10."); }]
   ]},
   { titre:"🧔 Un marchand louche", texte:"Il propose une trousse de soins et 2 bandages contre 6 rations de nourriture. Son sac est trop lourd pour être honnête.", choix:[
     ["Accepter", function(){
-      if(rations("nour") < 6) return "Vous n’avez pas assez de nourriture, il s’en va.";
+      if(rations("nour") < 6) return trad("Vous n’avez pas assez de nourriture, il s’en va.");
       prendreRations("nour", 6); ajouter("trousse", 1); ajouter("bandage", 2);
-      return "Marché conclu : −6 rations de nourriture, +1 trousse de soins, +2 bandages. ⛑️"; }],
-    ["Refuser", function(){ return "Il hausse les épaules et disparaît dans la nuit."; }]
+      return trad("Marché conclu : −6 rations de nourriture, +1 trousse de soins, +2 bandages. ⛑️"); }],
+    ["Refuser", function(){ return trad("Il hausse les épaules et disparaît dans la nuit."); }]
   ]},
-  { titre:"🧸 Cauchemars", si:function(){ var e = parRole("Emma"); return e && e.al; }, texte:function(){ return parRole("Emma").nom + " n’arrive pas à dormir et réclame une part en plus."; }, choix:[
+  { titre:"🧸 Cauchemars", si:function(){ var e = parRole("Emma"); return e && e.al; }, texte:function(){ return trad("{nom} n’arrive pas à dormir et réclame une part en plus.", { nom:parRole("Emma").nom }); }, choix:[
     ["Lui donner une ration (−1 nourriture)", function(){
-      if(rations("nour") < 1) return "Il ne reste rien à donner.";
-      prendreRations("nour", 1); changerMoral(10); return "Elle s’endort enfin. Moral +10."; }],
-    ["La rassurer sans rien donner", function(){ changerMoral(-6); return "Elle pleure longtemps. Moral −6."; }]
+      if(rations("nour") < 1) return trad("Il ne reste rien à donner.");
+      prendreRations("nour", 1); changerMoral(10); return trad("Elle s’endort enfin. Moral +10."); }],
+    ["La rassurer sans rien donner", function(){ changerMoral(-6); return trad("Elle pleure longtemps. Moral −6."); }]
   ]},
   { titre:"💧 Voisins assoiffés", texte:"Une famille voisine demande de l’eau. Ils ont l’air épuisés.", choix:[
     ["Donner 4 rations d’eau", function(){
-      if(rations("eau") < 4) return "Vous n’avez pas assez d’eau.";
-      prendreRations("eau", 4); changerMoral(8); return "Ils vous remercient. Moral +8."; }],
-    ["Refuser", function(){ return "Ils repartent sans un mot."; }],
+      if(rations("eau") < 4) return trad("Vous n’avez pas assez d’eau.");
+      prendreRations("eau", 4); changerMoral(8); return trad("Ils vous remercient. Moral +8."); }],
+    ["Refuser", function(){ return trad("Ils repartent sans un mot."); }],
     ["Les piller", function(){
       ajouter("conserve", 2); changerMoral(-15);
       var n = [], v = vivants();
       if(hasard() < 0.4) blesser(v[R(0, v.length-1)], R(15, 30), n, "tué en pillant des voisins");
-      return "Vous prenez 2 boîtes de conserve. Moral −15." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+      return trad("Vous prenez 2 boîtes de conserve. Moral −15.") + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]},
   // ----- Nouveaux événements -----
   // si : condition pour que l'événement puisse arriver ; prep : prépare (ex. choisit un membre)
   // texte peut être une fonction (pour citer un nom). Le premier choix est le choix « prudent ».
   { titre:"🚪 On frappe à la porte", si:function(){ return vivants().length < FAMILLE.length; },
     prep:function(){ var r = RECRUES[aleaR("recrue", 0, RECRUES.length - 1)]; G.evCible = r.nom; G.evIcone = r.icone; },
-    texte:function(){ var f = FEMININS.indexOf(G.evCible) >= 0; return '<span class="evportrait">' + iconeMembre({ nom:G.evCible, icone:G.evIcone, al:true, hp:100, en:100, faim:100, soif:100 }) + '</span>' + G.evCible + " frappe à la porte. " + (f ? "Elle" : "Il") + " a perdu les siens et demande à rester avec vous. Une bouche de plus à nourrir… mais aussi une paire de bras."; }, choix:[
-    ["L’accueillir dans la famille", function(){ recruter(G.evCible, G.evIcone); changerMoral(10); return G.evCible + " pose son sac. La famille s’agrandit ! Moral +10."; }],
-    ["Lui donner 2 rations, puis refermer", function(){ var e = FEMININS.indexOf(G.evCible) >= 0 ? "Elle" : "Il"; if(rations("nour") < 2) return "Vous n’avez rien à lui donner. " + e + " repart dans la nuit."; prendreRations("nour", 2); changerMoral(3); return e + " vous remercie et s’en va. Moral +3."; }],
-    ["Refuser", function(){ changerMoral(-6); return "Vous fermez la porte. Moral −6."; }]
+    texte:function(){ var f = FEMININS.indexOf(G.evCible) >= 0; return '<span class="evportrait">' + iconeMembre({ nom:G.evCible, icone:G.evIcone, al:true, hp:100, en:100, faim:100, soif:100 }) + '</span>'
+      + trad(f ? "{nom} frappe à la porte. Elle a perdu les siens et demande à rester avec vous. Une bouche de plus à nourrir… mais aussi une paire de bras." : "{nom} frappe à la porte. Il a perdu les siens et demande à rester avec vous. Une bouche de plus à nourrir… mais aussi une paire de bras.", { nom:G.evCible }); }, choix:[
+    ["L’accueillir dans la famille", function(){ recruter(G.evCible, G.evIcone); changerMoral(10); return trad("{nom} pose son sac. La famille s’agrandit ! Moral +10.", { nom:G.evCible }); }],
+    ["Lui donner 2 rations, puis refermer", function(){ var f = FEMININS.indexOf(G.evCible) >= 0;
+      if(rations("nour") < 2) return trad(f ? "Vous n’avez rien à lui donner. Elle repart dans la nuit." : "Vous n’avez rien à lui donner. Il repart dans la nuit.");
+      prendreRations("nour", 2); changerMoral(3); return trad(f ? "Elle vous remercie et s’en va. Moral +3." : "Il vous remercie et s’en va. Moral +3."); }],
+    ["Refuser", function(){ changerMoral(-6); return trad("Vous fermez la porte. Moral −6."); }]
   ]},
   { titre:"🌧️ L’orage", texte:"Une pluie violente s’abat sur le quartier toute la nuit.", choix:[
     ["Sortir des récipients", function(){
       G.reste.eau += 5; var x = vivants()[R(0, vivants().length - 1)], n = [];
-      if(!G.feu && !possede(function(o){ return o.chaleur; })){ blesser(x, 10, n, "mort de froid sous l’orage"); return "+5 rations d’eau. Mais " + x.nom + " a pris froid (−10 PV)." + (n.length ? " " + n[0][1] : ""); }
-      return "+5 rations d’eau de pluie. 💧"; }],
-    ["Rester à l’abri", function(){ return "Vous écoutez la pluie tomber. Rien ne se passe."; }]
+      if(!G.feu && !possede(function(o){ return o.chaleur; })){ blesser(x, 10, n, "mort de froid sous l’orage"); return trad("+5 rations d’eau. Mais {nom} a pris froid (−10 PV).", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }
+      return trad("+5 rations d’eau de pluie. 💧"); }],
+    ["Rester à l’abri", function(){ return trad("Vous écoutez la pluie tomber. Rien ne se passe."); }]
   ]},
   { titre:"🏴 Des pillards", si:function(){ return G.day >= 6; },
-    texte:function(){ return "Trois pillards armés exigent un tribut : 6 rations de nourriture, sinon ils attaquent. (Votre défense de nuit : " + defenseNuit() + ")"; }, choix:[
-    ["Payer le tribut", function(){ var p = prendreRations("nour", 6); changerMoral(-5); return "Vous donnez " + p + " rations. Ils repartent en ricanant. Moral −5."; }],
+    texte:function(){ return trad("Trois pillards armés exigent un tribut : 6 rations de nourriture, sinon ils attaquent. (Votre défense de nuit : {d})", { d:defenseNuit() }); }, choix:[
+    ["Payer le tribut", function(){ var p = prendreRations("nour", 6); changerMoral(-5); return trad("Vous donnez {n} rations. Ils repartent en ricanant. Moral −5.", { n:p }); }],
     ["Se battre", function(){
       var force = 3 + Math.floor(G.day / 4) + R(0, 2), df = defenseNuit(), n = [];
-      if(df >= force){ ajouter("conserve", 2); ajouter("boiteBalles", 1); changerMoral(10); return "Vous repoussez les pillards (force " + force + " contre " + df + ") ! Ils abandonnent 2 boîtes de conserve et une boîte de balles. Moral +10."; }
+      if(df >= force){ ajouter("conserve", 2); ajouter("boiteBalles", 1); changerMoral(10); return trad("Vous repoussez les pillards (force {f} contre {d}) ! Ils abandonnent 2 boîtes de conserve et une boîte de balles. Moral +10.", { f:force, d:df }); }
       var v = vivants(), x = v[R(0, v.length - 1)]; blesser(x, R(20, 35), n, "tué par des pillards"); prendreRations("nour", 4);
-      return "Les pillards sont trop forts (force " + force + " contre " + df + "). " + x.nom + " est blessé et ils emportent 4 rations." + (n.length ? " " + n[0][1] : ""); }],
+      return trad("Les pillards sont trop forts (force {f} contre {d}). {nom} est blessé et ils emportent 4 rations.", { f:force, d:df, nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }],
     ["Négocier (si le moral est bon)", function(){
-      if(G.moral >= 50 && hasard() < 0.6){ prendreRations("nour", 2); return "Votre calme les impressionne : ils se contentent de 2 rations."; }
-      var p = prendreRations("nour", 8); changerMoral(-10); return "La négociation tourne mal : ils prennent " + p + " rations. Moral −10."; }]
+      if(G.moral >= 50 && hasard() < 0.6){ prendreRations("nour", 2); return trad("Votre calme les impressionne : ils se contentent de 2 rations."); }
+      var p = prendreRations("nour", 8); changerMoral(-10); return trad("La négociation tourne mal : ils prennent {n} rations. Moral −10.", { n:p }); }]
   ]},
   { titre:"🤒 La fièvre",
     prep:function(){ var v = vivants(); G.evCible = v[R(0, v.length - 1)].nom; },
-    texte:function(){ return G.evCible + " a de la fièvre et tremble sous la couverture."; }, choix:[
-    ["Utiliser un soin", function(){ var s = retirerSoin(); if(!s){ var x = membre(G.evCible); if(x) x.en = 0; return "Vous n’avez aucun soin. " + G.evCible + " doit se reposer : pas de sortie aujourd’hui."; } return "Vous utilisez " + nommer(s, 1) + ". La fièvre tombe dans la matinée."; }],
+    texte:function(){ return trad("{nom} a de la fièvre et tremble sous la couverture.", { nom:G.evCible }); }, choix:[
+    ["Utiliser un soin", function(){ var s = retirerSoin(); if(!s){ var x = membre(G.evCible); if(x) x.en = 0; return trad("Vous n’avez aucun soin. {nom} doit se reposer : pas de sortie aujourd’hui.", { nom:G.evCible }); } return trad("Vous utilisez {soin}. La fièvre tombe dans la matinée.", { soin:nommer(s, 1) }); }],
     ["Le laisser se reposer", function(){
-      var x = membre(G.evCible), n = []; if(!x || !x.al) return "Trop tard…";
+      var x = membre(G.evCible), n = []; if(!x || !x.al) return trad("Trop tard…");
       x.en = 0; blesser(x, 10, n, "emporté par la fièvre");
-      return x.nom + " reste couché toute la journée (énergie à 0, −10 PV)." + (n.length ? " " + n[0][1] : ""); }]
+      return trad("{nom} reste couché toute la journée (énergie à 0, −10 PV).", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }]
   ]},
   { titre:"🐕 Un chien errant", si:function(){ return !G.chien; }, texte:"Un gros chien maigre rôde devant le refuge. Il a l’air affamé mais pas méchant.", choix:[
-    ["Le nourrir (−2 rations)", function(){ if(rations("nour") < 2) return "Vous n’avez rien à lui donner. Il finit par partir."; prendreRations("nour", 2); G.chien = { nom:"Rex", faim:0 }; changerMoral(10); return "Il ne vous quitte plus ! Les enfants l’appellent Rex. Il montera la garde la nuit (défense +1), mais il mangera une ration chaque soir. Moral +10."; }],
-    ["Le chasser", function(){ return "Il s’éloigne en boitant."; }]
+    ["Le nourrir (−2 rations)", function(){ if(rations("nour") < 2) return trad("Vous n’avez rien à lui donner. Il finit par partir."); prendreRations("nour", 2); G.chien = { nom:"Rex", faim:0 }; changerMoral(10); return trad("Il ne vous quitte plus ! Les enfants l’appellent Rex. Il montera la garde la nuit (défense +1), mais il mangera une ration chaque soir. Moral +10."); }],
+    ["Le chasser", function(){ return trad("Il s’éloigne en boitant."); }]
   ]},
   { titre:"📻 Un message radio", si:function(){ return possede(function(o){ return o.radio; }); },
     texte:"La radio grésille : « Largage de vivres au parc, ce matin seulement. » Un piège ?", choix:[
-    ["Ignorer le message", function(){ return "Vous éteignez la radio. Mieux vaut ne pas tenter le diable."; }],
+    ["Ignorer le message", function(){ return trad("Vous éteignez la radio. Mieux vaut ne pas tenter le diable."); }],
     ["Envoyer le plus reposé", function(){
       var x = vivants().slice().sort(function(a, b){ return b.en - a.en; })[0], n = [];
       x.en = Math.max(0, x.en - 30);
-      if(hasard() < 0.5){ ajouter("trousse", 1); ajouter("conserve", 3); return x.nom + " revient avec une trousse de soins et 3 boîtes de conserve ! (−30 ⚡)"; }
-      blesser(x, R(15, 30), n, "tombé dans un piège au parc"); return "C’était un piège : " + x.nom + " s’enfuit blessé (−30 ⚡)." + (n.length ? " " + n[0][1] : ""); }]
+      if(hasard() < 0.5){ ajouter("trousse", 1); ajouter("conserve", 3); return trad("{nom} revient avec une trousse de soins et 3 boîtes de conserve ! (−30 ⚡)", { nom:x.nom }); }
+      blesser(x, R(15, 30), n, "tombé dans un piège au parc"); return trad("C’était un piège : {nom} s’enfuit blessé (−30 ⚡).", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }]
   ]},
   { titre:"🚙 Une voiture accidentée", texte:"Une voiture renversée bloque la rue. Le coffre est entrouvert.", choix:[
-    ["La laisser", function(){ return "Vous contournez l’épave."; }],
+    ["La laisser", function(){ return trad("Vous contournez l’épave."); }],
     ["La fouiller", function(){
       var v = vivants(), x = v[R(0, v.length - 1)], n = [], r = hasard(), gain;
-      if(r < 0.35){ ajouter("jerrican", 1); gain = "un jerrican d’essence"; } else if(r < 0.6){ ajouter("ferraille", 2); ajouter("ruban", 1); gain = "2 morceaux de ferraille et un rouleau d’adhésif"; } else { ajouter("bouteille", 2); gain = "2 bouteilles d’eau"; }
-      if(hasard() < 0.3){ blesser(x, R(10, 20), n, "coupé par la tôle d’une épave"); return "Vous trouvez " + gain + ", mais " + x.nom + " se coupe sur la tôle." + (n.length ? " " + n[0][1] : ""); }
-      return "Vous trouvez " + gain + " !"; }]
+      if(r < 0.35){ ajouter("jerrican", 1); gain = trad("un jerrican d’essence"); } else if(r < 0.6){ ajouter("ferraille", 2); ajouter("ruban", 1); gain = trad("2 morceaux de ferraille et un rouleau d’adhésif"); } else { ajouter("bouteille", 2); gain = trad("2 bouteilles d’eau"); }
+      if(hasard() < 0.3){ blesser(x, R(10, 20), n, "coupé par la tôle d’une épave"); return trad("Vous trouvez {gain}, mais {nom} se coupe sur la tôle.", { gain:gain, nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }
+      return trad("Vous trouvez {gain} !", { gain:gain }); }]
   ]},
   { titre:"👵 La vieille voisine", texte:"Mme Roux, 80 ans, refuse de quitter sa maison. Elle demande un médicament pour son cœur.", choix:[
-    ["Lui donner un soin", function(){ var s = retirerSoin(); if(!s) return "Vous n’avez rien à lui donner. Elle vous bénit quand même."; ajouter("conserve", 3); ajouter("alcool", 1); changerMoral(8); return "Elle vous donne la clé de sa cave : 3 boîtes de conserve et une bouteille d’alcool ! Moral +8."; }],
-    ["Refuser poliment", function(){ changerMoral(-8); return "Elle referme sa porte sans un mot. Moral −8."; }]
+    ["Lui donner un soin", function(){ var s = retirerSoin(); if(!s) return trad("Vous n’avez rien à lui donner. Elle vous bénit quand même."); ajouter("conserve", 3); ajouter("alcool", 1); changerMoral(8); return trad("Elle vous donne la clé de sa cave : 3 boîtes de conserve et une bouteille d’alcool ! Moral +8."); }],
+    ["Refuser poliment", function(){ changerMoral(-8); return trad("Elle referme sa porte sans un mot. Moral −8."); }]
   ]},
   { titre:"🔥 Incendie", texte:"Un incendie se propage au bout de la rue. Le vent souffle vers le refuge.", choix:[
-    ["Arroser les murs (−4 eau)", function(){ if(rations("eau") < 4){ return incendie(); } prendreRations("eau", 4); return "Vous arrosez tout. Le feu passe à côté. 💧 −4 rations d’eau."; }],
-    ["Prier pour que le vent tourne", function(){ return hasard() < 0.5 ? "Le vent tourne. Ouf." : incendie(); }]
+    ["Arroser les murs (−4 eau)", function(){ if(rations("eau") < 4){ return incendie(); } prendreRations("eau", 4); return trad("Vous arrosez tout. Le feu passe à côté. 💧 −4 rations d’eau."); }],
+    ["Prier pour que le vent tourne", function(){ return hasard() < 0.5 ? trad("Le vent tourne. Ouf.") : incendie(); }]
   ]},
-  { titre:"🍽️ Dispute à table", si:function(){ return ["Papa","Maman"].every(function(n){ var x = parRole(n); return x && x.al; }); }, texte:function(){ return parRole("Papa").nom + " et " + parRole("Maman").nom + " se disputent : faut-il se rationner ou garder des forces ?"; }, choix:[
-    ["Se rationner aujourd’hui", function(){ G.reste.nour += 2; changerMoral(-8); return "Tout le monde mange un peu moins : +2 rations économisées. Moral −8."; }],
-    ["Repas de fête (−4 rations)", function(){ if(rations("nour") < 4) return "Il n’y a pas de quoi faire la fête…"; prendreRations("nour", 4); changerMoral(15); return "Un vrai repas, des rires. Moral +15."; }]
+  { titre:"🍽️ Dispute à table", si:function(){ return ["Papa","Maman"].every(function(n){ var x = parRole(n); return x && x.al; }); }, texte:function(){ return trad("{a} et {b} se disputent : faut-il se rationner ou garder des forces ?", { a:parRole("Papa").nom, b:parRole("Maman").nom }); }, choix:[
+    ["Se rationner aujourd’hui", function(){ G.reste.nour += 2; changerMoral(-8); return trad("Tout le monde mange un peu moins : +2 rations économisées. Moral −8."); }],
+    ["Repas de fête (−4 rations)", function(){ if(rations("nour") < 4) return trad("Il n’y a pas de quoi faire la fête…"); prendreRations("nour", 4); changerMoral(15); return trad("Un vrai repas, des rires. Moral +15."); }]
   ]},
   { titre:"🧟 Une horde au loin", si:function(){ return G.day >= 10; }, texte:"Une horde immense passe à deux rues d’ici. Le sol tremble.", choix:[
-    ["Se cacher toute la journée", function(){ vivants().forEach(function(x){ x.en = Math.min(x.en, 0); }); return "Personne ne sort aujourd’hui. La horde passe sans vous voir."; }],
-    ["Sortir quand même (danger accru)", function(){ G.hordeJour = G.day; return "Vous restez sur vos gardes : les lieux seront bien plus dangereux aujourd’hui (+20 %)."; }]
+    ["Se cacher toute la journée", function(){ vivants().forEach(function(x){ x.en = Math.min(x.en, 0); }); return trad("Personne ne sort aujourd’hui. La horde passe sans vous voir."); }],
+    ["Sortir quand même (danger accru)", function(){ G.hordeJour = G.day; return trad("Vous restez sur vos gardes : les lieux seront bien plus dangereux aujourd’hui (+20 %)."); }]
   ]},
   { titre:"🔐 Un coffre-fort", si:function(){ return possede(function(o){ return o.ouvre; }); }, texte:"Dans la cave d’à côté, un vieux coffre-fort. Avec vos outils, il faudrait des heures.", choix:[
     ["Le forcer (−30 ⚡ au plus reposé)", function(){
-      var x = artisan(); if(!x || x.en < 30) return "Personne n’a assez d’énergie aujourd’hui.";
+      var x = artisan(); if(!x || x.en < 30) return trad("Personne n’a assez d’énergie aujourd’hui.");
       x.en -= 30; var r = hasard();
-      if(r < 0.4){ ajouter("boiteBalles", 1); ajouter("trousse", 1); return x.nom + " ouvre le coffre : une boîte de balles et une trousse de soins !"; }
-      if(r < 0.8){ ajouter("canette", 2); ajouter("pile", 2); return x.nom + " ouvre le coffre : 2 canettes et 2 piles."; }
-      return x.nom + " ouvre le coffre… vide. Quelqu’un est passé avant vous."; }],
-    ["Laisser tomber", function(){ return "Vous laissez le coffre à d’autres."; }]
+      if(r < 0.4){ ajouter("boiteBalles", 1); ajouter("trousse", 1); return trad("{nom} ouvre le coffre : une boîte de balles et une trousse de soins !", { nom:x.nom }); }
+      if(r < 0.8){ ajouter("canette", 2); ajouter("pile", 2); return trad("{nom} ouvre le coffre : 2 canettes et 2 piles.", { nom:x.nom }); }
+      return trad("{nom} ouvre le coffre… vide. Quelqu’un est passé avant vous.", { nom:x.nom }); }],
+    ["Laisser tomber", function(){ return trad("Vous laissez le coffre à d’autres."); }]
   ]},
   { titre:"🐔 Une poule égarée", si:function(){ return G.day >= 3; }, texte:"Une poule picore devant la porte. Elle pourrait pondre... mais il faudra lui donner à boire, et ses caquètements s’entendent de loin.", choix:[
-    ["La laisser partir", function(){ return "Elle s’éloigne en caquetant."; }],
-    ["La garder", function(){ ajouter("poule", 1); return "Vous avez une poule ! Elle pondra souvent la nuit, mais boit de l’eau et attire un peu les zombies. 🐔"; }],
-    ["La manger tout de suite", function(){ G.reste.nour += BAL.poules.viande; return "Ce soir, c’est poulet : +" + BAL.poules.viande + " rations de nourriture."; }]
+    ["La laisser partir", function(){ return trad("Elle s’éloigne en caquetant."); }],
+    ["La garder", function(){ ajouter("poule", 1); return trad("Vous avez une poule ! Elle pondra souvent la nuit, mais boit de l’eau et attire un peu les zombies. 🐔"); }],
+    ["La manger tout de suite", function(){ G.reste.nour += BAL.poules.viande; return trad("Ce soir, c’est poulet : +{n} rations de nourriture.", { n:BAL.poules.viande }); }]
   ]}
 ];
 // ----- Événements de fin de partie (2026-11-14) : plus durs, seulement après le jour 30. Ajoutés à la fin (les sauvegardes gardent le numéro de l'événement) -----
@@ -1027,75 +1034,75 @@ EVENEMENTS.push(
   { titre:"🦠 Une épidémie dans le quartier", si:function(){ return G.day >= 30; },
     texte:"Des voisins toussent à s’en déchirer la gorge. Une maladie se propage de maison en maison. Il faudrait désinfecter le refuge… ou croiser les doigts.", choix:[
     ["Désinfecter le refuge (1 alcool ou 1 objet de soin)", function(){
-      if(compter("alcool") > 0){ retirer("alcool", 1); return "Vous frottez chaque recoin à l’alcool. La maladie passe à côté de vous. 🧴"; }
-      var s = retirerSoin(); if(s) return "Faute d’alcool, vous utilisez " + nommer(s, 1) + " pour désinfecter. La maladie passe à côté de vous.";
+      if(compter("alcool") > 0){ retirer("alcool", 1); return trad("Vous frottez chaque recoin à l’alcool. La maladie passe à côté de vous. 🧴"); }
+      var s = retirerSoin(); if(s) return trad("Faute d’alcool, vous utilisez {soin} pour désinfecter. La maladie passe à côté de vous.", { soin:nommer(s, 1) });
       var v = vivants(), x = v[R(0, v.length - 1)], n = []; blesser(x, 15, n, "mort de la maladie du quartier");
-      return "Vous n’avez rien pour désinfecter. " + x.nom + " tombe malade (−15 PV)." + (n.length ? " " + n[0][1] : ""); }],
+      return trad("Vous n’avez rien pour désinfecter. {nom} tombe malade (−15 PV).", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }],
     ["Croiser les doigts", function(){
-      if(hasard() < 0.5) return "La toux s’éloigne. Vous avez eu de la chance.";
+      if(hasard() < 0.5) return trad("La toux s’éloigne. Vous avez eu de la chance.");
       var n = [], noms = [];
       vivants().forEach(function(x){ if(hasard() < 0.5){ blesser(x, 20, n, "mort de la maladie du quartier"); noms.push(x.nom); } });
       if(!noms.length){ var x = vivants()[0]; blesser(x, 20, n, "mort de la maladie du quartier"); noms.push(x.nom); }
-      return "La maladie entre au refuge : " + liste(noms) + " " + (noms.length > 1 ? "tombent malades" : "tombe malade") + " (−20 PV)." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+      return trad(noms.length > 1 ? "La maladie entre au refuge : {noms} tombent malades (−20 PV)." : "La maladie entre au refuge : {noms} tombe malade (−20 PV).", { noms:liste(noms) }) + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]},
   { titre:"🎖️ Un convoi militaire", si:function(){ return G.day >= 35; },
     texte:"Des camions kaki s’arrêtent devant le refuge. Un officier fatigué descend : « Réquisition. Vos vivres serviront à tenir la ligne. » Ses soldats ont l’air aussi affamés que vous.", choix:[
-    ["Donner 2 rations d’eau et 2 de nourriture", function(){ var e = prendreRations("eau", 2), f = prendreRations("nour", 2); changerMoral(-3); return "Vous donnez " + e + " rations d’eau et " + f + " de nourriture. L’officier salue et le convoi repart. Moral −3."; }],
+    ["Donner 2 rations d’eau et 2 de nourriture", function(){ var e = prendreRations("eau", 2), f = prendreRations("nour", 2); changerMoral(-3); return trad("Vous donnez {e} rations d’eau et {f} de nourriture. L’officier salue et le convoi repart. Moral −3.", { e:e, f:f }); }],
     ["Échanger 6 planches contre des munitions", function(){
-      if(compter("planche") < 6){ var pf = prendreRations("nour", 4); return "Vous n’avez pas 6 planches. L’officier perd patience et ses soldats prennent " + pf + " rations de nourriture."; }
-      retirer("planche", 6); ajouter("boiteBalles", 1); ajouter("boiteCart", 1); return "« Des planches ? On en manque pour les barricades. » Marché conclu : −6 planches, +1 boîte de balles, +1 boîte de cartouches."; }],
+      if(compter("planche") < 6){ var pf = prendreRations("nour", 4); return trad("Vous n’avez pas 6 planches. L’officier perd patience et ses soldats prennent {n} rations de nourriture.", { n:pf }); }
+      retirer("planche", 6); ajouter("boiteBalles", 1); ajouter("boiteCart", 1); return trad("« Des planches ? On en manque pour les barricades. » Marché conclu : −6 planches, +1 boîte de balles, +1 boîte de cartouches."); }],
     ["Cacher vos réserves et faire les pauvres", function(){
-      if(hasard() < 0.5){ changerMoral(5); return "Les soldats fouillent sans conviction et repartent bredouilles. Moral +5."; }
-      var f = prendreRations("nour", 8); changerMoral(-10); return "Ils trouvent la cachette. Furieux, ils emportent " + f + " rations de nourriture. Moral −10."; }]
+      if(hasard() < 0.5){ changerMoral(5); return trad("Les soldats fouillent sans conviction et repartent bredouilles. Moral +5."); }
+      var f = prendreRations("nour", 8); changerMoral(-10); return trad("Ils trouvent la cachette. Furieux, ils emportent {n} rations de nourriture. Moral −10.", { n:f }); }]
   ]},
   { titre:"🌨️ La tempête de neige", si:function(){ return G.day >= 30 && estSaison("hiver"); },
     texte:"Le vent hurle toute la nuit. La neige s’entasse contre les portes et le froid traverse les murs.", choix:[
     ["Brûler 2 planches pour tenir", function(){
-      if(compter("planche") < 2){ var n = []; vivants().forEach(function(x){ x.en = Math.max(0, x.en - 15); blesser(x, 5, n, "mort de froid pendant la tempête"); }); return "Il n’y a pas assez de planches. Toute la famille grelotte (−15 ⚡, −5 PV chacun)." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }
-      retirer("planche", 2); changerMoral(3); return "Le feu crépite toute la nuit. Serrés autour, vous racontez des histoires d’avant. −2 planches, moral +3."; }],
+      if(compter("planche") < 2){ var n = []; vivants().forEach(function(x){ x.en = Math.max(0, x.en - 15); blesser(x, 5, n, "mort de froid pendant la tempête"); }); return trad("Il n’y a pas assez de planches. Toute la famille grelotte (−15 ⚡, −5 PV chacun).") + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }
+      retirer("planche", 2); changerMoral(3); return trad("Le feu crépite toute la nuit. Serrés autour, vous racontez des histoires d’avant. −2 planches, moral +3."); }],
     ["Se serrer sous les couvertures", function(){
       var n = [], couv = compter("couverture") * 2;
       vivants().forEach(function(x, k){ x.en = Math.max(0, x.en - 15); if(k >= couv) blesser(x, 8, n, "mort de froid pendant la tempête"); });
-      return "La nuit est longue et glacée : −15 ⚡ pour tout le monde" + (couv < vivants().length ? ", et ceux sans couverture perdent 8 PV" : "") + "." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+      return trad(couv < vivants().length ? "La nuit est longue et glacée : −15 ⚡ pour tout le monde, et ceux sans couverture perdent 8 PV." : "La nuit est longue et glacée : −15 ⚡ pour tout le monde.") + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]},
   { titre:"🏴 La bande des Corbeaux", si:function(){ return G.day >= 45; },
-    texte:function(){ return "Une dizaine de pillards organisés encerclent le refuge, menés par un chef au manteau noir : « La moitié de vos vivres, et on vous laisse en paix pour l’hiver. » (Votre défense de nuit : " + defenseNuit() + ")"; }, choix:[
-    ["Payer (la moitié de la nourriture, 8 rations au plus)", function(){ var p = prendreRations("nour", Math.min(8, Math.ceil(rations("nour") / 2))); changerMoral(-8); return "Vous leur donnez " + p + " rations. Le chef sourit. « Sage décision. » Moral −8."; }],
+    texte:function(){ return trad("Une dizaine de pillards organisés encerclent le refuge, menés par un chef au manteau noir : « La moitié de vos vivres, et on vous laisse en paix pour l’hiver. » (Votre défense de nuit : {d})", { d:defenseNuit() }); }, choix:[
+    ["Payer (la moitié de la nourriture, 8 rations au plus)", function(){ var p = prendreRations("nour", Math.min(8, Math.ceil(rations("nour") / 2))); changerMoral(-8); return trad("Vous leur donnez {n} rations. Le chef sourit. « Sage décision. » Moral −8.", { n:p }); }],
     ["Leur offrir des munitions à la place", function(){
       var m = compter("boiteBalles") ? "boiteBalles" : compter("boiteCart") ? "boiteCart" : compter("balle") >= 6 ? "balle" : compter("cartouche") >= 6 ? "cartouche" : null;
-      if(!m){ var p = prendreRations("nour", Math.ceil(rations("nour") / 2)); changerMoral(-12); return "Vous n’avez pas de munitions à offrir. Vexés, ils prennent " + p + " rations. Moral −12."; }
-      retirer(m, OBJETS[m].empile && (m === "balle" || m === "cartouche") ? 6 : 1); return "Le chef soupèse " + (m === "balle" || m === "cartouche" ? "les munitions" : "la boîte") + ". « Ça ira. » Ils repartent sans toucher à vos vivres."; }],
+      if(!m){ var p = prendreRations("nour", Math.ceil(rations("nour") / 2)); changerMoral(-12); return trad("Vous n’avez pas de munitions à offrir. Vexés, ils prennent {n} rations. Moral −12.", { n:p }); }
+      retirer(m, OBJETS[m].empile && (m === "balle" || m === "cartouche") ? 6 : 1); return trad(m === "balle" || m === "cartouche" ? "Le chef soupèse les munitions. « Ça ira. » Ils repartent sans toucher à vos vivres." : "Le chef soupèse la boîte. « Ça ira. » Ils repartent sans toucher à vos vivres."); }],
     ["Se battre", function(){
       var force = 6 + Math.floor(G.day / 4) + R(0, 3), df = defenseNuit(), n = [];
-      if(df >= force){ ajouter("boiteBalles", 1); ajouter("conserves", 1); ajouter("trousse", 1); changerMoral(15); return "Les Corbeaux se brisent sur vos défenses (force " + force + " contre " + df + ") ! Dans leur fuite, ils abandonnent un lot de conserves, une trousse et une boîte de balles. Moral +15."; }
+      if(df >= force){ ajouter("boiteBalles", 1); ajouter("conserves", 1); ajouter("trousse", 1); changerMoral(15); return trad("Les Corbeaux se brisent sur vos défenses (force {f} contre {d}) ! Dans leur fuite, ils abandonnent un lot de conserves, une trousse et une boîte de balles. Moral +15.", { f:force, d:df }); }
       var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(20, 35), n, "tué par la bande des Corbeaux"); });
       if(G.ref.barr > 0) G.ref.barr--;
       var p = prendreRations("nour", Math.ceil(rations("nour") / 2));
-      return "Ils sont trop nombreux (force " + force + " contre " + df + "). La barricade cède, il y a des blessés, et ils emportent " + p + " rations." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+      return trad("Ils sont trop nombreux (force {f} contre {d}). La barricade cède, il y a des blessés, et ils emportent {n} rations.", { f:force, d:df, n:p }) + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]},
   { titre:"👁️ L’éclaireur sur le toit", si:function(){ return G.day >= 40; },
     texte:"Depuis l’aube, un homme observe le refuge à la jumelle, couché sur un toit voisin. Un éclaireur… mais de quel groupe ?", choix:[
-    ["Rester discrets et barricader les fenêtres (−1 planche)", function(){ if(compter("planche") > 0){ retirer("planche", 1); return "Vous clouez une planche de plus. À midi, l’éclaireur a disparu."; } return "Sans planche à clouer, vous restez loin des fenêtres. À midi, l’éclaireur a disparu."; }],
+    ["Rester discrets et barricader les fenêtres (−1 planche)", function(){ if(compter("planche") > 0){ retirer("planche", 1); return trad("Vous clouez une planche de plus. À midi, l’éclaireur a disparu."); } return trad("Sans planche à clouer, vous restez loin des fenêtres. À midi, l’éclaireur a disparu."); }],
     ["Lui faire signe de descendre", function(){
       if(hasard() < 0.55){ ajouter("bouteille", 3); var ls = LIEUX.map(function(L, i){ return i; }).filter(function(i){ return LIEUX[i].secret && !(G.decouverts && G.decouverts[i]); }); var t = "";
-        if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; t = " Il vous parle d’un endroit encore intact : 📍 " + LIEUX[ls[0]].nom + "."; }
-        changerMoral(5); return "Il descend, méfiant, puis partage de l’eau (+3 bouteilles)." + t + " Moral +5."; }
-      var p = prendreRations("nour", 3); return "Il fait un signe… à d’autres. Le temps de comprendre, des inconnus ont filé avec " + p + " rations de nourriture."; }],
+        if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; t = " " + trad("Il vous parle d’un endroit encore intact : 📍 {lieu}.", { lieu:LIEUX[ls[0]].nom }); }
+        changerMoral(5); return trad("Il descend, méfiant, puis partage de l’eau (+3 bouteilles).") + t + " " + trad("Moral +5."); }
+      var p = prendreRations("nour", 3); return trad("Il fait un signe… à d’autres. Le temps de comprendre, des inconnus ont filé avec {n} rations de nourriture.", { n:p }); }],
     ["Tenter de le capturer", function(){
       var v = vivants(), n = [];
-      if(hasard() < 0.5){ ajouter("pistolet", 1); ajouter("balle", 4); changerMoral(-5); return "Vous le surprenez sur le toit. Il jure qu’il était seul et vous laisse son pistolet et 4 balles pour repartir libre. Moral −5."; }
-      var x = v[R(0, v.length - 1)]; blesser(x, 25, n, "tué en poursuivant un éclaireur"); return x.nom + " glisse sur le toit en le poursuivant (−25 PV). L’éclaireur s’enfuit." + (n.length ? " " + n[0][1] : ""); }]
+      if(hasard() < 0.5){ ajouter("pistolet", 1); ajouter("balle", 4); changerMoral(-5); return trad("Vous le surprenez sur le toit. Il jure qu’il était seul et vous laisse son pistolet et 4 balles pour repartir libre. Moral −5."); }
+      var x = v[R(0, v.length - 1)]; blesser(x, 25, n, "tué en poursuivant un éclaireur"); return trad("{nom} glisse sur le toit en le poursuivant (−25 PV). L’éclaireur s’enfuit.", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }]
   ]},
   { titre:"🐺 La meute", si:function(){ return G.day >= 50; },
     texte:"Des chiens retournés à l’état sauvage tournent autour du refuge, les côtes saillantes. Ils grattent à la porte de la réserve.", choix:[
-    ["Leur jeter 3 rations pour qu’ils partent", function(){ var p = prendreRations("nour", 3); if(p >= 3) return "Ils se battent pour la viande, puis disparaissent dans la nuit."; var n = [], v = vivants(), x = v[R(0, v.length - 1)]; blesser(x, 15, n, "tué par une meute de chiens"); return "Ce n’est pas assez : la meute force l’entrée et mord " + x.nom + " (−15 PV) avant de s’enfuir." + (n.length ? " " + n[0][1] : ""); }],
+    ["Leur jeter 3 rations pour qu’ils partent", function(){ var p = prendreRations("nour", 3); if(p >= 3) return trad("Ils se battent pour la viande, puis disparaissent dans la nuit."); var n = [], v = vivants(), x = v[R(0, v.length - 1)]; blesser(x, 15, n, "tué par une meute de chiens"); return trad("Ce n’est pas assez : la meute force l’entrée et mord {nom} (−15 PV) avant de s’enfuir.", { nom:x.nom }) + (n.length ? " " + n[0][1] : ""); }],
     ["Les effrayer avec le feu (1 alcool + 1 chiffon)", function(){
-      if(compter("alcool") < 1 || compter("chiffon") < 1){ var pm = prendreRations("nour", 2); return "Il vous manque de quoi faire une torche. Les chiens finissent par partir… avec " + pm + " rations."; }
-      retirer("alcool", 1); retirer("chiffon", 1); return "La torche enflammée les fait détaler en couinant. La nuit redevient calme."; }],
+      if(compter("alcool") < 1 || compter("chiffon") < 1){ var pm = prendreRations("nour", 2); return trad("Il vous manque de quoi faire une torche. Les chiens finissent par partir… avec {n} rations.", { n:pm }); }
+      retirer("alcool", 1); retirer("chiffon", 1); return trad("La torche enflammée les fait détaler en couinant. La nuit redevient calme."); }],
     ["Les chasser à la hache et au bâton", function(){
       var df = defenseNuit(), n = [];
-      if(df >= 8 || hasard() < 0.35){ G.reste.nour = (G.reste.nour || 0) + 6; changerMoral(-3); return "Après une lutte brutale, la meute s’enfuit en laissant deux bêtes derrière elle : +6 rations de viande. Moral −3."; }
-      var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(12, 22), n, "tué par une meute de chiens"); }); return "La meute est trop nombreuse : des morsures partout avant qu’elle ne s’enfuie." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
+      if(df >= 8 || hasard() < 0.35){ G.reste.nour = (G.reste.nour || 0) + 6; changerMoral(-3); return trad("Après une lutte brutale, la meute s’enfuit en laissant deux bêtes derrière elle : +6 rations de viande. Moral −3."); }
+      var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(12, 22), n, "tué par une meute de chiens"); }); return trad("La meute est trop nombreuse : des morsures partout avant qu’elle ne s’enfuie.") + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]}
 );
 // Images des événements de fin de partie (Gemini, grille 3 × 2 : images/sources/evenements-fin-partie-gemini.jpg)

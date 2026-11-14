@@ -40,15 +40,18 @@ function nouvellePartie(seed){
 
 /* ---------- Noms pour les messages ---------- */
 // « de Papa », « d’Emma »
+function anglais(){ return typeof LANGUE !== "undefined" && LANGUE === "en"; }
 function de(nom){ return /^[aeiouyéèh]/i.test(nom) ? "d’" + nom : "de " + nom; }
 function minus(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
 // nommer("hache",1) -> "une hache" ; nommer("planche",3) -> "3 planches"
 function nommer(id, n){
   var o = OBJETS[id];
+  if(anglais() && n <= 1 && typeof UN_EN !== "undefined" && UN_EN[id]) return UN_EN[id];
+  if(anglais()){ var nm = /^Emma/.test(o.nom) ? o.nom : minus(o.nom); return n > 1 ? n + " " + minus(o.pl) : (/^Emma/.test(o.nom) ? "" : /^[aeiou]/i.test(nm) ? "an " : "a ") + nm; } // « an axe », « 2 planks »
   return n > 1 ? n + " " + minus(o.pl) : (o.g === "f" ? "une " : "un ") + minus(o.nom);
 }
 // ["une hache","2 planches","un couteau"] -> "une hache, 2 planches et un couteau"
-function liste(t){ return t.length < 2 ? t.join("") : t.slice(0, -1).join(", ") + " et " + t[t.length - 1]; }
+function liste(t){ return t.length < 2 ? t.join("") : t.slice(0, -1).join(", ") + (anglais() ? " and " : " et ") + t[t.length - 1]; }
 // [{id,n}] -> texte
 function nommerListe(groupes){ return liste(groupes.map(function(g){ return nommer(g.id, g.n); })); }
 function grouper(ids){
@@ -1407,7 +1410,7 @@ function evenementDuMatin(){
   if(ev.prep) ev.prep();
   return ev;
 }
-function texteEvenement(ev){ return typeof ev.texte === "function" ? ev.texte() : ev.texte; }
+function texteEvenement(ev){ return typeof ev.texte === "function" ? ev.texte() : trad(ev.texte); }
 function membre(nom){ return G.m.filter(function(x){ return x.nom === nom; })[0]; }
 // Membre par rôle d'origine (Papa, Maman, Léo, Emma), même renommé
 function parRole(r){ return G.m.filter(function(x){ return x.r === r; })[0]; }

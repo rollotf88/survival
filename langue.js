@@ -32,6 +32,8 @@ function trad(fr, v){
   }
   return v ? String(s).replace(/\{(\w+)\}/g, function(m, k){ return v[k] != null ? v[k] : m; }) : s;
 }
+// Un texte qui peut être une liste de versions (récits selon qui est en vie) : chaque version est traduite
+function tradVersions(t){ return Array.isArray(t) ? t.map(function(x){ return trad(x); }) : trad(t); }
 // Pluriel : tradN(3, "1 ration", "{n} rations") ; l'anglais a la même règle simple (1 = singulier)
 function tradN(n, un, plusieurs, v){ return trad(n === 1 || (LANGUE === "fr" && n === 0) ? un : plusieurs, Object.assign({ n: n }, v || {})); }
 function changerLangue(l){

@@ -495,18 +495,19 @@ function openRencontre(){
   var R0 = rencontreCourante(); if(!R0){ G.rencontre = null; hide(); return; }
   var Rc = G.rencontre, N = Rc.noeud ? R0.noeuds[Rc.noeud] : null;
   var Lr = Rc.apres && LIEUX[Rc.apres.lieu];
-  var h = '<div class="rencontre"><p class="r-lieu">Sur le chemin du retour' + (Lr ? (function(d){ return d.indexOf("le ") === 0 ? " du " + d.slice(3) : " de " + d; })(leLieu(Lr.nom)) : "") + '…</p><h2>' + R0.titre + '</h2>';
-  if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? "🎲 Réussi ! " : Rc.reussi === false ? "🎲 Raté… " : "") + perso(Rc.texte) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
+  var chemin = Lr ? (anglais() ? "On the way back from " + leLieu(Lr.nom) : "Sur le chemin du retour" + (function(d){ return d.indexOf("le ") === 0 ? " du " + d.slice(3) : " de " + d; })(leLieu(Lr.nom))) : trad("Sur le chemin du retour");
+  var h = '<div class="rencontre"><p class="r-lieu">' + chemin + '…</p><h2>' + trad(R0.titre) + '</h2>';
+  if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? trad("🎲 Réussi ! ") : Rc.reussi === false ? trad("🎲 Raté… ") : "") + perso(tradVersions(Rc.texte)) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
   if(N){
-    h += '<p class="r-texte">' + perso(N.texte) + '</p>';
+    h += '<p class="r-texte">' + perso(tradVersions(N.texte)) + '</p>';
     h += choixRencontre().map(function(o){
-      var c = o.c, info = c.chance !== undefined ? "🎲 " + Math.round(chanceChoix(c) * 100) + " % de chances" + (c.trait ? " (" + TRAITS[c.trait].icone + " " + TRAITS[c.trait].nom + " : +" + Math.round(BAL.rencontres.bonusTrait * 100) + " %)" : "") : "";
-      return '<button class="loc r-choix" data-act="rchoix" data-id="' + o.k + '"' + (o.ok ? "" : " disabled") + '><b>' + c.t + '</b>' + (info || !o.ok ? '<small>' + (o.ok ? info : "❌ " + c.sans) + '</small>' : '') + '</button>';
+      var c = o.c, info = c.chance !== undefined ? trad("🎲 {p} % de chances", { p:Math.round(chanceChoix(c) * 100) }) + (c.trait ? " (" + TRAITS[c.trait].icone + " " + TRAITS[c.trait].nom + (anglais() ? ": +" + Math.round(BAL.rencontres.bonusTrait * 100) + "%)" : " : +" + Math.round(BAL.rencontres.bonusTrait * 100) + " %)") : "") : "";
+      return '<button class="loc r-choix" data-act="rchoix" data-id="' + o.k + '"' + (o.ok ? "" : " disabled") + '><b>' + trad(c.t) + '</b>' + (info || !o.ok ? '<small>' + (o.ok ? info : "❌ " + trad(c.sans)) + '</small>' : '') + '</button>';
     }).join("");
-  } else h += '<button class="btn" style="width:100%" data-act="rfin">Continuer</button>';
+  } else h += '<button class="btn" style="width:100%" data-act="rfin">' + trad("Continuer") + '</button>';
   show(h + '</div>');
   poserDansScene(Lr ? imageLieu(Lr) : null);
-  if(R0.portrait !== "" && Rc.noeud) parle(R0.nom, R0.portrait);
+  if(R0.portrait !== "" && Rc.noeud) parle(trad(R0.nom), R0.portrait);
 }
 // Sur PC, pose la fenêtre en grand sur la scène : image du lieu en fond, contenu dans une carte en bas (résultat d'une fouille, rencontre en chemin)
 function poserDansScene(im){
@@ -1095,8 +1096,8 @@ function openNuit(n){
 function openEvent(ev){
   G.ev = ev; G.evIdx = EVENEMENTS.indexOf(ev);
   var im = IMAGES_EVENEMENTS[G.ev.titre];
-  var h = (im ? '<div class="banniere"><img src="images/evenements/' + im + '.webp" alt=""></div>' : '') + '<h2>' + G.ev.titre + '</h2><p>' + texteEvenement(G.ev) + '</p>';
-  G.ev.choix.forEach(function(c, i){ h += '<button class="loc" data-act="ev" data-id="' + i + '"><b>' + c[0] + '</b></button>'; });
+  var h = (im ? '<div class="banniere"><img src="images/evenements/' + im + '.webp" alt=""></div>' : '') + '<h2>' + trad(G.ev.titre) + '</h2><p>' + texteEvenement(G.ev) + '</p>';
+  G.ev.choix.forEach(function(c, i){ h += '<button class="loc" data-act="ev" data-id="' + i + '"><b>' + trad(c[0]) + '</b></button>'; });
   show(h);
   var qui = locuteurEvenement(G.ev); if(qui) parle(qui[0], qui[1]);
 }
@@ -1627,7 +1628,7 @@ document.addEventListener("click", function(e){
   else if(a === "repair"){ msgAtelier = reparer(i) || ""; render(); openRef(); return; }
   else if(a === "salvage"){ msgAtelier = demonter(i) || ""; render(); openRef(); return; }
   else if(a === "morning"){ var ev = evenementDuMatin(); if(ev) openEvent(ev); else fermer(); return; }
-  else if(a === "ev"){ var rs = G.ev.choix[i][1](); G.ev = null; G.evIdx = null; render(); show('<h2>Résultat</h2><p>' + rs + '</p>' + BTN_FERMER("Continuer")); finiSiMorts(); return; }
+  else if(a === "ev"){ var rs = G.ev.choix[i][1](); G.ev = null; G.evIdx = null; render(); show('<h2>' + trad("Résultat") + '</h2><p>' + rs + '</p>' + BTN_FERMER(trad("Continuer"))); finiSiMorts(); return; }
   else if(a === "again"){ var go = $("gameover"); if(go) go.style.display = "none"; nouvelleFamille(); return; }
   else if(a === "continuer"){ reprendre(enCours); enCours = null; return; }
   // Le logo de l’en-tête ramène à l’accueil (« Partie en cours ») : la partie est sauvegardée puis la page est rechargée (2026-11-12, demande de Fabien). Pas pendant le raid de l’immeuble (partie temporaire, pas sauvegardée)
