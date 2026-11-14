@@ -1,13 +1,15 @@
 # Envoi automatique vers zombria.com chez o2switch (2026-11-14)
-# À chaque envoi sur la branche main, GitHub copie par FTP sécurisé (FTPS) :
-#   - le jeu (dossier site/)            → compte FTP limité au dossier /zombria.com
+# À chaque envoi sur la branche main, GitHub copie par FTP sécurisé (FTPS, avec lftp) :
+#   - le jeu (dossier site/)                 → compte FTP limité au dossier /zombria.com
 #   - le serveur (dossier serveur-o2switch/) → compte FTP limité au dossier /zombria-serveur,
-#     puis touche tmp/restart.txt pour que o2switch redémarre le serveur.
-# Seuls les fichiers modifiés sont renvoyés (fichier .ftp-deploy-sync-state.json gardé sur le serveur).
-# Les identifiants sont dans les « Secrets » du dépôt GitHub (jamais dans le code) :
+#     puis envoie tmp/restart.txt pour que o2switch redémarre le serveur.
+# Images et sons : envoyés seulement si leur taille a changé (ou s'ils sont nouveaux). Pages, scripts et styles :
+# toujours renvoyés (petits, et une modification peut garder la même taille, comme la version de sw.js).
+# Rien n'est jamais supprimé sur le serveur (pas de --delete) : les données des joueurs (donnees/), le mot de passe
+# (reglages.json), .well-known et api ne sont jamais touchés.
+# Identifiants dans les « Secrets » du dépôt GitHub (jamais dans le code) :
 #   FTP_HOTE, FTP_JEU_UTILISATEUR, FTP_JEU_MDP, FTP_SERVEUR_UTILISATEUR, FTP_SERVEUR_MDP
-# Les données des joueurs (donnees/) et le mot de passe admin (reglages.json) ne sont jamais touchés :
-# ils ne sont pas dans GitHub, et l'envoi ne supprime que des fichiers qu'il a lui-même envoyés.
+# (Premier essai avec SamKirkland/FTP-Deploy-Action : « ECONNRESET (data socket) » avec le FTPS d'o2switch.)
 name: Envoi vers o2switch
 
 on:
@@ -20,45 +22,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  jeu:
-    name: Le jeu (zombria.com)
-    runs-on: ubuntu-latest
+  envoi:
+    name: Jeu et serveur vers o2switch
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Envoi du dossier site/
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOTE }}
-          username: ${{ secrets.FTP_JEU_UTILISATEUR }}
-          password: ${{ secrets.FTP_JEU_MDP }}
-          protocol: ftps
-          local-dir: ./site/
-          server-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            sons/prompts-bruitages.md
+      - name: Installer lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-  serveur:
-    name: Le serveur (zombria.com/api)
-    runs-on: ubuntu-latest
-    needs: jeu
-    steps:
-      - uses: actions/checkout@v4
-      - name: Préparer le redémarrage
-        run: mkdir -p serveur-o2switch/tmp && date -u > serveur-o2switch/tmp/restart.txt
-      - name: Envoi du dossier serveur-o2switch/
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOTE }}
-          username: ${{ secrets.FTP_SERVEUR_UTILISATEUR }}
-          password: ${{ secrets.FTP_SERVEUR_MDP }}
-          protocol: ftps
-          local-dir: ./serveur-o2switch/
-          server-dir: ./
-          exclude: |
-            **/.git*
-            **/.git*/**
-            LISEZMOI.md
-            donnees/**
-            reglages.json
+      - name: Le jeu (zombria.com)
+        env:
+          HOTE: ${{ secrets.FTP_HOTE }}
+          UTIL: ${{ secrets.FTP_JEU_UTILISATEUR }}
+          LFTP_PASSWORD: ${{ secrets.FTP_JEU_MDP }}
+        run: |
+          cd site
+          lftp --env-password -u "$UTIL" "$HOTE" <<'FIN'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ftp:passive-mode true
+          set net:max-retries 6
+          set net:reconnect-interval-base 5
+          set net:timeout 40
+          set cmd:fail-exit true
+          mirror --reverse --ignore-time --no-perms --parallel=2 --verbose=1 --exclude-glob .git* --exclude-glob prompts-bruitages.md ./ ./
+          mput -O ./ *.html *.js *.css *.json .htaccess
+          bye
+          FIN
+
+      - name: Le serveur (zombria.com/api)
+        env:
+          HOTE: ${{ secrets.FTP_HOTE }}
+          UTIL: ${{ secrets.FTP_SERVEUR_UTILISATEUR }}
+          LFTP_PASSWORD: ${{ secrets.FTP_SERVEUR_MDP }}
+        run: |
+          cd serveur-o2switch
+          mkdir -p tmp && date -u > tmp/restart.txt
+          lftp --env-password -u "$UTIL" "$HOTE" <<'FIN'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ftp:passive-mode true
+          set net:max-retries 6
+          set net:reconnect-interval-base 5
+          set net:timeout 40
+          set cmd:fail-exit true
+          mput -O ./ app.js package.json worker.mjs
+          mkdir -p tmp
+          put -O tmp/ tmp/restart.txt
+          bye
+          FIN
