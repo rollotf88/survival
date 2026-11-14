@@ -1570,7 +1570,7 @@ document.addEventListener("click", function(e){
   else if(a === "ctigre"){ // Raja bondit à travers la scène, puis les zombies tombent
     if(!(typeof tigreLegende === "function" && tigreLegende()) || tigreUtilise()) return;
     var t = document.createElement("img"); t.src = "images/tigre-bond.webp"; t.className = "tigre-saut"; document.body.appendChild(t);
-    if(typeof son === "function"){ son("zombie"); son("coup", 450); } if(typeof vibrer === "function") vibrer([80, 40, 160]);
+    if(typeof son === "function") son("rugissement"); if(typeof vibrer === "function") vibrer([80, 40, 160]);
     setTimeout(function(){ lacherTigre(); render(); openCombat(); }, 750); setTimeout(function(){ t.remove(); }, 1300); return;
   }
   else if(a === "cauto"){
@@ -1726,25 +1726,31 @@ if(enCours){
    est fabriqué par le navigateur (pas de fichier). On peut couper le son
    avec le bouton 🔊 en haut de l'écran (réglage gardé dans le navigateur).
    ===================================================================== */
+// 2026-11-14 : bruitages refaits par Fabien avec ElevenLabs (MP3, lus par tous les téléphones) ; les autres restent ceux de Kenney (CC0)
 var SONS = {
   clic:["sons/clic.wav", .35], depart:["sons/depart.ogg", .7], pas:[["sons/pas1.ogg","sons/pas2.ogg","sons/pas3.ogg"], .6],
-  butin:["sons/butin.ogg", .7], atelier:["sons/atelier.ogg", .7], construire:["sons/construire.ogg", .8],
-  coup:["sons/coup.ogg", .7], goupille:["sons/goupille.ogg", .8], casse:["sons/casse.wav", .8], porte:["sons/porte.ogg", .7],
+  butin:["sons/butin.ogg", .7], atelier:["sons/atelier.ogg", .7], construire:["sons/planches.mp3", .6],
+  coup:["sons/coup-melee.mp3", .65], goupille:["sons/goupille.ogg", .8], casse:["sons/casse.wav", .8], porte:["sons/porte.mp3", .6],
   nuit:["sons/nuit.ogg", .6], soin:["sons/soin.ogg", .7], troc:["sons/troc.ogg", .7], piece:["sons/piece.ogg", .8],
-  zombie:[["sons/zombie1.wav","sons/zombie2.wav","sons/zombie3.wav"], .6]
+  zombie:[["sons/zombie1.mp3","sons/zombie2.mp3","sons/zombie3.mp3"], .55],
+  tirPistolet:["sons/tir-pistolet.mp3", .5], tirFusil:["sons/tir-fusil.mp3", .5], cocktail:["sons/cocktail.mp3", .6], explosion:["sons/explosion.mp3", .6],
+  attaque:["sons/attaque-nuit.mp3", .6], feu:["sons/feu.mp3", .5, 4], poule:["sons/poules.mp3", .5], moulinet:["sons/peche.mp3", .6], hache:["sons/hache.mp3", .6],
+  rugissement:["sons/rugissement.mp3", .7], glas:["sons/glas.mp3", .5], victoire:["sons/victoire.mp3", .5], defaite:["sons/defaite.mp3", .5]
 };
 // (fonction « hoistée » : utilisable même avant cette ligne, au premier affichage)
 function sonEstActif(){ try{ return localStorage.getItem("survival_son") !== "non"; }catch(e){ return true; } }
 var sonActif = sonEstActif();
 var lectureOgg = !!new Audio().canPlayType('audio/ogg; codecs="vorbis"'); // certains iPhone ne lisent pas l'OGG
 function son(nom, delai){
-  if(nom === "glas"){ sonGlas(); return; }
   if(SONS_SYNTH[nom]){ if(sonActif){ if(delai) setTimeout(function(){ jouerSynth(nom); }, delai); else jouerSynth(nom); } return; }
   if(!sonActif || !SONS[nom]) return;
   if(delai){ setTimeout(function(){ son(nom); }, delai); return; }
   var f = SONS[nom][0]; if(Array.isArray(f)) f = f[Math.floor(Math.random() * f.length)];
   if(/\.ogg$/.test(f) && !lectureOgg) return;
-  try{ var a = new Audio(f); a.volume = SONS[nom][1]; var p = a.play(); if(p && p.catch) p.catch(function(){}); }catch(e){}
+  try{ var a = new Audio(f); a.volume = SONS[nom][1]; var p = a.play(); if(p && p.catch) p.catch(function(){});
+    // 3e valeur (facultative) : durée maximale en secondes, puis fondu de 0,6 s (le feu de cheminée dure 30 s)
+    var max = SONS[nom][2]; if(max) setTimeout(function(){ var v0 = a.volume, k = 0, t = setInterval(function(){ k++; a.volume = Math.max(0, v0 * (1 - k / 6)); if(k >= 6){ clearInterval(t); a.pause(); } }, 100); }, max * 1000);
+  }catch(e){}
 }
 /* ---------- Musiques (2026-11-14 : deux musiques faites par Fabien avec Suno) ----------
    « maison » partout au refuge (pièces de la maison ET du bastion : elle ne coupe pas quand on change de pièce),
@@ -1780,7 +1786,7 @@ document.addEventListener("pointerdown", lancerMusique);
 document.addEventListener("visibilitychange", function(){ if(document.hidden) arreterMusique(); else if(musiqueDebloquee) lancerMusique(); });
 
 /* Petits bruitages fabriqués par le navigateur (pas de fichier) : feu qui crépite, poules, moulinet, bois */
-var SONS_SYNTH = { feu:1, poule:1, moulinet:1, bois:1 };
+var SONS_SYNTH = { bois:1 }; // feu, poules et moulinet sont maintenant de vrais fichiers (2026-11-14)
 function jouerSynth(nom){
   try{
     ctxAudio = ctxAudio || new (window.AudioContext || window.webkitAudioContext)();
@@ -1842,19 +1848,25 @@ document.addEventListener("click", function(e){
     var J = G && G.combat && G.combat.journal ? G.combat.journal.map(function(l){ return l[1]; }).join(" ") : "";
     var feuille = $("modal").style.display === "flex" ? $("sheet").innerText : "";
     if(a === "start") son("depart");
-    else if(a === "loc"){ son("pas"); if(G.combat) son("zombie", 350); else if(G.exp && G.exp.serrure) son("porte", 250); else if(feuille.indexOf("Vous trouvez") >= 0) son("butin", 300); }
+    else if(a === "loc"){ son("pas"); if(G.combat) son("zombie", 350); else if(G.exp && G.exp.serrure) son("porte", 250); else if(feuille.indexOf("Vous trouvez") >= 0) son("butin", 300); if(feuille.indexOf("abat un arbre") >= 0) son("hache", 150); }
     else if(a === "ctour" || a === "cauto" || a === "cfuir"){
-      if(J.indexOf("🔫") >= 0) sonTir(); else if(/⚔️|🎯|✋|🔥/.test(J)) son("coup");
+      // Bruitage du tour : tir (pistolet ou fusil), cocktail, coup au corps à corps ; explosion du Gonflé ; zombie qui frappe ou hurle
+      if(J.indexOf("🔫") >= 0) son(/fusil/i.test(J) ? "tirFusil" : "tirPistolet");
+      else if(J.indexOf("lance un cocktail") >= 0) son("cocktail");
+      else if(/⚔️|🎯|✋/.test(J)) son("coup");
+      if(J.indexOf("💥") >= 0) son("explosion", 300);
       if(J.indexOf("📢") >= 0) son("zombie", 120);
       if(/frappe .* \(−/.test(J)){ son("zombie", 220); if(typeof vibrer === "function") vibrer(70); } // un zombie touche un membre
+      // Fin du combat : petit air de victoire ou de défaite
+      if(G.combat && G.combat.fin === "victoire") son("victoire", 650); else if(G.combat && G.combat.fin === "defaite") son("defaite", 650);
     }
-    else if(a === "cfin" || a === "forcer" || a === "suiteporte"){ if(a === "forcer") son("construire"); if(feuille.indexOf("Vous trouvez") >= 0) son("butin", a === "forcer" ? 250 : 0); else if(G.combat) son("zombie", 200); }
+    else if(a === "cfin" || a === "forcer" || a === "suiteporte"){ if(a === "forcer") son("construire"); if(feuille.indexOf("Vous trouvez") >= 0) son("butin", a === "forcer" ? 250 : 0); else if(G.combat) son("zombie", 200); if(feuille.indexOf("abat un arbre") >= 0) son("hache", 150); }
     else if(a === "goupille"){ if(/^Clic/.test(msgSerrure)) son(G.exp && G.exp.serrure && G.exp.serrure.fin === "ouvert" ? "porte" : "goupille"); else son("casse"); }
     else if(a === "craft" || a === "repair" || a === "salvage") son("atelier");
     else if(a === "build") son("construire");
     else if(a === "plein") son("piece");
     else if(a === "pslot") return; // le son est joué par poserPiece
-    else if(a === "endday") son("nuit");
+    else if(a === "endday"){ var bn = document.querySelector("#sheet .banniere img"); son(bn && /\/nuit\.webp/.test(bn.getAttribute("src") || "") ? "attaque" : "nuit"); } // nuit attaquée : coups sur les planches
     else if(a === "heal" || a === "boire" || a === "ration") son("soin");
     else if(a === "troc" || a === "marche") son("troc");
     else son("clic");

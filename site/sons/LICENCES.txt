@@ -21,3 +21,9 @@ Sons utilisés dans ZOMBRIA (tous en licence CC0 : libres, aucune mention obliga
 - musique-maison.mp3 et musique-combat.mp3 (musiques d'ambiance, depuis le 2026-11-14)
   Faites par Fabien avec Suno (suno.com), abonnement payant de Fabien (droit d'utilisation commerciale).
   Les morceaux doivent être créés pendant l'abonnement pour avoir ce droit.
+
+- zombie1-3, tir-pistolet, tir-fusil, coup-melee, cocktail, explosion, attaque-nuit, feu, porte, planches, poules,
+  hache, peche, rugissement, glas, victoire, defaite (.mp3, depuis le 2026-11-14)
+  Faits par Fabien avec ElevenLabs Sound Effects, abonnement payant de Fabien (droit d'utilisation commerciale).
+  Ils remplacent zombie1-3.wav, coup.ogg, construire.ogg, porte.ogg (gardés dans le dossier, inutilisés) et les sons
+  fabriqués en code du coup de feu, du feu, des poules, du moulinet et du glas.
