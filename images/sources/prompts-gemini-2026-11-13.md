@@ -64,3 +64,21 @@ Joindre : `images/piece-atelier.webp` + `images/portrait-sam.webp`
 Joindre : `images/piece-atelier.webp` + `images/portrait-ines.webp`
 [PERSONNE] = la femme blonde du portrait
 [ACTION] = à gauche, près des planches appuyées contre le mur, qui en porte une sous le bras en vérifiant si elle est droite
+
+## E. Pièces SANS lampe au plafond (base propre, 2026-11-14)
+
+Les lampes à pétrole collées sur les ampoules donnent de mauvais reflets. On repart d'images propres, sans aucune lampe au plafond : une lanterne pourra être ajoutée ensuite à part, toujours la même.
+Une image par message. Joindre l'image indiquée, envoyer le prompt. Vérifier ensuite : même cadrage, même taille, rien d'autre n'a bougé.
+
+### Prompt commun
+
+Voici une image de mon jeu. Garde EXACTEMENT la même image, au pixel près : même cadrage, même taille, mêmes meubles, mêmes objets, mêmes couleurs, même style dessiné. Supprime UNIQUEMENT la lampe suspendue au plafond : l'abat-jour ou l'ampoule, son fil ou sa chaîne, ET la tache de lumière qu'elle fait sur le mur et le plafond juste autour d'elle (le halo clair). À la place, dessine simplement la suite du plafond en bois et du mur, avec leurs fissures et leur texture, comme s'il n'y avait jamais eu de lampe. Garde la lumière générale de la pièce et toutes les autres sources de lumière (lanternes posées, fenêtres). Ne modifie rien d'autre.
+
+### Les images à joindre (une par message)
+
+1. `images/refuge-fond-sans-table.webp` : le salon (suspension verte au-dessus du canapé)
+2. `images/piece-atelier.webp` : l'atelier (suspension verte au-dessus de l'établi)
+3. `images/piece-garage.webp` : le garage, voiture en panne (ampoule nue au-dessus de la voiture)
+4. `images/piece-garage-ok.webp` : le garage, voiture réparée (même ampoule)
+5. `images/piece-reserve.webp` : la réserve (ampoule nue au plafond)
+6. `images/piece-chambre-propre.webp` : la chambre (suspension verte éteinte) — facultatif, pour que toutes les pièces soient pareilles
