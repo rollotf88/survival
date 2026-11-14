@@ -586,3 +586,117 @@ Object.assign(TRADUCTIONS.en, {
   "Demander si quelqu’un veut rester avec vous": "Ask if anyone wants to stay with you",
   "Après une longue discussion à voix basse, une jeune femme qui voyageait avec eux descend du pick-up. « Le sud, c’est un rêve. Ici, au moins, il y a vous. »": "After a long, hushed discussion, a young woman traveling with them climbs out of the pickup. “The south is a dream. Here, at least, there’s you.”"
 });
+
+/* ---------- Causes de mort (2026-11-14) ----------
+   La cause est gardée en français dans la partie (« tué par un coureur (Supermarché) ») ; causeAnglaise la traduit
+   à l'affichage en bout de phrase anglaise : « was killed by a runner (Supermarket) », « died of thirst ». */
+var CAUSES_EN = {
+  "mort":"died", "mort de soif":"died of thirst", "mort de faim":"died of hunger", "mort de froid":"froze to death",
+  "mort de froid sous l’orage":"froze to death in the storm", "mort de froid pendant la tempête":"froze to death in the snowstorm",
+  "mort de la maladie du quartier":"died of the neighborhood sickness", "mort dehors, seul dans la nuit":"died outside, alone in the night",
+  "tué pendant l’attaque de nuit":"was killed in the night attack", "tué par une meute de chiens":"was killed by a pack of dogs",
+  "tué par des pillards":"was killed by raiders", "tué pendant le raid de l’immeuble":"was killed during the apartment block raid",
+  "tué par un soldat aux abois":"was killed by a desperate soldier", "tué par un détenu en fuite":"was killed by an escaping prisoner",
+  "tué par un court-circuit à la centrale":"was killed by a short circuit at the power plant", "tué par la bande des Corbeaux":"was killed by the Crows gang",
+  "tué en écoutant un violon":"was killed while listening to a violin", "tué en poursuivant un éclaireur":"was killed chasing a scout",
+  "tué en pillant des voisins":"was killed robbing the neighbors", "tué en chemin":"was killed on the road",
+  "tué dans un immeuble infesté":"was killed in an infested building", "tué dans un guet-apens":"was killed in an ambush",
+  "tué dans l’explosion d’un hélicoptère":"was killed when a helicopter exploded", "tué au pont à péage":"was killed at the toll bridge",
+  "tombé pendant le raid de l’immeuble":"fell during the apartment block raid", "tombé dans un piège au parc":"fell into a trap at the park",
+  "sacrifié":"was sacrificed", "parti dans la nuit, fou à lier":"walked out into the night, raving mad",
+  "mordu":"was bitten", "mordu par un enfant qui s’est transformé":"was bitten by a child who turned", "mordu par un chien affolé":"was bitten by a panicked dog",
+  "emporté par la fièvre":"was taken by the fever", "coupé par la tôle d’une épave":"bled out after a cut on a wreck’s sheet metal"
+};
+function causeAnglaise(c){
+  c = String(c || "mort");
+  // la forme féminine (« morte », « tuée », « partie… folle ») revient à la forme de la table
+  var base = c.replace(/^(mort|tué|mordu|tombé|emporté|coupé|sacrifié|parti|blessé)e(?![a-zé])/, "$1").replace(/, seule\b/, ", seul").replace("folle à lier", "fou à lier");
+  if(CAUSES_EN[base]) return CAUSES_EN[base];
+  var m;
+  if((m = base.match(/^tué par une mine devant (.+)$/))) return "was killed by a mine outside " + m[1];
+  if((m = base.match(/^tué par l’explosion d’un (.+?) \((.+)\)$/))) return "was killed when a " + m[1] + " exploded (" + m[2] + ")";
+  if((m = base.match(/^tué par (.+), devenue? folle?$/)) || (m = base.match(/^tué par (.+), devenu fou$/))) return "was killed by " + m[1] + ", who had gone mad";
+  if((m = base.match(/^tué par une? (.+?)( \(.+\))?$/))) return "was killed by " + (/^[aeiou]/i.test(m[1]) ? "an " : "a ") + m[1] + (m[2] || "");
+  if((m = base.match(/^tué par (.+)$/))) return "was killed by " + m[1];
+  return "died (" + c + ")";
+}
+
+/* ---------- Effets des rencontres, chapitres et récits (2026-11-14) ---------- */
+Object.assign(TRADUCTIONS.en, {
+  "−1 ration de nourriture.": "−1 food ration.", "−{n} rations de nourriture.": "−{n} food rations.",
+  "−1 ration d’eau.": "−1 water ration.", "−{n} rations d’eau.": "−{n} water rations.",
+  "Vous rapportez {objets}.": "You bring back {objets}.",
+  "Rex fait désormais partie de la famille.": "Rex is part of the family now.",
+  "{nom} rejoint la famille.": "{nom} joins the family.",
+  "Nouveau lieu découvert : {lieu}.": "New place discovered: {lieu}.",
+  "L’équipe est soignée (+{n} PV chacun).": "The team is patched up (+{n} HP each).",
+  "−{n} d’énergie pour l’équipe.": "−{n} energy for the team.",
+  "Moral +{n}.": "Morale +{n}.", "Moral {n}.": "Morale {n}.", "Moral +{n}": "Morale +{n}", "moral +{n}": "morale +{n}",
+  "{nom} est blessée (−{n} PV).": "{nom} is wounded (−{n} HP).", "{nom} est blessé (−{n} PV).": "{nom} is wounded (−{n} HP).",
+  // Fenêtre du chapitre
+  "le bastion « {clan} »": "the “{clan}” stronghold",
+  "Chapitre {n}": "Chapter {n}", "Chapitre {n} terminé": "Chapter {n} complete", "Objectif :": "Goal:", "Récompense :": "Reward:", "aucune": "none",
+  "L’histoire jusqu’ici": "The story so far", "Prochain :": "Next:",
+  // Chapitres
+  "Premiers pas": "First steps", "Fouiller 3 lieux différents": "Search 3 different places", "lieux fouillés": "places searched",
+  "Il y a trois jours, la radio s’est tue. Puis les sirènes. Dans la rue, les voisins ne sont plus vraiment des voisins. Papa a calé la porte avec la commode : il va falloir sortir chercher de quoi tenir.":
+    "Three days ago, the radio went silent. Then the sirens. Out in the street, the neighbors aren’t really neighbors anymore. Dad has wedged the door shut with the dresser: someone will have to go out and find supplies.",
+  "Il y a trois jours, la radio s’est tue. Puis les sirènes. Dans la rue, les voisins ne sont plus vraiment des voisins. La porte est calée avec la commode : il va falloir sortir chercher de quoi tenir.":
+    "Three days ago, the radio went silent. Then the sirens. Out in the street, the neighbors aren’t really neighbors anymore. The door is wedged shut with the dresser: someone will have to go out and find supplies.",
+  "Le quartier n’a plus de secrets pour vous. Un voisin vous laisse une canette.": "The neighborhood holds no more secrets for you. A neighbor leaves you an energy drink.",
+  "Le refuge": "The refuge", "Construire la barricade (niveau 1)": "Build the barricade (level 1)", "niveau de barricade": "barricade level",
+  "Les premières sorties ont appris une chose à la famille : la nuit, ils viennent gratter aux fenêtres. Le salon doit devenir un vrai refuge.":
+    "The first trips taught the family one thing: at night, they come and scratch at the windows. The living room has to become a real refuge.",
+  "La porte tient. Léo bricole un piège avec les restes.": "The door holds. Léo rigs up a trap with the leftovers.",
+  "La porte tient. Avec les restes, on bricole un piège.": "The door holds. You rig up a trap with the leftovers.",
+  "Bricoleurs": "Handymen", "Fabriquer 2 objets à l’atelier": "Craft 2 items in the workshop", "objets fabriqués": "items crafted",
+  "La porte tient. Mais les armes s’usent et les bandages manquent. Maman ressort la boîte à couture, Léo démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.":
+    "The door holds. But weapons wear out and bandages run short. Mom digs out the sewing kit, Léo takes apart everything lying around: it’s time to learn to craft.",
+  "La porte tient. Mais les armes s’usent et les bandages manquent. Maman ressort la boîte à couture et démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.":
+    "The door holds. But weapons wear out and bandages run short. Mom digs out the sewing kit and takes apart everything lying around: it’s time to learn to craft.",
+  "La porte tient. Mais les armes s’usent et les bandages manquent. Léo démonte tout ce qui traîne et ressort la vieille boîte à couture : il est temps d’apprendre à fabriquer.":
+    "The door holds. But weapons wear out and bandages run short. Léo takes apart everything lying around and digs out the old sewing kit: it’s time to learn to craft.",
+  "La porte tient. Mais les armes s’usent et les bandages manquent. On ressort la boîte à couture, on démonte tout ce qui traîne : il est temps d’apprendre à fabriquer.":
+    "The door holds. But weapons wear out and bandages run short. Out comes the sewing kit, apart comes everything lying around: it’s time to learn to craft.",
+  "La famille prend le coup de main. Des matériaux en plus pour la suite.": "The family is getting the hang of it. Some extra materials for what’s ahead.",
+  "Sur la route": "On the road", "Réparer la voiture": "Repair the car", "pièces installées": "parts installed",
+  "Le quartier se vide. Dans le garage du voisin, un vieux break dort sous une bâche. Avec une batterie, une roue et une courroie, il pourrait encore rouler.":
+    "The neighborhood is emptying out. In the neighbor’s garage, an old station wagon sleeps under a tarp. With a battery, a wheel and a fan belt, it could still run.",
+  "Le moteur ronronne. Un jerrican oublié dans le coffre !": "The engine purrs. A forgotten jerry can in the trunk!",
+  "Au-delà du quartier": "Beyond the neighborhood", "Revenir vivant d’une zone éloignée": "Come back alive from a distant zone", "retour de zone éloignée": "return from a distant zone",
+  "Le moteur tousse, puis ronronne. Emma colle son nez à la vitre : au-delà du quartier, il reste peut-être des réserves… et d’autres survivants.":
+    "The engine coughs, then purrs. Emma presses her nose to the window: beyond the neighborhood, there may still be supplies… and other survivors.",
+  "Le moteur tousse, puis ronronne. Les visages se collent aux vitres : au-delà du quartier, il reste peut-être des réserves… et d’autres survivants.":
+    "The engine coughs, then purrs. Faces press against the windows: beyond the neighborhood, there may still be supplies… and other survivors.",
+  "Le monde est plus grand que la rue. Et plus dangereux.": "The world is bigger than the street. And more dangerous.",
+  // Tenir bon
+  "Tenir bon": "Hold on", "Survivre jusqu’au jour {n}": "Survive until day {n}", "jours": "days",
+  "Encore debout. Chaque jour arraché compte. La famille reprend courage.": "Still standing. Every day snatched back counts. The family takes heart again.",
+  "Encore debout. Chaque jour arraché compte, même sans les autres.": "Still standing. Every day snatched back counts, even without the others.",
+  "Les réserves du quartier sont presque épuisées. Chaque jour gagné est une victoire : la famille s’organise et se relaie pour les gardes.":
+    "The neighborhood’s supplies are nearly gone. Every day won is a victory: the family gets organized and takes turns keeping watch.",
+  "Le monde d’avant semble loin. Le soir, Léo raconte des histoires de super-héros à Emma, et pendant un moment, on oublie les grattements dehors.":
+    "The world before feels far away. In the evening, Léo tells Emma superhero stories, and for a while, everyone forgets the scratching outside.",
+  "Le monde d’avant semble loin. Le soir, Léo raconte des histoires de super-héros, et pendant un moment, on oublie les grattements dehors.":
+    "The world before feels far away. In the evening, Léo tells superhero stories, and for a while, everyone forgets the scratching outside.",
+  "Le monde d’avant semble loin. Le soir, Emma invente des histoires de princesses guerrières, et pendant un moment, on oublie les grattements dehors.":
+    "The world before feels far away. In the evening, Emma makes up stories about warrior princesses, and for a while, everyone forgets the scratching outside.",
+  "Le monde d’avant semble loin. Le soir, on se raconte des souvenirs d’avant, et pendant un moment, on oublie les grattements dehors.":
+    "The world before feels far away. In the evening, you share memories from before, and for a while, everyone forgets the scratching outside.",
+  "Les zombies sont plus nombreux, plus affamés. Papa compte les planches, Maman compte les rations. Personne ne parle de partir.":
+    "The zombies are more numerous, hungrier. Dad counts the planks, Mom counts the rations. Nobody talks about leaving.",
+  "Les zombies sont plus nombreux, plus affamés. Papa compte les planches et les rations, deux fois par jour. Personne ne parle de partir.":
+    "The zombies are more numerous, hungrier. Dad counts the planks and the rations, twice a day. Nobody talks about leaving.",
+  "Les zombies sont plus nombreux, plus affamés. Maman compte les planches et les rations, deux fois par jour. Personne ne parle de partir.":
+    "The zombies are more numerous, hungrier. Mom counts the planks and the rations, twice a day. Nobody talks about leaving.",
+  "Les zombies sont plus nombreux, plus affamés. On compte les planches, on compte les rations. Personne ne parle de partir.":
+    "The zombies are more numerous, hungrier. You count the planks, you count the rations. Nobody talks about leaving.",
+  "Une fumée au loin, peut-être d’autres survivants. Peut-être pas. Ici, au moins, c’est chez vous.":
+    "Smoke in the distance, maybe other survivors. Maybe not. Here, at least, it’s home.",
+  "L’hiver approche, ou peut-être pas : on ne compte plus les saisons, seulement les jours. Et vous êtes encore là.":
+    "Winter is coming, or maybe not: nobody counts the seasons anymore, only the days. And you’re still here.",
+  "Le refuge est trop grand maintenant. Chaque bruit fait sursauter. Mais tant qu’il reste quelqu’un pour garder la porte, la maison tient.":
+    "The refuge is too big now. Every noise makes you jump. But as long as someone is left to guard the door, the house holds.",
+  "Les lits vides, les tasses en trop sur l’étagère. On continue pour eux, un jour après l’autre.":
+    "The empty beds, the extra mugs on the shelf. You keep going for them, one day after another."
+});

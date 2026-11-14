@@ -497,9 +497,9 @@ function openRencontre(){
   var Lr = Rc.apres && LIEUX[Rc.apres.lieu];
   var chemin = Lr ? (anglais() ? "On the way back from " + leLieu(Lr.nom) : "Sur le chemin du retour" + (function(d){ return d.indexOf("le ") === 0 ? " du " + d.slice(3) : " de " + d; })(leLieu(Lr.nom))) : trad("Sur le chemin du retour");
   var h = '<div class="rencontre"><p class="r-lieu">' + chemin + '…</p><h2>' + trad(R0.titre) + '</h2>';
-  if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? trad("🎲 Réussi ! ") : Rc.reussi === false ? trad("🎲 Raté… ") : "") + perso(tradVersions(Rc.texte)) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
+  if(Rc.texte) h += '<p class="r-res' + (Rc.reussi === true ? " ok" : Rc.reussi === false ? " ko" : "") + '">' + (Rc.reussi === true ? trad("🎲 Réussi ! ") : Rc.reussi === false ? trad("🎲 Raté… ") : "") + perso(Rc.texte) + '</p>' + (Rc.lignes.length ? puces(Rc.lignes) : '');
   if(N){
-    h += '<p class="r-texte">' + perso(tradVersions(N.texte)) + '</p>';
+    h += '<p class="r-texte">' + perso(N.texte) + '</p>';
     h += choixRencontre().map(function(o){
       var c = o.c, info = c.chance !== undefined ? trad("🎲 {p} % de chances", { p:Math.round(chanceChoix(c) * 100) }) + (c.trait ? " (" + TRAITS[c.trait].icone + " " + TRAITS[c.trait].nom + (anglais() ? ": +" + Math.round(BAL.rencontres.bonusTrait * 100) + "%)" : " : +" + Math.round(BAL.rencontres.bonusTrait * 100) + " %)") : "") : "";
       return '<button class="loc r-choix" data-act="rchoix" data-id="' + o.k + '"' + (o.ok ? "" : " disabled") + '><b>' + trad(c.t) + '</b>' + (info || !o.ok ? '<small>' + (o.ok ? info : "❌ " + trad(c.sans)) + '</small>' : '') + '</button>';
@@ -676,15 +676,15 @@ function openSaison(){
 }
 function openChapitre(){
   var c = chapitreCourant(), p = c.progres ? c.progres() : null;
-  var h = '<h2>📖 Chapitre ' + (G.chap + 1) + ' · ' + c.titre + '</h2><p><b>Objectif :</b> ' + c.objectif + '</p>';
-  if(p) h += '<div class="jauge">' + barre("🎯", Math.round(Math.min(p[0], p[1]) / p[1] * 100)) + '<small>' + Math.min(p[0], p[1]) + ' / ' + p[1] + ' ' + p[2] + '</small></div>';
+  var h = '<h2>📖 ' + trad("Chapitre {n}", { n:G.chap + 1 }) + ' · ' + trad(c.titre) + '</h2><p><b>' + trad("Objectif :") + '</b> ' + trad(c.objectif) + '</p>';
+  if(p) h += '<div class="jauge">' + barre("🎯", Math.round(Math.min(p[0], p[1]) / p[1] * 100)) + '<small>' + Math.min(p[0], p[1]) + ' / ' + p[1] + ' ' + trad(p[2]) + '</small></div>';
   if(typeof barreLegende === "function") h += barreLegende();
   var rec = []; for(var k in c.recompense) rec.push(icone(k) + " " + nommer(k, c.recompense[k]));
-  if(c.moral) rec.push("moral +" + c.moral);
-  h += '<p class="sub">🎁 Récompense : ' + (rec.length ? rec.join(", ") : "aucune") + '</p>';
+  if(c.moral) rec.push(trad("moral +{n}", { n:c.moral }));
+  h += '<p class="sub">🎁 ' + trad("Récompense :") + ' ' + (rec.length ? rec.join(", ") : trad("aucune")) + '</p>';
   // L'histoire jusqu'ici : les récits des chapitres passés, puis celui en cours
   var passes = CHAPITRES.slice(0, Math.min(G.chap, CHAPITRES.length));
-  h += '<div class="gsec histoire"><b>📜 L’histoire jusqu’ici</b>' + passes.map(function(ch){ return '<p class="fait">' + perso(ch.recit, true) + '</p>'; }).join("")
+  h += '<div class="gsec histoire"><b>📜 ' + trad("L’histoire jusqu’ici") + '</b>' + passes.map(function(ch){ return '<p class="fait">' + perso(ch.recit, true) + '</p>'; }).join("")
     + '<p class="encours">' + perso(c.recit) + '</p></div>';
   show(h + BTN_FERMER());
 }
@@ -1236,7 +1236,7 @@ function tableauPC(){
   if(!t){ t = document.createElement("aside"); t.id = "tableauPC"; document.body.appendChild(t); }
   if(G.combat && !document.body.classList.contains("scene-petite")){ panneauCombat(); return; }
   var ch = chapitreCourant(), h = '<h2>📜 Jour ' + G.day + '</h2>';
-  if(ch) h += '<div class="tb-bloc"><b>' + ch.titre + '</b><small>' + ch.objectif + '</small></div>';
+  if(ch) h += '<div class="tb-bloc"><b>' + trad(ch.titre) + '</b><small>' + trad(ch.objectif) + '</small></div>';
   if(typeof barreLegende === "function") h += barreLegende();
   if(typeof pastilleGuerre === "function") h += pastilleGuerre(true);
   if(mission()) h += '<button class="loc" data-act="mission"><b>🎯 ' + mission().titre + '</b><small>Encore ' + joursMission() + ' jour' + (joursMission() > 1 ? "s" : "") + (livraisonPossible() >= 0 ? " · tu peux livrer !" : "") + '</small></button>';
@@ -1272,7 +1272,7 @@ function render(){
 function fermer(){
   var A = G.annonces && G.annonces.shift();
   if(!A || !vivants().length){ hide(); return; }
-  show('<h2>📖 Chapitre ' + A.num + ' terminé</h2><p><b>' + A.titre + '</b></p><p>' + perso(A.texte) + '</p><p class="g2 msg">🎁 ' + [A.recompense, A.moral ? "Moral +" + A.moral : ""].filter(Boolean).join(" · ") + '</p><p class="histoire"><i>' + perso(chapitreCourant().recit) + '</i></p><p class="sub">Prochain : ' + chapitreCourant().titre + ' — ' + chapitreCourant().objectif + '</p>' + BTN_FERMER("Continuer"));
+  show('<h2>📖 ' + trad("Chapitre {n} terminé", { n:A.num }) + '</h2><p><b>' + trad(A.titre) + '</b></p><p>' + perso(A.texte) + '</p><p class="g2 msg">🎁 ' + [A.recompense, A.moral ? trad("Moral +{n}", { n:A.moral }) : ""].filter(Boolean).join(" · ") + '</p><p class="histoire"><i>' + perso(chapitreCourant().recit) + '</i></p><p class="sub">' + trad("Prochain :") + ' ' + trad(chapitreCourant().titre) + ' — ' + trad(chapitreCourant().objectif) + '</p>' + BTN_FERMER(trad("Continuer")));
   var conteur = vivants()[0]; if(conteur) parle(conteur.nom, iconeMembre(conteur));
 }
 

@@ -320,9 +320,11 @@ function accorder(r, texte){
   return texte.replace(PARTICIPES_MORT, "$1e").replace(/, seul\b/, ", seule"); // « devenu fou » parle du meurtrier : on n’y touche pas
 }
 // Cause seule, accordée et avec une majuscule, pour une légende sous un prénom : « Morte de soif », « Tuée par un coureur »
-function causeMort(r, cause){ var t = accorder(r, cause || "mort"); return t.charAt(0).toUpperCase() + t.slice(1); }
+function causeMort(r, cause){ if(anglais() && typeof causeAnglaise === "function"){ var ce = causeAnglaise(cause || "mort").replace(/^was /, ""); return ce.charAt(0).toUpperCase() + ce.slice(1); }
+  var t = accorder(r, cause || "mort"); return t.charAt(0).toUpperCase() + t.slice(1); }
 function phraseMort(nom, cause, r){
   r = r || nom;
+  if(anglais() && typeof causeAnglaise === "function") return nom + " " + causeAnglaise(cause || "mort") + ".";
   if(!cause) return nom + " est " + accorder(r, "mort") + ".";
   if(/^(mort|tombé|parti)/.test(cause)) return nom + " est " + accorder(r, cause) + ".";
   if(/^(mordu|coupé)/.test(cause)) return nom + " est " + accorder(r, "mort") + ", " + accorder(r, cause) + ".";
@@ -332,10 +334,13 @@ function phraseMort(nom, cause, r){
 // Remplace Papa, Maman, Léo, Emma dans les récits par les prénoms choisis.
 // t peut être une liste de versions : on prend la première qui ne nomme que des membres en vie (sinon la dernière, sans nom).
 // passe = true : récit d'un chapitre déjà vécu, on garde la version d'origine (c'était vrai à ce moment-là).
-function nommeVivants(t){ return (String(t).match(/Papa|Maman|Léo|Emma/g) || []).every(function(r){ var x = parRole(r); return x && x.al; }); }
+var ROLES_EN = { "Dad":"Papa", "Mom":"Maman", "Léo":"Léo", "Emma":"Emma" };
+function nommeVivants(t){ return (String(t).match(anglais() ? /Dad|Mom|Léo|Emma/g : /Papa|Maman|Léo|Emma/g) || []).every(function(r){ var x = parRole(ROLES_EN[r] && anglais() ? ROLES_EN[r] : r); return x && x.al; }); }
 function perso(t, passe){
+  if(typeof tradVersions === "function") t = tradVersions(t); // récit traduit (lang-en.js) avant de choisir la version
   if(Array.isArray(t)) t = (!G || !G.m || passe) ? t[0] : (t.filter(nommeVivants)[0] || t[t.length - 1]);
   if(!G || !G.m) return t;
+  if(anglais()) return String(t).replace(/\b(Dad|Mom|Léo|Emma)\b/g, function(m){ var x = parRole(ROLES_EN[m]); return x ? x.nom : m; });
   // « d’Emma » devient « de Lina » si le prénom choisi commence par une consonne
   return String(t).replace(/(\b[dD](?:’|'|e ))?(Papa|Maman|Léo|Emma)/g, function(m, d, r){ var x = parRole(r), nom = x ? x.nom : r; if(!d) return nom; var v = de(nom); return d.charAt(0) === "D" ? v.charAt(0).toUpperCase() + v.slice(1) : v; });
 }
@@ -674,26 +679,26 @@ function chanceChoix(c){ return Math.min(0.95, c.chance + (c.trait && equipeRenc
 function appliquerEffets(e, L){
   if(!e) return;
   var eq = equipeRencontre(), cible = eq.length ? eq[R(0, eq.length - 1)] : vivants()[0], recu = [];
-  if(e.nour){ var pn = prendreRations("nour", e.nour); if(pn) L.push(["b2", "🥫 −" + pn + " ration" + (pn > 1 ? "s" : "") + " de nourriture."]); }
-  if(e.eau){ var pe = prendreRations("eau", e.eau); if(pe) L.push(["b2", "💧 −" + pe + " ration" + (pe > 1 ? "s" : "") + " d’eau."]); }
+  if(e.nour){ var pn = prendreRations("nour", e.nour); if(pn) L.push(["b2", "🥫 " + tradN(pn, "−1 ration de nourriture.", "−{n} rations de nourriture.")]); }
+  if(e.eau){ var pe = prendreRations("eau", e.eau); if(pe) L.push(["b2", "💧 " + tradN(pe, "−1 ration d’eau.", "−{n} rations d’eau.")]); }
   var moins = function(id, q){ return icone(id) + " −" + q + " " + (q > 1 ? OBJETS[id].pl : OBJETS[id].nom).toLowerCase() + "."; };
   for(var s = 0; s < (e.soins || 0); s++){ var k = retirerSoin(); if(k) L.push(["b2", moins(k, 1)]); }
   if(e.perdre) for(var p in e.perdre){ var q = Math.min(compter(p), e.perdre[p]); if(!q) continue; if(OBJETS[p].empile) retirer(p, q); else consommer(p, q); L.push(["b2", moins(p, q)]); }
   if(e.perdreConfort){ var kc = ["photo", "cartes", "peluche", "radio"].filter(function(k){ return compter(k) > 0; })[0]; if(kc){ consommer(kc, 1); L.push(["b2", moins(kc, 1)]); } }
   if(e.objets) for(var o in e.objets){ ajouter(o, e.objets[o]); recu.push(nommer(o, e.objets[o])); }
-  if(recu.length) L.push(["g2", "🎁 Vous rapportez " + liste(recu) + "."]);
-  if(e.chien && !chien()){ G.chien = { nom:"Rex", faim:0 }; L.push(["g2", ic("chien", "🐕") + " Rex fait désormais partie de la famille."]); }
-  if(e.recruter && recruter(e.recruter[0], e.recruter[1])) L.push(["g2", "🧑 " + e.recruter[0] + " rejoint la famille."]);
+  if(recu.length) L.push(["g2", "🎁 " + trad("Vous rapportez {objets}.", { objets:liste(recu) })]);
+  if(e.chien && !chien()){ G.chien = { nom:"Rex", faim:0 }; L.push(["g2", ic("chien", "🐕") + " " + trad("Rex fait désormais partie de la famille.")]); }
+  if(e.recruter && recruter(e.recruter[0], e.recruter[1])) L.push(["g2", "🧑 " + trad("{nom} rejoint la famille.", { nom:e.recruter[0] })]);
   if(e.decouvrir){
     var ls = LIEUX.map(function(L2, i){ return i; }).filter(function(i){ return LIEUX[i].secret && !(G.decouverts && G.decouverts[i]); });
-    if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; L.push(["g2", "📍 Nouveau lieu découvert : " + LIEUX[ls[0]].nom + "."]); }
+    if(ls.length){ G.decouverts = G.decouverts || {}; G.decouverts[ls[0]] = true; L.push(["g2", "📍 " + trad("Nouveau lieu découvert : {lieu}.", { lieu:LIEUX[ls[0]].nom })]); }
   }
-  if(e.soigne){ eq.forEach(function(x){ x.hp = Math.min(100, x.hp + e.soigne); }); L.push(["g2", "🩹 L’équipe est soignée (+" + e.soigne + " PV chacun)."]); }
+  if(e.soigne){ eq.forEach(function(x){ x.hp = Math.min(100, x.hp + e.soigne); }); L.push(["g2", "🩹 " + trad("L’équipe est soignée (+{n} PV chacun).", { n:e.soigne })]); }
   if(e.essence && G.voiture){ var place = VOITURE.reservoir - G.voiture.essence, dans = Math.min(place, e.essence), nj = Math.floor((e.essence - dans) / VOITURE.litresJerrican); G.voiture.essence += dans; if(nj) ajouter("jerrican", nj); L.push(["g2", "⛽ +" + e.essence + " L d’essence" + (dans ? " (réservoir : " + G.voiture.essence + " L)" : "") + (nj ? ", " + nommer("jerrican", nj) + " remplis" : "") + "."]); }
-  if(e.energie){ eq.forEach(function(x){ x.en = Math.max(0, x.en - e.energie); }); L.push(["b2", "⚡ −" + e.energie + " d’énergie pour l’équipe."]); }
+  if(e.energie){ eq.forEach(function(x){ x.en = Math.max(0, x.en - e.energie); }); L.push(["b2", "⚡ " + trad("−{n} d’énergie pour l’équipe.", { n:e.energie })]); }
   if(e.folie) eq.forEach(function(x){ x.folie = Math.min(100, (x.folie || 0) + e.folie); });
-  if(e.moral){ changerMoral(e.moral); L.push([e.moral > 0 ? "g2" : "b2", (e.moral > 0 ? "😊 Moral +" : "😟 Moral ") + e.moral + "."]); }
-  if(e.pv && cible){ L.push(["b2", "🩸 " + cible.nom + " est blessé" + (FEMININS.indexOf(roleDe(cible)) >= 0 ? "e" : "") + " (−" + e.pv + " PV)."]); blesser(cible, e.pv, L, e.cause || "tué en chemin"); }
+  if(e.moral){ changerMoral(e.moral); L.push([e.moral > 0 ? "g2" : "b2", (e.moral > 0 ? "😊 " + trad("Moral +{n}.", { n:e.moral }) : "😟 " + trad("Moral {n}.", { n:e.moral }))]); }
+  if(e.pv && cible){ L.push(["b2", "🩸 " + trad(FEMININS.indexOf(roleDe(cible)) >= 0 ? "{nom} est blessée (−{n} PV)." : "{nom} est blessé (−{n} PV).", { nom:cible.nom, n:e.pv })]); blesser(cible, e.pv, L, e.cause || "tué en chemin"); }
 }
 // Les choix proposés au nœud en cours (avec la raison s'ils sont impossibles)
 function choixRencontre(){
@@ -795,7 +800,7 @@ function equipGuerrePour(equipe){
 }
 function porteGuerre(x, id){ var g = G.exp && G.exp.equipGuerre && G.exp.equipGuerre[G.m.indexOf(x)]; return !!(g && g.some(function(o){ return o.id === id; })); }
 function creerAssaut(p, equipe){
-  G.exp = { guerre:true, assaut:p.assaut, nomLieu:"le bastion « " + p.clan + " »", cible:p.cible, lieu:0, equipe:equipe.slice(), notes:[], mult:1, d:0, voiture:false };
+  G.exp = { guerre:true, assaut:p.assaut, nomLieu:trad("le bastion « {clan} »", { clan:p.clan }), cible:p.cible, lieu:0, equipe:equipe.slice(), notes:[], mult:1, d:0, voiture:false };
   var T = ZOMBIES.find(function(t){ return t.id === "defenseur"; }), n = BAL.assaut.defenseurs[Math.min(5, p.remparts || 0)];
   var A = BAL.assaut, force = Math.max(0, Math.min(A.forceMax, Math.floor(((p.jourCible || BAL.jourClans) - BAL.jourClans) / A.joursParForce))), zs = [];
   for(var k = 0; k < n; k++){
@@ -1195,7 +1200,7 @@ function defenseNuit(){
 function chapitreCourant(){
   if(G.chap < CHAPITRES.length) return CHAPITRES[G.chap];
   if(!G.cibleTenir) G.cibleTenir = Math.ceil((G.day + 1) / TENIR_TOUS_LES) * TENIR_TOUS_LES;
-  return { titre:"Tenir bon", objectif:"Survivre jusqu’au jour " + G.cibleTenir,
+  return { titre:"Tenir bon", objectif:trad("Survivre jusqu’au jour {n}", { n:G.cibleTenir }),
            test:function(){ return G.day >= G.cibleTenir; }, progres:function(){ return [G.day, G.cibleTenir, "jours"]; }, recompense:{}, moral:10, // pas d'objets : ils reviendraient sans fin
            texte:vivants().length > 1 ? "Encore debout. Chaque jour arraché compte. La famille reprend courage." : "Encore debout. Chaque jour arraché compte, même sans les autres.",
            recit:(function(L){ return L[(Math.round(G.cibleTenir / TENIR_TOUS_LES) - 1) % L.length]; })(vivants().length > 1 ? RECITS_TENIR : RECITS_SEUL) };
