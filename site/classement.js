@@ -6,7 +6,9 @@
    simplement et le jeu continue normalement.
    ===================================================================== */
 var SITE_JEU = "https://survival-refuge.rollotf88.workers.dev";
-function adresseClassement(){ return (/(netlify\.app|workers\.dev|pages\.dev)$/.test(location.hostname) ? "" : SITE_JEU) + "/api/classement"; }
+// Le jeu appelle son propre serveur quand il est servi par un vrai site (zombria.com chez o2switch depuis le 2026-11-14,
+// ou l'ancien site Cloudflare) ; depuis claude.ai ou en double-clic, il appelle SITE_JEU.
+function adresseClassement(){ return (/(^|\.)zombria\.com$|(netlify\.app|workers\.dev|pages\.dev)$/.test(location.hostname) ? "" : SITE_JEU) + "/api/classement"; }
 var MSG_HORS_LIGNE = "Impossible de joindre le classement (pas de connexion, ou cette page bloque internet). Il marche dans le jeu installé : " + SITE_JEU.replace("https://", "");
 
 // Identifiant de l'appareil (au hasard, pour garder un seul score par joueur) et pseudo
