@@ -2855,3 +2855,5 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:reduce){
   .btn:hover, .loc:hover, .menugrille .mt:hover, .mf-a:hover, .inv-t:hover, .carte-lieu:hover, .act:hover, .bd-case:hover, .mr:hover, .tab:hover, .islot:hover{transform:none!important}
 }
+/* Écran du sac : le nombre choisi dans le coin de la case (il dépassait et était coupé par la grille qui défile, 2026-11-14) */
+.tile .n{top:3px;right:3px;line-height:1.25}
