@@ -2916,3 +2916,53 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .slot .vide img.emo{width:1.1em;height:1.1em}
 .qpeq .slot .vide,.slots.grands .slot .vide{width:56%;height:56%;opacity:.4}
 .qpeq .slot .vide .ico,.slots.grands .slot .vide .ico,.qpeq .slot .vide img.emo,.slots.grands .slot .vide img.emo{width:100%;height:100%}
+/* Échanges du clan (2026-11-14) : bouton 🤝 dans la barre d'envoi, cartes d'offre dans la discussion, fenêtre « Proposer un échange » */
+.ch-saisie:has(.ch-ech-b){padding-left:4px}
+.ch-ech-b{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:2px solid var(--bois);background:var(--card);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 0 var(--line);padding:0}
+.ch-ech-b .ico,.ch-ech-b img{width:22px;height:22px}
+.ch-ech{align-self:stretch;margin:6px 2px;padding:8px 10px 9px;border:2px solid #c9a227;border-radius:14px;background:linear-gradient(160deg,rgba(247,215,116,.22),var(--card));box-shadow:0 2px 0 var(--line)}
+.ch-ech.moi{border-color:var(--acc)}
+.ch-ech.clos{border-color:var(--line);opacity:.78}
+.ce-t{display:flex;align-items:center;gap:6px;font-size:13px}
+.ce-t .ico,.ce-t img{width:18px;height:18px;flex:none}
+.ce-t b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ce-t .ch-h{position:static;font-size:11px;color:var(--mut)}
+.ce-o{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;margin:6px 0}
+.ce-cote{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ce-cote > small{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.ce-cases{display:flex;flex-wrap:wrap;gap:4px}
+.ce-c{position:relative;display:flex;flex-direction:column;align-items:center;width:46px;padding:3px 2px 2px;border-radius:9px;background:url("images/case.webp") center/100% 100% no-repeat}
+.ce-c .ico,.ce-c img{width:26px;height:26px}
+.ce-c i{position:absolute;top:-4px;right:-4px;font-style:normal;font-size:10.5px;font-weight:900;background:var(--ink);color:var(--bg);border-radius:999px;padding:0 4px;line-height:15px}
+.ce-c small{font-size:9px;line-height:1.1;font-weight:800;max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3a2a1a}
+.ce-c.vide{height:44px;justify-content:center;color:var(--mut)}
+.ce-fl{font-size:20px;font-weight:900;color:var(--acc)}
+.ce-bas{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ce-etat{font-size:12px;font-weight:800;color:var(--mut)}
+.ce-etat.ok{color:var(--ok)}.ce-etat.ko{color:var(--bad)}
+.ce-btn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:900;font-size:13.5px;padding:7px 14px;border-radius:999px;border:0;cursor:pointer;color:#2a1a0a;background:linear-gradient(180deg,#f6c86a,#e09a2f);box-shadow:0 2px 0 #9a6512}
+.ce-btn.alt{background:var(--bg);border:2px solid var(--line);box-shadow:none;color:var(--ink);padding:5px 12px}
+.ce-btn .ico,.ce-btn img{width:18px;height:18px}
+.ec-regles{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px}
+.ec-regles span{font-size:11.5px;font-weight:800;padding:2px 9px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg)}
+.ec-plateau{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:center}
+.ec-cote{padding:7px 8px;border:2px dashed var(--line);border-radius:14px;background:var(--bg);min-width:0}
+.ec-cote.on{border:2px solid var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.ec-cote > b{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px}
+.ec-cote > b small{color:var(--mut)}
+.ec-cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.ec-cases .islot,.ec-vide{aspect-ratio:1/1;width:100%;min-width:0}
+.ec-vide{border-radius:10px;border:2px dashed var(--line);opacity:.6}
+.ec-fl{font-size:22px;font-weight:900;color:var(--acc)}
+.ec-bilan{margin:6px 0 8px;font-size:13px;font-weight:800;text-align:center}
+.ec-bilan.ok{color:var(--ok)}.ec-bilan.ko{color:var(--bad)}
+.ec-grille{margin-top:6px}
+.ec-go{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px}
+.ec-go .ico,.ec-go img{width:22px;height:22px}
+.ec-note{font-size:12px;text-align:center;margin:6px 0 0}
+/* Vitrine de hauteur fixe (2026-11-14, retour de Fabien) : les cartes sont empilées dans la même case de grille,
+   seule la carte choisie est visible ; le bloc garde la hauteur de la carte la plus haute, il ne saute plus */
+.vt-pile{display:grid}
+.vt-pile > .vt{display:flex;grid-area:1/1;visibility:hidden;animation:none}
+.vt-pile > .vt.on{visibility:visible;animation:vtEntre .5s ease-out}
+@media (prefers-reduced-motion:reduce){.vt-pile > .vt.on{animation:none}}

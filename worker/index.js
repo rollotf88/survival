@@ -414,10 +414,39 @@ function vueRaid(c, id){
    le chef efface, chacun signale (le message part dans les avis de l'administration).
    Partie bien séparée : sur l'hébergeur définitif, elle sera refaite avec une vraie base de données. */
 const CHAT_MAX = 100, CHAT_LONG = 200, CHAT_DELAI = 3000;
-const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un volontaire pour le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🆘 J’ai besoin de soins.", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
+const CHAT_RAPIDES = ["✋ Je suis prêt pour le raid !", "🏢 Qui envoie un volontaire pour le raid ?", "📦 J’ai déposé des matériaux dans la réserve.", "🤝 Regardez mon offre d’échange !", "⚔️ On attaque ce soir ?", "👍 D’accord !", "🙏 Merci !", "👋 Salut le clan !"];
 async function lireChat(env, cid){ return (await env.CLASSEMENT.get("chat_" + cid, { type: "json" })) || []; }
+/* ---------- Échanges entre membres du clan (2026-11-14, demande de Fabien) ----------
+   Une offre « je donne … contre … » se poste dans la discussion. Limites : 3 objets au plus de chaque côté,
+   seulement les objets déposables (vivres, soins, munitions, matériaux), un échange (proposé OU accepté) toutes les 8 h
+   par joueur, une seule offre ouverte à la fois, et on ne peut pas demander plus de 1,5 fois la valeur de ce qu'on donne.
+   Ce qui est donné est mis de côté à la publication (retiré du stock du joueur) ; à l'acceptation, celui qui accepte reçoit
+   tout de suite, celui qui a proposé reçoit à sa prochaine visite de la discussion (c.livraisons). Une offre non prise
+   pendant 24 h expire et ce qui était mis de côté revient à son auteur. Pas de vraie vérification des stocks (anti-triche : plus tard). */
+const ECH_MAX = 3, ECH_DELAI = 8 * 3600e3, ECH_DUREE = 24 * 3600e3, ECH_RATIO = 1.5;
+const ECH_VALEURS = { bouteille:2, bidon:8, conserve:2, conserves:8, riz:12, biscuits:4, pates:3, barre:1, ration:4, poisson:2, bandage:3, trousse:6, antibio:5,
+  balle:1, cartouche:1.5, planche:1, ferraille:2, clous:1, ruban:2, chiffon:1, alcool:2, pile:2, jerrican:8, canette:4, epices:2, huile:2, farine:2 };
+function objetsEch(o){
+  const r = {}; let n = 0;
+  for(const k in (o || {})){ const q = Math.floor(+o[k]); if(!(q > 0) || DEPOSABLES.indexOf(k) < 0) continue; r[k] = q; n += q; }
+  return n >= 1 && n <= ECH_MAX ? r : null;
+}
+const valeurEch = (o) => Object.keys(o || {}).reduce((t, k) => t + (ECH_VALEURS[k] || 1) * o[k], 0);
+function livrer(c, id, objets, txt, now){ c.livraisons = c.livraisons || {}; (c.livraisons[id] = c.livraisons[id] || []).push({ objets, txt, t: now }); }
+// Prépare les échanges du clan et fait expirer les vieilles offres (renvoie true si quelque chose a changé)
+function echangesDe(c, now){
+  c.echanges = c.echanges || []; c.echT = c.echT || {}; c.livraisons = c.livraisons || {};
+  let change = false;
+  c.echanges.forEach((e) => { if(e.etat === "ouvert" && now - e.t > ECH_DUREE){ e.etat = "expire"; livrer(c, e.par, e.donne, "Ton offre d’échange a expiré : ce que tu proposais te revient.", now); change = true; } });
+  if(c.echanges.length > 30){ c.echanges = c.echanges.filter((e, k) => e.etat === "ouvert" || k >= c.echanges.length - 30); change = true; }
+  return change;
+}
+const attenteEch = (c, id, now) => Math.max(0, ((c.echT || {})[id] || 0) + ECH_DELAI - now);
 function vueChat(liste, mon, id){
-  return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef })),
+  const now = Date.now(), ech = {};
+  (mon.echanges || []).forEach((e) => { ech[e.eid] = { eid: e.eid, qui: e.qui, moi: e.par === id, donne: e.donne, veut: e.veut, t: e.t, fin: e.t + ECH_DUREE, etat: e.etat, preneur: e.pqui || "", jePrends: e.preneur === id }; });
+  return { messages: liste.map((m) => ({ id: m.id, t: m.t, qui: m.qui, cadre: m.cadre || "", txt: m.txt, r: m.r ? 1 : 0, moi: m.par === id, chef: m.par === mon.chef, ech: m.ech || null })),
+           echanges: ech, echAttente: attenteEch(mon, id, now), echMax: ECH_MAX, echRatio: ECH_RATIO,
            journal: (mon.journal || []).slice(0, 25).map((j) => ({ t: j.t, qui: j.qui, txt: j.txt })), chef: mon.chef === id, nom: mon.nom, blason: mon.blason || 1, membres: (mon.membres || []).length };
 }
 
@@ -484,12 +513,16 @@ async function clansPost(request, env){
     case "quitter": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       bastionDe(mon);
+      // Échanges (2026-11-14) : une offre encore ouverte est annulée et ce qui était mis de côté revient (ce que le jeu range s'il le peut)
+      const rendus = {}; (mon.echanges || []).forEach((e) => { if(e.par === id && e.etat === "ouvert"){ e.etat = "annule"; for(const k in e.donne) rendus[k] = (rendus[k] || 0) + e.donne[k]; } });
+      (((mon.livraisons || {})[id]) || []).forEach((l) => { for(const k in l.objets) rendus[k] = (rendus[k] || 0) + l.objets[k]; }); if(mon.livraisons) delete mon.livraisons[id];
+      d._rendus = Object.keys(rendus).length ? rendus : null;
       if(d.raison === "mort") noter(mon, "💀", "La famille de " + (pseudo || "?") + " est tombée" + (jour ? " au jour " + jour : "") + ". Le clan perd une famille.");
       else { noter(mon, "🚪", (pseudo || "?") + " a quitté le clan."); C.departs = C.departs || {}; Object.keys(C.departs).forEach((k) => { if(now - C.departs[k] >= ATTENTE_CLAN) delete C.departs[k]; }); C.departs[id] = now; } // 24 h avant un autre clan (pas après une mort ni une exclusion)
       mon.membres = mon.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
       if(!mon.membres.length) delete C.clans[mon.id];
       else if(mon.chef === id) mon.chef = mon.membres.slice().sort((a, b) => a.rejoint - b.rejoint)[0].id;
-      await sauver(); return reponse({ ok: true });
+      await sauver(); return reponse({ ok: true, ech: d._rendus ? { ajouter: d._rendus, msgs: ["Ton offre d’échange est annulée : ce que tu proposais te revient."] } : null });
     }
     case "bastion": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
@@ -600,7 +633,50 @@ async function clansPost(request, env){
     }
     case "chat": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
-      bastionDe(mon); return reponse(Object.assign({ ok: true }, vueChat(await lireChat(env, mon.id), mon, id)));
+      bastionDe(mon); let change = echangesDe(mon, now), recus = [];
+      // Livraisons des échanges (seulement si le jeu peut les ranger dans une vraie partie : « prendre »)
+      if(d.prendre && mon.livraisons[id] && mon.livraisons[id].length){ recus = mon.livraisons[id]; delete mon.livraisons[id]; change = true; }
+      if(change || C._change) await sauver();
+      const aj = {}; recus.forEach((l) => { for(const k in l.objets) aj[k] = (aj[k] || 0) + l.objets[k]; });
+      return reponse(Object.assign({ ok: true, ech: recus.length ? { ajouter: aj, msgs: recus.map((l) => l.txt) } : null }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "echProposer": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const donne = objetsEch(d.donne), veut = objetsEch(d.veut);
+      if(!donne || !veut) return reponse({ erreur: "Choisis de 1 à " + ECH_MAX + " objets à donner et de 1 à " + ECH_MAX + " à demander." });
+      if(valeurEch(veut) > ECH_RATIO * valeurEch(donne)) return reponse({ erreur: "Échange trop déséquilibré : tu demandes beaucoup plus que ce que tu donnes." });
+      if(mon.echanges.some((e) => e.par === id && e.etat === "ouvert")) return reponse({ erreur: "Tu as déjà une offre en cours : attends qu’elle soit prise, ou annule-la." });
+      const att = attenteEch(mon, id, now); if(att) return reponse({ erreur: "Un échange toutes les 8 h : le prochain dans " + Math.ceil(att / 3600e3) + " h." });
+      const eid = "e" + Math.random().toString(36).slice(2, 9);
+      mon.echanges.push({ eid, par: id, qui: pseudo || "?", donne, veut, t: now, etat: "ouvert" }); mon.echT[id] = now;
+      const liste = await lireChat(env, mon.id);
+      liste.push({ id: "m" + Math.random().toString(36).slice(2, 9), t: now, par: id, qui: pseudo || "?", cadre: cadreDe(d) || "", txt: "🤝 propose un échange", r: false, ech: eid });
+      while(liste.length > CHAT_MAX) liste.shift();
+      await sauver(); await env.CLASSEMENT.put("chat_" + mon.id, JSON.stringify(liste));
+      return reponse(Object.assign({ ok: true, ech: { retirer: donne } }, vueChat(liste, mon, id)));
+    }
+    case "echAccepter": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const e = mon.echanges.find((x) => x.eid === String(d.eid || ""));
+      if(!e || e.etat !== "ouvert") return reponse({ erreur: "Cette offre n’est plus disponible." });
+      if(e.par === id) return reponse({ erreur: "C’est ta propre offre." });
+      const att = attenteEch(mon, id, now); if(att) return reponse({ erreur: "Un échange toutes les 8 h : le prochain dans " + Math.ceil(att / 3600e3) + " h." });
+      e.etat = "fait"; e.preneur = id; e.pqui = pseudo || "?"; e.tFait = now; mon.echT[id] = now;
+      livrer(mon, e.par, e.veut, (pseudo || "Un membre") + " a accepté ton échange.", now);
+      noter(mon, pseudo || "Un membre", "🤝 " + (pseudo || "Un membre") + " a fait un échange avec " + e.qui);
+      await sauver();
+      return reponse(Object.assign({ ok: true, ech: { ajouter: e.donne, retirer: e.veut, msgs: ["Échange fait avec " + e.qui + "."] } }, vueChat(await lireChat(env, mon.id), mon, id)));
+    }
+    case "echAnnuler": {
+      if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
+      bastionDe(mon); echangesDe(mon, now);
+      const e = mon.echanges.find((x) => x.eid === String(d.eid || ""));
+      if(!e || e.etat !== "ouvert" || e.par !== id) return reponse({ erreur: "Cette offre ne peut plus être annulée." });
+      e.etat = "annule"; delete mon.echT[id]; // annuler rend aussi le droit d'échanger tout de suite
+      await sauver();
+      return reponse(Object.assign({ ok: true, ech: { ajouter: e.donne, msgs: ["Offre annulée : ce que tu proposais te revient."] } }, vueChat(await lireChat(env, mon.id), mon, id)));
     }
     case "chatEnvoyer": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });

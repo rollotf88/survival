@@ -496,7 +496,8 @@ function openProfilMembre(i){
 function appelClans(corps){
   corps.id = idAppareil(); corps.pseudo = lirePseudo(); corps.jour = corps.jour || jourPartie(); corps.cadre = cadreActif(); corps.avatar = lireAvatar(); corps.profil = monProfil();
   if(corps.action !== "liste" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return Promise.resolve({ erreur:"(Test sur l’ordinateur : rien n’est envoyé au serveur.)" });
-  return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
+  // Échanges du clan (2026-11-14) : ce que le serveur dit d'ajouter ou de retirer est rangé dans le stock (chat.js)
+  return fetch(adresseClans(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); }).then(function(d){ if(d && d.ech && typeof appliquerEch === "function") appliquerEch(d.ech); return d; });
 }
 function openClans(msg){
   show('<h2>⚔️ Clans</h2><p class="sub">Chargement…</p>' + BTN_FERMER());

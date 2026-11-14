@@ -70,6 +70,10 @@ function reglesGuide(){
     ["La discussion du clan", "💬",
       "Pour s’organiser : menu ☰ → Clans → Discussion du clan, ou la cheminée de la grande salle du bastion (sur PC, le panneau de droite). Les messages rapides s’envoient en un toucher (« Je suis prêt pour le raid ! »…), la vie du clan (dépôts, raid, guerre) s’y affiche en gris. " +
       "Une pastille rouge sur le bouton ☰ compte les nouveaux messages, sur tous les écrans. Les gros mots sont masqués ; le chef peut effacer un message, et chacun peut en signaler un (🚩) à l’équipe du jeu."],
+    ["Les échanges du clan", "🤝",
+      "Dans la discussion du clan, le bouton 🤝 à gauche de la saisie sert à proposer un échange : tu choisis ce que tu donnes et ce que tu demandes (vivres, soins, munitions ou matériaux), et l’offre apparaît en carte pour tout le clan. Un autre membre l’accepte en un toucher s’il a les objets demandés. " +
+      "Pour que ça reste juste : 3 objets au plus de chaque côté, un seul échange (proposé ou accepté) toutes les 8 heures, une seule offre en cours, et tu ne peux pas demander plus d’une fois et demie la valeur de ce que tu donnes. " +
+      "Ce que tu donnes est mis de côté dès que tu publies l’offre ; si personne ne la prend en 24 heures (ou si tu l’annules), tout te revient. Quand ton offre est acceptée, tu reçois ta part à ta prochaine visite de la discussion."],
     ["Équipement de guerre", "🦺",
       "Pour les guerres de clans, fabrique à l’atelier (ou trouve au commissariat, à la caserne, à la base militaire) : le gilet pare-balles (−2 dégâts par coup reçu), le casque de fortune (mines et explosions ÷2) et le bouclier anti-émeute (« Se protéger » ne laisse passer que 40 % des dégâts). Ils sont portés tout seuls par l’équipe d’assaut, un de chaque par membre, et s’usent d’un cran par assaut. L’armurerie du bastion habille les défenseurs de gilets : chaque tir perd 2 dégâts par niveau (même à la tête), un coup de mêlée un peu moins."],
     ["Le camion du clan", "🚚",
@@ -179,7 +183,7 @@ var THEMES_GUIDE = [
   ["Le refuge", "🏠", ["Le refuge", "La cuisine", "Pêche et poules", "La forêt et le bois", "La voiture", "Les tombes"]],
   ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "Événements et rencontres", "L’expérience des survivants"]],
   ["Progresser", "🏆", ["Score et chapitres", "La Légende du mois", "Le tigre de la Légende", "Les défis", "La grande horde du week-end", "L’héritage"]],
-  ["Les clans", "⚔️", ["Les clans", "Les opérations du clan", "La discussion du clan", "Équipement de guerre", "Le camion du clan"]]
+  ["Les clans", "⚔️", ["Les clans", "Les opérations du clan", "La discussion du clan", "Les échanges du clan", "Équipement de guerre", "Le camion du clan"]]
 ];
 var guideVue = null, guideCat = null; // guideVue = { t:"regle"|"objet"|"lieu"|"zombie"|"immeuble", id }
 function sansAccents(t){ return String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/<[^>]+>/g, " "); }

@@ -1305,21 +1305,22 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 var VITRINE = [
   ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
   ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps, jusqu’au zoo abandonné et à la prison."],
-  ["images/portrait-hurleur.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège, et des zombies célèbres à traquer."],
-  ["images/portrait-fillette.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
-  ["images/portrait-papa.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
-  ["images/combat/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
+  ["images/evenements/horde.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège, et des zombies célèbres à traquer."],
+  ["images/evenements/marchand.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
+  ["images/evenements/dispute.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
+  ["images/lieux/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
-  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion entre membres, et guerres de 3 jours contre d’autres clans."],
+  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion et échanges entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
   ["images/aube.webp", "👑 La Légende du mois", "Le meilleur joueur du mois est couronné Légende pour tout le mois suivant, avec Raja le tigre. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de prendre la couronne !"]
 ];
 var minuteurVitrine = null;
 function vitrine(){
-  return '<div class="vitrine" id="vitrine" aria-label="Ce qui t’attend">' + VITRINE.map(function(v, k){
+  // 2026-11-14 (retour de Fabien : la hauteur changeait selon le texte) : toutes les cartes sont empilées au même endroit (.vt-pile), le bloc prend la hauteur de la plus grande
+  return '<div class="vitrine" id="vitrine" aria-label="Ce qui t’attend"><div class="vt-pile">' + VITRINE.map(function(v, k){
       return '<div class="vt' + (k ? "" : " on") + '"><span class="vt-img"><img src="' + v[0] + '" alt="" loading="lazy"></span><span class="vt-txt"><b>' + v[1] + '</b><small>' + v[2] + '</small></span></div>';
-    }).join("")
+    }).join("") + '</div>'
     + '<button class="vt-fl g" data-act="vitrineprec" aria-label="Carte précédente">‹</button><button class="vt-fl d" data-act="vitrinesuiv" aria-label="Carte suivante">›</button>'
     + '<div class="vt-points">' + VITRINE.map(function(v, k){ return '<button class="vt-pt' + (k ? "" : " on") + '" data-act="vitrine" data-id="' + k + '" aria-label="Voir : ' + v[1].replace(/^\S+ /, "") + '"></button>'; }).join("") + '</div></div>';
 }

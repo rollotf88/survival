@@ -5,7 +5,7 @@ async function serveurFactice(){
   var W = (await import("/worker/index.js?" + Date.now())).default, store = {};
   var env = { CLASSEMENT:{ get:async function(k, o){ return store[k] === undefined ? null : (o && o.type === "json" ? JSON.parse(store[k]) : store[k]); }, put:async function(k, v){ store[k] = v; } } };
   window.__srv = async function(c){ var r = await W.fetch(new Request("https://x/api/clans", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(c) }), env); return r.json(); };
-  appelClans = function(corps){ corps.id = idAppareil(); corps.pseudo = lirePseudo() || "Fabou"; corps.jour = corps.jour || jourPartie() || 40; corps.cadre = cadreActif(); corps.profil = monProfil(); return window.__srv(JSON.parse(JSON.stringify(corps))); };
+  appelClans = function(corps){ corps.id = idAppareil(); corps.pseudo = lirePseudo() || "Fabou"; corps.jour = corps.jour || jourPartie() || 40; corps.cadre = cadreActif(); corps.profil = monProfil(); return window.__srv(JSON.parse(JSON.stringify(corps))).then(function(d){ if(d && d.ech && typeof appliquerEch === "function") appliquerEch(d.ech); return d; }); };
   try{ localStorage.setItem("survival_pseudo", "Fabou"); }catch(e){}
 }
 async function testRaid(){
@@ -57,4 +57,34 @@ async function testChat(){
   openClans(); await w(500); verif("monClan");
   hide(); chatNonLus = 0;
   return innerWidth + "x" + innerHeight + " chat : " + (Object.keys(pb).length ? JSON.stringify(pb) : "aucun problème");
+}
+
+/* await testEchange() : échanges du clan avec le vrai serveur (2026-11-14) : proposer, accepter, livraison, limites, écrans */
+async function testEchange(){
+  var w = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }, pb = {}, res = {};
+  var verif = function(nom){ var r = controleAffichage(); if(r && r.length) pb[nom] = r; };
+  await serveurFactice(); nouvellePartie(null); demarrer(); G.ph = "game"; G.day = 40; G.stock.n = {}; ajouter("planche", 6); ajouter("bandage", 2); render();
+  var c0 = await appelClans({ action:"creer", nom:"Les Testeurs", blason:3 }); try{ localStorage.setItem("survival_mon_clan", "1"); }catch(e){}
+  await window.__srv({ action:"rejoindre", id:"autreBBBB2", pseudo:"Bob", jour:45, clan:c0.monClan.id });
+  openChat(); await w(500); verif("discussion");
+  document.querySelector('#sheet [data-act="echouvrir"]').click(); await w(200); verif("fenetreVide");
+  document.querySelector('#sheet [data-act="echpick"][data-id="donne:planche"]').click(); await w(80);
+  document.querySelector('#sheet [data-act="echpick"][data-id="donne:planche"]').click(); await w(80);
+  document.querySelector('#sheet [data-act="echcote"][data-id="veut"]').click(); await w(80);
+  document.querySelector('#sheet [data-act="echpick"][data-id="veut:trousse"]').click(); await w(80);
+  res.tropCher = document.querySelector("#sheet .ec-bilan").textContent;
+  document.querySelector('#sheet [data-act="echote"][data-id="veut:trousse"]').click(); await w(80);
+  document.querySelector('#sheet [data-act="echpick"][data-id="veut:clous"]').click(); await w(80);
+  res.juste = document.querySelector("#sheet .ec-bilan").textContent; verif("fenetreRemplie");
+  document.querySelector('#sheet [data-act="echproposer"]').click(); await w(600);
+  res.planchesApresOffre = compter("planche"); verif("discussionAvecOffre");
+  var d = await window.__srv({ action:"chat", id:"autreBBBB2", pseudo:"Bob", jour:45 }), eid = Object.keys(d.echanges)[0];
+  res.bobAccepte = (await window.__srv({ action:"echAccepter", id:"autreBBBB2", pseudo:"Bob", jour:45, eid:eid })).ech;
+  res.deuxiemeOffre = (await window.__srv({ action:"echProposer", id:"autreBBBB2", pseudo:"Bob", jour:45, donne:{ bandage:1 }, veut:{ planche:1 } })).erreur;
+  chargerChat(false); await w(600);
+  res.clousRecus = compter("clous"); verif("discussionApresEchange");
+  // Bob, plus tard (on avance son horloge à la main), propose ; je ne peux pas accepter (déjà un échange il y a moins de 8 h)
+  window.__magie = true;
+  hide();
+  return { taille: innerWidth + "x" + innerHeight, res: res, pb: Object.keys(pb).length ? pb : "aucun problème" };
 }
