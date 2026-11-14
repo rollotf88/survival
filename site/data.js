@@ -1098,9 +1098,9 @@ EVENEMENTS.push(
       var v = vivants(); v.slice(0, 2).forEach(function(x){ blesser(x, R(12, 22), n, "tué par une meute de chiens"); }); return "La meute est trop nombreuse : des morsures partout avant qu’elle ne s’enfuie." + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }]
   ]}
 );
-// Images des événements de fin de partie : scènes provisoires (images Gemini demandées)
-IMAGES_EVENEMENTS["🦠 Une épidémie dans le quartier"] = "fievre"; IMAGES_EVENEMENTS["🎖️ Un convoi militaire"] = "horde"; IMAGES_EVENEMENTS["🌨️ La tempête de neige"] = "orage";
-IMAGES_EVENEMENTS["🏴 La bande des Corbeaux"] = "pillards"; IMAGES_EVENEMENTS["👁️ L’éclaireur sur le toit"] = "horde"; IMAGES_EVENEMENTS["🐺 La meute"] = "chien";
+// Images des événements de fin de partie (Gemini, grille 3 × 2 : images/sources/evenements-fin-partie-gemini.jpg)
+IMAGES_EVENEMENTS["🦠 Une épidémie dans le quartier"] = "epidemie"; IMAGES_EVENEMENTS["🎖️ Un convoi militaire"] = "convoi"; IMAGES_EVENEMENTS["🌨️ La tempête de neige"] = "neige";
+IMAGES_EVENEMENTS["🏴 La bande des Corbeaux"] = "corbeaux"; IMAGES_EVENEMENTS["👁️ L’éclaireur sur le toit"] = "eclaireur"; IMAGES_EVENEMENTS["🐺 La meute"] = "meute";
 
 var RECRUES = [ { nom:"Sam", icone:"🧑" }, { nom:"Nora", icone:"👩‍🦱" }, { nom:"Inès", icone:"👱‍♀️" }, { nom:"Yanis", icone:"🧔" } ];
 
