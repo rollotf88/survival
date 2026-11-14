@@ -6,13 +6,19 @@
 
 RewriteEngine On
 
-RewriteCond %{HTTP_HOST} !^zombria\.com$ [NC,OR]
+# (sauf .well-known : o2switch s'en sert pour renouveler le certificat https)
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteCond %{HTTP_HOST} !^zombria\.com$ [NC]
+RewriteRule ^(.*)$ https://zombria.com/$1 [R=301,L]
+RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://zombria.com/$1 [R=301,L]
 
-<Files "sw.js">
-  Header set Cache-Control "no-cache, no-store, must-revalidate"
-</Files>
+<IfModule mod_headers.c>
+  <Files "sw.js">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </Files>
+</IfModule>
 
 <IfModule mod_headers.c>
   Header always set X-Content-Type-Options "nosniff"
