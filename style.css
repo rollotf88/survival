@@ -2868,3 +2868,16 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .mc-ex.confirme{width:auto;min-width:30px;padding:0 12px;border-radius:999px;background:var(--bad);color:#fff;font-size:13px;white-space:nowrap}
 .bj-tr{white-space:nowrap}
 .mc-m .mc-m-b{min-width:0}
+
+/* Historique des guerres (2026-11-14) */
+.hg-bilan{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.hg-p{font-size:12px;font-weight:900;padding:2px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg)}
+.hg-p.ok{border-color:#c9a227;color:#9a6512}.hg-p.ko{border-color:var(--bad);color:var(--bad)}
+.hg-liste{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.hg-c{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 6px;border:2px solid var(--bois);border-radius:14px;background:var(--bg);box-shadow:0 2px 0 var(--line)}
+.hg-c.ok{border-color:#c9a227;background:linear-gradient(135deg,rgba(247,215,116,.3),var(--bg))}
+.hg-c.ko{border-color:var(--bad)}
+.hg-c .blason{width:38px!important;height:42px!important;flex:none}
+.hg-t{flex:1;min-width:0}.hg-t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hg-t small{font-size:12px;color:var(--mut)}
+.hg-r{flex:none;text-align:right}.hg-r b{display:block;font-size:13px}.hg-c.ok .hg-r b{color:#9a6512}.hg-c.ko .hg-r b{color:var(--bad)}
+.hg-r small{font-size:12px;font-weight:900}.hg-r small.plus{color:var(--ok)}.hg-r small.moins{color:var(--bad)}

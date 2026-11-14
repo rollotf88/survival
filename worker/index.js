@@ -286,6 +286,12 @@ function botsAttaquent(C, W){
   return change;
 }
 
+// Résumé d'une guerre terminée, gardé dans chaque clan (2026-11-14 : historique des guerres ; le détail des vieilles guerres finit par être effacé)
+function resumeGuerreClan(C, W, wid, c){
+  const camp = W.a === c.id ? "a" : "b", adv = C.clans[W[camp === "a" ? "b" : "a"]];
+  return { wid, t: W.debut + DUREE_GUERRE * JOUR_MS, contre: adv ? adv.nom : (W.noms && W.noms[camp === "a" ? "b" : "a"]) || "un clan disparu", blason: adv ? adv.blason : 1,
+    nous: W.etoiles[camp] || 0, eux: W.etoiles[camp === "a" ? "b" : "a"] || 0, res: !W.gagnant ? "nulle" : W.gagnant === c.id ? "gagnee" : "perdue", tr: (W.trophees && W.trophees[camp]) || 0 };
+}
 function cloreGuerres(C){
   const now = Date.now();
   // Les bots jouent leurs assauts dans les guerres en cours
@@ -300,6 +306,7 @@ function cloreGuerres(C){
     [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.guerre = null; c.historique = [wid].concat(c.historique || []).slice(0, 10);
       if(c.bot && c.membres.length >= MAX_CLAN){ c.recherche = true; if(C.file.indexOf(c.id) < 0) C.file.push(c.id); }
       c.bilan = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 }; if(!W.gagnant) c.bilan.nulles++; else if(W.gagnant === cid) c.bilan.gagnees++; else c.bilan.perdues++; });
+    [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.histoG = [resumeGuerreClan(C, W, wid, c)].concat(c.histoG || []).slice(0, 20); });
     // Fin de la guerre dans le journal des deux clans (2026-11-14, demande de Fabien)
     ["a", "b"].forEach((camp) => { const c = C.clans[W[camp]], adv = C.clans[W[camp === "a" ? "b" : "a"]]; if(!c) return;
       const res = !W.gagnant ? "nulle" : W.gagnant === c.id ? "gagnee" : "perdue", nous = W.etoiles[camp] || 0, eux = W.etoiles[camp === "a" ? "b" : "a"] || 0, tr = W.trophees[camp] || 0, contre = adv ? adv.nom : "un clan disparu";
@@ -639,10 +646,13 @@ async function clansPost(request, env){
     case "guerre": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       const W = mon.guerre ? C.guerres[mon.guerre] : null;
+      // Historique des guerres : repris des guerres encore en mémoire la première fois (clans d'avant le 2026-11-14)
+      if(!mon.histoG){ mon.histoG = (mon.historique || []).filter((w) => C.guerres[w] && C.guerres[w].fini).map((w) => resumeGuerreClan(C, C.guerres[w], w, mon)).slice(0, 20); C._change = true; }
       if(C._change) await sauver();
       return reponse({ ok: true, complet: mon.membres.length >= MAX_CLAN, chef: mon.chef === id, recherche: !!mon.recherche, bilan: mon.bilan || null,
         guerre: W ? vueGuerre(C, W, mon, id) : null,
-        derniere: !W && mon.historique && C.guerres[mon.historique[0]] ? vueGuerre(C, C.guerres[mon.historique[0]], mon, id) : null });
+        derniere: !W && mon.historique && C.guerres[mon.historique[0]] ? vueGuerre(C, C.guerres[mon.historique[0]], mon, id) : null,
+        histo: mon.histoG || [] });
     }
     case "chercherGuerre": {
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });

@@ -689,6 +689,17 @@ function openGuerre(msg){
   appelClans({ action:"guerre" }).then(function(d){ if(d.erreur){ show('<h2>⚔️ La guerre</h2><p>❌ ' + d.erreur + '</p>' + BTN_FERMER()); return; } etatGuerre = d; afficherGuerre(msg); })
     .catch(function(){ show('<h2>⚔️ La guerre</h2><p>' + MSG_HORS_LIGNE.replace("le classement", "la guerre") + '</p>' + BTN_FERMER()); });
 }
+// Historique des guerres du clan (2026-11-14, demande de Fabien) : bilan + les 20 dernières guerres en cartes
+function blocHistoGuerres(d){
+  var H = d.histo || [], b = d.bilan || { gagnees:0, perdues:0, nulles:0 };
+  if(!H.length && !(b.gagnees + b.perdues + b.nulles)) return "";
+  var MOIS = ["janv.", "févr.", "mars", "avril", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  var dt = function(t){ var x = new Date(t); return x.getDate() + " " + MOIS[x.getMonth()]; };
+  var h = '<p class="titre-butin">📜 Historique des guerres</p><div class="hg-bilan"><span class="hg-p ok">🏆 ' + b.gagnees + ' gagnée' + (b.gagnees > 1 ? "s" : "") + '</span><span class="hg-p ko">💀 ' + b.perdues + ' perdue' + (b.perdues > 1 ? "s" : "") + '</span><span class="hg-p">🤝 ' + b.nulles + ' égalité' + (b.nulles > 1 ? "s" : "") + '</span></div>';
+  if(!H.length) return h + '<p class="sub">Le détail des guerres apparaîtra ici à la fin de la prochaine guerre.</p>';
+  return h + '<div class="hg-liste">' + H.map(function(g){ var ok = g.res === "gagnee", nul = g.res === "nulle";
+    return '<div class="hg-c ' + (ok ? "ok" : nul ? "" : "ko") + '">' + blason(g.blason) + '<span class="hg-t"><b>' + echapper(g.contre) + '</b><small>' + dt(g.t) + ' · ' + g.nous + ' ★ contre ' + g.eux + ' ★</small></span><span class="hg-r"><b>' + (ok ? "Gagnée" : nul ? "Égalité" : "Perdue") + '</b><small class="' + (g.tr > 0 ? "plus" : g.tr < 0 ? "moins" : "") + '">' + (g.tr > 0 ? "+" : "") + g.tr + ' 🏆</small></span></div>'; }).join("") + '</div>';
+}
 function bandeauGuerre(W){
   return '<div class="gu-tete"><span class="gu-camp">' + blason(W.nous.blason) + '<b>' + echapper(W.nous.nom) + '</b>' + (W.nous.trophees !== undefined ? badgeLigue(W.nous.trophees, true) : '') + '<span class="gu-et">' + W.nous.etoiles + ' ★</span></span><span class="gu-vs">VS</span>'
     + '<span class="gu-camp">' + blason(W.eux.blason) + '<b>' + echapper(W.eux.nom) + '</b>' + (W.eux.trophees !== undefined ? badgeLigue(W.eux.trophees, true) : '') + '<span class="gu-et">' + W.eux.etoiles + ' ★</span></span></div>';
@@ -697,14 +708,14 @@ function afficherGuerre(msg){
   noterEtatGuerre(etatGuerre);
   if(etatGuerre && etatGuerre.bilan && etatGuerre.bilan.gagnees) noterStatClan("victoires", etatGuerre.bilan.gagnees, true);
   var d = etatGuerre, W = d.guerre, h = '<h2>⚔️ La guerre</h2>' + (msg ? '<p class="msg ' + (msg.charAt(0) === "❌" ? "" : "g2") + '">' + msg + '</p>' : '');
-  if(d.bilan) h += '<p class="sub">Bilan du clan : ' + d.bilan.gagnees + ' victoire' + (d.bilan.gagnees > 1 ? "s" : "") + ', ' + d.bilan.perdues + ' défaite' + (d.bilan.perdues > 1 ? "s" : "") + ', ' + d.bilan.nulles + ' nulle' + (d.bilan.nulles > 1 ? "s" : "") + '.</p>';
+  // (le bilan du clan est maintenant en tête de l’historique, en bas de la fenêtre)
   if(!W){
     if(d.derniere) h += '<div class="carte-guerre">' + bandeauGuerre(d.derniere) + '<p class="etat ' + (d.derniere.gagnant === "nous" ? "ok" : d.derniere.gagnant ? "ko" : "") + '">' + (d.derniere.gagnant === "nous" ? "🏆 Dernière guerre gagnée !" : d.derniere.gagnant ? "Dernière guerre perdue." : "Dernière guerre : match nul.") + (d.derniere.gainTrophees ? " (" + (d.derniere.gainTrophees > 0 ? "+" : "") + d.derniere.gainTrophees + " 🏆)" : "") + '</p></div>';
     if(!d.complet) h += '<p>🔒 Il faut <b>5 familles</b> dans le clan pour partir en guerre. Les clans incomplets ne peuvent ni attaquer ni être attaqués.</p>';
     else if(d.recherche) h += '<p>🔎 Le clan cherche un adversaire de sa taille… La guerre commencera dès qu’un autre clan complet sera prêt.</p>' + (d.chef ? '<button class="btn alt" style="width:100%;margin-bottom:8px" data-act="guerreannuler">Annuler la recherche</button>' : '');
     else h += '<p>Une guerre dure <b>3 jours</b>. Chaque jour, chaque membre peut lancer <b>un assaut</b> contre une famille adverse : un combat tactique contre ses défenseurs, ses mines et ses remparts. Les étoiles décident du vainqueur, et chaque victoire rapporte une part de la réserve adverse.</p><p class="sub">🏆 Ligues : une guerre gagnée rapporte +30 trophées, perdue −20, nulle +5. Tu n’affrontes qu’un clan de ta ligue (ou de la ligue voisine si personne d’autre n’attend) : Ferraille, Bronze (100), Argent (250), Or (450), Légende (700).</p>'
       + (d.chef ? '<button class="btn" style="width:100%;margin-bottom:8px" data-act="guerrechercher">⚔️ Chercher une guerre</button>' : '<p class="sub">Seul le chef peut lancer la recherche d’un adversaire.</p>');
-    show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>'); return;
+    show(h + blocHistoGuerres(d) + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>'); return;
   }
   // Raccord avec la DA (2026-11-12) : infos en pastilles, familles adverses en cartes (état ou bouton Attaquer)
   h += bandeauGuerre(W) + '<div class="gu-infos"><span class="gu-i fort">Jour ' + W.jour + ' / 3</span><span class="gu-i">⏳ ' + (W.jour < 3 ? "nouveaux assauts dans " + tempsRestant(W.finJour) : "fin dans " + tempsRestant(W.fin)) + '</span><span class="gu-i">🧱 remparts ' + W.eux.remparts + '</span><span class="gu-i">💣 ' + W.eux.mines + ' mine' + (W.eux.mines > 1 ? "s" : "") + '</span></div>';
@@ -716,7 +727,7 @@ function afficherGuerre(msg){
   }).join("") + '</div>';
   if(W.dejaMoi) h += '<p class="sub">✅ Tu as lancé ton assaut aujourd’hui. Reviens demain !</p>';
   if(W.assauts.length) h += '<p class="titre-butin">📜 Assauts</p><div class="fil">' + W.assauts.map(function(s){ return '<div class="lj ' + (s.nous ? "bon" : "mauvais") + '"><span class="lj-ico">' + (s.nous ? "⚔️" : "🛡️") + '</span><span class="lj-txt">Jour ' + s.jour + ' : <b>' + echapper(s.qui) + '</b> attaque ' + echapper(s.cible) + ' → ' + (s.etoiles ? "★".repeat(s.etoiles) : "repoussé") + '</span></div>'; }).join("") + '</div>';
-  show(h + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
+  show(h + blocHistoGuerres(d) + '<div class="row"><button class="btn alt" data-act="clans">⚔️ Mon clan</button><button class="btn" data-act="close">Fermer</button></div>');
 }
 // Qui part à l'assaut : les 2 membres en état de sortir avec le plus de vie et d'énergie
 function equipeAssaut(){ return G.m.map(function(x, i){ return i; }).filter(function(i){ var x = G.m[i]; return x.al && !x.raid && x.en >= BAL.energieAssaut && x.hp > 25; })
