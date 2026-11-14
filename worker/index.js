@@ -300,6 +300,11 @@ function cloreGuerres(C){
     [W.a, W.b].forEach((cid) => { const c = C.clans[cid]; if(!c) return; c.guerre = null; c.historique = [wid].concat(c.historique || []).slice(0, 10);
       if(c.bot && c.membres.length >= MAX_CLAN){ c.recherche = true; if(C.file.indexOf(c.id) < 0) C.file.push(c.id); }
       c.bilan = c.bilan || { gagnees: 0, perdues: 0, nulles: 0 }; if(!W.gagnant) c.bilan.nulles++; else if(W.gagnant === cid) c.bilan.gagnees++; else c.bilan.perdues++; });
+    // Fin de la guerre dans le journal des deux clans (2026-11-14, demande de Fabien)
+    ["a", "b"].forEach((camp) => { const c = C.clans[W[camp]], adv = C.clans[W[camp === "a" ? "b" : "a"]]; if(!c) return;
+      const res = !W.gagnant ? "nulle" : W.gagnant === c.id ? "gagnee" : "perdue", nous = W.etoiles[camp] || 0, eux = W.etoiles[camp === "a" ? "b" : "a"] || 0, tr = W.trophees[camp] || 0, contre = adv ? adv.nom : "un clan disparu";
+      bastionDe(c); noter(c, res === "gagnee" ? "🏆" : res === "perdue" ? "💀" : "🤝", "Guerre " + (res === "gagnee" ? "gagnée" : res === "perdue" ? "perdue" : "à égalité") + " contre " + contre + " : " + nous + " ★ contre " + eux + " ★ (" + (tr >= 0 ? "+" : "") + tr + " trophées)",
+        { g: { res, contre, nous, eux, tr }, t: Math.min(now, W.debut + DUREE_GUERRE * JOUR_MS) }); });
   }
   // On ne garde que les 30 dernières guerres terminées
   const finies = Object.keys(C.guerres).filter((w) => C.guerres[w].fini).sort((x, y) => C.guerres[y].debut - C.guerres[x].debut);

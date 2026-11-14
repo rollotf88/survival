@@ -648,6 +648,7 @@ function afficherBastion(){
     // Raccord avec la DA (2026-11-11) : regroupé par jour, l'emoji de la ligne sort dans un médaillon coloré (rouge = pillé / perdu, vert = repoussé / construit…), l'heure en petit
     var jourPrec = "";
     h += B.journal.length ? '<div class="bj">' + B.journal.map(function(jl){
+      if(jl.g){ var jr3 = typeof jourChat === "function" ? jourChat(jl.t) : "", sep3 = jr3 !== jourPrec ? '<p class="ch-jour"><span>' + jr3 + '</span></p>' : ""; jourPrec = jr3; return sep3 + ligneFinGuerre(jl); }
       if(jl.a){ var jr2 = typeof jourChat === "function" ? jourChat(jl.t) : "", sep2 = jr2 !== jourPrec ? '<p class="ch-jour"><span>' + jr2 + '</span></p>' : ""; jourPrec = jr2; return sep2 + ligneAssautClan(jl); }
       var txt = jl.txt.replace(/\b(\d+) (\w+)/g, function(m0, n, k){ return OBJETS[k] ? nommer(k, +n) : m0; }).replace(/: (\w+) \(/, function(m0, k){ return ": " + (defBastion(k) ? defBastion(k).nom.toLowerCase() : k) + " ("; });
       var m = txt.match(/^(\p{Extended_Pictographic}(\uFE0F|\u200D\p{Extended_Pictographic})*)\s*/u), ico = m ? m[1] : (jl.qui && emojiSeul(jl.qui) ? jl.qui : "📜"); if(m) txt = txt.slice(m[0].length);
@@ -791,6 +792,13 @@ function openCadres(msg){
 }
 // Un mot interdit (pseudo d’avant le filtre) devient « Survivant », comme dans les classements
 function pseudosPropres(t){ return typeof texteInterdit !== "function" ? String(t) : String(t).replace(/[^\s.,;:!?()«»]+/g, function(w){ return texteInterdit(w) ? "Survivant" : w; }); }
+// Fin d'une guerre dans le journal du bastion (2026-11-14) : résultat, clan adverse, étoiles, trophées
+function ligneFinGuerre(jl){
+  var g = jl.g, ok = g.res === "gagnee", nul = g.res === "nulle";
+  var titre = (ok ? "Guerre gagnée" : nul ? "Guerre à égalité" : "Guerre perdue") + ' contre <span class="bj-clan">' + echapper(g.contre || "?") + '</span>';
+  var detail = '<b>' + g.nous + ' ★</b> contre ' + g.eux + ' ★ · <span class="bj-tr ' + (g.tr > 0 ? "plus" : g.tr < 0 ? "moins" : "") + '">' + (g.tr > 0 ? "+" : "") + g.tr + ' trophée' + (Math.abs(g.tr) > 1 ? "s" : "") + '</span>';
+  return '<div class="lj bj-l bj-g ' + (ok ? "g2" : nul ? "" : "b2") + '"><span class="lj-ico">' + (ok ? "🏆" : nul ? "🤝" : "💀") + '</span><span class="lj-txt"><b class="bj-gt">' + titre + '</b><small class="bj-d">' + detail + '</small></span><small class="bj-t">' + quand(jl.t) + '</small></div>';
+}
 function emojiSeul(t){ return String(t).length <= 4 && !/[A-Za-zÀ-ÿ0-9]/.test(t); }
 // Une ligne d'assaut du journal du bastion (2026-11-12, retour de Fabien : on ne savait pas quel clan avait attaqué qui) : qui, de quel clan, contre qui, étoiles et butin
 function ligneAssautClan(jl){
