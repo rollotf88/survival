@@ -713,7 +713,7 @@ async function clansPost(request, env){
         infos: { version: "chat", jour, ecran: "", appareil: "", page: "chat du clan" }, lu: false });
       if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
       await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
-      await envoyerMailAvis(env, avis[0], ["🚩 Message signalé dans le clan « " + mon.nom + " »", avis[0].texte + "\n\nSignalé par " + (avis[0].pseudo || "un joueur") + ".\n\nModération : https://zombria.com/admin.html (onglet Avis)"]);
+      await envoyerMailAvis(env, avis[0], ["🚩 Message signalé dans le clan « " + mon.nom + " »", avis[0].texte + "\n\nSignalé par " + (avis[0].pseudo || "un joueur") + ".\n\nModération : administration du jeu, onglet Avis."]);
       return reponse({ ok: true });
     }
     case "classementClans": {
@@ -995,7 +995,7 @@ async function cadeauPost(request, env){
 function mailAvis(a0){
   const ETIQ = { bug: "🐞 Bug", idee: "💡 Idée", autre: "💬 Avis" }, i = a0.infos || {};
   return [(ETIQ[a0.type] || "💬 Avis") + " de " + (a0.pseudo || "un joueur") + " : " + a0.texte.slice(0, 60),
-    a0.texte + "\n\n— " + (a0.pseudo || "sans pseudo") + " (joueur " + a0.joueur + ")" + (i.version ? "\nInfos : jour " + i.jour + ", écran " + i.ecran + ", " + i.page + "\n" + i.appareil : "") + "\n\nTous les avis : https://zombria.com/admin.html (onglet Avis)"];
+    a0.texte + "\n\n— " + (a0.pseudo || "sans pseudo") + " (joueur " + a0.joueur + ")" + (i.version ? "\nInfos : jour " + i.jour + ", écran " + i.ecran + ", " + i.page + "\n" + i.appareil : "") + "\n\nÀ lire aussi dans l’administration du jeu, onglet Avis."]; // pas de lien : Gmail jetait les avis qui en contenaient un (2026-11-14)
 }
 async function envoyerMailAvis(env, a0, sujetTexte){
   if(!env.NOTIFIER) return null;
