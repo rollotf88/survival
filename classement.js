@@ -300,7 +300,10 @@ function poserMonde(){
   var relu = false, relire = function(){ if(!relu){ relu = true; remplirMonde(); } };
   envoyerMonde(!dejaEnvoye).then(relire, relire); setTimeout(function(){ relu = true; }, 8000);
 }
-poserMonde(); // l'accueil a pu s'afficher avant le chargement de ce fichier
+// L'accueil a pu s'afficher avant le chargement de ce fichier. 2026-11-14 (bug « le menu ne s'ouvre pas parfois après Ctrl+F5 ») :
+// appelé une fois TOUS les scripts chargés ; avant, l'envoi de la partie lisait l'avatar (liste AVATARS, définie plus bas)
+// trop tôt : l'erreur arrêtait le chargement du reste de ce fichier (menu, profil, cadeaux…)
+setTimeout(function(){ try{ poserMonde(); }catch(e){ console.error("poserMonde :", e); } }, 0);
 
 /* ---------- Le choix impossible (contenu sensible) ---------- */
 function lireSensible(){ try{ return localStorage.getItem("survival_sensible") !== "0"; }catch(e){ return true; } }
@@ -1047,7 +1050,7 @@ var AVATARS = [
   ["Les zombies célèbres", ["mariee", "pompier", "boucher", "colosse"]]
 ];
 // RÈGLE : un portrait ajouté ici doit aussi être ajouté à AVATARS_OK dans worker/index.js (le serveur refuse les autres)
-function avatarValide(a){ return AVATARS.some(function(g){ return g[1].indexOf(a) >= 0; }); }
+function avatarValide(a){ return typeof AVATARS !== "undefined" && AVATARS.some(function(g){ return g[1].indexOf(a) >= 0; }); }
 function lireAvatar(){ var a = ""; try{ a = localStorage.getItem("survival_avatar") || ""; }catch(e){} return avatarValide(a) ? a : ""; }
 // Avatar d'un joueur : son portrait choisi, sinon la pastille ronde avec son initiale (comme dans la discussion)
 // 2026-11-12 (retour de Fabien) : la Légende du mois a partout l'avatar de la Légende (Raja dans le médaillon doré qui tourne, avec la couronne),
