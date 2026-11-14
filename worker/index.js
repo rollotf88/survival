@@ -1019,9 +1019,44 @@ const MSG_NOM_INTERDIT = "Ce nom n’est pas autorisé (insulte ou mot blessant)
 function masquerInterdits(t){ return String(t || "").replace(/[^\s.,;:!?()"'«»]+/g, function(w){ return texteInterdit(w) ? "★".repeat(Math.max(3, Math.min(8, w.length))) : w; }); }
 
 // Point d'entrée : /api/classement -> le classement ; /api/monde -> les chiffres du monde ; tout le reste -> les fichiers du jeu
+/* ---------- Déménagement (2026-11-14) : l'ancien site Cloudflare (*.workers.dev) renvoie vers https://zombria.com ----------
+   - les appels /api/… : redirection 307 (le navigateur renvoie la même demande, contenu compris, au serveur d'o2switch) ;
+   - /admin : vers l'administration de zombria.com ;
+   - tout le reste : une petite page qui emporte les sauvegardes du navigateur (clés localStorage « survival… »)
+     vers zombria.com/#transfert=… (le « # » ne part jamais à un serveur), une seule fois ; ensuite simple redirection.
+   Ce code tourne aussi chez o2switch : il ne s'applique qu'aux adresses *.workers.dev. */
+const NOUVEAU_SITE = "https://zombria.com";
+const PAGE_TRANSFERT = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>ZOMBRIA a déménagé</title><link rel="canonical" href="${NOUVEAU_SITE}/">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#2b1d12;color:#f6e7cf;font-family:system-ui,sans-serif;text-align:center;padding:16px}a{color:#f6c86a}</style></head>
+<body><div><h1>ZOMBRIA a déménagé</h1><p>Le jeu continue sur <a id="lien" href="${NOUVEAU_SITE}/">zombria.com</a>. Ta partie et ta progression te suivent…</p></div>
+<script>
+(function(){
+  var cible = "${NOUVEAU_SITE}/", d = {}, n = 0;
+  try{
+    if(!localStorage.getItem("survival_transfere")){
+      for(var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i); if(k && k.indexOf("survival") === 0){ d[k] = localStorage.getItem(k); n++; } }
+      if(n){ cible += "#transfert=" + encodeURIComponent(JSON.stringify(d)); localStorage.setItem("survival_transfere", String(Date.now())); }
+    }
+  }catch(e){}
+  // l'ancienne copie hors connexion (service worker) est retirée pour ne plus servir l'ancien jeu
+  try{ if(navigator.serviceWorker) navigator.serviceWorker.getRegistrations().then(function(r){ r.forEach(function(x){ x.unregister(); }); }); }catch(e){}
+  document.getElementById("lien").href = cible;
+  setTimeout(function(){ location.replace(cible); }, 300);
+})();
+</script></body></html>`;
+function demenagement(url){
+  if(!/\.workers\.dev$/.test(url.hostname)) return null;
+  if(url.pathname.indexOf("/api/") === 0) return new Response(null, { status: 307, headers: { "Location": NOUVEAU_SITE + url.pathname + url.search, "Access-Control-Allow-Origin": "*" } });
+  if(url.pathname === "/admin" || url.pathname === "/admin.html") return Response.redirect(NOUVEAU_SITE + "/admin.html", 301);
+  if(url.pathname === "/sw.js") return new Response("self.addEventListener('install',function(){self.skipWaiting();});self.addEventListener('activate',function(){self.registration.unregister();});", { headers: { "Content-Type": "text/javascript", "Cache-Control": "no-store" } });
+  return new Response(PAGE_TRANSFERT, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
+}
+
 export default {
   async fetch(request, env){
     const url = new URL(request.url);
+    const dem = demenagement(url); if(dem) return dem;
     if(url.pathname === "/api/classement"){
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "GET") return onRequestGet({ request, env });

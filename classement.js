@@ -5,7 +5,7 @@
    Sans connexion (ou sur une page qui bloque internet), on l'explique
    simplement et le jeu continue normalement.
    ===================================================================== */
-var SITE_JEU = "https://survival-refuge.rollotf88.workers.dev";
+var SITE_JEU = "https://zombria.com"; // depuis le 2026-11-14 (avant : l'ancien site Cloudflare, qui redirige maintenant ici)
 // Le jeu appelle son propre serveur quand il est servi par un vrai site (zombria.com chez o2switch depuis le 2026-11-14,
 // ou l'ancien site Cloudflare) ; depuis claude.ai ou en double-clic, il appelle SITE_JEU.
 function adresseClassement(){ return (/(^|\.)zombria\.com$|(netlify\.app|workers\.dev|pages\.dev)$/.test(location.hostname) ? "" : SITE_JEU) + "/api/classement"; }

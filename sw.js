@@ -8,6 +8,7 @@ var VERSION = "survival-1";
 var FICHIERS = [
   "./",
   "index.html",
+  "transfert.js",
   "style.css",
   "data.js",
   "icones.js",
