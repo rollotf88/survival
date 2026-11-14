@@ -92,7 +92,7 @@ function afficherChat(defiler){
       + (m.moi ? '' : (suite ? '<span class="ch-av vide"></span>' : (typeof avatarHtml === "function" ? avatarHtml(m.avatar, qui, "ch-av") : avatarChat(qui))))
       + '<div class="ch-b' + (m.r ? " rapide" : "") + '" data-act="chatbulle" tabindex="0">'
       + (!m.moi && !suite ? '<span class="ch-qui">' + (m.chef ? ic("couronne", "👑") + " " : "") + echapper(qui) + '</span>' : '')
-      + '<span class="ch-txt">' + echapper(m.txt) + '</span><span class="ch-h">' + heureChat(m.t) + '</span>'
+      + '<span class="ch-txt sans-trad">' + echapper(m.txt) + '</span><span class="ch-h">' + heureChat(m.t) + '</span>'
       + (actions ? '<span class="ch-acts">' + actions + '</span>' : '') + '</div></div>';
     prec = m;
   });
