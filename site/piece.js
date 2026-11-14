@@ -671,12 +671,9 @@ var FEUX_PIECE = {
    Les ampoules allumées du salon, de l'atelier, du garage et de la réserve sont recouvertes par une lampe à pétrole
    suspendue et sa lueur, découpées dans des retouches Gemini calées au pixel près sur chaque pièce (images/lampes/).
    Posées tout en dessous des autres décors (elles ne touchent rien d'autre). Le garage réparé a le même cadrage. */
-var LAMPES_PIECE = {
-  salon:   ["images/lampes/salon.webp",   400, 0, 640, 205],
-  atelier: ["images/lampes/atelier.webp", 400, 0, 640, 205],
-  garage:  ["images/lampes/garage.webp",  300, 60, 470, 352],
-  reserve: ["images/lampes/reserve.webp", 430, 0, 610, 250]
-};
+// 2026-11-14 (retour de Fabien : reflets ratés) : plus de lampe collée ; les pièces de base n'ont plus aucune lampe au plafond
+// (retouches Gemini recollées sur la zone de la lampe). Une lanterne unique pourra être ajoutée ici plus tard.
+var LAMPES_PIECE = {};
 (function(){
   Object.keys(LAMPES_PIECE).forEach(function(id){
     var P = PIECES.find(function(p){ return p.id === id; }); if(!P) return;
