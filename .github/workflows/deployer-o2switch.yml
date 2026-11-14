@@ -42,8 +42,13 @@ jobs:
           echo "Certificat intermédiaire : $URL"
           curl -fsSL "$URL" -o /tmp/inter.bin
           openssl x509 -inform DER -in /tmp/inter.bin -out /tmp/inter.pem 2>/dev/null || cp /tmp/inter.bin /tmp/inter.pem
-          cat /etc/ssl/certs/ca-certificates.crt /tmp/inter.pem > /tmp/ca-o2switch.pem
-          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted /tmp/inter.pem /tmp/feuille.pem
+          # La nouvelle racine « ISRG Root YR » de Let's Encrypt n'est pas encore connue partout : on ajoute sa version
+          # signée par l'ancienne racine ISRG Root X1 (connue de tous les systèmes), publiée par Let's Encrypt
+          curl -fsSL https://letsencrypt.org/certs/gen-y/root-yr-by-x1.pem -o /tmp/yr-x1.pem
+          cat /tmp/inter.pem /tmp/yr-x1.pem > /tmp/chaine.pem
+          # La chaîne doit se vérifier jusqu'à une racine du système, sinon on s'arrête
+          openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt -untrusted /tmp/chaine.pem /tmp/feuille.pem
+          cat /etc/ssl/certs/ca-certificates.crt /tmp/chaine.pem > /tmp/ca-o2switch.pem
 
       - name: Le jeu (zombria.com)
         env:
