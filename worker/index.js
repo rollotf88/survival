@@ -860,6 +860,21 @@ async function adminPost(request, env){
       return repAdmin({ ok: true, version: 1, t: now, donnees });
     }
     case "avis": return repAdmin({ avis: await lireAvis(env) });
+    // Cadeau de l'équipe (2026-11-14) : objets + message, rangés dans « cadeau_<id> » et remis au joueur par /api/cadeau
+    case "cadeauEnvoyer": {
+      const cible = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+      if(cible.length < 8) return repAdmin({ erreur: "Joueur inconnu (cet avis est trop ancien : pas d’identifiant complet)." });
+      const objets = {}; let nb = 0;
+      Object.keys(d.objets || {}).slice(0, 12).forEach((k) => { const n = Math.floor(+d.objets[k]) || 0; if(/^[a-zA-Z]{2,24}$/.test(k) && n > 0){ objets[k] = Math.min(n, 99); nb++; } });
+      const texte = texteAvis(d.texte, 600);
+      if(!nb && !texte) return repAdmin({ erreur: "Choisis au moins un objet ou écris un message." });
+      const cle = "cadeau_" + cible, file = (await env.CLASSEMENT.get(cle, { type: "json" })) || [];
+      if(file.length >= 10) return repAdmin({ erreur: "Ce joueur a déjà 10 cadeaux en attente." });
+      file.push({ cid: "c" + Math.random().toString(36).slice(2, 9), t: now, objets, texte });
+      await env.CLASSEMENT.put(cle, JSON.stringify(file));
+      if(d.aid){ const av = await lireAvis(env), a = av.find((x) => x.aid === d.aid); if(a){ a.cadeau = { t: now, objets, texte }; a.lu = true; await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); } }
+      return repAdmin({ ok: true });
+    }
     case "avisLu": { const av = await lireAvis(env), a = av.find((x) => x.aid === d.aid); if(!a) return repAdmin({ erreur: "introuvable" }, 404); a.lu = !a.lu; await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
     case "avisSupprimer": { const av = (await lireAvis(env)).filter((x) => x.aid !== d.aid); await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(av)); return repAdmin({ ok: true }); }
     case "classement": return repAdmin({ scores: liste.slice(0, 200) });
@@ -954,6 +969,19 @@ async function adminPost(request, env){
 const CLE_AVIS = "avis", AVIS_MAX = 500, AVIS_PAR_JOUR = 5, TYPES_AVIS = ["bug", "idee", "autre"];
 async function lireAvis(env){ return (await env.CLASSEMENT.get(CLE_AVIS, { type: "json" })) || []; }
 function texteAvis(t, max){ return String(t || "").replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").replace(/[<>]/g, " ").trim().slice(0, max); }
+// Le joueur relève ses cadeaux : « voir » les liste, « prendre » {cid} confirme qu'il est rangé dans sa partie (puis effacé)
+async function cadeauPost(request, env){
+  let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
+  const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if(id.length < 8) return reponse({ erreur: "id" }, 400);
+  const cle = "cadeau_" + id, file = (await env.CLASSEMENT.get(cle, { type: "json" })) || [];
+  if(d.prendre){
+    const reste = file.filter((c) => c.cid !== String(d.prendre));
+    if(reste.length) await env.CLASSEMENT.put(cle, JSON.stringify(reste)); else await env.CLASSEMENT.delete(cle);
+    return reponse({ ok: true });
+  }
+  return reponse({ cadeaux: file });
+}
 async function avisPost(request, env){
   let d; try{ d = await request.json(); }catch(e){ return reponse({ erreur: "données" }, 400); }
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
@@ -964,7 +992,7 @@ async function avisPost(request, env){
   if(n >= AVIS_PAR_JOUR) return reponse({ erreur: "Tu as déjà envoyé " + AVIS_PAR_JOUR + " messages aujourd’hui. Merci ! Réessaie demain." });
   const inf = d.infos && typeof d.infos === "object" ? d.infos : {};
   const avis = await lireAvis(env);
-  avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: Date.now(), type: TYPES_AVIS.indexOf(d.type) >= 0 ? d.type : "autre", texte, pseudo: texteAvis(d.pseudo, 16), joueur: id.slice(0, 8),
+  avis.unshift({ aid: "a" + Math.random().toString(36).slice(2, 9), t: Date.now(), type: TYPES_AVIS.indexOf(d.type) >= 0 ? d.type : "autre", texte, pseudo: texteAvis(d.pseudo, 16), joueur: id.slice(0, 8), idj: id,
     infos: { version: texteAvis(inf.version, 40), jour: Math.floor(+inf.jour) || 0, ecran: texteAvis(inf.ecran, 20), appareil: texteAvis(inf.appareil, 160), page: texteAvis(inf.page, 40) }, lu: false });
   if(avis.length > AVIS_MAX) avis.length = AVIS_MAX;
   await env.CLASSEMENT.put(CLE_AVIS, JSON.stringify(avis));
@@ -1083,6 +1111,12 @@ export default {
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "POST") return parrainagePost(request, env);
+      return reponse({ erreur: "méthode" }, 405);
+    }
+    if(url.pathname === "/api/cadeau"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST") return cadeauPost(request, env);
       return reponse({ erreur: "méthode" }, 405);
     }
     if(url.pathname === "/api/avis"){

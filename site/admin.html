@@ -43,6 +43,23 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .pastille.on{background:color-mix(in srgb,var(--ok) 25%,transparent);color:var(--ok)}
 .pastille.off{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
 .cache{display:none}
+/* Cadeau de l'équipe (2026-11-14) */
+#fenCadeau{position:fixed;inset:0;background:rgba(20,12,6,.55);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto;z-index:10}
+#fenCadeau.cache{display:none}
+#fenCadeau > .carte{width:min(640px,100%);margin:20px 0}
+.cd-cats{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.cd-cats button{padding:4px 10px;font-size:13px}
+.cd-objs{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px;max-height:240px;overflow:auto;padding:2px}
+.cd-o{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:12px;font-weight:600;background:var(--card);color:var(--ink);border:2px solid var(--line);border-radius:10px;text-align:center}
+.cd-o img,.cd-l img{width:34px;height:34px;object-fit:contain}
+.cd-o .em,.cd-l .em{font-size:26px;line-height:34px}
+.cd-o.choisi{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 18%,var(--card))}
+.cd-panier{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.cd-l{display:flex;align-items:center;gap:8px}
+.cd-l span{flex:1}
+.cd-l input{width:70px;padding:6px}
+textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);border-radius:10px;background:var(--bg);color:var(--ink);min-height:90px}
+.cd-envoye{margin:6px 0 0;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok);font-size:13px;font-weight:700}
 @media (max-width:560px){main{padding:12px}.tuile b{font-size:22px}}
 </style>
 </head>
@@ -75,7 +92,20 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     <p class="msg" id="msg"></p>
     <div id="contenu"></div>
   </section>
+  <div id="fenCadeau" class="cache"><div class="carte">
+    <div class="row" style="justify-content:space-between"><b style="font-size:18px">🎁 Cadeau pour <span id="cdNom"></span></b><button class="alt" id="cdFermer">✕</button></div>
+    <p class="sub" style="margin-top:6px">Le joueur reçoit les objets dans sa partie en cours (dans les minutes qui suivent, ou à son prochain lancement), avec ton message.</p>
+    <b>Objets</b>
+    <div class="cd-cats" id="cdCats"></div>
+    <div class="cd-objs" id="cdObjs"></div>
+    <div class="cd-panier" id="cdPanier"></div>
+    <b>Message</b>
+    <textarea id="cdTexte" maxlength="600"></textarea>
+    <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="alt" id="cdAnnuler">Annuler</button><button id="cdEnvoyer">🎁 Envoyer le cadeau</button></div>
+    <p class="msg" id="cdMsg"></p>
+  </div></div>
 </main>
+<script src="data.js"></script>
 <script>
 (function(){
   var mdp = sessionStorage.getItem("survival_admin") || "", onglet = "resume";
@@ -132,7 +162,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
         + d.tombes.map(function(t){ return '<tr><td>' + esc(t.n || "—") + '</td><td class="num">' + t.j + '</td><td class="num">' + t.s + '</td><td>' + quand(t.t) + '</td></tr>'; }).join("") + '</table></div></div>';
     } else if(onglet === "joueurs"){
       h = '<p class="sub">Les ' + d.joueurs.length + ' derniers joueurs vus (le plus récent en premier). Supprimer retire le joueur des chiffres du monde et du classement.</p><div class="carte tableau"><table><tr><th>Pseudo</th><th>Vu</th><th>En vie</th><th>Jour</th><th>Parties</th><th>Morts</th><th>Zombies</th><th>Record</th><th>Code</th><th></th></tr>'
-        + d.joueurs.map(function(j){ return '<tr><td>' + esc(j.pseudo || "(sans pseudo)") + '</td><td>' + quand(j.vu) + '</td><td class="num">' + j.vivants + '</td><td class="num">' + (j.jour || "—") + '</td><td class="num">' + j.parties + '</td><td class="num">' + j.morts + '</td><td class="num">' + j.zombies + '</td><td class="num">' + (j.score == null ? "—" : j.score) + '</td><td>' + esc(j.code || "—") + (j.filleuls ? " (" + j.filleuls + ")" : "") + '</td><td><button class="danger" data-suppr="' + esc(j.id) + '" data-nom="' + esc(j.pseudo) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
+        + d.joueurs.map(function(j){ return '<tr><td>' + esc(j.pseudo || "(sans pseudo)") + '</td><td>' + quand(j.vu) + '</td><td class="num">' + j.vivants + '</td><td class="num">' + (j.jour || "—") + '</td><td class="num">' + j.parties + '</td><td class="num">' + j.morts + '</td><td class="num">' + j.zombies + '</td><td class="num">' + (j.score == null ? "—" : j.score) + '</td><td>' + esc(j.code || "—") + (j.filleuls ? " (" + j.filleuls + ")" : "") + '</td><td class="row"><button title="Envoyer un cadeau" data-cadeau="' + esc(j.id) + '" data-nom="' + esc(j.pseudo || "ce joueur") + '">🎁</button><button class="danger" data-suppr="' + esc(j.id) + '" data-nom="' + esc(j.pseudo) + '">Supprimer</button></td></tr>'; }).join("") + '</table></div>';
     } else if(onglet === "classement"){
       h = '<div class="carte tableau"><table><tr><th>#</th><th>Pseudo</th><th>Score</th><th>Jours</th><th></th></tr>'
         + d.scores.map(function(s, k){ return '<tr><td class="num">' + (k + 1) + '</td><td>' + esc(s.pseudo) + '</td><td class="num">' + s.score + '</td><td class="num">' + s.jours + '</td><td><button class="danger" data-score="' + esc(s.id) + '" data-nom="' + esc(s.pseudo) + '">Retirer</button></td></tr>'; }).join("") + '</table></div>';
@@ -148,7 +178,8 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
             return '<div class="carte"' + (a.lu ? ' style="opacity:.6"' : '') + '><div class="row" style="justify-content:space-between"><b>' + (TY[a.type] || a.type) + ' · ' + esc(a.pseudo || "(sans pseudo)") + '</b><small>' + quand(a.t) + '</small></div>'
               + '<p style="white-space:pre-wrap;margin:8px 0">' + esc(a.texte) + '</p>'
               + (i.ecran || i.jour || i.appareil ? '<p class="sub" style="font-size:12px">Jour ' + (i.jour || "?") + ' · écran ' + esc(i.ecran || "?") + (i.page ? ' · ' + esc(i.page) : '') + (i.version ? ' · version ' + esc(i.version) : '') + '<br>' + esc(i.appareil || "") + '</p>' : '')
-              + '<div class="row"><button class="alt" data-avislu="' + esc(a.aid) + '">' + (a.lu ? "Marquer non lu" : "✔ Marquer lu") + '</button><button class="danger" data-avissuppr="' + esc(a.aid) + '">Supprimer</button></div></div>'; }).join("")
+              + (a.cadeau ? '<p class="cd-envoye">🎁 Cadeau envoyé ' + quand(a.cadeau.t) + ' : ' + esc(resumeObjets(a.cadeau.objets) || "message seul") + '</p>' : '')
+              + '<div class="row">' + (a.idj ? '<button data-cadeau="' + esc(a.idj) + '" data-aid="' + esc(a.aid) + '" data-nom="' + esc(a.pseudo || "ce joueur") + '">🎁 Envoyer un cadeau</button>' : '') + '<button class="alt" data-avislu="' + esc(a.aid) + '">' + (a.lu ? "Marquer non lu" : "✔ Marquer lu") + '</button><button class="danger" data-avissuppr="' + esc(a.aid) + '">Supprimer</button></div></div>'; }).join("")
           : '<div class="carte">Aucun message pour l’instant.</div>');
     }
     if(onglet === "clans"){
@@ -166,6 +197,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
   function action(a, extra, ok){ appel(a, extra).then(function(d){ if(d.erreur){ message(d.erreur); return; } charger(); setTimeout(function(){ message(ok, true); }, 300); }).catch(function(){ message("Impossible de joindre le serveur."); }); }
   $("contenu").addEventListener("click", function(e){
     var b = e.target.closest("button"); if(!b) return;
+    if(b.dataset.cadeau){ ouvrirCadeau(b.dataset.cadeau, b.dataset.aid || "", b.dataset.nom || "ce joueur"); return; }
     if(b.dataset.avislu){ action("avisLu", { aid:b.dataset.avislu }, "C’est noté."); return; }
     if(b.dataset.avissuppr && confirm("Supprimer ce message ?")){ action("avisSupprimer", { aid:b.dataset.avissuppr }, "Message supprimé."); return; }
     if(b.dataset.suppr && confirm("Supprimer « " + (b.dataset.nom || "ce joueur") + " » des chiffres du monde et du classement ?")) action("supprimerJoueur", { id:b.dataset.suppr }, "Joueur supprimé.");
@@ -178,6 +210,40 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
     else if(b.dataset.clansuppr && confirm("Dissoudre le clan « " + b.dataset.nom + " » ? Ses membres redeviennent sans clan.")) action("clanSupprimer", { clan:b.dataset.clansuppr }, "Clan dissous.");
     else if(b.dataset.codesuppr && confirm("Supprimer le code « " + b.dataset.codesuppr + " » ?")) action("codeSupprimer", { code:b.dataset.codesuppr }, "Code supprimé.");
   });
+  /* ---------- Cadeau de l'équipe (2026-11-14) : objets du jeu (data.js) + message ---------- */
+  var CATS_CADEAU = [["eau","💧 Eau"],["nour","🥫 Vivres"],["soin","🩹 Soins"],["arme","🗡️ Armes"],["munition","🔫 Munitions"],["outil","🔧 Outils"],["materiau","🪵 Matériaux"],["guerre","🛡️ Guerre"],["autre","📦 Autres"]];
+  var TEXTE_CADEAU = "Merci de nous avoir contactés ! Désolés pour ce souci : voici de quoi remplacer ce que tu as perdu. Bonne survie ! — L’équipe ZOMBRIA";
+  var cadeau = null, catCadeau = "eau";
+  function catObjet(k){ var c = (OBJETS[k] || {}).cat; return CATS_CADEAU.some(function(x){ return x[0] === c; }) ? c : "autre"; }
+  function nomObjet(k, n){ var o = OBJETS[k]; return o ? (n > 1 && o.pl ? o.pl : o.nom) : k; }
+  function resumeObjets(ob){ return Object.keys(ob || {}).map(function(k){ return ob[k] + " " + nomObjet(k, ob[k]); }).join(", "); }
+  function imgObjet(k){ return '<img src="images/icones/' + k + '.webp" alt="" data-em="' + esc((OBJETS[k] || {}).icone || "📦") + '" onerror="var s=document.createElement(\'span\');s.className=\'em\';s.textContent=this.dataset.em;this.replaceWith(s)">'; }
+  function ouvrirCadeau(id, aid, nom){ cadeau = { id: id, aid: aid, objets: {} }; $("cdNom").textContent = nom; $("cdTexte").value = TEXTE_CADEAU; $("cdMsg").textContent = ""; dessinerCadeau(); $("fenCadeau").className = ""; }
+  function fermerCadeau(){ $("fenCadeau").className = "cache"; cadeau = null; }
+  function dessinerCadeau(){
+    $("cdCats").innerHTML = CATS_CADEAU.map(function(c){ return '<button class="' + (c[0] === catCadeau ? "" : "alt") + '" data-cat="' + c[0] + '">' + c[1] + '</button>'; }).join("");
+    $("cdObjs").innerHTML = Object.keys(OBJETS).filter(function(k){ return catObjet(k) === catCadeau; }).map(function(k){ return '<button class="cd-o' + (cadeau.objets[k] ? " choisi" : "") + '" data-obj="' + k + '">' + imgObjet(k) + esc(OBJETS[k].nom) + '</button>'; }).join("");
+    var ks = Object.keys(cadeau.objets);
+    $("cdPanier").innerHTML = ks.length ? ks.map(function(k){ return '<div class="cd-l">' + imgObjet(k) + '<span>' + esc(OBJETS[k].nom) + (OBJETS[k].empile ? "" : ' <small class="sub">(objet unique, neuf)</small>') + '</span><input type="number" min="1" max="99" value="' + cadeau.objets[k] + '" data-qte="' + k + '"><button class="danger" data-retire="' + k + '">✕</button></div>'; }).join("") : '<p class="sub" style="margin:0">Touche un objet pour l’ajouter (12 sortes au plus). Tu peux aussi n’envoyer qu’un message.</p>';
+  }
+  $("fenCadeau").addEventListener("click", function(e){
+    if(e.target === this){ fermerCadeau(); return; }
+    var b = e.target.closest("button"); if(!b) return;
+    if(b.id === "cdFermer" || b.id === "cdAnnuler"){ fermerCadeau(); return; }
+    if(b.dataset.cat){ catCadeau = b.dataset.cat; dessinerCadeau(); return; }
+    if(b.dataset.obj){ var k = b.dataset.obj; if(cadeau.objets[k]) delete cadeau.objets[k]; else if(Object.keys(cadeau.objets).length < 12) cadeau.objets[k] = 1; dessinerCadeau(); return; }
+    if(b.dataset.retire){ delete cadeau.objets[b.dataset.retire]; dessinerCadeau(); return; }
+    if(b.id === "cdEnvoyer"){
+      var ob = cadeau.objets, texte = $("cdTexte").value.trim();
+      if(!Object.keys(ob).length && !texte){ $("cdMsg").textContent = "Choisis au moins un objet ou écris un message."; return; }
+      b.disabled = true;
+      appel("cadeauEnvoyer", { id: cadeau.id, aid: cadeau.aid, objets: ob, texte: texte }).then(function(d){
+        b.disabled = false; if(d.erreur){ $("cdMsg").textContent = d.erreur; return; }
+        fermerCadeau(); charger(); setTimeout(function(){ message("🎁 Cadeau envoyé. Le joueur le recevra dans sa partie.", true); }, 300);
+      }).catch(function(){ b.disabled = false; $("cdMsg").textContent = "Impossible de joindre le serveur."; });
+    }
+  });
+  $("fenCadeau").addEventListener("input", function(e){ var k = e.target.dataset.qte; if(k && cadeau) cadeau.objets[k] = Math.max(1, Math.min(99, Math.floor(+e.target.value) || 1)); });
   if(mdp){ $("connexion").className = "cache"; $("tableau").className = ""; charger(); }
 })();
 </script>

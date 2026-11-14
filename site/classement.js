@@ -901,7 +901,7 @@ function openAvis(){
     + '<div class="tabs onglets">' + Object.keys(TYPES_AVIS).map(function(k){ var t = TYPES_AVIS[k]; return '<button class="tab' + (k === typeAvis ? " on" : "") + '" data-act="avistype" data-id="' + k + '">' + t[0] + '<small>' + t[1] + '</small></button>'; }).join("") + '</div>'
     + (msgAvis ? '<p class="msg ' + (msgAvis.charAt(0) === "✅" ? "g2" : "") + '">' + msgAvis + '</p>' : '')
     + '<textarea id="texteAvis" class="desc-clan" maxlength="1000" rows="5" placeholder="' + T[2] + '"></textarea><p class="sub" id="resteAvis"></p>'
-    + '<label class="avis-case"><input type="checkbox" id="infosAvis" checked> Joindre les infos techniques (jour, taille d’écran, appareil) pour nous aider à retrouver le bug</label>'
+    + '<label class="avis-case"><input type="checkbox" id="infosAvis" checked> Joindre mon pseudo et les infos techniques (jour, taille d’écran, appareil) : pour retrouver le bug et, si besoin, te rendre ce que tu as perdu</label>'
     + '<div class="row"><button class="btn alt" data-act="menu">Retour</button><button class="btn" data-act="avisenvoyer">📨 Envoyer</button></div>';
   msgAvis = "";
   show(h);
@@ -911,8 +911,8 @@ function openAvis(){
 function envoyerAvis(){
   var tx = document.getElementById("texteAvis"), texte = tx ? tx.value.trim() : "";
   if(texte.length < 5){ msgAvis = "❌ Écris un peu plus (5 lettres au moins)."; var garde = texte; openAvis(); document.getElementById("texteAvis").value = garde; return; }
-  var corps = { id:idAppareil(), pseudo:lirePseudo(), type:typeAvis, texte:texte };
-  if(document.getElementById("infosAvis") && document.getElementById("infosAvis").checked) corps.infos = infosTechniques();
+  var corps = { id:idAppareil(), type:typeAvis, texte:texte };
+  if(document.getElementById("infosAvis") && document.getElementById("infosAvis").checked){ corps.infos = infosTechniques(); corps.pseudo = lirePseudo(); }
   if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){ msgAvis = "✅ (Test sur l’ordinateur : rien n’est envoyé au serveur.)"; openAvis(); return; }
   fetch(adresseAvis(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); })
     .then(function(d){ msgAvis = d.erreur ? "❌ " + d.erreur : "✅ Merci ! Ton message est bien arrivé."; openAvis(); if(d.erreur) document.getElementById("texteAvis").value = texte; })
@@ -1126,3 +1126,56 @@ function boutonPseudo(p){
   return '<button class="btn alt pf-mini" data-act="saisie" data-id="p" data-retour="profil"' + (r ? " disabled" : "") + '>✏️ ' + (p ? "Changer de pseudo" : "Choisir un pseudo") + '</button>'
     + '<small class="pf-regle">' + (r ? r + " · " : "") + (p ? "un changement tous les " + PSEUDO_DELAI_J + " jours, jamais en guerre" : "") + '</small>';
 }
+
+/* =====================================================================
+   Cadeau de l'équipe (2026-11-14) : depuis l'administration, Fabien peut envoyer à un joueur des objets et un message
+   (par ex. pour rendre ce qu'un bug lui a fait perdre). Le jeu relève /api/cadeau au lancement puis toutes les 3 minutes,
+   et montre le cadeau dès qu'une partie est en cours et qu'aucune fenêtre n'est ouverte (pas pendant une sortie ni un raid).
+   Un cadeau récupéré est noté sur l'appareil (survival_cadeaux_pris) avant d'être effacé du serveur : jamais reçu deux fois.
+   ===================================================================== */
+var cadeauxRecus = [];
+function adresseCadeau(){ return adresseClassement().replace("/api/classement", "/api/cadeau"); }
+function cadeauxPris(){ try{ return JSON.parse(localStorage.getItem("survival_cadeaux_pris") || "[]"); }catch(e){ return []; } }
+function appelCadeau(corps){
+  return fetch(adresseCadeau(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(Object.assign({ id:idAppareil() }, corps || {})) }).then(function(r){ return r.json(); });
+}
+function verifierCadeaux(){
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+  appelCadeau({}).then(function(d){
+    var pris = cadeauxPris();
+    cadeauxRecus = (d.cadeaux || []).filter(function(c){ if(pris.indexOf(c.cid) >= 0){ appelCadeau({ prendre:c.cid }).catch(function(){}); return false; } return true; });
+    montrerCadeau();
+  }).catch(function(){});
+}
+function peutRecevoirCadeau(){
+  return cadeauxRecus.length && partieEnJeu() && !G.bacASable && !G.exp && !G.combat && !G.rencontre && !G.siphon && !G.ev
+    && document.getElementById("modal") && document.getElementById("modal").style.display !== "flex" && document.getElementById("modal").style.display !== "block";
+}
+function montrerCadeau(){
+  if(!peutRecevoirCadeau()) return;
+  var c = cadeauxRecus[0], ob = c.objets || {}, ks = Object.keys(ob).filter(function(k){ return OBJETS[k]; });
+  var cases = ks.map(function(k){ return caseObjet(k, { fixe:true, n:ob[k] }); });
+  var h = '<h2>🎁 Un cadeau de l’équipe</h2>'
+    + (c.texte ? '<p class="msg">' + echapCadeau(c.texte) + '</p>' : '')
+    + (ks.length ? '<p class="titre-butin">Dans le colis</p>' + etageres(cases, 0, true) + '<p class="sub" style="text-align:center">' + ks.map(function(k){ return nommer(k, ob[k]); }).join(", ") + '</p>' : '')
+    + '<button class="btn" data-act="cadeaupris">' + (ks.length ? "🎒 Ranger au stock" : "Merci !") + '</button>';
+  show(h);
+}
+function echapCadeau(t){ return String(t).replace(/[&<>"]/g, function(x){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[x]; }); }
+function prendreCadeau(){
+  var c = cadeauxRecus.shift(); if(!c) return hide();
+  var pris = cadeauxPris(); if(pris.indexOf(c.cid) >= 0){ hide(); return; }
+  for(var k in (c.objets || {})) if(OBJETS[k]) ajouter(k, Math.max(1, Math.min(99, Math.floor(+c.objets[k]) || 1)));
+  pris.push(c.cid); try{ localStorage.setItem("survival_cadeaux_pris", JSON.stringify(pris.slice(-50))); }catch(e){}
+  if(typeof sauver === "function") sauver();
+  appelCadeau({ prendre:c.cid }).catch(function(){});
+  hide(); if(typeof render === "function") render();
+  setTimeout(montrerCadeau, 600);
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest('[data-act="cadeaupris"]'); if(!b) return;
+  prendreCadeau();
+});
+setTimeout(verifierCadeaux, 4000);
+setInterval(verifierCadeaux, 3 * 60 * 1000);
+setInterval(function(){ if(cadeauxRecus.length) montrerCadeau(); }, 3000);
