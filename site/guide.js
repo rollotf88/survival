@@ -113,7 +113,7 @@ function niveauDanger(d){ return d < 0.3 ? "faible" : d < 0.5 ? "moyen" : d < 0.
 function ouTrouver(id){
   var t = [];
   LIEUX.forEach(function(L){ if(L.butin[id]) t.push(iconeLieu(L) + " " + L.nom); });
-  MAISONS.forEach(function(M){ if(M.objets[id]) t.push(ic(ICONE_MAISON[M.nom], M.icone) + " " + M.nom + " (départ)"); });
+  MAISONS.forEach(function(M){ if(M.objets[id]) t.push(ic(ICONE_MAISON[M.cle || M.nom], M.icone) + " " + M.nom + " " + trad("(départ)")); });
   if(MARCHE.stock[id]) t.push(ic("marco", "🧔") + " Marco le brocanteur");
   return t;
 }

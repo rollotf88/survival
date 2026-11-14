@@ -654,7 +654,7 @@ function finirSiphon(reussi){
 function lancerRencontre(equipe, res){
   var B = BAL.rencontres; G.rencontresFaites = G.rencontresFaites || [];
   if(G.rencontre || G.day < B.jour || G.jourRencontre === G.day) return;
-  var nomLieu = res && LIEUX[res.lieu] ? LIEUX[res.lieu].nom : "";
+  var nomLieu = res && LIEUX[res.lieu] ? (LIEUX[res.lieu].cle || LIEUX[res.lieu].nom) : ""; // nom français (identifiant) même quand le jeu est traduit
   var ok = RENCONTRES.filter(function(r){ return G.day >= (r.jour || 1) && (!r.cond || r.cond()) && G.rencontresFaites.indexOf(r.id) < 0 && (!r.lieu || r.lieu === nomLieu); });
   var ici = ok.filter(function(r){ return r.lieu; }); // une rencontre propre à ce lieu passe avant les autres
   if(hasard() >= (ici.length ? B.lieuChance : G.day >= B.tard ? B.chanceTard : B.chance)) return;
@@ -1265,7 +1265,7 @@ function nuitMonde(n){
 }
 // « le Garage auto », « l’Hôpital », « la Zone industrielle »
 var FEMININS_LIEUX = ["Prison", "Centrale électrique", "Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire", "Forêt"];
-function leLieu(nom){ return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
+function leLieu(nom){ if(typeof LANGUE !== "undefined" && LANGUE === "en") return "the " + nom; return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
 function mission(){ return G.mission ? MISSIONS.filter(function(m){ return m.id === G.mission.id; })[0] : null; }
 function texteMission(){ var M = mission(); return M ? M.texte.replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }
 function joursMission(){ return G.mission ? G.mission.fin - G.day + 1 : 0; }

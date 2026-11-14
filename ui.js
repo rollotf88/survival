@@ -140,7 +140,7 @@ function rPick(){
     var c = G.pack[k] || 0, ok = c < H.objets[k] && libre >= OBJETS[k].place;
     tiles += '<button class="tile f-' + famillePick(k) + (ok ? "" : " off") + '" data-act="add" data-id="' + k + '" aria-label="Prendre ' + OBJETS[k].nom + ' (' + OBJETS[k].place + ' place' + (OBJETS[k].place > 1 ? "s" : "") + ')">' + (c ? '<span class="n">' + c + '</span>' : "") + (OBJETS[k].place > 1 ? '<span class="pl">' + OBJETS[k].place + ' pl.</span>' : "") + icone(k) + '<small>' + (NOM_COURT[k] || OBJETS[k].nom) + '</small></button>';
   });
-  var tabs = MAISONS.map(function(x, j){ return '<button class="tab' + (j === G.h ? " on" : "") + '" data-act="house" data-id="' + j + '"' + (G.seed && j !== G.h ? " disabled" : "") + '>' + ic(ICONE_MAISON[x.nom], x.icone) + ' ' + x.nom + '<small>' + x.cap + ' places</small></button>'; }).join("");
+  var tabs = MAISONS.map(function(x, j){ return '<button class="tab' + (j === G.h ? " on" : "") + '" data-act="house" data-id="' + j + '"' + (G.seed && j !== G.h ? " disabled" : "") + '>' + ic(ICONE_MAISON[x.cle || x.nom], x.icone) + ' ' + x.nom + '<small>' + trad("{n} places", { n:x.cap }) + '</small></button>'; }).join("");
   var tm = Math.max(0, G.tl), pc = Math.min(100, Math.round(tm / BAL.tempsDepart * 100));
   document.body.classList.toggle("urgence", tm <= 10);
   $("app").innerHTML = '<div class="row"><h1>Jour 0</h1><span class="mode">' + (G.seed ? "🏆 Partie classée" : "🎲 Partie libre") + '</span><span class="pill" id="tsec">⏱ ' + Math.ceil(tm) + ' s</span></div><div class="timer"><i id="tbar" class="' + (pc < 30 ? "lo" : "") + '" style="width:' + pc + '%"></i></div><div class="tabs">' + tabs + '</div>'
@@ -801,6 +801,7 @@ var FAMILLES_STOCK = [
   ["materiaux", "🪵", "Matériaux", ["materiau"]],
   ["divers", "🧸", "Divers", ["confort", "animal"]]
 ];
+if(typeof traduireTables === "function") traduireTables("ui"); // noms courts et onglets du stock en anglais (lang-en.js)
 var filtreStock = "tout", selStock = null, msgStock = "";
 function casesStock(){
   var t = [];
@@ -1387,7 +1388,7 @@ function rIntro(){
 // Noms et traits de la dernière famille (gardés dans le navigateur)
 function familleRetenue(){
   var f = null; try{ f = JSON.parse(localStorage.getItem("survival_famille")); }catch(e){}
-  return FAMILLE.map(function(m, k){ var c = f && f[k] || {}; return { nom:c.nom || m.nom, trait:TRAITS[c.trait] ? c.trait : m.trait }; });
+  return FAMILLE.map(function(m, k){ var c = f && f[k] || {}; return { nom:c.nom && c.nom !== m.nom ? c.nom : (typeof prenomDefaut === "function" ? prenomDefaut(m.nom) : m.nom), trait:TRAITS[c.trait] ? c.trait : m.trait }; });
 }
 function texteTrait(t){ var T = TRAITS[t]; return '<span class="plus">+ ' + T.plus + '</span><span class="moins">− ' + T.moins + '</span>'; }
 function rFamille(){

@@ -3,7 +3,7 @@
    Les succès débloqués sont gardés dans le navigateur (survival_succes),
    d'une partie à l'autre. Chargé après classement.js.
    ===================================================================== */
-function lieuNomme(nom){ return LIEUX.findIndex(function(L){ return L.nom === nom; }); }
+function lieuNomme(nom){ return LIEUX.findIndex(function(L){ return (L.cle || L.nom) === nom; }); }
 // test : fonction qui dit si le succès est obtenu dans la partie en cours (G)
 var SUCCES = [
   { id:"nuit1",      icone:"🌙", nom:"Première nuit",          desc:"Survivre à la première nuit",                    test:function(){ return G.day >= 2; } },

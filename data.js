@@ -17,7 +17,7 @@ var PORTRAITS_PNJ = { pilleur:"images/portrait-pilleur.webp", couveuse:"images/p
 // Décor du combat selon le lieu (images/combat/*.webp)
 var FONDS_COMBAT = { foret:["Forêt", "Étang", "Camping des Pins"], magasin:["Supermarché", "Hôpital", "Commissariat", "Centre commercial", "Clinique vétérinaire", "École Jules-Ferry", "Bunker du survivaliste", "Quincaillerie"],
   usine:["Zone industrielle", "Garage auto", "Entrepôt logistique", "Base militaire", "Caserne des pompiers", "Péniche du canal"] };
-function fondCombat(L){ for(var k in FONDS_COMBAT) if(FONDS_COMBAT[k].indexOf(L.nom) >= 0) return "images/combat/" + k + ".webp"; return "images/combat/rue.webp"; }
+function fondCombat(L){ for(var k in FONDS_COMBAT) if(FONDS_COMBAT[k].indexOf(L.cle || L.nom) >= 0) return "images/combat/" + k + ".webp"; return "images/combat/rue.webp"; }
 function portraitPNJ(k){ return '<span class="portrait pnj"><img src="' + PORTRAITS_PNJ[k] + '" alt=""></span>'; }
 var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue", "Supermarché":"lieuSuper", "Hôpital":"lieuHopital",
   "Quincaillerie":"lieuQuinc", "Station-service":"lieuStation", "Garage auto":"lieuGarage", "Commissariat":"lieuPolice",
@@ -25,7 +25,7 @@ var ICONE_LIEU = { "Maison voisine":"lieuMaison", "Rue des pavillons":"lieuRue",
   "Camping des Pins":"lieuCamping", "Clinique vétérinaire":"lieuClinique", "Bunker du survivaliste":"lieuBunker", "Entrepôt logistique":"lieuEntrepot", "Base militaire":"lieuBase",
   "Forêt":"lieuForet", "Zoo abandonné":"lieuZoo", "Aéroport":"lieuAeroport", "Prison":"lieuPrison", "Centrale électrique":"lieuCentrale" };
 var ICONE_MAISON = { "Pavillon":"maisonPavillon", "Ferme":"maisonFerme", "Appart":"maisonAppart" };
-function iconeLieu(L){ return ic(ICONE_LIEU[L.nom], L.icone); }
+function iconeLieu(L){ return ic(ICONE_LIEU[L.cle || L.nom], L.icone); } // L.cle : nom français quand le jeu est traduit (lang-en.js)
 // Illustrations peintes des lieux (Gemini, grilles de 4 découpées) : images/lieux/<nom>.webp
 var IMAGES_LIEUX = { "Forêt":"foret", "Maison voisine":"maison", "Rue des pavillons":"rue", "Supermarché":"super", "Hôpital":"hopital",
   "Quincaillerie":"quinc", "Station-service":"station", "Étang":"etang", "Garage auto":"garage",
@@ -33,7 +33,7 @@ var IMAGES_LIEUX = { "Forêt":"foret", "Maison voisine":"maison", "Rue des pavil
   "Entrepôt logistique":"entrepot", "Base militaire":"base", "École Jules-Ferry":"ecole", "Caserne des pompiers":"caserne",
   "Péniche du canal":"peniche", "Camping des Pins":"camping", "Clinique vétérinaire":"clinique", "Bunker du survivaliste":"bunker",
   "Zoo abandonné":"zoo", "Aéroport":"aeroport", "Prison":"prison", "Centrale électrique":"centrale" };
-function imageLieu(L){ return typeof ICONES_SVG !== "undefined" && IMAGES_LIEUX[L.nom] ? "images/lieux/" + IMAGES_LIEUX[L.nom] + ".webp" : null; }
+function imageLieu(L){ return typeof ICONES_SVG !== "undefined" && IMAGES_LIEUX[L.cle || L.nom] ? "images/lieux/" + IMAGES_LIEUX[L.cle || L.nom] + ".webp" : null; }
 // Petite vignette pour la liste des lieux (sinon l'icône dessinée)
 function vignetteLieu(L){ var i = imageLieu(L); return i ? '<img class="vign" src="' + i + '" alt="">' : iconeLieu(L); }
 // Portraits peints (images faites avec ChatGPT par Fabien, découpées dans images/)
