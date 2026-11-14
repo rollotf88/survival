@@ -206,11 +206,13 @@ function openGuide(){
       if(reste.length) h += '<div class="gtheme"><b class="gcat">📎 Et aussi</b><div class="gtuiles regles">' + reste.map(tuile).join("") + '</div></div>';
     } else if(guideOnglet === "objets"){
       var cats = CATEGORIES.filter(function(c){ return Object.keys(OBJETS).some(function(id){ return OBJETS[id].cat === c[0]; }); });
-      if(!guideCat || !cats.some(function(c){ return c[0] === guideCat; })) guideCat = cats[0][0];
-      h += '<div class="gpuces">' + cats.map(function(c){ return '<button class="gpuce' + (c[0] === guideCat ? " on" : "") + '" data-act="gcat" data-id="' + c[0] + '">' + c[1] + '</button>'; }).join("") + '</div>';
+      // 2026-11-14 (demande de Fabien) : une pastille « Tout » en premier (choisie d'office) montre toutes les catégories à la suite, avec leur titre
+      if(!guideCat || guideCat !== "tout" && !cats.some(function(c){ return c[0] === guideCat; })) guideCat = "tout";
+      var tout = guideCat === "tout";
+      h += '<div class="gpuces">' + [["tout", "📦 Tout"]].concat(cats).map(function(c){ return '<button class="gpuce' + (c[0] === guideCat ? " on" : "") + '" data-act="gcat" data-id="' + c[0] + '">' + c[1] + '</button>'; }).join("") + '</div>';
       h += cats.map(function(c){
         var ids = Object.keys(OBJETS).filter(function(id){ return OBJETS[id].cat === c[0]; });
-        return '<div class="gtheme gcatobj' + (c[0] === guideCat ? "" : " cache") + '"><div class="gtuiles objets">' + ids.map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom, OBJETS[id].desc); }).join("") + '</div></div>';
+        return '<div class="gtheme gcatobj' + (tout || c[0] === guideCat ? "" : " cache") + '" data-cat="' + c[0] + '">' + (tout ? '<b class="gcat">' + c[1] + '</b>' : '') + '<div class="gtuiles objets">' + ids.map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom, OBJETS[id].desc); }).join("") + '</div></div>';
       }).join("");
     } else if(guideOnglet === "lieux"){
       h += '<div class="gtheme"><div class="gtuiles lieux">' + LIEUX.map(function(L, i){ return tuileGuide("glieu", i, '<span class="gt-img">' + vignetteLieu(L) + '</span>', L.nom, Object.keys(L.butin).map(function(id){ return OBJETS[id].nom; }).join(" ")); }).join("")
@@ -237,8 +239,8 @@ function filtrerGuide(q){
   sh.querySelectorAll(".gtuile").forEach(function(t){ var ok = !q || t.getAttribute("data-q").indexOf(q) >= 0; t.classList.toggle("cache", !ok); if(ok) n++; });
   sh.querySelectorAll(".gtheme:not(.gcatobj)").forEach(function(T){ T.classList.toggle("cache", !T.querySelector(".gtuile:not(.cache)")); });
   if(guideOnglet === "objets"){
-    var cats = sh.querySelectorAll(".gcatobj"), idx = [].map.call(sh.querySelectorAll(".gpuce"), function(b){ return b.classList.contains("on"); });
-    cats.forEach(function(T, k){ T.classList.toggle("cache", q ? !T.querySelector(".gtuile:not(.cache)") : !idx[k]); });
+    var cats = sh.querySelectorAll(".gcatobj");
+    cats.forEach(function(T){ T.classList.toggle("cache", q ? !T.querySelector(".gtuile:not(.cache)") : !(guideCat === "tout" || T.getAttribute("data-cat") === guideCat)); });
     var pu = sh.querySelector(".gpuces"); if(pu) pu.classList.toggle("estompe", !!q);
   }
   var rien = sh.querySelector(".g-rien"); if(rien) rien.classList.toggle("cache", n > 0);
