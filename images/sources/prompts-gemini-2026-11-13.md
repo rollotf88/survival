@@ -36,3 +36,31 @@ Voici une cuisine (première image), le portrait d'un garçon de 13 ans (deuxiè
 ### Emma (petite fille d'environ 9 ans)
 
 Voici une cuisine (première image), le portrait d'une petite fille de 9 ans (deuxième image) et sa mère déjà dessinée devant cette même cuisinière (troisième image, seulement pour comparer les tailles, ne la dessine pas). Garde la cuisine IDENTIQUE au pixel près : même cadrage, même taille, même style, mêmes couleurs, même lumière. Ajoute UNIQUEMENT cette petite fille devant la cuisinière. C'est une enfant de 9 ans, beaucoup plus petite qu'un adulte : debout par terre, sa tête arriverait à peine à la poitrine de sa mère. Pour atteindre la casserole, elle est montée sur une petite caisse en bois retournée posée devant la cuisinière, et remue la casserole avec une cuillère en bois tenue à deux mains, concentrée, la langue un peu sortie. Visage rond et enfantin comme sur le portrait, petites mains, silhouette d'enfant. Elle et la caisse sont entières, ses deux pieds bien posés sur la caisse, la caisse bien posée au sol. Même style que le portrait : dessin cartoon peint, contours brun foncé épais et nets tout autour d'elle et de la caisse (elles seront découpées ensemble). Personne d'autre. Aucun texte.
+
+## D. Les recrues qui n'ont pas de place au salon (2026-11-14)
+
+Une recrue reprend la place d'un membre de la famille (Yanis = Papa, Nora = Léo, Sam = Emma, Inès = Maman). Quand ce membre est encore en vie, la recrue n'a pas de place au salon : on la montre ailleurs. Une image par recrue. Joindre l'image de la pièce + le portrait de la recrue. Vérifier ensuite que la pièce est IDENTIQUE (même cadrage, même taille, rien d'autre n'a bougé) et que la personne est entière, pieds compris.
+
+### Prompt commun (remplacer [PERSONNE] et [ACTION])
+
+Voici une pièce de mon jeu (première image) et le portrait d'une personne (deuxième image). Garde la pièce IDENTIQUE au pixel près : même cadrage, même taille, mêmes objets, mêmes couleurs, même lumière, même style dessiné. Ajoute UNIQUEMENT cette personne : [PERSONNE], [ACTION]. Elle est entière, de la tête aux pieds, ses deux pieds bien visibles posés au sol, à la même échelle qu'un adulte dans cette pièce. Même style que le portrait : dessin cartoon peint, contours brun foncé épais et nets tout autour d'elle (elle sera découpée). Personne d'autre. Aucun texte.
+
+### 1. Yanis dans la réserve
+Joindre : `images/piece-reserve.webp` + `images/portrait-yanis.webp`
+[PERSONNE] = un homme barbu d'une quarantaine d'années avec un bonnet, comme sur le portrait
+[ACTION] = debout devant les étagères, un peu à gauche du milieu, de trois quarts, qui compte les conserves en notant sur un petit carnet avec un crayon
+
+### 2. Nora dans la réserve
+Joindre : `images/piece-reserve.webp` + `images/portrait-nora.webp`
+[PERSONNE] = la femme du portrait
+[ACTION] = à droite, devant les caisses en bois empilées, accroupie, qui range des boîtes dans une caisse ouverte
+
+### 3. Sam dans l'atelier
+Joindre : `images/piece-atelier.webp` + `images/portrait-sam.webp`
+[PERSONNE] = l'homme du portrait
+[ACTION] = debout derrière l'établi, au milieu, de trois quarts, qui scie ou cloue une planche posée sur l'établi
+
+### 4. Inès dans l'atelier
+Joindre : `images/piece-atelier.webp` + `images/portrait-ines.webp`
+[PERSONNE] = la femme blonde du portrait
+[ACTION] = à gauche, près des planches appuyées contre le mur, qui en porte une sous le bras en vérifiant si elle est droite
