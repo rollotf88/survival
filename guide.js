@@ -166,7 +166,7 @@ function openMenu(){
   if(typeof openAvis === "function") h += t("avis", "💬", "Avis / bug", "Signaler, proposer");
   h += '</div><div class="mn-reglages">';
   h += r("menuson", "🔊", "Son", sonEstActif());
-  if(typeof basculerMusique === "function" && lectureOgg) h += r("menumusique", "🎵", "Musique", musiqueActive());
+  if(typeof basculerMusique === "function") h += r("menumusique", "🎵", "Musique", musiqueActive());
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibrations", vibrationsActives());
   h += r("menusensible", "🕯️", "Adulte", CONTENUS_SENSIBLES); // « Contenus durs » était coupé sur téléphone (2026-11-12, choix de Fabien)
   h += '</div>';

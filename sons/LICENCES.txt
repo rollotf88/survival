@@ -1,4 +1,4 @@
-Sons utilisés dans SURVIVAL (tous en licence CC0 : libres, aucune mention obligatoire)
+Sons utilisés dans ZOMBRIA (tous en licence CC0 : libres, aucune mention obligatoire)
 
 - pas1-3, butin, atelier, construire, coup, goupille, porte, depart, soin, troc, piece, nuit (.ogg)
   « 50 RPG sound effects » par Kenney (www.kenney.nl) — CC0
@@ -17,3 +17,8 @@ Sons utilisés dans SURVIVAL (tous en licence CC0 : libres, aucune mention oblig
   https://opengameart.org/content/emptycity-background-music
 
 - Le coup de feu n'est pas un fichier : il est fabriqué par le jeu (bruit synthétisé).
+
+- musique-maison.mp3 et musique-combat.mp3 (musiques d'ambiance, depuis le 2026-11-14)
+  Faites par Fabien avec Suno (suno.com), compte gratuit : POUR LES ESSAIS SEULEMENT.
+  Avant une sortie commerciale (stores, publicités), les refaire ou les télécharger pendant un abonnement Suno payant
+  (qui donne le droit d'utilisation commerciale). L'ancienne musique « EmptyCity » (CC0) reste dans le dossier, inutilisée.

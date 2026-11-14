@@ -1746,20 +1746,38 @@ function son(nom, delai){
   if(/\.ogg$/.test(f) && !lectureOgg) return;
   try{ var a = new Audio(f); a.volume = SONS[nom][1]; var p = a.play(); if(p && p.catch) p.catch(function(){}); }catch(e){}
 }
-/* ---------- Musique d'ambiance (« EmptyCity » par yd, CC0) ----------
-   Réglage séparé des bruitages. Elle démarre au premier toucher (les navigateurs
-   interdisent le son avant) et se met en pause quand le jeu passe en arrière-plan. */
-var musique = null;
+/* ---------- Musiques (2026-11-14 : deux musiques faites par Fabien avec Suno) ----------
+   « maison » partout au refuge (pièces de la maison ET du bastion : elle ne coupe pas quand on change de pièce),
+   « combat » pendant un combat. Passage de l'une à l'autre en fondu (~1,5 s). La musique de combat repart du début à chaque combat.
+   Réglage « 🎵 Musique » du menu ; elle démarre au premier toucher (les navigateurs interdisent le son avant) et se coupe
+   quand le jeu passe en arrière-plan. MP3 : lu par tous les navigateurs, iPhone compris.
+   Licence : comptes Suno gratuits = pour les essais ; à refaire ou télécharger avec un abonnement avant une sortie commerciale. */
+var MUSIQUES = { maison:["sons/musique-maison.mp3", 0.22], combat:["sons/musique-combat.mp3", 0.26] };
+var pistes = {}, musiqueDebloquee = false, musique = null; // « musique » gardée pour les anciens appels
 function musiqueActive(){ try{ return localStorage.getItem("survival_musique") !== "non"; }catch(e){ return true; } }
+function pisteDuMoment(){ return typeof G !== "undefined" && G && G.combat && !G.combat.fin ? "combat" : "maison"; }
+function piste(k){ if(!pistes[k]){ var a = new Audio(MUSIQUES[k][0]); a.loop = true; a.volume = 0; a.preload = "auto"; pistes[k] = a; } return pistes[k]; }
 function lancerMusique(){
-  if(!musiqueActive() || !lectureOgg || document.hidden) return;
-  if(!musique){ musique = new Audio("sons/musique-emptycity.ogg"); musique.loop = true; musique.volume = 0.22; }
-  if(musique.paused){ var p = musique.play(); if(p && p.catch) p.catch(function(){}); }
+  musiqueDebloquee = true;
+  if(!musiqueActive() || document.hidden) return;
+  var a = piste(pisteDuMoment()); musique = a;
+  if(a.paused){ var p = a.play(); if(p && p.catch) p.catch(function(){}); }
 }
-function arreterMusique(){ if(musique && !musique.paused) musique.pause(); }
+function arreterMusique(){ for(var k in pistes){ if(!pistes[k].paused) pistes[k].pause(); pistes[k].volume = 0; } }
 function basculerMusique(){ var on = !musiqueActive(); try{ localStorage.setItem("survival_musique", on ? "oui" : "non"); }catch(e){} if(on) lancerMusique(); else arreterMusique(); }
+// Toutes les 100 ms : la piste du moment monte vers son volume, l'autre descend puis s'arrête
+setInterval(function(){
+  if(!musiqueDebloquee) return;
+  var voulue = musiqueActive() && !document.hidden ? pisteDuMoment() : null;
+  if(voulue){ var a = piste(voulue); if(a.paused){ var p = a.play(); if(p && p.catch) p.catch(function(){}); } }
+  for(var k in pistes){
+    var x = pistes[k], cible = k === voulue ? MUSIQUES[k][1] : 0, pas = 0.015;
+    if(Math.abs(x.volume - cible) <= pas) x.volume = cible; else x.volume = Math.max(0, Math.min(1, x.volume + (x.volume < cible ? pas : -pas)));
+    if(cible === 0 && x.volume === 0 && !x.paused){ x.pause(); if(k === "combat") x.currentTime = 0; }
+  }
+}, 100);
 document.addEventListener("pointerdown", lancerMusique);
-document.addEventListener("visibilitychange", function(){ if(document.hidden) arreterMusique(); else if(musique) lancerMusique(); });
+document.addEventListener("visibilitychange", function(){ if(document.hidden) arreterMusique(); else if(musiqueDebloquee) lancerMusique(); });
 
 /* Petits bruitages fabriqués par le navigateur (pas de fichier) : feu qui crépite, poules, moulinet, bois */
 var SONS_SYNTH = { feu:1, poule:1, moulinet:1, bois:1 };
