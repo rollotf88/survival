@@ -22,7 +22,16 @@ function fermerAstuce(toutes){
 // Le premier toucher n'importe où ferme l'astuce (elle compte comme lue) ;
 // l'action touchée se fait quand même. Les boutons de la bulle gardent leur rôle.
 document.addEventListener("click", function(e){
-  if($("astuce") && !e.target.closest("#astuce button")) fermerAstuce(false);
+  var bulle = $("astuce"); if(!bulle || e.target.closest("#astuce button")) return;
+  var surBulle = !!e.target.closest("#astuce");
+  fermerAstuce(false);
+  // 2026-11-14 (signalé par Fabien) : la bulle cache parfois un bouton (le ☰ du menu sur PC). Un toucher sur la bulle
+  // la ferme ET fait l'action du bouton qui est dessous (avant : le clic s'arrêtait sur la bulle, le menu ne s'ouvrait pas)
+  if(surBulle && document.elementsFromPoint){
+    var dessous = document.elementsFromPoint(e.clientX, e.clientY).filter(function(el){ return el.closest && !el.closest("#astuce"); })[0];
+    var cible = dessous && dessous.closest("[data-act], button, a");
+    if(cible){ e.stopPropagation(); e.preventDefault(); setTimeout(function(){ cible.click(); }, 0); }
+  }
 }, true);
 
 // Case d'équipement : repère rouge quand l'objet porté est presque cassé (un quart de solidité ou moins)
