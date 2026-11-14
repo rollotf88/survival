@@ -1318,11 +1318,11 @@ var VITRINE = [
   ["images/evenements/marchand.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
   ["images/evenements/dispute.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
   ["images/lieux/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
-  ["images/voiture-ok.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
+  ["images/vitrine-voiture.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
   ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion et échanges entre membres, et guerres de 3 jours contre d’autres clans."],
   ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/aube.webp", "👑 La Légende du mois", "Le meilleur joueur du mois est couronné Légende pour tout le mois suivant, avec Raja le tigre. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de prendre la couronne !"]
+  ["images/tigre-zoo.webp", "👑 La Légende du mois", "Le meilleur joueur du mois est couronné Légende pour tout le mois suivant, avec Raja le tigre. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de prendre la couronne !"]
 ];
 var minuteurVitrine = null;
 function vitrine(){

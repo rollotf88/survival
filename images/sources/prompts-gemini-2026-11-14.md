@@ -93,3 +93,13 @@ Fais une grille de 3 colonnes × 2 rangées de scènes pour un jeu de survie pos
 4. une bande de pillards organisés : une dizaine de silhouettes armées en manteaux sombres autour de la maison, au crépuscule, leur chef au premier plan avec des plumes de corbeau sur les épaules
 5. un éclaireur : un homme couché sur un toit voisin qui observe la maison à la jumelle, vu de derrière la fenêtre barricadée
 6. une meute : des chiens sauvages maigres qui rôdent autour de la maison la nuit, les yeux brillants dans l'obscurité
+
+---
+
+# F. Image de la vitrine « La Légende du mois » (2026-11-14)
+
+En attendant, la carte utilise `images/tigre-zoo.webp` (l'histoire de Raja). La voiture utilise maintenant le garage avec la voiture réparée (`images/vitrine-voiture.webp`), plus besoin d'image.
+
+Joindre : `images/tigre-zoo.webp` (style et tigre) et `images/aube.webp` (style des scènes du refuge).
+
+Crée une illustration au format paysage 16:9 pour mon jeu de survie post-apocalyptique, dans EXACTEMENT le même style que les images jointes : dessin cartoon peint, contours brun foncé épais, couleurs chaudes et usées. La scène : au lever du soleil, sur le toit d'une maison barricadée, un survivant vu de dos ou de trois quarts (silhouette, visage peu visible) se tient debout, une couronne dorée cabossée sur la tête, une lanterne à la main. À côté de lui, assis fièrement, le tigre de la première image, puissant et calme, qui regarde l'horizon. En contrebas, la ville en ruine et quelques zombies minuscules dans la brume. Lumière dorée et triomphante, ambiance « le roi des survivants ». Aucun texte, aucune marque.
