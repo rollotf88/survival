@@ -169,6 +169,8 @@ function openMenu(){
   if(typeof basculerMusique === "function") h += r("menumusique", "🎵", "Musique", musiqueActive());
   if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibrations", vibrationsActives());
   h += r("menusensible", "🕯️", "Adulte", CONTENUS_SENSIBLES); // « Contenus durs » était coupé sur téléphone (2026-11-12, choix de Fabien)
+  // Langue (2026-11-14, début de la traduction) : la pastille dit la langue actuelle, toucher passe à l'autre (la page se recharge)
+  if(typeof LANGUES !== "undefined" && (LANGUES_PRETES.en || LANGUE !== "fr" || /langue=/.test(location.search))) h += '<button class="mr on" data-act="menulangue"><span class="mr-i">🌐</span><small>' + trad("Langue") + '</small><i>' + (LANGUE === "fr" ? "FR" : "EN") + '</i></button>';
   h += '</div>';
   h += liensLegaux("mn-legal");
   if(!confirmerNouvelle) h += '<div class="row"><button class="btn" data-act="close">▶️ Reprendre</button><button class="btn alt" data-act="menunouvelle">🆕 Recommencer</button></div>';

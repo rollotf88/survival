@@ -1367,16 +1367,16 @@ document.addEventListener("keydown", function(e){
 // Titre peint (2026-11-13, Leonardo, détouré) : « SURVIVAL » en planches clouées ; le sous-titre est écrit par le jeu
 // sur le panneau en bois vide, pour pouvoir être traduit (le panneau est entre 24 % et 76 % de la largeur, vers 87 % de la hauteur)
 // 2026-11-14 : le jeu s'appelle maintenant ZOMBRIA (titre Gemini sur fond vert, détouré ; panneau suspendu par des chaînes) ; la lueur de lanterne est en CSS (.titre-peint::before)
-function titrePeint(){ return '<h1 class="titre-peint"><img src="images/titre-zombria.webp" alt="ZOMBRIA"><span class="tp-sous">Le dernier refuge</span></h1>'; }
+function titrePeint(){ return '<h1 class="titre-peint"><img src="images/titre-zombria.webp" alt="ZOMBRIA"><span class="tp-sous">' + trad("Le dernier refuge") + '</span></h1>'; }
 function rIntro(){
   $("app").innerHTML = '<div class="panneau intro"><div class="tetejeu">' + titrePeint() + '</div>'
-    + '<div class="intro-recit"><p class="mf-titre ir-titre">Le monde d’après</p><p class="ir-premier">Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.</p>'
-    + '<p>Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.</p>'
-    + '<p>Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b></p>'
-    + '<div class="ir-puces"><span class="ir-famille">👪 Une famille de 4</span><span>🗺️ Plus de 20 lieux</span><span>⚔️ Clans et guerres</span><span>🎲 Événements uniques</span></div></div>'
+    + '<div class="intro-recit"><p class="mf-titre ir-titre">' + trad("Le monde d’après") + '</p><p class="ir-premier">' + trad("Personne n’a compris ce qui se passait. En une semaine, les villes se sont tues : les morts se relèvent, et ils ont faim.") + '</p>'
+    + '<p>' + trad("Ta famille a tenu bon dans votre maison… jusqu’à ce soir. <b>Ils sont à la porte.</b> Tu as une minute pour remplir le sac avant de fuir vers le refuge : une vieille maison au bout de la rue, avec une cheminée et des murs solides.") + '</p>'
+    + '<p>' + trad("Là-bas, il faudra fouiller le quartier, barricader, soigner les tiens. Personne ne viendra vous sauver. Le seul but : <b>tenir le plus longtemps possible, tous ensemble.</b>") + '</p>'
+    + '<div class="ir-puces"><span class="ir-famille">👪 ' + trad("Une famille de 4") + '</span><span>🗺️ ' + trad("Plus de 20 lieux") + '</span><span>⚔️ ' + trad("Clans et guerres") + '</span><span>🎲 ' + trad("Événements uniques") + '</span></div></div>'
     + '<div class="intro-cote">' + vitrine()
     + '<div class="monde-place" data-compact="1"></div></div>'
-    + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 Fuir vers le refuge</button>' + (typeof liensLegaux === "function" ? liensLegaux("ir-legal") : "") + '</div>';
+    + '<button class="btn ir-go" style="width:100%" data-act="intro">🚪 ' + trad("Fuir vers le refuge") + '</button>' + (typeof liensLegaux === "function" ? liensLegaux("ir-legal") : "") + '</div>';
   // Le fondu en bas du récit disparaît quand on a tout lu (ou quand tout tient sans défiler)
   var rc = document.querySelector(".intro-recit");
   if(rc){ var fondu = function(){ rc.classList.toggle("fin", rc.scrollTop + rc.clientHeight >= rc.scrollHeight - 4); }; rc.addEventListener("scroll", fondu, { passive:true }); setTimeout(fondu, 50); setTimeout(fondu, 600); }

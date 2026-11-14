@@ -330,6 +330,7 @@ document.addEventListener("click", function(e){
     show('<div class="sacrifice"><h2>La nuit la plus longue</h2><p>' + (t || "Ce n’est plus possible.") + '</p>' + BTN_FERMER("Continuer") + '</div>');
     if(typeof sauver === "function") sauver();
   }
+  else if(a === "menulangue"){ changerLangue(LANGUE === "fr" ? "en" : "fr"); }
   else if(a === "menusensible"){ CONTENUS_SENSIBLES = !CONTENUS_SENSIBLES; try{ localStorage.setItem("survival_sensible", CONTENUS_SENSIBLES ? "1" : "0"); }catch(e2){} openMenu(); }
 });
 
