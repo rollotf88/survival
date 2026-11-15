@@ -843,7 +843,8 @@ async function adminPost(request, env){
   switch(d.action){
     case "resume": {
       const js = joueurs();
-      return repAdmin({ joueurs: js.length, actifs24h: js.filter((j) => now - j.vu < JOUR).length, actifs7j: js.filter((j) => now - j.vu < 7 * JOUR).length,
+      const RGm = await lireReglages(env);
+      return repAdmin({ maintenance: RGm.maintenance || { on: false }, joueurs: js.length, actifs24h: js.filter((j) => now - j.vu < JOUR).length, actifs7j: js.filter((j) => now - j.vu < 7 * JOUR).length,
         enPartie: js.filter((j) => j.vivants > 0 && now - j.vu < 3 * JOUR).length, survivants: js.filter((j) => now - j.vu < 3 * JOUR).reduce((t, j) => t + j.vivants, 0),
         morts: js.reduce((t, j) => t + j.morts, 0), zombies: js.reduce((t, j) => t + j.zombies, 0), parties: js.reduce((t, j) => t + j.parties, 0),
         classement: liste.length, codes: Object.keys(parr.codes).length, parrainages: Object.keys(parr.utilises).length,
@@ -956,6 +957,11 @@ async function adminPost(request, env){
       const R = await lireReglages(env), j = Math.floor(+d.jour);
       if(!(j >= 1 && j <= 1000)) return repAdmin({ erreur: "Entre 1 et 1000 jours." }, 400);
       R.jourAvantposte = j; await env.CLASSEMENT.put(CLE_REGLAGES, JSON.stringify(R)); return repAdmin({ ok: true });
+    }
+    case "maintenance": { // MAINTENANCE : on / off + message affiché aux joueurs
+      const R = await lireReglages(env);
+      R.maintenance = { on: !!d.on, message: String(d.message || "").replace(/[<>]/g, "").slice(0, 300), t: Date.now() };
+      await env.CLASSEMENT.put(CLE_REGLAGES, JSON.stringify(R)); return repAdmin({ ok: true, maintenance: R.maintenance });
     }
     case "reglageJourClan": {
       const R = await lireReglages(env), j = Math.floor(+d.jour);
@@ -1156,6 +1162,13 @@ export default {
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "POST"){ const M = await import("./avantposte.mjs"); return M.avantpostePost(request, env, { reponse, texteInterdit, nomPropre, avatarDe }); }
       return reponse({ erreur: "méthode" }, 405);
+    }
+    // MAINTENANCE : le jeu demande si le site est en maintenance (clé « reglages », champ maintenance)
+    if(url.pathname === "/api/maintenance"){
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(!env.CLASSEMENT) return reponse({ on: false });
+      const RM = await lireReglages(env), M = RM.maintenance || {};
+      return reponse({ on: !!M.on, message: M.on ? (M.message || "") : "" });
     }
     if(url.pathname === "/api/monde"){
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);

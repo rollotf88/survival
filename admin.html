@@ -153,7 +153,13 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
   function afficher(d){
     var h = "";
     if(onglet === "resume"){
-      h = '<div class="tuiles">' + tuile(d.joueurs, "joueurs (appareils)") + tuile(d.actifs24h, "actifs ces 24 h") + tuile(d.actifs7j, "actifs ces 7 jours")
+      // MAINTENANCE : bouton pour mettre le site en maintenance (les joueurs voient un écran d'attente)
+      var M = d.maintenance || {};
+      h = '<div class="carte" style="margin-bottom:12px;border-color:' + (M.on ? '#c0392b' : 'var(--bois)') + '"><b>' + (M.on ? '🚧 Site EN MAINTENANCE' : '✅ Site ouvert aux joueurs') + '</b>'
+        + (M.on ? '<p style="margin:6px 0">Depuis ' + quand(M.t) + '. Les joueurs voient l’écran « Le refuge est en travaux » ; il disparaît tout seul quand tu rouvres le site.</p>' : '<p style="margin:6px 0">En maintenance, les joueurs voient un écran d’attente au lieu du jeu (leur partie reste sur leur appareil). Pour jouer quand même pendant une maintenance : <code>zombria.com/?maintenance=passer</code></p>')
+        + '<textarea id="msgMaint" rows="2" maxlength="300" placeholder="Message pour les joueurs (facultatif)" style="width:100%;box-sizing:border-box">' + esc(M.message || "") + '</textarea>'
+        + '<button id="btnMaint" style="margin-top:8px" data-on="' + (M.on ? "0" : "1") + '">' + (M.on ? '✅ Rouvrir le site' : '🚧 Mettre en maintenance') + '</button></div>';
+      h += '<div class="tuiles">' + tuile(d.joueurs, "joueurs (appareils)") + tuile(d.actifs24h, "actifs ces 24 h") + tuile(d.actifs7j, "actifs ces 7 jours")
         + tuile(d.enPartie, "familles en vie") + tuile(d.survivants, "survivants en vie") + tuile(d.parties, "parties jouées")
         + tuile(d.morts, "morts") + tuile(d.zombies, "zombies abattus") + tuile(d.classement, "au classement")
         + tuile(d.codes, "codes de parrainage") + tuile(d.parrainages, "parrainages réussis") + '</div>';
@@ -208,6 +214,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
     var tm1 = $("testMail"); if(tm1) tm1.addEventListener("click", function(){ testerMail(tm1, {}); });
     var tm2 = $("testMailAvis"); if(tm2) tm2.addEventListener("click", function(){ testerMail(tm2, { commeAvis: true }); });
     var fj = $("formJour"); if(fj) fj.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourClan", { jour:$("jourMin").value }, "Réglage enregistré."); });
+    var bm = $("btnMaint"); if(bm) bm.addEventListener("click", function(){ var on = bm.getAttribute("data-on") === "1"; if(on && !confirm("Mettre le site en maintenance ? Les joueurs ne pourront plus jouer jusqu’à ce que tu le rouvres.")) return; action("maintenance", { on:on, message:$("msgMaint").value }, on ? "Site en maintenance." : "Site rouvert."); }); // MAINTENANCE
     var fa = $("formJourAp"); if(fa) fa.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourAvantposte", { jour:$("jourAp").value }, "Réglage enregistré."); }); // AVANT-POSTE
     var f = $("formCode"); if(f) f.addEventListener("submit", function(e){ e.preventDefault(); action("codeCreer", { code:$("nouveauCode").value }, "Code créé."); });
   }

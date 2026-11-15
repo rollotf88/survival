@@ -10,6 +10,7 @@ var FICHIERS = [
   "index.html",
   "transfert.js",
   "langue.js",
+  "maintenance.js",
   "lang-en.js",
   "style.css",
   "data.js",

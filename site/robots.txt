@@ -1,0 +1,7 @@
+# ZOMBRIA : les moteurs de recherche peuvent tout visiter, sauf l'administration et le serveur
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /api/
+
+Sitemap: https://zombria.com/sitemap.xml

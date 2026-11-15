@@ -6,7 +6,7 @@ import os, shutil, re, time
 
 ici = os.path.dirname(os.path.abspath(__file__))
 os.chdir(ici)
-FICHIERS = ["index.html", "transfert.js", "langue.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "avantposte.js", "avantposte.css", "manifest.json", "sw.js", "admin.html"]  # AVANT-POSTE : avantposte.js et avantposte.css
+FICHIERS = ["index.html", "transfert.js", "langue.js", "maintenance.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "avantposte.js", "avantposte.css", "manifest.json", "sw.js", "admin.html", "robots.txt", "sitemap.xml"]  # AVANT-POSTE : avantposte.js et avantposte.css
 
 if os.path.isdir("site"): shutil.rmtree("site")
 os.makedirs("site/images"); os.makedirs("site/sons")
@@ -23,6 +23,7 @@ for f in os.listdir("sons"): shutil.copy("sons/" + f, "site/sons/" + f)
 
 # Hébergement o2switch (2026-11-14) : le .htaccess du jeu (https, nom zombria.com, sw.js jamais en cache)
 shutil.copy("htaccess-o2switch.txt", "site/.htaccess")
+shutil.copy("images/partage.jpg", "site/images/partage.jpg")  # image de partage (réseaux sociaux)
 # Le serveur Node.js d'o2switch fait tourner le même code que le Worker Cloudflare : copie à jour
 shutil.copy("worker/index.js", "serveur-o2switch/worker.mjs")
 shutil.copy("worker/avantposte.mjs", "serveur-o2switch/avantposte.mjs")  # AVANT-POSTE : module de la carte

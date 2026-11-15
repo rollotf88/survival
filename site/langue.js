@@ -11,15 +11,17 @@
    (LANGUES_PRETES), le jeu démarre en français, même sur un téléphone réglé en anglais.
    ===================================================================== */
 var LANGUES = { fr:"Français", en:"English" };
-var LANGUES_PRETES = { fr:true, en:false }; // passer en à true quand toute la traduction sera faite : détection automatique
+var LANGUES_PRETES = { fr:true, en:true }; // 2026-11-15 (demande de Fabien) : détection automatique, français ou anglais selon l’appareil du visiteur
 var TRADUCTIONS = { en:{} };
 var TRAD_MANQUANTES = {};
 // Pour essayer avant la sortie : zombria.com/?langue=en (ou ?langue=fr pour revenir) ; le réglage du menu apparaît alors
 try{ var lq = (location.search.match(/[?&]langue=(\w+)/) || [])[1]; if(lq && LANGUES[lq]) localStorage.setItem("survival_langue", lq); }catch(e){}
 var LANGUE = (function(){
   try{ var l = localStorage.getItem("survival_langue"); if(LANGUES[l]) return l; }catch(e){}
-  var n = (navigator.language || "fr").slice(0, 2).toLowerCase();
-  return LANGUES[n] && LANGUES_PRETES[n] ? n : (LANGUES_PRETES.en && n !== "fr" ? "en" : "fr");
+  // Langues de l'appareil, par ordre de préférence : la première que le jeu connaît l'emporte (fr-FR, fr-BE, fr-CA… → français ; tout le reste → anglais)
+  var L = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "fr"]).map(function(x){ return String(x).slice(0, 2).toLowerCase(); });
+  for(var i = 0; i < L.length; i++) if(LANGUES[L[i]] && LANGUES_PRETES[L[i]]) return L[i];
+  return LANGUES_PRETES.en ? "en" : "fr";
 })();
 try{ document.documentElement.lang = LANGUE; }catch(e){}
 

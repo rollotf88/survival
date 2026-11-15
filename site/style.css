@@ -3002,3 +3002,6 @@ html[lang="en"] .st-t.conseil::before{content:"advised"}
 /* … et toujours carrée et centrée, même quand la case est plus large que haute (fiche du membre au téléphone) */
 .qpeq .slot .vide,.slots.grands .slot .vide{width:auto;height:44%;aspect-ratio:1/1;margin:auto;display:grid;place-items:center}
 .qpeq .slot .vide > *,.slots.grands .slot .vide > *{width:100%;height:100%;object-fit:contain;display:block}
+
+/* Texte de présentation pour les moteurs de recherche (index.html) : invisible à l'écran, lu par Google */
+.seo-texte{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

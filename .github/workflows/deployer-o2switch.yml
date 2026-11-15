@@ -67,7 +67,7 @@ jobs:
           set net:timeout 40
           set cmd:fail-exit true
           mirror --reverse --ignore-time --no-perms --parallel=2 --verbose=1 --exclude-glob .git* --exclude-glob prompts-bruitages.md ./ ./
-          mput -O ./ *.html *.js *.css *.json .htaccess
+          mput -O ./ *.html *.js *.css *.json *.txt *.xml .htaccess
           bye
           FIN
 

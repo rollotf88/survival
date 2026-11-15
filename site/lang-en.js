@@ -1934,3 +1934,5 @@ TRAD_MOTIFS.unshift(
   [/^Marco le brocanteur has set up at the street corner today: go check out the market$/, "Marco the junk dealer has set up at the street corner today: go check out the market"],
   [/^Marco le brocanteur s’installe au coin de la rue aujourd’hui : allez voir le marché$/, "Marco the junk dealer has set up at the street corner today: go check out the market"]
 );
+/* Écran de maintenance (maintenance.js) */
+Object.assign(TRADUCTIONS.en, { "Le refuge est en travaux":"The refuge is under repair", "Nous améliorons le jeu. Revenez dans quelques minutes : votre partie est gardée sur votre appareil.":"We’re improving the game. Come back in a few minutes: your game is kept on your device.", "Cette page se rechargera toute seule dès que ce sera fini.":"This page will reload by itself as soon as it’s done." });
