@@ -694,7 +694,7 @@ var LAMPES_PIECE = {};
 var LITS_CHAMBRE = { haut:[330, 250, 722, 352, "emma"], bas:[338, 432, 722, 562, "leo"], gauche:[98, 495, 452, 790, "papa"], droite:[628, 495, 992, 790, "maman"] }; // ordre de pose : du fond vers le devant
 var LIT_DE = { "Emma":"haut", "Léo":"bas", "Papa":"gauche", "Maman":"droite", "Sam":"haut", "Nora":"bas", "Yanis":"gauche", "Inès":"droite" };
 var DORMEUR_IMG = { "Emma":"emma", "Léo":"leo", "Papa":"papa", "Maman":"maman", "Sam":"sam", "Nora":"nora", "Yanis":"yanis", "Inès":"ines" };
-var ZONE_DORMEUR = { "Sam":[330, 212, 722, 352] }; // Sam : un peu plus haut, sinon ses cheveux étaient coupés
+var ZONE_DORMEUR = { "Sam":[330, 212, 722, 352], "Emma":[330, 226, 722, 352], "Léo":[338, 387, 722, 562] }; // Emma et Léo : découpe agrandie vers le haut pour leurs cheveux (2026-11-15) // Sam : un peu plus haut, sinon ses cheveux étaient coupés
 var FAMILLE_ORIGINE = ["Papa", "Maman", "Léo", "Emma"];
 function enSortie(x){ var i = G.m.indexOf(x); return !!(G.exp && G.exp.equipe && G.exp.equipe.indexOf(i) >= 0); }
 function roleDormeur(y){ return y.r || y.nom; }

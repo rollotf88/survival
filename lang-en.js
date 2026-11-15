@@ -1916,3 +1916,8 @@ Object.assign(TRAD_ECRAN, {
   "Réparer · solidité {#} → {#}": "Repair · durability {#} → {#}", "Réparer": "Repair",
   "Pas encore de poule. On en trouve au": "No chickens yet. You can find some in the", "chez": "at", "le brocanteur, et parfois une poule égarée arrive le matin": "the junk dealer’s, and sometimes a stray chicken shows up in the morning"
 });
+Object.assign(TRAD_ECRAN, {
+  "Second souffle : +{#}": "Second wind: +{#}", "pour toute la famille": "for the whole family",
+  "Regarder une courte pub · encore {#} aujourd’hui": "Watch a short ad · {#} left today"
+});
+Object.assign(TRAD_ECRAN, { "Second souffle : +{#} ⚡ pour toute la famille": "Second wind: +{#} ⚡ for the whole family", "Second souffle: +{#}": "Second wind: +{#}" });
