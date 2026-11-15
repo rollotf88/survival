@@ -22,10 +22,15 @@ const JOUR = 86400000, RUINE = 30 * JOUR, OUBLI = 60 * JOUR;
 // 24 h de bouclier après avoir été pillé ; 10 à 20 % du stock non récolté (moins la planque), plafonné par la charrette.
 const ENGAGE = 3 * JOUR, BOUCLIER = JOUR, RES_OK = ["eau", "nour", "planche", "herbes", "bandage", "clous", "ferraille", "jerrican"];
 const PLANQUE = [15, 25, 35, 45, 60];
+// 2026-11-15 (choix de Fabien) : piller d'autres joueurs (et passer en mode pillard) demande une famille qui a tenu 30 jours ;
+// à la mort de la famille, retour automatique en mode protégé + 24 h de bouclier (action « mort »)
+const JOUR_PVP = 30;
+const MSG_JOUR_PVP = "Ta famille doit avoir tenu 30 jours pour piller d’autres survivants.";
 function peutCibler(A, P, now){
   if(!P) return "Cet avant-poste n’existe plus.";
   if(P === A) return "Tu ne peux pas te piller toi-même.";
   if(!A.pillard) return "Active d’abord le mode pillard.";
+  if((A.jour || 0) < JOUR_PVP) return MSG_JOUR_PVP;
   const ruine = now - (P.vu || 0) > RUINE;
   if(!ruine && !P.pillard) return "Cet avant-poste est protégé : il n’est pas en mode pillard.";
   if((P.bouclier || 0) > now) return "Cet avant-poste vient d’être pillé : il est à l’abri encore un moment.";
@@ -91,8 +96,14 @@ export async function avantpostePost(request, env, O){
   const A = C.postes[id];
   // Pillages subis depuis la dernière fois : envoyés une fois, puis effacés
   if(d.action === "maj" && A && A.pille && A.pille.length){ extra.pillages = A.pille; A.pille = []; change = true; }
+  // Le jour de la famille, envoyé avec les actions qui en dépendent
+  if(A && d.jour != null && d.action !== "maj"){ A.jour = Math.max(0, Math.min(5000, Math.floor(+d.jour) || 0)); change = true; }
+  if(d.action === "mort"){
+    if(A){ A.pillard = false; A.engage = 0; A.bouclier = now + BOUCLIER; delete A.attaque; change = true; }
+  }
   if(d.action === "pillard"){
     if(!A) return O.reponse({ erreur: "Ton avant-poste n’est pas encore sur la carte." });
+    if(d.on && (A.jour || 0) < JOUR_PVP) return O.reponse({ erreur: MSG_JOUR_PVP });
     if(d.on){ A.pillard = true; A.engage = Math.max(A.engage || 0, now + ENGAGE); }
     else { if((A.engage || 0) > now) return O.reponse({ erreur: "Tu t’es engagé : le mode pillard reste actif encore un peu." }); A.pillard = false; }
     change = true;

@@ -543,8 +543,7 @@ function apFicheRepere(i){
   if(P.pnj){
     h += '<div class="apc-ft"><img class="apc-fi" src="images/avantposte/reperes/pnj.webp" alt=""><div><b>' + trad("Camp de pillards") + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv, d:P.def }) + '</small></div></div>'
       + '<p class="apc-fp">' + (P.s === 0 ? trad("Le centre-ville est tenu par les bandes les plus dangereuses.") : trad("Une bande de pillards s’est installée ici.")) + '</p>'
-      + (apPillard() ? '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Attaquer le camp") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>'
-        : '<p class="apc-fp"><b>' + trad("Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.") + '</b></p>');
+      + '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Attaquer le camp") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>';
   } else {
     var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
     h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
@@ -555,7 +554,7 @@ function apFicheRepere(i){
       : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.", { n:P.absent || 30 })
       : pill ? (bouclier ? trad("Pillard, mais pillé récemment : à l’abri encore {t}.", { t:apFmt(P.bouclier - Date.now()) }) : trad("En mode pillard : il peut être attaqué par les autres pillards."))
       : trad("Avant-poste protégé : il ne peut pas être pillé.")) + '</p>';
-    if(!P.moi && (pill || P.ruine) && !bouclier) h += apPillard() ? '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Piller") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>'
+    if(!P.moi && (pill || P.ruine) && !bouclier) h += !apAssezVieux() ? '<p class="apc-fp"><b>' + trad("Ta famille doit avoir tenu {n} jours pour piller d’autres survivants.", { n:AP_JOUR_PVP }) + '</b></p>' : apPillard() ? '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Piller") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>'
       : '<p class="apc-fp"><b>' + trad("Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.") + '</b></p>';
   }
   el.innerHTML = h; el.classList.add("on");
@@ -585,6 +584,19 @@ if(typeof ZOMBIES !== "undefined" && !ZOMBIES.some(function(z){ return z.id === 
 }
 var AP_PNJ_PAUSE = 24 * 3600e3, AP_BONUS_PILLARD = 1.25, AP_ENERGIE = (typeof BAL !== "undefined" && BAL.energieAssaut) || 40;
 function apPillard(){ return !!(APS.pillard && APS.pillard.on); }
+// Piller d'autres joueurs : famille d'au moins 30 jours (les camps de pillards du jeu, eux, sont attaquables à tout moment)
+var AP_JOUR_PVP = 30;
+function apAssezVieux(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.bacASable && G.day >= AP_JOUR_PVP; }
+// À la mort de la famille : retour en mode protégé et 24 h de bouclier (envoyé au serveur, réessayé si hors ligne)
+function apMortFamille(){
+  if(!AVANTPOSTE_ACTIF || !APS.debloque) return;
+  APS.pillard = { on:false, engage:0 }; APS.mortAttente = Date.now(); apSauver();
+  apAppel({ action:"mort" }).then(function(d){ if(d && !d.erreur){ delete APS.mortAttente; apSauver(); } }).catch(function(){});
+}
+if(typeof ecranGameOver === "function"){
+  var ecranGameOverBase = ecranGameOver;
+  ecranGameOver = function(){ try{ if(typeof G === "undefined" || !G || !G.bacASable) apMortFamille(); }catch(e){} return ecranGameOverBase.apply(this, arguments); };
+}
 function apNoterServeur(d){
   if(!d || d.erreur) return d;
   if(d.moi){ APS.pillard = { on:!!d.moi.pillard, engage:d.moi.engage || 0 }; apSauver(); }
@@ -608,6 +620,7 @@ apEnvoyer = function(force){
   if(!force && Date.now() - t < 600000) return Promise.resolve(null);
   try{ localStorage.setItem("survival_ap_envoi", String(Date.now())); }catch(e){}
   apMaj();
+  if(APS.mortAttente) apAppel({ action:"mort" }).then(function(d){ if(d && !d.erreur){ delete APS.mortAttente; apSauver(); } }).catch(function(){});
   var bats = {}, stock = {}; for(var k in APS.plots) if(APS.plots[k].niv) bats[APS.plots[k].id] = APS.plots[k].niv;
   for(var r in APS.acc) if(APS.acc[r] >= 1) stock[r] = Math.floor(APS.acc[r]);
   return apAppel({ action:"maj", pseudo:typeof lirePseudo === "function" ? lirePseudo() : "", avatar:typeof lireAvatar === "function" ? lireAvatar() : "",
@@ -629,8 +642,9 @@ apEffet = function(id, n){
 function apBlocPillard(){
   var h = '<p class="titre-butin">🏴 ' + trad("Mode pillard") + '</p>';
   if(!apPillard()){
-    h += '<p class="ap-note">' + trad("Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.") + '</p>'
-      + '<button class="loc" data-act="apPillardOn"><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + trad("Engagement de 3 jours, relancé à chaque attaque") + '</small></button>';
+    var vieux = apAssezVieux();
+    h += '<p class="ap-note">' + trad("Tu es protégé : personne ne peut piller ton avant-poste. Les camps de pillards de la carte s’attaquent à tout moment. En mode pillard, tu peux aussi piller les autres joueurs pillards et les ruines, et ta production monte de 25 %… mais d’autres pillards peuvent te piller.") + '</p>'
+      + '<button class="loc" data-act="apPillardOn"' + (vieux ? '' : ' disabled') + '><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + (vieux ? trad("Engagement de 3 jours, relancé à chaque attaque") : trad("Après {n} jours de survie de ta famille", { n:AP_JOUR_PVP })) + '</small></button>';
   } else {
     var reste = (APS.pillard.engage || 0) - Date.now();
     h += '<p class="ap-note ap-pill-on">🏴 ' + trad("Mode pillard actif : +25 % de production, mais tu peux être pillé.") + '</p>'
@@ -645,7 +659,7 @@ openCamp = function(){
   if(place) place.outerHTML = '<div class="ap-pill">' + apBlocPillard() + '</div>';
 };
 function apConfirmerPillard(){
-  show('<div class="ap"><h2>🏴 ' + trad("Passer en mode pillard ?") + '</h2><p>' + trad("Tu pourras piller les autres pillards, les ruines et les camps de pillards du jeu, et ta production montera de 25 %.") + '</p>'
+  show('<div class="ap"><h2>🏴 ' + trad("Passer en mode pillard ?") + '</h2><p>' + trad("Tu pourras piller les autres joueurs pillards et les ruines, et ta production montera de 25 %.") + '</p>'
     + '<p class="msg b2">⚠️ ' + trad("Mais d’autres pillards pourront attaquer ton avant-poste et repartir avec une partie de ton stock non récolté (palissade, tour et pièges le défendent, la planque en cache une part). Tu restes en mode pillard au moins 3 jours, et chaque attaque que tu lances relance ce délai.") + '</p>'
     + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="apPillardOui">🏴 ' + trad("Oui, devenir pillard") + '</button><button class="btn alt" style="width:100%" data-act="apCamp">' + trad("Non, rester protégé") + '</button></div>');
 }
@@ -706,7 +720,7 @@ function apAttaquer(i){
       jourCible:(BAL.jourClans || 30) + Math.floor((P.niv || 0) / 6) * ((BAL.assaut && BAL.assaut.joursParForce) || 30) }, { pnj:true, cle:cle, niv:P.niv || 4 }, eq);
     return;
   }
-  apAppel({ action:"attaquer", s:P.s, p:P.p }).then(function(d){
+  apAppel({ action:"attaquer", s:P.s, p:P.p, jour:typeof G !== "undefined" && G ? G.day : 0 }).then(function(d){
     if(!d || d.erreur){ apMsgFiche(d && d.erreur ? d.erreur : trad("Hors ligne : impossible d’attaquer.")); return; }
     apNoterServeur(d);
     var c = d.cible || {};
@@ -758,7 +772,7 @@ document.addEventListener("click", function(e){
   if(a === "apPillardOn"){ apConfirmerPillard(); return; }
   if(a === "apPillardOui" || a === "apPillardOff"){
     var on = a === "apPillardOui";
-    apEnvoyer(true).then(function(){ return apAppel({ action:"pillard", on:on }); }).then(function(d){ apNoterServeur(d); apMsg = d && d.erreur ? "❌ " + d.erreur : on ? "🏴 " + trad("Tu es maintenant en mode pillard.") : "🛡️ " + trad("Tu es de nouveau protégé."); openCamp(); if(apIci() && typeof placerPiece === "function") placerPiece(); })
+    apEnvoyer(true).then(function(){ return apAppel({ action:"pillard", on:on, jour:typeof G !== "undefined" && G ? G.day : 0 }); }).then(function(d){ apNoterServeur(d); apMsg = d && d.erreur ? "❌ " + d.erreur : on ? "🏴 " + trad("Tu es maintenant en mode pillard.") : "🛡️ " + trad("Tu es de nouveau protégé."); openCamp(); if(apIci() && typeof placerPiece === "function") placerPiece(); })
       .catch(function(){ apMsg = "❌ " + trad("Hors ligne : impossible de changer de mode."); openCamp(); });
     return;
   }
@@ -776,7 +790,7 @@ if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
   var apReglesOrigine = reglesGuide;
   reglesGuide = function(){
     var R = apReglesOrigine.apply(this, arguments);
-    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour tout rapporter au refuge. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Par défaut tu es protégé ; en mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque), 2 membres de ta famille peuvent piller les autres pillards, les ruines et les camps de pillards, mais tu peux aussi être pillé (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri)."]);
+    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour tout rapporter au refuge. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Les camps de pillards du jeu s’attaquent à tout moment (2 membres de ta famille partent). Par défaut tu es protégé ; quand ta famille a tenu " + AP_JOUR_PVP + " jours, le mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque) permet aussi de piller les autres joueurs pillards et les ruines, mais tu peux être pillé à ton tour (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri). Quand ta famille meurt, l’avant-poste repasse en mode protégé avec 24 heures à l’abri, et la famille suivante y a accès dès son premier jour."]);
     return R;
   };
   if(typeof THEMES_GUIDE !== "undefined") THEMES_GUIDE.forEach(function(T){ if(T[0] === "Progresser") T[2].push("L’avant-poste"); });
@@ -831,7 +845,10 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Pillage repoussé !":"Raid repelled!", "Ton avant-poste a été pillé":"Your outpost was raided", "{p} a tenté de piller ton avant-poste et a échoué.":"{p} tried to raid your outpost and failed.",
     "{p} est reparti avec une partie de ton stock.":"{p} left with part of your stock.", "Un pillard":"A raider",
     "Butin d’un pillage : {n} objets au plus":"Loot from a raid: {n} items max", "Défenses adverses affaiblies : palissade −{a}, pièges −{b}":"Enemy defenses weakened: palisade −{a}, traps −{b}",
-    "Mode pillard":"Raider mode", "Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. In raider mode, you can attack other raiders, ruins and raider camps (2 members of your family go), your production rises by 25%… but other raiders can raid you.",
+    "Mode pillard":"Raider mode", "Ta famille doit avoir tenu {n} jours pour piller d’autres survivants.":"Your family must have lasted {n} days to raid other survivors.",
+    "Ta famille doit avoir tenu 30 jours pour piller d’autres survivants.":"Your family must have lasted 30 days to raid other survivors.", "Après {n} jours de survie de ta famille":"After your family has survived {n} days",
+    "Tu es protégé : personne ne peut piller ton avant-poste. Les camps de pillards de la carte s’attaquent à tout moment. En mode pillard, tu peux aussi piller les autres joueurs pillards et les ruines, et ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. The raider camps on the map can be attacked at any time. In raider mode, you can also raid other raider players and ruins, and your production rises by 25%… but other raiders can raid you.",
+    "Tu pourras piller les autres joueurs pillards et les ruines, et ta production montera de 25 %.":"You’ll be able to raid other raider players and ruins, and your production will rise by 25%.", "Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. In raider mode, you can attack other raiders, ruins and raider camps (2 members of your family go), your production rises by 25%… but other raiders can raid you.",
     "Passer en mode pillard":"Switch to raider mode", "Engagement de 3 jours, relancé à chaque attaque":"3-day commitment, renewed with every attack",
     "Mode pillard actif : +25 % de production, mais tu peux être pillé.":"Raider mode on: +25% production, but you can be raided.", "Revenir en mode protégé":"Go back to protected mode",
     "Engagé encore {t}":"Committed for {t} more", "Possible maintenant":"Possible now", "Passer en mode pillard ?":"Switch to raider mode?",
@@ -852,4 +869,4 @@ if(typeof TRADUCTIONS !== "undefined"){
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost", "Dès {#} jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux":"From day {#}, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps", "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
-if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. By default you’re protected; in raider mode ({#}% more production, at least {#} days, renewed with every attack), 2 members of your family can raid other raiders, ruins and raider camps, but you can be raided too (up to {#}% of your unharvested stock, then {#} hours of safety).";
+if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
