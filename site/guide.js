@@ -114,26 +114,26 @@ function ouTrouver(id){
   var t = [];
   LIEUX.forEach(function(L){ if(L.butin[id]) t.push(iconeLieu(L) + " " + L.nom); });
   MAISONS.forEach(function(M){ if(M.objets[id]) t.push(ic(ICONE_MAISON[M.cle || M.nom], M.icone) + " " + M.nom + " " + trad("(départ)")); });
-  if(MARCHE.stock[id]) t.push(ic("marco", "🧔") + " Marco le brocanteur");
+  if(MARCHE.stock[id]) t.push(ic("marco", "🧔") + " " + trad("Marco le brocanteur"));
   return t;
 }
 function caracteristiques(o){
   var t = [];
-  if(o.rations) t.push(o.rations + " ration" + (o.rations > 1 ? "s" : "") + (o.cat === "eau" ? " d’eau" : " de nourriture"));
-  if(o.soin) t.push("soigne " + o.soin + " PV");
-  if(o.degats) t.push("dégâts " + o.degats[0] + "-" + o.degats[1]);
-  if(o.def) t.push("défense de nuit +" + o.def);
-  if(o.sol && o.emplacement) t.push("solidité " + o.sol);
-  if(o.munition) t.push("munition : " + minus(OBJETS[o.munition].pl));
-  if(o.capacite) t.push("+" + o.capacite + " places de butin");
-  if(o.lumiere) t.push(o.lumiere === 2 ? "éclaire bien (1 pile par fouille)" : "lueur faible");
-  if(o.ouvre) t.push("ouvre les portes verrouillées");
-  if(o.chaleur) t.push("tient chaud 2 personnes la nuit");
-  if(o.allume) t.push("allume le feu de cheminée");
-  if(o.moral) t.push("moral +" + o.moral);
-  if(o.radio) t.push("révèle le danger des lieux");
-  if(o.emplacement) t.push("se porte : " + { arme:"arme", outil:"outil / éclairage", sac:"sac" }[o.emplacement]);
-  if(o.place !== undefined) t.push(o.place ? o.place + " place" + (o.place > 1 ? "s" : "") + " dans un sac" : "ne prend pas de place");
+  if(o.rations) t.push(o.cat === "eau" ? tradN(o.rations, "1 ration d’eau", "{n} rations d’eau") : tradN(o.rations, "1 ration de nourriture", "{n} rations de nourriture"));
+  if(o.soin) t.push(trad("soigne {n} PV", { n:o.soin }));
+  if(o.degats) t.push(trad("dégâts {a}-{b}", { a:o.degats[0], b:o.degats[1] }));
+  if(o.def) t.push(trad("défense de nuit +{n}", { n:o.def }));
+  if(o.sol && o.emplacement) t.push(trad("solidité {n}", { n:o.sol }));
+  if(o.munition) t.push(trad("munition : {m}", { m:minus(OBJETS[o.munition].pl) }));
+  if(o.capacite) t.push(trad("+{n} places de butin", { n:o.capacite }));
+  if(o.lumiere) t.push(trad(o.lumiere === 2 ? "éclaire bien (1 pile par fouille)" : "lueur faible"));
+  if(o.ouvre) t.push(trad("ouvre les portes verrouillées"));
+  if(o.chaleur) t.push(trad("tient chaud 2 personnes la nuit"));
+  if(o.allume) t.push(trad("allume le feu de cheminée"));
+  if(o.moral) t.push(trad("moral +{n}", { n:o.moral }));
+  if(o.radio) t.push(trad("révèle le danger des lieux"));
+  if(o.emplacement) t.push(trad({ arme:"se porte : arme", outil:"se porte : outil / éclairage", sac:"se porte : sac" }[o.emplacement]));
+  if(o.place !== undefined) t.push(o.place ? tradN(o.place, "1 place dans un sac", "{n} places dans un sac") : trad("ne prend pas de place"));
   return t;
 }
 
@@ -274,7 +274,7 @@ function ficheGuide(V){
   if(V.t === "objet") return ficheObjet(V.id);
   if(V.t === "regle"){
     var R = reglesGuide(), r = R[V.id], pre = R[V.id - 1], sui = R[+V.id + 1];
-    return '<div class="gfiche"><h3>' + r[1] + ' ' + r[0] + '</h3><p>' + r[2] + '</p></div>'
+    return '<div class="gfiche"><h3>' + r[1] + ' ' + r[0] + '</h3><p>' + (typeof tradRegle === "function" ? tradRegle(r[0], r[2]) : r[2]) + '</p></div>'
       + '<div class="gnav">' + (pre ? '<button class="lien-retour" data-act="gregle" data-id="' + (V.id - 1) + '">‹ ' + pre[0] + '</button>' : '<span></span>')
       + (sui ? '<button class="lien-retour" data-act="gregle" data-id="' + (+V.id + 1) + '">' + sui[0] + ' ›</button>' : '') + '</div>';
   }
@@ -282,14 +282,14 @@ function ficheGuide(V){
     var L = LIEUX[V.id], img = imageLieu(L);
     var tags = [DISTANCES[L.distance], "danger " + niveauDanger(L.danger)];
     if(L.sombre) tags.push("sombre"); if(L.verrou) tags.push("verrouillé"); if(L.voiture) tags.push("voiture obligatoire"); if(L.peche) tags.push("pêche (canne à pêche)"); if(L.bois) tags.push("bois (une hache en main)"); if(L.secret) tags.push("secret : découvert vers le jour " + L.secret); if(L.jour) tags.push("à partir du jour " + L.jour);
-    return (img ? '<img class="gimg" src="' + img + '" alt="">' : '') + '<div class="gfiche"><h3>' + iconeLieu(L) + ' ' + L.nom + '</h3><p class="sub">' + tags.join(" · ") + '</p></div>'
-      + '<b class="gcat">Ce qu’on peut y trouver</b><div class="gtuiles objets">' + Object.keys(L.butin).map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom); }).join("") + '</div>';
+    return (img ? '<img class="gimg" src="' + img + '" alt="">' : '') + '<div class="gfiche"><h3>' + iconeLieu(L) + ' ' + L.nom + '</h3><p class="sub">' + tags.map(function(t){ return typeof tradEcran === "function" ? tradEcran(t) : t; }).join(" · ") + '</p></div>'
+      + '<b class="gcat">' + trad("Ce qu’on peut y trouver") + '</b><div class="gtuiles objets">' + Object.keys(L.butin).map(function(id){ return tuileGuide("gfiche", id, icone(id), OBJETS[id].nom); }).join("") + '</div>';
   }
   if(V.t === "immeuble"){
-    return '<img class="gimg" src="' + BAL.immeuble.exterieur + '" alt=""><div class="gfiche"><h3>' + ic("cible", "🎯") + ' L’immeuble abandonné</h3><p class="sub">Opération de clan · ' + BAL.immeuble.etages.length + ' étages · 4 à 5 volontaires · une seule fois par clan · le chef mène le raid</p></div>'
+    return '<img class="gimg" src="' + BAL.immeuble.exterieur + '" alt=""><div class="gfiche"><h3>' + ic("cible", "🎯") + ' ' + trad("L’immeuble abandonné") + '</h3><p class="sub">' + trad("Opération de clan · {n} étages · 4 à 5 volontaires · une seule fois par clan · le chef mène le raid", { n:BAL.immeuble.etages.length }) + '</p></div>'
       + BAL.immeuble.etages.map(function(E, n){ return '<div class="gsec"><b>' + (n + 1) + '. ' + E.nom + '</b> <span class="g-zs">' + E.z.map(function(id){ var T = ZOMBIES.find(function(t){ return t.id === id; }); return '<span class="g-z" title="' + T.nom + '">' + iconeZombie(T) + '</span>'; }).join("")
         + '</span><div class="gmini">' + Object.keys(E.butin).map(function(id){ return '<span title="' + OBJETS[id].nom + '">' + icone(id) + '</span>'; }).join("") + '</div></div>'; }).join("")
-      + '<p class="sub">Zombies renforcés étage après étage. Butin : ' + BAL.immeuble.sac + ' objets par volontaire debout, ' + BAL.immeuble.remorque + ' de plus avec la remorque du bastion.</p>';
+      + '<p class="sub">' + trad("Zombies renforcés étage après étage. Butin : {n} objets par volontaire debout, {r} de plus avec la remorque du bastion.", { n:BAL.immeuble.sac, r:BAL.immeuble.remorque }) + '</p>';
   }
   if(V.t === "trait"){
     var T = TRAITS[V.id];
@@ -309,17 +309,17 @@ function ficheObjet(id){
   var o = OBJETS[id], h = '<div class="rt"><span class="em" style="font-size:56px">' + icone(id) + '</span><span class="eqt"><h2>' + o.nom + '</h2><p class="sub">' + o.desc + '</p></span></div>';
   var c = caracteristiques(o); if(c.length) h += '<p>' + c.join(" · ") + '</p>';
   var ou = ouTrouver(id);
-  h += '<div class="gsec"><b>Où le trouver</b><p>' + (ou.length ? ou.join(", ") : "Nulle part : il faut le fabriquer.") + '</p></div>';
+  h += '<div class="gsec"><b>' + trad("Où le trouver") + '</b><p>' + (ou.length ? ou.join(", ") : trad("Nulle part : il faut le fabriquer.")) + '</p></div>';
   var rec = RECETTES.filter(function(r){ return r.id === id; })[0];
-  if(rec){ var ing = []; for(var k in rec.ingredients) ing.push(icone(k) + " " + nommer(k, rec.ingredients[k])); h += '<div class="gsec"><b>Se fabrique avec</b><p>' + ing.join(", ") + (rec.besoin ? " (avec " + nommer(rec.besoin, 1) + ")" : "") + '</p></div>'; }
+  if(rec){ var ing = []; for(var k in rec.ingredients) ing.push(icone(k) + " " + nommer(k, rec.ingredients[k])); h += '<div class="gsec"><b>' + trad("Se fabrique avec") + '</b><p>' + ing.join(", ") + (rec.besoin ? " " + trad("(avec {outil})", { outil:nommer(rec.besoin, 1) }) : "") + '</p></div>'; }
   var sert = RECETTES.filter(function(r){ return r.ingredients[id] || r.besoin === id; }).map(function(r){ return icone(r.id) + " " + OBJETS[r.id].nom; });
-  if(id === "ferraille" || id === "ruban") sert.push("🔧 réparer une arme");
-  if(OBJETS[id].piece) sert.push(ic("roue", "🚗") + " réparer la voiture");
-  if(id === "jerrican") sert.push(ic("roue", "🚗") + " faire le plein de la voiture");
-  if(id === "planche") sert.push(ic("ref_barr", "🧱") + " construire le refuge");
-  if(id === "epingle") sert.push("🗝️ crocheter une serrure");
-  if(sert.length) h += '<div class="gsec"><b>Sert à fabriquer ou à faire</b><p>' + sert.join(", ") + '</p></div>';
-  if(DEMONTAGE[id]){ var d = []; for(var k2 in DEMONTAGE[id]) d.push(icone(k2) + " " + nommer(k2, DEMONTAGE[id][k2])); h += '<div class="gsec"><b>Démonté, il donne</b><p>' + d.join(", ") + '</p></div>'; }
+  if(id === "ferraille" || id === "ruban") sert.push("🔧 " + trad("réparer une arme"));
+  if(OBJETS[id].piece) sert.push(ic("roue", "🚗") + " " + trad("réparer la voiture"));
+  if(id === "jerrican") sert.push(ic("roue", "🚗") + " " + trad("faire le plein de la voiture"));
+  if(id === "planche") sert.push(ic("ref_barr", "🧱") + " " + trad("construire le refuge"));
+  if(id === "epingle") sert.push("🗝️ " + trad("crocheter une serrure"));
+  if(sert.length) h += '<div class="gsec"><b>' + trad("Sert à fabriquer ou à faire") + '</b><p>' + sert.join(", ") + '</p></div>';
+  if(DEMONTAGE[id]){ var d = []; for(var k2 in DEMONTAGE[id]) d.push(icone(k2) + " " + nommer(k2, DEMONTAGE[id][k2])); h += '<div class="gsec"><b>' + trad("Démonté, il donne") + '</b><p>' + d.join(", ") + '</p></div>'; }
   return h;
 }
 

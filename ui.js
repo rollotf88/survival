@@ -11,7 +11,7 @@ try{ astucesVues = JSON.parse(localStorage.getItem("survival_astuces")) || {}; }
 function astuce(id){
   if(astucesVues.aucune || astucesVues[id] || $("astuce")) return;
   var d = document.createElement("div"); d.id = "astuce"; d.setAttribute("data-id", id); d.setAttribute("role", "status");
-  d.innerHTML = '<p>' + ASTUCES[id] + '</p><div class="row"><button class="lien" data-act="astucesoff">Ne plus montrer d’astuces</button><small class="indic">ou touche n’importe où</small><button class="btn" style="flex:0 0 auto;padding:6px 16px" data-act="astuceok">OK</button></div>';
+  d.innerHTML = '<p>' + (typeof tradEcran === "function" ? tradEcran(ASTUCES[id]) : ASTUCES[id]) + '</p><div class="row"><button class="lien" data-act="astucesoff">Ne plus montrer d’astuces</button><small class="indic">ou touche n’importe où</small><button class="btn" style="flex:0 0 auto;padding:6px 16px" data-act="astuceok">OK</button></div>';
   document.body.appendChild(d);
 }
 function fermerAstuce(toutes){

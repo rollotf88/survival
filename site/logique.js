@@ -1275,7 +1275,7 @@ function nuitMonde(n){
 var FEMININS_LIEUX = ["Prison", "Centrale électrique", "Maison voisine", "Rue des pavillons", "Quincaillerie", "Station-service", "Zone industrielle", "Base militaire", "Caserne des pompiers", "Péniche du canal", "Clinique vétérinaire", "Forêt"];
 function leLieu(nom){ if(typeof LANGUE !== "undefined" && LANGUE === "en") return "the " + nom; return /^[AEIOUYÉÈH]/.test(nom) ? "l’" + nom : (FEMININS_LIEUX.indexOf(nom) >= 0 ? "la " : "le ") + nom; }
 function mission(){ return G.mission ? MISSIONS.filter(function(m){ return m.id === G.mission.id; })[0] : null; }
-function texteMission(){ var M = mission(); return M ? M.texte.replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }
+function texteMission(){ var M = mission(); return M ? trad(M.texte).replace("LIEU", G.mission.lieu != null ? LIEUX[G.mission.lieu].nom : "") : ""; }
 function joursMission(){ return G.mission ? G.mission.fin - G.day + 1 : 0; }
 // Quelle livraison est possible maintenant (index dans M.livrer), ou -1
 function livraisonPossible(){
@@ -1292,7 +1292,7 @@ function reussirMission(){
   var M = mission(); if(!M) return null;
   var rec = []; for(var k in M.recompense){ ajouter(k, M.recompense[k], 1); rec.push({ id:k, n:M.recompense[k] }); }
   changerMoral(M.moral || 0); G.mission = null; G.stats.missions = (G.stats.missions || 0) + 1;
-  return M.icone + " Mission réussie : " + M.titre + ". " + M.merci + " (+" + nommerListe(rec) + (M.moral ? ", moral +" + M.moral : "") + ")";
+  return M.icone + " " + trad("Mission réussie :") + " " + trad(M.titre) + ". " + trad(M.merci) + " (+" + nommerListe(rec) + (M.moral ? ", " + trad("moral +{n}", { n:M.moral }) : "") + ")";
 }
 
 /* ---------- Le chien ---------- */
