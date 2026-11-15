@@ -55,11 +55,29 @@ var TRAD_ECRAN = {};
 var TRAD_MOTIFS = []; // [expression, remplacement] pour les textes qui contiennent un nom
 var ECRAN_MANQUANTS = {};
 var RE_NOMBRE = /\d+(?:[.,]\d+)?/g;
+/* Les phrases de TRADUCTIONS[LANGUE] rangées comme les clés de l'écran (sans emoji ni ponctuation au bout, nombres → {#}) */
+var CLES_TRAD = null;
+function clesTrad(){
+  if(CLES_TRAD) return CLES_TRAD;
+  var d = TRADUCTIONS[LANGUE] || {};
+  if(typeof DONNEES_EN === "undefined") return {}; /* lang-en.js pas encore chargé : on réessaiera */
+  CLES_TRAD = {};
+  var re = /^[\s\p{Extended_Pictographic}️‍\p{S}\p{Pd}\p{Pi}«"“(\[•·]*([\s\S]*?)[\s\p{Extended_Pictographic}️‍\p{Pf}:…!?.,;)\]»"”’]*$/u;
+  for(var k in d){
+    if(typeof d[k] !== "string" || /[<{]/.test(k)) continue;
+    var a = re.exec(k), b = re.exec(d[k]);
+    if(!a || !b || !a[1] || !b[1]) continue;
+    var c = a[1].replace(RE_NOMBRE, "{#}");
+    if(!(c in CLES_TRAD)) CLES_TRAD[c] = b[1].replace(RE_NOMBRE, "{#}");
+  }
+  return CLES_TRAD;
+}
 function traduireTexteEcran(t){
   var m = /^([\s\p{Extended_Pictographic}\uFE0F\u200D\p{S}\p{Pd}\p{Pi}«"“(\[•·]*)([\s\S]*?)([\s\p{Extended_Pictographic}\uFE0F\u200D\p{Pf}:…!?.,;)\]»"”’]*)$/u.exec(t);
   if(!m || !m[2] || !/[A-Za-zÀ-ÿ]/.test(m[2])) return null;
   var core = m[2], nums = core.match(RE_NOMBRE) || [], cle = core.replace(RE_NOMBRE, "{#}");
   var tr = TRAD_ECRAN[cle];
+  if(tr === undefined) tr = clesTrad()[cle]; /* en secours : les phrases de trad() (TRADUCTIONS), quand le code les affiche sans passer par trad() */
   if(tr === undefined){
     // Textes avec un nom dedans (« Arme de Papa : vide ») : modèles de TRAD_MOTIFS (lang-en.js)
     for(var i = 0; i < TRAD_MOTIFS.length; i++){ if(TRAD_MOTIFS[i][0].test(core)){ var res = core.replace(TRAD_MOTIFS[i][0], TRAD_MOTIFS[i][1]); if(/^[A-Z][a-z]{2} \d+$/.test(res)) m[3] = m[3].replace(/^\./, ""); /* « 9 nov. » → « Nov 9 » */ return m[1] + res + m[3].replace(/^[\s  ]+(?=[:?!;])/, ""); } }
