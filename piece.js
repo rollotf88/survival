@@ -756,11 +756,13 @@ var CUISINIERS = { "Maman":[149, 177, 410, 882, "cuisine-maman"], "Papa":[140, 2
   // Recrues (2026-11-12, images Gemini redessinées : découpe au contour, guidée par les silhouettes de la famille)
   "Yanis":[118, 218, 495, 773, "cuisine-yanis"], "Sam":[118, 218, 495, 773, "cuisine-sam"],
   "Inès":[118, 217, 495, 773, "cuisine-ines"], "Nora":[118, 217, 495, 773, "cuisine-nora"] };
+function fenetreCuisine(){ var m = document.getElementById("modal"); return !!(m && m.style.display !== "none" && typeof ongletRef !== "undefined" && ongletRef === "cuisine" && document.querySelector("#sheet .onglets")); }
 function cuisinierDuJour(){
   if(!G || !G.m || G.cuisineJour !== G.day) return null;
   // Celui qui a vraiment cuisiné aujourd'hui, même épuisé par le travail (2026-11-14, signalé par Fabien : Léo cuisinait mais n'apparaissait pas)
   if(G.cuisinierR && CUISINIERS[G.cuisinierR]){ var c = G.m.find(function(y){ return roleDormeur(y) === G.cuisinierR; });
-    if(c && c.al && !c.raid && !enSortie(c)) return G.cuisinierR; }
+    // 2026-11-15 (Fabien) : épuisé, il ne reste aux fourneaux que tant que la fenêtre de la cuisine est ouverte ; ensuite il va au lit
+    if(c && c.al && !c.raid && !enSortie(c)) return peutSortir(c) || fenetreCuisine() ? G.cuisinierR : null; }
   var dispo = Object.keys(CUISINIERS).filter(function(r){ return auSalon(r, true); });
   var chef = dispo.filter(function(r){ var x = G.m.find(function(y){ return roleDormeur(y) === r; }); return x && x.trait === "cuisinier"; })[0];
   return chef || dispo[0] || null;
