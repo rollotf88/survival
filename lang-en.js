@@ -1858,3 +1858,54 @@ Object.assign(TRAD_ECRAN, {
   "Dès {#} jours, rejoins un clan de {#} familles : bastion, réserve, défenses, échanges et guerres contre d’autres clans": "From day {#}, join a clan of {#} families: stronghold, stockpile, defenses, trades and wars against other clans",
   "Chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de {#} étages. Replay pour tous, butin partagé": "Everyone sends a volunteer, the leader storms a {#}-floor apartment block. Replay for all, shared loot"
 });
+/* ---------- Relecture (5) du 2026-11-15 ---------- */
+Object.assign(TRADUCTIONS.en, {
+  "Il faut {o} pour la cuisinière": "You need {o} for the stove", "{x} cuisine {o}.": "{x} cooks {o}.", "{x} installe {o}.": "{x} installs {o}.",
+  "Le moteur tousse… et démarre ! La voiture roule.": "The engine coughs… and starts! The car runs.", "Plein fait : ⛽ {n} L": "Tank filled: ⛽ {n} L", "(le surplus a débordé)": "(the extra spilled over)",
+  "Clic ! Goupille {n} en place.": "Click! Pin {n} in place.", "Crac ! L’épingle casse (il en reste {n}).": "Snap! The pin breaks ({n} left).",
+  "Personne ne parlera jamais de cette nuit. Au matin, {x} n’est plus là, et la famille a de quoi manger (+{n} rations)… mais plus personne n’ose croiser le regard des autres. Moral {m}.": "Nobody will ever speak of that night. In the morning, {x} is gone, and the family has food (+{n} rations)… but nobody dares meet anyone’s eyes anymore. Morale {m}.",
+  "Personne ne parle pendant le repas. Vous avez {n} rations de plus, mais {c} ne montera plus jamais la garde. Moral {m}.": "Nobody speaks during the meal. You have {n} more rations, but {c} will never stand guard again. Morale {m}.",
+  "Échange fait : vous donnez {a} et recevez {b}.": "Trade done: you give {a} and get {b}.", "Il faut {o}": "You need {o}", "Il manque {l}": "Missing {l}",
+  "{x} fabrique {o}.": "{x} crafts {o}.", "{x} répare {o} (solidité {a} / {b}).": "{x} repairs {o} (durability {a} / {b}).", "{x} démonte {o} et récupère {r}.": "{x} takes apart {o} and salvages {r}.",
+  "Tour {n} · choisis l’action de chacun puis « Jouer »": "Turn {n} · choose everyone’s action, then “Play”",
+  "Combat gagné en {n} tour !": "Fight won in {n} turn!", "Combat gagné en {n} tours !": "Fight won in {n} turns!",
+  "Assaut gagné en {n} tour !": "Assault won in {n} turn!", "Assaut gagné en {n} tours !": "Assault won in {n} turns!",
+  "Étage nettoyé en {n} tour !": "Floor cleared in {n} turn!", "Étage nettoyé en {n} tours !": "Floor cleared in {n} turns!"
+});
+Object.assign(TRAD_ECRAN, {
+  "case vide": "empty slot", "vide": "empty", "ration d’eau par nuit": "water ration per night", "rations d’eau par nuit": "water rations per night",
+  "ration de nourriture par nuit": "food ration per night", "rations de nourriture par nuit": "food rations per night",
+  "{#} ration d’eau par nuit": "{#} water ration per night", "{#} ration de nourriture par nuit": "{#} food ration per night",
+  "Astuces": "Tips", "En guerre": "At war", "repoussé": "repelled", "Merci": "Thanks", "en main": "in hand",
+  "zombies abattus par {#} survivants": "zombies killed by {#} survivors", "zombies abattus par {#} survivant": "zombies killed by {#} survivor",
+  "zombies abattus par {#} survivants · ✅ objectif atteint": "zombies killed by {#} survivors · ✅ goal reached",
+  "Toi : {#} pts ({#} %": "You: {#} pts ({#}%", "Toi : {#} pts ({#} %) · tu passes devant": "You: {#} pts ({#}%) · you’re pulling ahead",
+  "Si les zombies viennent : force {#} à {#}, votre défense {#} : vous tiendrez": "If the zombies come: strength {#} to {#}, your defense {#}: you’ll hold",
+  "Si les zombies viennent : force {#} à {#}, votre défense {#} : ce sera juste": "If the zombies come: strength {#} to {#}, your defense {#}: it’ll be close",
+  "Si les zombies viennent : force {#} à {#}, votre défense {#} : la barricade risque de céder": "If the zombies come: strength {#} to {#}, your defense {#}: the barricade may give way",
+  "En face": "Facing you", "Les défenseurs": "The defenders", "Marco le brocanteur": "Marco the junk dealer", "Marco le brocanteur est là aujourd’hui": "Marco the junk dealer is here today",
+  "Kit de siphonnage : encore {#} utilisations. Il faut aspirer au bon moment : trop tôt ou trop tard, ça gicle et le bruit attire les zombies": "Siphon kit: {#} uses left. You have to suck at the right moment: too early or too late, it splashes and the noise attracts zombies",
+  "Kit de siphonnage : encore {#} utilisation. Il faut aspirer au bon moment : trop tôt ou trop tard, ça gicle et le bruit attire les zombies": "Siphon kit: {#} use left. You have to suck at the right moment: too early or too late, it splashes and the noise attracts zombies",
+  "Un colis t’attend (menu ☰": "A package is waiting for you (menu ☰", "Un colis t’attend (menu ☰ → Inviter": "A package is waiting for you (menu ☰ → Invite", "un colis t’attend": "a package is waiting for you",
+  "Mes bonus": "My bonuses", "Ouvrir mon colis ({#}": "Open my package ({#}", "Ouvrir mon colis": "Open my package",
+  "Survivant de renfort": "Reinforcement survivor", "Caisse de survie": "Survival crate", "Trousse militaire": "Military medkit",
+  "Il rejoint ton sac de bonus ({#} / {#}). Tu pourras l’utiliser": "It goes into your bonus bag ({#} / {#}). You can use it", "une fois par partie": "once per game",
+  "au moment de ton choix ; s’il ne sert pas, il reste pour la partie suivante": "whenever you choose; if it isn’t used, it stays for the next game",
+  "conseillé": "advised", "Volontaires · {#} / {#}": "Volunteers · {#} / {#}", "Volontaires": "Volunteers", "Clans rivaux": "Rival clans", "Discuter": "Chat", "Garde-manger": "Pantry",
+  "Mange": "Eats", "chaque soir, après la famille": "every evening, after the family", "Manger": "Eat",
+  "La famille n’a plus de quoi manger ce soir": "The family has nothing left to eat tonight",
+  "Tu as dépassé la moitié du score du n°{#} du mois ({#} points": "You’ve passed half the score of the month’s no. {#} ({#} points",
+  "Tu as fait les trois quarts du chemin vers la tête du mois": "You’re three quarters of the way to the top of the month"
+});
+TRAD_MOTIFS.unshift(
+  [/^Jour (\d+) sur (\d+) · ton clan compte sur toi$/, "Day $1 of $2 · your clan is counting on you"],
+  [/^(.+) \((.+)\) a attaqué (.+) : bastion pillé, (.*)$/, "$1 ($2) attacked $3: stronghold looted, $4"],
+  [/^(.+) \((.+)\) a attaqué (.+) : repoussé$/, "$1 ($2) attacked $3: repelled"],
+  [/^(.+) a attaqué (.+) : repoussé$/, "$1 attacked $2: repelled"],
+  [/^(.+) a attaqué (.+) \((★+)\)$/, "$1 attacked $2 ($3)"],
+  [/^(.+) en main : \+(\d+)$/, "$1 in hand: +$2"],
+  [/^Manger (.+)$/, "Eat $1"],
+  [/^(.+) : un colis t’attend$/, function(m, a){ return (TRAD_ECRAN[a] || a) + ": a package is waiting for you"; }],
+  [/^il manque (.+)$/, "missing $1"], [/^Il manque (.+)$/, "Missing $1"],
+  [/^(.+) : case vide$/, "$1: empty slot"]
+);

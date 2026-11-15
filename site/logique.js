@@ -261,7 +261,7 @@ function empechementCuisine(r){
   var rec = RECETTES_CUISINE[r], manque = [];
   for(var k in rec.ingredients) if(!aIngredient(k, rec.ingredients[k])) manque.push(k);
   if(manque.length) return "Il manque des ingrédients";
-  if(compter("planche") < BAL.cuisine.planches) return "Il faut " + nommer("planche", BAL.cuisine.planches) + " pour la cuisinière";
+  if(compter("planche") < BAL.cuisine.planches) return trad("Il faut {o} pour la cuisinière", { o:nommer("planche", BAL.cuisine.planches) });
   if(!artisan()) return "Tout le monde est trop fatigué";
   return null;
 }
@@ -274,7 +274,7 @@ function cuisiner(r){
   retirer("planche", BAL.cuisine.planches);
   ajouter(rec.id, n, 1); G.cuisineJour = G.day; G.cuisinierR = x.r || x.nom; // qui a vraiment cuisiné : c'est lui qu'on voit aux fourneaux (2026-11-14) G.stats.plats = (G.stats.plats || 0) + n;
   var tt = exploit(x, "plats");
-  return x.nom + " cuisine " + nommer(rec.id, n) + "." + (tt ? " " + tt : "");
+  return trad("{x} cuisine {o}.", { x:x.nom, o:nommer(rec.id, n) }) + (tt ? " " + tt : "");
 }
 // Un membre mange un plat (celui qui se gâtera le plus tôt, ou le plat choisi) ; renvoie son id
 function mangerPlat(x, id){
@@ -435,14 +435,14 @@ function installerPiece(id){
   if(VOITURE.pieces.indexOf(id) < 0 || G.voiture.installees[id] || compter(id) < 1) return null;
   var x = artisan(); if(!x) return null;
   x.en -= BAL.energieCraft; retirer(id, 1); G.voiture.installees[id] = true;
-  return x.nom + " installe " + nommer(id, 1) + (voitureReparee() ? ". 🚗 Le moteur tousse… et démarre ! La voiture roule." : ".");
+  return trad("{x} installe {o}.", { x:x.nom, o:nommer(id, 1) }) + (voitureReparee() ? " 🚗 " + trad("Le moteur tousse… et démarre ! La voiture roule.") : "");
 }
 function fairePlein(){
   if(compter("jerrican") < 1 || G.voiture.essence >= VOITURE.reservoir) return null;
   retirer("jerrican", 1);
   var avant = G.voiture.essence;
   G.voiture.essence = Math.min(VOITURE.reservoir, avant + VOITURE.litresJerrican);
-  return "Plein fait : ⛽ " + G.voiture.essence + " L" + (avant + VOITURE.litresJerrican > VOITURE.reservoir ? " (le surplus a débordé)" : "") + ".";
+  return trad("Plein fait : ⛽ {n} L", { n:G.voiture.essence }) + (avant + VOITURE.litresJerrican > VOITURE.reservoir ? " " + trad("(le surplus a débordé)") : "") + ".";
 }
 function forceEquipe(team){
   var f = 0;
@@ -542,11 +542,11 @@ function tentativeGoupille(reussi){
       G.exp.notes.push(["g2", "🗝️ " + (S.cassees ? trad("{nom} crochète la serrure en silence ({epingles} cassée(s)).", { nom:x.nom, epingles:nommer("epingle", S.cassees) }) : trad("{nom} crochète la serrure en silence.", { nom:x.nom }))]);
       return "Clic ! La porte s’ouvre.";
     }
-    return "Clic ! Goupille " + S.faites + " en place.";
+    return trad("Clic ! Goupille {n} en place.", { n:S.faites });
   }
   retirer("epingle", 1); S.cassees++;
   if(compter("epingle") < 1){ S.fin = "echec"; forcerPorte(); return "Crac ! Plus d’épingles : il faut forcer la porte."; }
-  return "Crac ! L’épingle casse (il en reste " + compter("epingle") + ").";
+  return trad("Crac ! L’épingle casse (il en reste {n}).", { n:compter("epingle") });
 }
 
 
@@ -955,7 +955,7 @@ function lacherTigre(){
 function verifierFin(J){
   var C = G.combat;
   if(!equipeCombat().length){ C.fin = "defaite"; C.resume.push(["b2", "💀 Personne n’est revenu de " + nomLieuCombat() + "."]); }
-  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", (G.exp && G.exp.raid ? "🏢 Étage nettoyé en " : G.exp && G.exp.guerre ? "⚔️ Assaut gagné en " : "🧟 Combat gagné en ") + C.tour + " tour" + (C.tour > 1 ? "s" : "") + " !"]); }
+  else if(!zombiesDebout().length){ C.fin = "victoire"; C.resume.push(["g2", (G.exp && G.exp.raid ? "🏢 " + tradN(C.tour, "Étage nettoyé en {n} tour !", "Étage nettoyé en {n} tours !") : G.exp && G.exp.guerre ? "⚔️ " + tradN(C.tour, "Assaut gagné en {n} tour !", "Assaut gagné en {n} tours !") : "🧟 " + tradN(C.tour, "Combat gagné en {n} tour !", "Combat gagné en {n} tours !"))]); }
   C.tour++;
   if(!C.fin) preparerIntentions();
 }
@@ -1315,7 +1315,7 @@ function sacrifier(i){
   G.reste.nour += S.viande; changerMoral(S.moral);
   vivants().forEach(function(y){ y.folie = Math.min(100, (y.folie || 0) + R(S.folie[0], S.folie[1])); });
   G.stats.sacrifices = (G.stats.sacrifices || 0) + 1;
-  return "Personne ne parlera jamais de cette nuit. Au matin, " + x.nom + " n’est plus là, et la famille a de quoi manger (+" + S.viande + " rations)… mais plus personne n’ose croiser le regard des autres. Moral " + S.moral + ".";
+  return trad("Personne ne parlera jamais de cette nuit. Au matin, {x} n’est plus là, et la famille a de quoi manger (+{n} rations)… mais plus personne n’ose croiser le regard des autres. Moral {m}.", { x:x.nom, n:S.viande, m:S.moral });
 }
 function fou(x){ return x.al && (x.folie || 0) >= BAL.folie.seuil; }
 // Chaque nuit : la folie monte (ou baisse un peu si le moral tient), et pousse parfois à un acte fou
@@ -1367,7 +1367,7 @@ function famine(){ return rations("nour") < vivants().length; }
 function mangerChien(){
   var c = chien(); if(!c || !famine()) return null;
   G.reste.nour += BAL.chien.viande; changerMoral(BAL.chien.moral); G.chien = null;
-  return "Personne ne parle pendant le repas. Vous avez " + BAL.chien.viande + " rations de plus, mais " + c.nom + " ne montera plus jamais la garde. Moral " + BAL.chien.moral + ".";
+  return trad("Personne ne parle pendant le repas. Vous avez {n} rations de plus, mais {c} ne montera plus jamais la garde. Moral {m}.", { n:BAL.chien.viande, c:c.nom, m:BAL.chien.moral });
 }
 
 /* ---------- Marché de quartier ---------- */
@@ -1398,7 +1398,7 @@ function echanger(k){
   if((G.charrette[o.recoit.id] || 0) < o.recoit.n) return null;
   retirer(o.donne.id, o.donne.n); ajouter(o.recoit.id, o.recoit.n, 1); o.fait = true;
   G.charrette[o.recoit.id] -= o.recoit.n;
-  return "Échange fait : vous donnez " + nommer(o.donne.id, o.donne.n) + " et recevez " + nommer(o.recoit.id, o.recoit.n) + ".";
+  return trad("Échange fait : vous donnez {a} et recevez {b}.", { a:nommer(o.donne.id, o.donne.n), b:nommer(o.recoit.id, o.recoit.n) });
 }
 
 /* ---------- Événement du matin (même pour tous en Partie du jour) ---------- */
@@ -1461,7 +1461,7 @@ function consommer(id, n){
 }
 // Renvoie null si c'est possible, sinon la raison
 function empechement(ing, besoin){
-  if(besoin && !possede(function(o){ return o === OBJETS[besoin]; })) return "Il faut " + nommer(besoin, 1);
+  if(besoin && !possede(function(o){ return o === OBJETS[besoin]; })) return trad("Il faut {o}", { o:nommer(besoin, 1) });
   if(!aLesIngredients(ing)) return "Il manque des matériaux";
   if(!artisan()) return "Tout le monde est trop fatigué";
   return null;
@@ -1472,7 +1472,7 @@ function fabriquer(r){
   for(var k in rec.ingredients) consommer(k, rec.ingredients[k]);
   ajouter(rec.id, 1, 1); G.stats.fabriques++;
   var tt = exploit(x, "travaux");
-  return x.nom + " fabrique " + nommer(rec.id, 1) + "." + (tt ? " " + tt : "");
+  return trad("{x} fabrique {o}.", { x:x.nom, o:nommer(rec.id, 1) }) + (tt ? " " + tt : "");
 }
 // Toutes les armes de la famille (stock + en main) qui sont abîmées
 function armesAbimees(){
@@ -1485,7 +1485,7 @@ function reparer(uid){
   for(var k in REPARATION) consommer(k, REPARATION[k]);
   var max = OBJETS[o.id].sol; o.sol = Math.min(max, o.sol + Math.round(max * BAL.reparation));
   var tt = exploit(x, "travaux");
-  return x.nom + " répare " + nommer(o.id, 1) + " (solidité " + o.sol + " / " + max + ")." + (tt ? " " + tt : "");
+  return trad("{x} répare {o} (solidité {a} / {b}).", { x:x.nom, o:nommer(o.id, 1), a:o.sol, b:max }) + (tt ? " " + tt : "");
 }
 // Seuls les objets rangés dans le stock peuvent être démontés
 function demontables(){ return G.stock.o.filter(function(o){ return DEMONTAGE[o.id]; }); }
@@ -1497,7 +1497,7 @@ function demonter(uid){
   var p = DEMONTAGE[o.id], recup = [];
   for(var k in p){ ajouter(k, p[k], 1); recup.push({ id:k, n:p[k] }); }
   var tt = exploit(x, "travaux");
-  return x.nom + " démonte " + nommer(o.id, 1) + " et récupère " + nommerListe(recup) + "." + (tt ? " " + tt : "");
+  return trad("{x} démonte {o} et récupère {r}.", { x:x.nom, o:nommer(o.id, 1), r:nommerListe(recup) }) + (tt ? " " + tt : "");
 }
 
 nouvellePartie();

@@ -328,7 +328,7 @@ function panneauCombat(){
   noterHistoCombat(C);
   var L = G.exp && !G.exp.guerre ? LIEUX[G.exp.lieu] : null;
   if(C.fin){ t.innerHTML = panneauApresCombat(C, L); t.scrollTop = 0; return; }
-  var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : "Tour " + C.tour + " · choisis l’action de chacun puis « Jouer »") + '</p>';
+  var h = '<h2>⚔️ ' + (L ? L.nom : nomLieuCombat().replace(/^le /, "").replace(/^./, function(c){ return c.toUpperCase(); })) + '</h2><p class="sub">' + (C.fin ? ({ victoire:"Victoire !", fuite:"Vous avez fui.", defaite:"Défaite…" })[C.fin] : trad("Tour {n} · choisis l’action de chacun puis « Jouer »", { n:C.tour })) + '</p>';
   h += '<p class="titre-butin">' + (G.exp && G.exp.guerre && !G.exp.raid ? "🛡️ Les défenseurs" : "🧟 En face") + '</p><div class="pz-liste">' + C.zombies.map(function(z){
     var T = typeZombie(z), cib = z.int && G.m[z.int.c];
     var ti = texteIntention(z);
@@ -906,7 +906,7 @@ function boutonCuisine(r){
 function boutonTravail(texte, act, id, ing, besoin){
   var manque = []; for(var k in ing || {}) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
   var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? "Il faut " + nommer(besoin, 1)
-    : manque.length ? "Il manque " + nommerListe(manque) : !x ? "Tout le monde est trop fatigué" : "";
+    : manque.length ? trad("Il manque {l}", { l:nommerListe(manque) }) : !x ? "Tout le monde est trop fatigué" : "";
   return '<button class="btn travail" data-act="' + act + '" data-id="' + id + '"' + (raison ? " disabled" : "") + '>'
     + (raison ? '<span>❌ ' + raison + '</span>' : '<span>' + texte + '</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + coutTravail(x) + ' ⚡</small>') + '</button>';
 }
@@ -915,7 +915,7 @@ function etatTravail(ing, besoin, texteOk){
   var manque = [];
   for(var k in ing) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
   if(besoin && !possede(function(o){ return o === OBJETS[besoin]; })) return '<p class="etat ko">🔧 Il faut ' + nommer(besoin, 1) + ' au refuge</p>';
-  if(manque.length) return '<p class="etat ko">❌ Il manque ' + nommerListe(manque) + '</p>';
+  if(manque.length) return '<p class="etat ko">❌ ' + trad("Il manque {l}", { l:nommerListe(manque) }) + '</p>';
   var x = artisan();
   if(!x) return '<p class="etat ko">😴 Tout le monde est trop fatigué (il faut ' + BAL.energieCraft + ' ⚡)</p>';
   return '<p class="etat ok">✅ ' + (texteOk || "Prêt : touche pour le faire") + ' (' + iconeMembre(x) + ' ' + x.nom + ', −' + coutTravail(x) + ' ⚡)</p>';

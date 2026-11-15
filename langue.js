@@ -73,7 +73,7 @@ function clesTrad(){
   return CLES_TRAD;
 }
 function traduireTexteEcran(t){
-  var m = /^([\s\p{Extended_Pictographic}\uFE0F\u200D\p{S}\p{Pd}\p{Pi}«"“(\[•·]*)([\s\S]*?)([\s\p{Extended_Pictographic}\uFE0F\u200D\p{Pf}:…!?.,;)\]»"”’]*)$/u.exec(t);
+  var m = /^([\s\p{Extended_Pictographic}\uFE0F\u200D\p{S}\p{Pd}\p{Pi}«"“(\[•·,;]*)([\s\S]*?)([\s\p{Extended_Pictographic}\uFE0F\u200D\p{Pf}:…!?.,;)\]»"”’]*)$/u.exec(t);
   if(!m || !m[2] || !/[A-Za-zÀ-ÿ]/.test(m[2])) return null;
   var core = m[2], nums = core.match(RE_NOMBRE) || [], cle = core.replace(RE_NOMBRE, "{#}");
   var tr = TRAD_ECRAN[cle];

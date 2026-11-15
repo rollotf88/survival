@@ -401,7 +401,7 @@ function openElement(k, message){
   if(mx) h += '<p class="etat ok">⭐ Niveau maximum atteint</p>';
   else {
     h += '<p class="sub">' + (l ? "Niveau suivant : " : "Construire : ") + (k === "barr" ? "+" + BAL.defenseBarricade + " de défense" : "+" + r.parJour + " " + quoi + " par nuit") + ' · coût ' + ic("planche", "🪵") + ' ' + c + ' planches (tu en as ' + pl + ')</p>';
-    h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="buildel" data-id="' + k + '"' + (pl < c ? " disabled" : "") + '>' + (pl < c ? "❌ Il manque " + nommer("planche", c - pl) : "🔨 " + (l ? "Améliorer" : "Construire") + " (" + c + " planches)") + '</button>';
+    h += '<button class="btn" style="width:100%;margin-bottom:8px" data-act="buildel" data-id="' + k + '"' + (pl < c ? " disabled" : "") + '>' + (pl < c ? "❌ " + trad("Il manque {l}", { l:nommer("planche", c - pl) }) : "🔨 " + (l ? "Améliorer" : "Construire") + " (" + c + " planches)") + '</button>';
   }
   show(h + BTN_FERMER());
 }
