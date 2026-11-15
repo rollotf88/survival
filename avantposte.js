@@ -175,7 +175,7 @@ if(AP_PIECE && typeof placerPiece === "function"){
   placerPiece = function(){
     if(apIci()){ apMaj(); AP_PIECE.zones = apZones(); }
     var r = apPlacerOrigine.apply(this, arguments);
-    try{ apCompteurs(); apPlacerCarte(); }catch(e){}
+    try{ apCompteurs(); apCacherCarteSiBesoin(); apPlacerCarte(); }catch(e){}
     return r;
   };
 }
@@ -196,6 +196,11 @@ function apCompteurs(){
   el.innerHTML = "🔨 <b>" + apFmt(C.fin - Date.now()) + "</b>";
   d.appendChild(el);
 }
+function apCacherCarteSiBesoin(){
+  var el = document.getElementById("apCarte"); if(!el || el.style.display === "none") return;
+  if(typeof G === "undefined" || !G || G.ph !== "game" || G.combat || G.exp) el.style.display = "none";
+}
+setInterval(function(){ try{ apCacherCarteSiBesoin(); }catch(e){} }, 300);
 // Chaque seconde : le compteur ; chaque 20 s (ou à la fin d'un chantier) : tout recalculer
 var apDerniereMaj = 0;
 setInterval(function(){
@@ -658,6 +663,13 @@ function apLancerCombat(params, info, eq){
 // Choix des survivants qui partent (2 au plus), dans la fiche de la carte
 var apEquipe = [], apCibleI = null;
 function apPeutPartir(x){ return x.al && !x.raid && x.en >= AP_ENERGIE && x.hp > 25; }
+// Pourquoi un survivant ne peut pas partir (affiché sous lui, grisé)
+function apPourquoi(x){
+  var f = typeof estFeminin === "function" && estFeminin(x);
+  if(x.hp <= 25) return f ? trad("Trop blessée") : trad("Trop blessé");
+  if(x.en < AP_ENERGIE) return f ? trad("Trop fatiguée") : trad("Trop fatigué");
+  return "";
+}
 function apChoixEquipe(i){
   var raison = apRaisonAttaque(); if(raison){ apMsgFiche(raison); return; }
   if(apCibleI !== i){ apCibleI = i; apEquipe = equipeAssaut().slice(); }
@@ -665,7 +677,7 @@ function apChoixEquipe(i){
   var h = '<button class="apc-fx" data-act="apFicheFermer" aria-label="' + trad("Fermer") + '">✕</button><b class="apc-eq-t">⚔️ ' + trad("Qui part piller ?") + '</b><small class="apc-eq-s">' + trad("{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles", { n:max, e:AP_ENERGIE }) + '</small><div class="apc-eq">';
   G.m.forEach(function(x, j){ if(!x.al) return;
     var ok = apPeutPartir(x), sel = apEquipe.indexOf(j) >= 0;
-    h += '<button class="apc-mb' + (sel ? " sel" : "") + '" data-act="apEquipier" data-id="' + j + '"' + (ok ? "" : " disabled") + '>' + (typeof iconeMembre === "function" ? '<span class="apc-mp">' + iconeMembre(x) + '</span>' : '') + '<b>' + apEchap(x.nom) + '</b><small>' + (x.raid ? trad("Au bastion") : "❤️ " + Math.round(x.hp) + " · ⚡ " + Math.round(x.en)) + '</small></button>'; });
+    h += '<button class="apc-mb' + (sel ? " sel" : "") + '" data-act="apEquipier" data-id="' + j + '"' + (ok ? "" : " disabled") + '>' + (typeof iconeMembre === "function" ? '<span class="apc-mp">' + iconeMembre(x) + '</span>' : '') + '<b>' + apEchap(x.nom) + '</b><small>' + (x.raid ? trad("Au bastion") : "❤️ " + Math.round(x.hp) + " · ⚡ " + Math.round(x.en)) + '</small>' + (ok || x.raid ? '' : '<i class="apc-why">' + apPourquoi(x) + '</i>') + '</button>'; });
   h += '</div><button class="btn apc-go" data-act="apGo"' + (apEquipe.length ? "" : " disabled") + '>⚔️ ' + (apEquipe.length ? trad("À l’assaut avec {l}", { l:apEquipe.map(function(j){ return G.m[j].nom; }).join(" + ") }) : trad("Choisis au moins un survivant")) + '</button>';
   f.innerHTML = h; f.classList.add("on");
 }
@@ -821,7 +833,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.":"Your outpost, in raider mode: other raiders can attack it.",
     "Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.":"Abandoned for {n} days: it’s a ruin, raiders can help themselves.",
     "Pillard, mais pillé récemment : à l’abri encore {t}.":"A raider, but raided recently: safe for {t} more.", "En mode pillard : il peut être attaqué par les autres pillards.":"In raider mode: other raiders can attack it.", "Piller":"Raid", "Pillard":"Raider", "Un pillard qui défend son camp. La palissade le rend plus coriace.":"A raider defending their camp. The palisade makes them tougher.",
-    "Qui part piller ?":"Who goes raiding?", "{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles":"{n} survivors max · −{e} ⚡ each · real wounds and deaths", "Au bastion":"At the stronghold",
+    "Qui part piller ?":"Who goes raiding?", "Trop blessé":"Too wounded", "Trop blessée":"Too wounded", "Trop fatigué":"Too tired", "Trop fatiguée":"Too tired", "{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles":"{n} survivors max · −{e} ⚡ each · real wounds and deaths", "Au bastion":"At the stronghold",
     "À l’assaut avec {l}":"Attack with {l}", "Choisis au moins un survivant":"Choose at least one survivor", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Fermer la carte":"Close the map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
