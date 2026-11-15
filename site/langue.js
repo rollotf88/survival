@@ -100,3 +100,5 @@ if(typeof document !== "undefined" && typeof MutationObserver !== "undefined" &&
   var lancerObsLangue = function(){ traduireNoeud(document.body); obsLangue.observe(document.body, { childList:true, subtree:true, characterData:true }); };
   if(document.body) lancerObsLangue(); else document.addEventListener("DOMContentLoaded", lancerObsLangue);
 }
+// Titre de l'onglet du navigateur dans la langue du jeu
+try{ if(LANGUE === "en") document.title = "ZOMBRIA – The Last Refuge"; }catch(e){}

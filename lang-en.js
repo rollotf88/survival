@@ -1248,3 +1248,190 @@ TRAD_MOTIFS.push([/^(.+) : personne n’a d’outil pour ouvrir$/, "$1: nobody h
 Object.assign(TRAD_ECRAN, { "Vous avez tenu": "You held out", "{#} jours": "{#} days", "{#} jour": "{#} day", "Pêche terminée": "Fishing over", "Fouiller maintenant": "Search now" });
 Object.assign(TRAD_ECRAN, { "pêche (canne à pêche": "fishing (fishing rod", "bois (une hache en main": "wood (axe in hand" });
 TRAD_MOTIFS.push([/^(.+) peut essayer de$/, "$1 can try to"]);
+
+/* ---------- Lot 4 : clans, bastion, guerre, raid, discussion, classement, profil (2026-11-15) ---------- */
+Object.assign(TRAD_ECRAN, {
+  "Le hall": "The lobby", "Les appartements": "The apartments", "Les bureaux": "The offices", "Le dernier étage": "The top floor", "Le toit": "The roof",
+  "Succès débloqué": "Achievement unlocked", "Le bastion": "The stronghold", "Défenses": "Defenses", "Opérations": "Operations", "Opération": "Operation",
+  "Les opérations se préparent à plusieurs : chaque famille y envoie un volontaire, puis une seule équipe part pour tout le clan. De nouvelles opérations arriveront": "Operations are prepared together: each family sends a volunteer, then a single team goes out for the whole clan. New operations will come",
+  "L’immeuble abandonné": "The abandoned apartment block",
+  "Chaque famille envoie un volontaire. Dès {#}, le chef mène l’assaut, étage par étage. Le butin est partagé": "Each family sends a volunteer. With {#}, the leader leads the assault, floor by floor. The loot is shared",
+  "Opération de clan": "Clan operation", "Pas de canne à pêche": "No fishing rod", "Pas de hache": "No axe", "Toutes les opérations": "All operations",
+  "{#} étages · une seule fois par clan": "{#} floors · only once per clan", "volontaire par famille": "volunteer per family", "pour partir ({#} au plus": "to go ({#} at most",
+  "le chef mène le raid": "the leader leads the raid", "dernier étage": "top floor",
+  "Entre deux étages, le chef choisit de monter ou de redescendre avec le butin. Blessures et morts sont réelles": "Between floors, the leader chooses to go up or head back down with the loot. Wounds and deaths are real",
+  "en plus": "extra", "Équipe risquée": "Risky team", "Équipe prête": "Team ready", "Équipe suicidaire": "Suicidal team",
+  "Les premiers étages passeront, mais le dernier étage et le toit (soldats en gilet, le Colosse) demandent des armes à feu, des munitions et des gilets : il faudra sans doute redescendre": "The first floors will go fine, but the top floor and the roof (soldiers in vests, the Colossus) call for firearms, ammo and vests: you’ll probably have to head back down",
+  "Envoyer un volontaire": "Send a volunteer", "Sans elle : {#} objets par volontaire": "Without it: {#} items per volunteer", "Construire la remorque": "Build the trailer",
+  "En parler au clan": "Talk it over with the clan", "Qui part à l’immeuble": "Who goes to the apartment block",
+  "Ton volontaire reste au bastion jusqu’au raid : il ne pourra plus fouiller. Il emporte ce qu’il porte (arme, outil, sac": "Your volunteer stays at the stronghold until the raid: they can’t scavenge anymore. They take what they’re carrying (weapon, tool, bag",
+  "sans arme": "no weapon",
+  "Les munitions, les soins et l’équipement servent à toute l’équipe pendant le raid. Ce qui n’a pas servi te revient après": "Ammo, healing and gear are used by the whole team during the raid. Whatever isn’t used comes back to you afterwards",
+  "pour son arme": "for their weapon", "{#} au stock": "{#} in stock", "Avec cette équipe, le toit est à votre portée": "With this team, the roof is within reach",
+  "Lancer le raid": "Launch the raid", "Fouiller l’étage": "Search the floor", "Trouvé à cet étage": "Found on this floor", "Fin du raid": "End of the raid",
+  "Étage {#} / {#} nettoyé : fouillez-le, puis choisissez de monter ou de redescendre": "Floor {#} / {#} cleared: search it, then choose to go up or head back down",
+  "Étage {#} / {#} · {#} objets trouvés · place pour {#}": "Floor {#} / {#} · {#} items found · room for {#}",
+  "Chances de nettoyer l’étage : {#} % · sans perte : {#} %": "Chance to clear the floor: {#}% · with no losses: {#}%",
+  "Soigner le plus blessé ({#} soins en réserve": "Heal the most wounded ({#} healing items in reserve", "Monter": "Go up", "Redescendre": "Head back down",
+  "Envoi du résultat au clan": "Sending the result to the clan", "Retour du raid": "Back from the raid", "Ta part du butin": "Your share of the loot",
+  "L’équipe est redescendue. {#} étage sur {#}, {#} objets ramenés": "The team came back down. {#} floor out of {#}, {#} items brought back",
+  "Revoir le raid": "Watch the raid again", "Replay du raid": "Raid replay", "Raid de l’immeuble": "Apartment block raid", "Départ": "Start", "Aller au résultat": "Skip to the result",
+  "L’équipe redescend": "The team heads back down", "{#} étage nettoyé · {#} objets ramenés": "{#} floor cleared · {#} items brought back", "{#} étages nettoyés · {#} objets ramenés": "{#} floors cleared · {#} items brought back",
+  // Mon clan
+  "Pas encore de devise": "No motto yet", "Modifier la description": "Edit the description", "réserve, défenses": "stockpile, defenses", "La guerre": "The war",
+  "trouver un rival": "find a rival", "écrire au clan": "write to the clan", "Équipe prête : lance le raid": "Team ready: launch the raid",
+  "Les familles": "The families", "Classement des clans": "Clan leaderboard", "Quitter le clan": "Leave the clan", "toi": "you", "Toi": "You", "Chef": "Leader", "Exclure": "Kick", "Confirmer": "Confirm",
+  "Mon clan": "My clan", "Rejoindre": "Join", "Fonder un clan": "Found a clan", "{#} / {#} familles": "{#} / {#} families", "{#} / {#} joueurs": "{#} / {#} players",
+  // Bastion
+  "La réserve commune du clan. Ta participation": "The clan’s shared stockpile. Your contribution", "déposés": "deposited",
+  "pris. On peut prendre au plus {#} objets de plus que ce qu’on a déposé, et {#} par jour : tu peux encore en prendre": "taken. You can take at most {#} more items than you’ve deposited, and {#} per day: you can still take",
+  "Touche un objet de la réserve pour en prendre {#}": "Tap an item in the stockpile to take {#}", "Déposer depuis ton stock": "Deposit from your stock",
+  "Touche un objet de ton stock pour en déposer {#}": "Tap an item in your stock to deposit {#}", "Réserve": "Stockpile", "Journal": "Log", "Camion": "Truck",
+  "Remparts": "Ramparts", "Mines": "Mines", "Tours de guet": "Watchtowers", "Armurerie": "Armory", "Pare-buffle": "Bull bar", "Blindage": "Armor plating", "Tourelle": "Turret", "Remorque": "Trailer",
+  "Pendant une guerre, chaque défenseur a +{#} PV et frappe plus fort": "During a war, each defender has +{#} HP and hits harder",
+  "Niveau {#} : il faut dans la réserve": "Level {#}: needed in the stockpile", "Il manque des matériaux": "Materials missing",
+  "Le camion du clan conduit chaque équipe à l’assaut. Ses améliorations servent à tous les membres. Il est encore nu : améliore-le avec la réserve": "The clan truck drives each team to the assault. Its upgrades serve every member. It’s still bare: upgrade it with the stockpile",
+  "Le camion enfonce l’entrée : chaque défenseur perd {#} PV au début de l’assaut": "The truck rams the entrance: each defender loses {#} HP at the start of the assault",
+  "Aujourd’hui": "Today", "Hier": "Yesterday", "à l’instant": "just now",
+  // Guerre
+  "dans le clan pour partir en guerre. Les clans incomplets ne peuvent ni attaquer ni être attaqués": "in the clan to go to war. Incomplete clans can neither attack nor be attacked",
+  "Chercher une guerre": "Look for a war", "Annuler la recherche": "Cancel the search", "Attaquer": "Attack", "Attaquée aujourd’hui": "Attacked today", "Ton assaut est fait": "Your assault is done",
+  "Historique des guerres": "War history", "gagnées": "won", "perdues": "lost", "égalités": "draws",
+  // Discussion
+  "Le clan": "The clan", "Discussion du clan": "Clan chat", "Je suis prêt pour le raid": "I’m ready for the raid", "Qui envoie un volontaire pour le raid": "Who’s sending a volunteer for the raid",
+  "J’ai déposé des matériaux dans la réserve": "I’ve put materials in the stockpile", "Regardez mon offre d’échange": "Check out my trade offer", "On attaque ce soir": "We attack tonight",
+  "D’accord": "OK", "Salut le clan": "Hi clan", "Proposer un échange": "Propose a trade", "Discussion du clan · {#} / {#} familles": "Clan chat · {#} / {#} families",
+  "Écris au clan": "Write to the clan", "Effacer": "Delete", "Signaler": "Report", "Accepter": "Accept", "Annuler": "Cancel",
+  // Échange
+  "{#} objets au plus de chaque côté": "{#} items at most on each side", "{#} échange toutes les {#} h": "{#} trade every {#} h", "Pas plus de {#} fois ce que tu donnes": "No more than {#}× what you give",
+  "Valeur : {#} ➜ {#} · choisis des deux côtés": "Value: {#} ➜ {#} · choose on both sides", "Ce que je donne": "What I give", "Ce que je demande": "What I ask for", "Proposer au clan": "Offer to the clan",
+  "Ce que tu donnes est mis de côté jusqu’à ce qu’un membre accepte. Sans preneur en {#} h, ça te revient": "What you give is set aside until a member accepts. If nobody takes it within {#} h, it comes back to you",
+  // Classement des clans, profils, fondation
+  "Voir le clan": "See the clan", "Ton clan : {#}er": "Your clan: {#}st", "Ton clan : {#}e": "Your clan: no. {#}", "Les ligues (trophées": "Leagues (trophies", "Légende": "Legend",
+  "Ferraille": "Scrap", "Bronze": "Bronze", "Argent": "Silver", "Or": "Gold",
+  "jour de survie": "day survived", "jours de survie": "days survived", "Au combat": "In combat", "étoiles d’assaut": "assault stars", "guerres gagnées": "wars won", "succès": "achievements",
+  "Réserve du clan": "Clan stockpile", "A déposé": "Deposited", "A pris": "Took",
+  "Tu en seras le chef. Les autres familles qui ont tenu assez longtemps pourront te rejoindre": "You’ll be its leader. Other families who have held out long enough can join you",
+  "Nom du clan": "Clan name", "Blason": "Crest", "Fonder le clan": "Found the clan", "Description du clan": "Clan description",
+  "Loup": "Wolf", "Aigle": "Eagle", "Ours": "Bear", "Scorpion": "Scorpion", "Flamme": "Flame", "Crâne": "Skull", "Épées": "Swords", "Bouclier": "Shield", "Sapin": "Pine", "Drapeau noir": "Black flag", "Engrenage": "Gear", "Serpent": "Snake",
+  "Présente ton clan aux autres joueurs ({#} lettres au plus) : votre façon de jouer, vos règles, quand vous êtes là": "Introduce your clan to other players ({#} characters max): how you play, your rules, when you’re around",
+  "Enregistrer": "Save",
+  // Classement général
+  "Ce mois-ci": "This month", "Depuis toujours": "All time", "La Légende": "The Legend", "Panthéon": "Hall of fame", "Anciennes Légendes": "Past Legends",
+  "Personne… pour l’instant": "Nobody… for now", "Ta partie en cours est une": "Your current game is a", "partie libre": "free game",
+  ": elle ne compte pas pour le classement. Seules les parties classées y entrent": ": it doesn’t count for the leaderboard. Only ranked games go in",
+  "{#} joueurs ce mois-ci ·": "{#} players this month ·",
+  "meilleur score d’une partie classée ({#} point par jour et par survivant) · ● en cours = partie encore en vie, score mis à jour en direct": "best score from a ranked game ({#} point per day per survivor) · ● in progress = game still alive, score updated live",
+  "en cours": "in progress", "Choisir mon pseudo": "Choose my username", "n°{#} du mois": "no. {#} of the month",
+  // Profil, cadres
+  "Changer de pseudo": "Change username", "un changement tous les {#} jours, jamais en guerre": "one change every {#} days, never during a war",
+  "Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Les plus beaux se débloquent avec les succès": "Your frame surrounds your username in the leaderboard, clans and wars. The finest ones unlock with achievements",
+  "Tu as {#} succès · {#} cadres débloqués · prochain": "You have {#} achievements · {#} frames unlocked · next", "dans {#} succès": "in {#} achievements",
+  "Le cadre le plus rare": "The rarest frame",
+  "Réservé à la Légende du mois. Fais le meilleur score du mois en partie classée pour le porter, avec Raja en prime": "Reserved for the Legend of the Month. Get the month’s best score in a ranked game to wear it, with Raja as a bonus",
+  "Porté": "Worn", "Porter": "Wear", "{#} succès débloqués": "{#} achievements unlocked", "Tous les succès débloqués": "All achievements unlocked", "Aperçu": "Preview",
+  "Bois": "Wood", "Mythique": "Mythic",
+  // Divers
+  "Code d’invitation": "Invite code", "Tape le code d’un ami (ou un code spécial": "Type a friend’s code (or a special code", "Valider": "Confirm",
+  "Le choix impossible": "The impossible choice", "Ce n’est plus nécessaire": "It’s no longer necessary", "Pillé · revoir le replay": "Looted · watch the replay"
+});
+var ETAGES_FR_EN = function(s){ return TRAD_ECRAN[s] || s; };
+var MOIS_EN = { "janv.":"Jan", "févr.":"Feb", "mars":"Mar", "avr.":"Apr", "mai":"May", "juin":"Jun", "juil.":"Jul", "août":"Aug", "sept.":"Sep", "oct.":"Oct", "nov.":"Nov", "déc.":"Dec" };
+TRAD_MOTIFS.push(
+  [/^(Classée|Libre) · (\d+) (\S+) (\d+)$/, function(m, t, j, mo, a){ return (t === "Classée" ? "Ranked" : "Free play") + " · " + (MOIS_EN[mo] || mo) + " " + j + ", " + a; }],
+  [/^(\d+) (\S+)$/, function(m, j, mo){ return MOIS_EN[mo] ? MOIS_EN[mo] + " " + j : m; }],
+  [/^(.+) envoie (.+) pour le raid de l’immeuble \((\d+) \/ (\d+)$/, "$1 sends $2 for the apartment block raid ($3 / $4"],
+  [/^Raid de l’immeuble mené par (.+) : (\d+) étages? sur (\d+), (\d+) objets ramenés, aucun mort$/, "Apartment block raid led by $1: $2 floor(s) out of $3, $4 items brought back, no deaths"],
+  [/^Raid de l’immeuble mené par (.+) : (\d+) étages? sur (\d+), (\d+) objets ramenés, (\d+) morts?$/, "Apartment block raid led by $1: $2 floor(s) out of $3, $4 items brought back, $5 dead"],
+  [/^Ce que tu confies à (.+)$/, "What you entrust to $1"],
+  [/^Apport de (.+) : (\d+) points de force \(une équipe prête en réunit environ (\d+)$/, "$1’s contribution: $2 strength points (a ready team totals about $3"],
+  [/^(.+) est parti au bastion pour le raid de l’immeuble$/, "$1 has gone to the stronghold for the apartment block raid"],
+  [/^(.+) est partie au bastion pour le raid de l’immeuble$/, "$1 has gone to the stronghold for the apartment block raid"],
+  [/^(.+) est revenue? du raid \((.*)$/, "$1 is back from the raid ($2"],
+  [/^Rendu de ce que tu avais confié : (.+)$/, "Returned from what you entrusted: $1"],
+  [/^Part du clan versée à la réserve : (.+)$/, "Clan share paid into the stockpile: $1"],
+  [/^(.+) \(étage (\d+) \/ (\d+)\) : (\d+) zombies vous attendent$/, function(m, e, a, b, n){ return ETAGES_FR_EN(e) + " (floor " + a + " / " + b + "): " + n + " zombies are waiting for you"; }],
+  [/^(.+) : nettoyé$/, function(m, e){ return ETAGES_FR_EN(e) + ": cleared"; }],
+  [/^Plus haut : (.+)$/, function(m, e){ return "Higher up: " + ETAGES_FR_EN(e); }],
+  [/^Étage (\d+) \/ (\d+) · (.+?)( · tour (\d+))?$/, function(m, a, b, e, t, n){ return "Floor " + a + " / " + b + " · " + ETAGES_FR_EN(e) + (t ? " · turn " + n : ""); }],
+  [/^(.+) : (\d+) zombies$/, function(m, e, n){ return ETAGES_FR_EN(e) + ": " + n + " zombies"; }],
+  [/^Chef du clan « (.+) » depuis (.+) · vu (.+)$/, function(m, c, d, v){ return "Leader of the “" + c + "” clan since " + (d === "peu" ? "recently" : d) + " · seen " + (v === "à l’instant" ? "just now" : v); }],
+  [/^Membre du clan « (.+) » depuis (.+) · vu (.+)$/, function(m, c, d, v){ return "Member of the “" + c + "” clan since " + (d === "peu" ? "recently" : d) + " · seen " + (v === "à l’instant" ? "just now" : v); }],
+  [/^Jour (\d+) · vu (.+?)( · .*)?$/, function(m, j, v, r){ return "Day " + j + " · seen " + (v === "à l’instant" ? "just now" : v.replace(/^il y a /, "").replace(/ min$/, " min ago").replace(/ h$/, " h ago").replace(/ j$/, " d ago")) + (r || ""); }],
+  [/^vu il y a (\d+) (min|h|j)$/, function(m, n, u){ return "seen " + n + " " + (u === "j" ? "d" : u) + " ago"; }],
+  [/^il y a (\d+) (min|h|j)$/, function(m, n, u){ return n + " " + (u === "j" ? "d" : u) + " ago"; }],
+  [/^La Légende de (\S+)$/, function(m, mo){ return "The Legend of " + moisAnglais(mo); }],
+  [/^En tête de (\S+)$/, function(m, mo){ return "Leading in " + moisAnglais(mo); }],
+  [/^Le n°(\d+) de (\S+) sera la Légende de (\S+), couronnée? le (\d+)er (\S+)$/, function(m, n, a, b, j, c){ return "No. " + n + " of " + moisAnglais(a) + " will be the Legend of " + moisAnglais(b) + ", crowned on " + moisAnglais(c) + " " + j; }],
+  [/^(\d+) points\), futur\(e\) Légende de (\S+) si personne ne fait mieux$/, function(m, p, mo){ return p + " points), future Legend of " + moisAnglais(mo) + " if nobody does better"; }],
+  [/^Couronne remise le (\d+)er (\S+), dans (\d+) jours?$/, function(m, j, mo, n){ return "Crown awarded on " + moisAnglais(mo) + " " + j + ", in " + n + " day(s)"; }]
+);
+function moisAnglais(m){ return { janvier:"January", février:"February", mars:"March", avril:"April", mai:"May", juin:"June", juillet:"July", août:"August", septembre:"September", octobre:"October", novembre:"November", décembre:"December" }[m] || m; }
+
+/* ---------- Messages du serveur (erreurs), traduits à l'affichage (2026-11-15) ---------- */
+Object.assign(TRAD_ECRAN, {
+  "Assaut introuvable": "Assault not found", "Ce clan est complet ({#} familles": "This clan is full ({#} families", "Ce clan n’existe plus": "This clan no longer exists",
+  "Ce code existe déjà": "This code already exists", "Ce code n’est plus actif": "This code is no longer active", "Ce code n’existe pas": "This code doesn’t exist",
+  "Ce membre n’est plus dans le clan": "This member is no longer in the clan", "Ce nom de clan est déjà pris": "This clan name is already taken",
+  "Ce n’est pas toi qui as lancé le raid": "You’re not the one who launched the raid",
+  "Cette description n’est pas autorisée (insulte ou mot blessant": "This description isn’t allowed (insult or hurtful word",
+  "Cette famille a déjà été attaquée aujourd’hui": "This family has already been attacked today", "Cette famille n’est plus dans le clan adverse": "This family is no longer in the enemy clan",
+  "Cette offre ne peut plus être annulée": "This offer can no longer be canceled", "Cette offre n’est plus disponible": "This offer is no longer available",
+  "Choisis de {#} à {#} objets à donner et de {#} à {#} à demander": "Choose {#} to {#} items to give and {#} to {#} to ask for",
+  "Choisis d’abord un pseudo": "Choose a username first", "Code trop court ({#} caractères au moins": "Code too short ({#} characters at least",
+  "C’est ta propre offre": "It’s your own offer", "C’est ton propre code": "It’s your own code",
+  "Doucement ! Attends quelques secondes entre deux messages": "Easy! Wait a few seconds between messages",
+  "Il faut avoir tenu {#} jours pour fonder un clan": "You must have held out {#} days to found a clan", "Il faut avoir tenu {#} jours pour rejoindre un clan": "You must have held out {#} days to join a clan",
+  "Il manque des matériaux dans la réserve": "Materials are missing from the stockpile", "Il n’y en a plus assez dans la réserve": "There aren’t enough left in the stockpile",
+  "Il y a déjà {#} volontaires": "There are already {#} volunteers", "Il faut {#} familles dans le clan pour partir en guerre": "The clan needs {#} families to go to war",
+  "La guerre est terminée": "The war is over", "Le clan adverse n’existe plus": "The enemy clan no longer exists", "Le clan est déjà en guerre": "The clan is already at war",
+  "Le nom du clan doit faire au moins {#} lettres": "The clan name must be at least {#} letters",
+  "Le raid est en cours : impossible de changer les volontaires": "The raid is underway: volunteers can’t be changed",
+  "Le raid est en cours : ton volontaire ne peut plus se retirer": "The raid is underway: your volunteer can no longer withdraw",
+  "L’immeuble a déjà été pillé par le clan": "The clan has already looted the apartment block", "L’immeuble a déjà été pillé": "The apartment block has already been looted",
+  "Message introuvable": "Message not found", "Message refusé (insulte ou mot blessant": "Message refused (insult or hurtful word", "Message vide": "Empty message",
+  "Niveau maximum atteint": "Maximum level reached", "Pour partir, utilise « Quitter le clan": "To leave, use “Leave the clan", "Rien à déposer": "Nothing to deposit",
+  "Seul le chef du clan peut changer la description": "Only the clan leader can change the description", "Seul le chef du clan peut exclure un membre": "Only the clan leader can kick a member",
+  "Seul le chef peut annuler": "Only the leader can cancel", "Seul le chef peut effacer le message d’un autre": "Only the leader can delete someone else’s message",
+  "Seul le chef peut lancer une guerre": "Only the leader can start a war", "Ton clan n’est pas en guerre": "Your clan isn’t at war",
+  "Tu as déjà envoyé {#} messages aujourd’hui. Merci ! Réessaie demain": "You’ve already sent {#} messages today. Thanks! Try again tomorrow",
+  "Tu as déjà lancé ton assaut aujourd’hui. Reviens demain": "You’ve already launched your assault today. Come back tomorrow",
+  "Tu as déjà pris {#} objets aujourd’hui ({#} au maximum par jour": "You’ve already taken {#} items today ({#} max per day",
+  "Tu as déjà pris {#} objets de plus que ce que tu as déposé : dépose d’abord quelque chose dans la réserve": "You’ve already taken {#} more items than you’ve deposited: put something in the stockpile first",
+  "Tu as déjà récupéré ta part": "You’ve already collected your share",
+  "Tu as déjà une offre en cours : attends qu’elle soit prise, ou annule-la": "You already have an open offer: wait until it’s taken, or cancel it",
+  "Tu as déjà utilisé ce code": "You’ve already used this code", "Tu as déjà utilisé un code d’invitation": "You’ve already used an invite code",
+  "Tu fais déjà partie d’un clan": "You’re already in a clan", "Tu n’as pas de clan": "You don’t have a clan", "Tu n’as pas de volontaire inscrit": "You have no registered volunteer",
+  "Tu n’as pas participé au raid": "You didn’t take part in the raid",
+  "Échange trop déséquilibré : tu demandes beaucoup plus que ce que tu donnes": "Trade too lopsided: you’re asking for much more than you give",
+  "Écris un peu plus ({#} lettres au moins": "Write a bit more ({#} letters at least",
+  "Impossible de joindre le serveur": "Can’t reach the server", "Pas de connexion : réessaie plus tard": "No connection: try again later",
+  "Chargement": "Loading", "Chargement…": "Loading…"
+});
+TRAD_MOTIFS.push([/^Un échange toutes les 8 h : le prochain dans (\d+) h$/, "One trade every 8 h: the next one in $1 h"]);
+/* Journal du clan (lignes écrites par le serveur, ou assemblées par classement.js) */
+Object.assign(TRAD_ECRAN, {
+  "a pillé notre bastion": "looted our stronghold", "a repoussé": "drove back", "Assaut ennemi repoussé": "Enemy assault repelled", "a pillé": "looted",
+  "a été repoussé par": "was driven back by", "Notre assaut": "Our assault", "Assaut raté": "Failed assault",
+  "Guerre gagnée": "War won", "Guerre perdue": "War lost", "Guerre à égalité": "War drawn", "contre": "against", "trophée": "trophy", "trophées": "trophies",
+  "Un membre": "A member", "Survivant": "Survivor", "Aucun clan pour l’instant": "No clans yet"
+});
+TRAD_MOTIFS.push(
+  [/^en attaquant (.+)$/, "while attacking $1"],
+  [/^(\d+) mines? (?:ont|a) explosé sous les pieds de (.+)$/, "$1 mine(s) exploded under $2’s feet"],
+  [/^(.+) retire son volontaire du raid$/, "$1 withdraws their volunteer from the raid"],
+  [/^La famille de (.+) est tombée au jour (\d+)\. Le clan perd une famille$/, "$1’s family fell on day $2. The clan loses a family"],
+  [/^La famille de (.+) est tombée\. Le clan perd une famille$/, "$1’s family fell. The clan loses a family"],
+  [/^(.+) a quitté le clan$/, "$1 left the clan"], [/^(.+) a rejoint le clan$/, "$1 joined the clan"], [/^(.+) a fondé le clan$/, "$1 founded the clan"],
+  [/^(.+) s’appelle maintenant (.+)$/, "$1 is now called $2"],
+  [/^a construit : (.+) \(niveau (\d+)$/, "built: $1 (level $2"], [/^a déposé (.+)$/, "deposited $1"], [/^a pris (\d+) (.+)$/, "took $1 $2"],
+  [/^(.+) a fait un échange avec (.+)$/, "$1 made a trade with $2"],
+  [/^(.+) a attaqué (.+) \((.+)\) : (.+)$/, "$1 attacked $2 ($3): $4"]
+);
+Object.assign(TRAD_ECRAN, {
+  "Revoir le raid": "Replay", "Bastion": "Stronghold", "Discussion": "Chat", "Bastion · grande salle": "Stronghold · great hall", "Bastion · salle du trésor": "Stronghold · treasury",
+  "Bastion · cour fortifiée": "Stronghold · fortified yard", "{#} / {#} familles · {#} jours tenus": "{#} / {#} families · {#} days survived", "{#} / {#} familles ·": "{#} / {#} families ·",
+  "{#} joueurs ce mois-ci · ⭐ = meilleur score d’une partie classée ({#} point par jour et par survivant) · ● en cours = partie encore en vie, score mis à jour en direct": "{#} players this month · ⭐ = best score from a ranked game ({#} point per day per survivor) · ● in progress = game still alive, score updated live"
+});
+TRAD_MOTIFS.push([/^(.+?) · (\d+)$/, function(m, l, n){ var L = { "Ferraille":"Scrap", "Argent":"Silver", "Or":"Gold", "Légende":"Legend" }; return L[l] ? L[l] + " · " + n : m; }]);
+Object.assign(TRAD_ECRAN, { "Redescendre": "Go down" });

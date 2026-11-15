@@ -349,5 +349,6 @@ document.addEventListener("click", function(e){
    pour que ça marche aussi depuis la version de test claude.ai ou en double-clic) */
 function liensLegaux(cls){
   var base = typeof SITE_JEU !== "undefined" ? SITE_JEU : "https://zombria.com";
-  return '<p class="liens-legaux ' + (cls || "") + '"><a href="' + base + '/mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a> · <a href="' + base + '/confidentialite.html" target="_blank" rel="noopener">Confidentialité</a></p>';
+  var en = typeof LANGUE !== "undefined" && LANGUE === "en"; // pages anglaises : legal-notice.html, privacy.html (2026-11-15)
+  return '<p class="liens-legaux ' + (cls || "") + '"><a href="' + base + (en ? '/legal-notice.html' : '/mentions-legales.html') + '" target="_blank" rel="noopener">Mentions légales</a> · <a href="' + base + (en ? '/privacy.html' : '/confidentialite.html') + '" target="_blank" rel="noopener">Confidentialité</a></p>';
 }
