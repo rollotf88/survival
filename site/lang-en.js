@@ -1536,3 +1536,23 @@ TRAD_MOTIFS.unshift(
   [/^Attaque de nuit \(force (\d+) contre votre défense (\d+)$/, "Night attack (strength $1 against your defense $2"],
   [/^Attaque de nuit repoussée \(force (\d+) contre votre défense (\d+)$/, "Night attack driven off (strength $1 against your defense $2"]
 );
+/* Relecture du 2026-11-15 (2) */
+Object.assign(TRAD_ECRAN, {
+  "touche pour la retirer": "tap to remove it", "touche pour le retirer": "tap to remove him", "Touche pour la retirer": "Tap to remove her", "Touche pour le retirer": "Tap to remove him",
+  "Forcer": "Force", "Le combat commence : les zombies arrivent": "The fight begins: the zombies are coming",
+  "{#} objets à fouiller": "{#} items to search", "{#} objet à fouiller": "{#} item to search",
+  "Ce qui ne rentre pas dans les sacs restera sur place pour une prochaine fois": "Whatever doesn’t fit in the bags will stay there for next time",
+  "À mains nues": "Bare-handed", "abattu": "killed", "tour": "turn", "L’équipe avant de fouiller": "The team before searching", "Ici": "Here",
+  "laissé sur place": "left behind", "Mains nues": "Bare hands",
+  "Va hurler": "Will scream", "va hurler pour appeler du renfort": "will scream to call for backup", "Va voler": "Will steal", "Va s’enfuir": "Will run off",
+  "va s’enfuir avec ce qu’il a volé : abattez-le vite": "will run off with what it stole: take it down fast", "Va pondre": "Will spawn",
+  "un Rampant va sortir de son ventre": "a Crawler is about to come out of its belly", "Gonfle": "Swelling",
+  "gonfle doucement (un Rampant sortira au tour suivant": "swells slowly (a Crawler will come out next turn"
+});
+TRAD_MOTIFS.unshift(
+  [/^va attaquer (.+) \((\d+)-(\d+)$/, "will attack $1 ($2-$3"], [/^va attaquer (.+) et (.+) \((\d+)-(\d+)$/, "will attack $1 and $2 ($3-$4"],
+  [/^va attaquer (.+)$/, "will attack $1"], [/^va arracher (\d+) objets de votre butin$/, "will snatch $1 items from your loot"],
+  [/^frappe en premier$/, "strikes first"]
+);
+Object.assign(TRAD_ECRAN, { "S’est enfui": "Ran off", "À terre": "Down" });
+Object.assign(TRAD_ECRAN, { "touche pour la retirer": "tap to remove", "touche pour le retirer": "tap to remove", "Touche pour la retirer": "Tap to remove", "Touche pour le retirer": "Tap to remove" });
