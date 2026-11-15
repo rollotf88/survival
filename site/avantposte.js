@@ -139,8 +139,11 @@ function apMaj(){
 /* ---------- La pièce « Avant-poste » (ajoutée à PIECES de piece.js) ---------- */
 function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // centre = true : l'objet est centré sur l'emplacement (panneau, cadenas) au lieu d'être posé « par le pied » (bâtiments)
+// Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
+var AP_ECH_BAT = { tour:.72, radio:.85, charrette:.82, planque:.85, pieges:.85, siege:.9 };
 function apRect(nom, x, y, ech, centre){
-  var t = AP_TAILLES[nom], w = t[0] * (ech || AP.echelle), h = t[1] * (ech || AP.echelle), y1 = centre ? y + h * .5 + 6 : y + 48;
+  var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
+  var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + h * .5 + 6 : y + (ech ? 48 : 42);
   return [Math.round(x - w / 2), Math.round(y1 - h), Math.round(x + w / 2), Math.round(y1)];
 }
 function apDecor(){
