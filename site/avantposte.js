@@ -9,6 +9,14 @@
    et les lignes marquées « AVANT-POSTE » (index.html, sw.js, preparer-site.py).
    ===================================================================== */
 var AVANTPOSTE_ACTIF = true;
+// Carte de la vitrine de l'accueil (avant la Légende du mois), 128 caractères au plus en français et en anglais
+if(AVANTPOSTE_ACTIF && typeof VITRINE !== "undefined" && !VITRINE.some(function(v){ return v[0].indexOf("avantposte") >= 0; })){
+  var apIv = VITRINE.findIndex(function(v){ return v[0].indexOf("legende") >= 0; });
+  VITRINE.splice(apIv < 0 ? VITRINE.length : apIv, 0, ["images/vitrine-avantposte.webp", "🏕️ Ton avant-poste", "Dès 50 jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux."]);
+  // l'accueil a pu s'afficher avant ce fichier : on refait la vitrine déjà posée
+  var apVt = document.getElementById("vitrine");
+  if(apVt && typeof vitrine === "function"){ apVt.outerHTML = vitrine(); if(typeof lancerVitrine === "function") lancerVitrine(); }
+}
 
 var AP = {
   jour: 50,                                   // jour de partie où l'avant-poste se débloque
@@ -130,8 +138,9 @@ function apMaj(){
 
 /* ---------- La pièce « Avant-poste » (ajoutée à PIECES de piece.js) ---------- */
 function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
-function apRect(nom, x, y, ech){
-  var t = AP_TAILLES[nom], w = t[0] * (ech || AP.echelle), h = t[1] * (ech || AP.echelle), y1 = y + 48;
+// centre = true : l'objet est centré sur l'emplacement (panneau, cadenas) au lieu d'être posé « par le pied » (bâtiments)
+function apRect(nom, x, y, ech, centre){
+  var t = AP_TAILLES[nom], w = t[0] * (ech || AP.echelle), h = t[1] * (ech || AP.echelle), y1 = centre ? y + h * .5 + 6 : y + 48;
   return [Math.round(x - w / 2), Math.round(y1 - h), Math.round(x + w / 2), Math.round(y1)];
 }
 function apDecor(){
@@ -141,8 +150,8 @@ function apDecor(){
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
     var x = AP.plots[k][0], y = AP.plots[k][1];
-    var r = apRect("panneau", x, y, .36); D.push(["images/avantposte/panneau.webp", r[0], r[1], r[2], r[3], function(){ return apOuvert(k) && !APS.plots[k] && !(APS.chantier && APS.chantier.k === k); }]);
-    r = apRect("cadenas", x, y, .3); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
+    var r = apRect("panneau", x, y, .36, true); D.push(["images/avantposte/panneau.webp", r[0], r[1], r[2], r[3], function(){ return apOuvert(k) && !APS.plots[k] && !(APS.chantier && APS.chantier.k === k); }]);
+    r = apRect("cadenas", x, y, .3, true); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
     Object.keys(AP_BAT).forEach(function(b){ if(AP_BAT[b].pillard) return;
       [1, 3, 5].forEach(function(s){ var rr = apRect(b + "-" + s, x, y);
         D.push(["images/avantposte/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }]); }); });
@@ -774,6 +783,7 @@ if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
 if(typeof TRADUCTIONS !== "undefined"){
   TRADUCTIONS.en = TRADUCTIONS.en || {};
   Object.assign(TRADUCTIONS.en, {
+    "Dès 50 jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux.":"From day 50, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps.", "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost",
     "Citerne":"Cistern", "Serre":"Greenhouse", "Scierie":"Sawmill", "Palissade":"Palisade", "Entrepôt":"Storehouse", "Infirmerie":"Infirmary", "Forge":"Forge", "Poste radio":"Radio post", "Tour de guet":"Watchtower", "Garage":"Garage", "Planque":"Hideout", "Pièges":"Traps", "Charrette":"Cart", "Atelier de siège":"Siege workshop",
     "Recueille l’eau de pluie dans des tonneaux, puis une vraie cuve.":"Collects rainwater in barrels, then in a real tank.",
     "Légumes et champignons à l’abri ; des herbes fraîches à partir du niveau 3.":"Vegetables and mushrooms under cover; fresh herbs from level 3.",
@@ -837,6 +847,6 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Qui part piller ?":"Who goes raiding?", "Trop blessé":"Too wounded", "Trop blessée":"Too wounded", "Trop fatigué":"Too tired", "Trop fatiguée":"Too tired", "{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles":"{n} survivors max · −{e} ⚡ each · real wounds and deaths", "Au bastion":"At the stronghold",
     "À l’assaut avec {l}":"Attack with {l}", "Choisis au moins un survivant":"Choose at least one survivor", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Fermer la carte":"Close the map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Ouvrir la carte":"Open the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
-  if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
+  if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost", "Dès {#} jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux":"From day {#}, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps", "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
 if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. By default you’re protected; in raider mode ({#}% more production, at least {#} days, renewed with every attack), 2 members of your family can raid other raiders, ruins and raider camps, but you can be raided too (up to {#}% of your unharvested stock, then {#} hours of safety).";
