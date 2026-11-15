@@ -611,7 +611,7 @@ function openPieces(){
   var tuile = function(P, k){
     var F = P.cadre, cx = ((F.x0 + F.x1) / 2) / P.l * 100, cy = ((F.y0 + F.y1) / 2) / P.h * 100, pa = pastillePiece(P);
     return '<button class="pz-v' + (k === pieceIdx ? " ici" : "") + '" data-act="pieceVa2" data-id="' + k + '">'
-      + '<span class="pz-img" style="background-image:url(\'' + imagePiece(P) + '\');background-position:' + cx.toFixed(1) + '% ' + cy.toFixed(1) + '%"></span>'
+      + '<span class="pz-img" style="background-image:url(\'' + imagePiece(P) + '\');background-position:' + cx.toFixed(1) + '% ' + cy.toFixed(1) + '%' + (P.l > 1024 ? ';background-size:' + (P.l / 1024 * 100).toFixed(0) + '% auto' : '') + '"></span>'
       + (pa ? '<span class="pz-pastille">' + pa + '</span>' : '')
       + '<span class="pz-nom">' + majuscule(P.nom.replace(/^Bastion · /, "")) + (k === pieceIdx ? ' <small>(ici)</small>' : '') + '</span></button>';
   };
