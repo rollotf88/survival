@@ -2999,3 +2999,6 @@ html[lang="en"] .st-t.conseil::before{content:"advised"}
 /* Case d'équipement vide (2026-11-15, retour de Fabien) : l'icône repère reste petite, grise et discrète, pour ne pas ressembler à un objet équipé */
 .qpeq .slot .vide,.slots.grands .slot .vide{width:40%;height:40%;opacity:.28;filter:grayscale(1)}
 .slots.grands .slot.dispo .vide{opacity:.45;filter:none}
+/* … et toujours carrée et centrée, même quand la case est plus large que haute (fiche du membre au téléphone) */
+.qpeq .slot .vide,.slots.grands .slot .vide{width:auto;height:44%;aspect-ratio:1/1;margin:auto;display:grid;place-items:center}
+.qpeq .slot .vide > *,.slots.grands .slot .vide > *{width:100%;height:100%;object-fit:contain;display:block}
