@@ -175,7 +175,7 @@ if(AP_PIECE && typeof placerPiece === "function"){
   placerPiece = function(){
     if(apIci()){ apMaj(); AP_PIECE.zones = apZones(); }
     var r = apPlacerOrigine.apply(this, arguments);
-    try{ apCompteurs(); }catch(e){}
+    try{ apCompteurs(); apPlacerCarte(); }catch(e){}
     return r;
   };
 }
@@ -411,12 +411,12 @@ function apEnvoyer(force){
 var apCarteVue = { x:0, y:0, z:0.6 }, apCarteData = null, apCarteSel = null;
 var AP_TAILLE_SECTEUR = 512, AP_TAILLE_REPERE = 92;
 function openCarte(){
-  if(typeof hide === "function") hide();
+  if(typeof hide === "function" && !(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite"))) hide(); // sur PC, le panneau de droite reste à côté de la carte
   var el = document.getElementById("apCarte");
   if(!el){ el = document.createElement("div"); el.id = "apCarte"; document.body.appendChild(el); apBrancherCarte(el); }
   el.innerHTML = '<div class="apc-haut"><b>🗺️ ' + trad("La carte") + '</b><span class="apc-leg"><span><img src="images/avantposte/reperes/moi.webp" alt="">' + trad("Toi") + '</span><span><img src="images/avantposte/reperes/protege.webp" alt="">' + trad("Protégé") + '</span><span><img src="images/avantposte/reperes/pnj.webp" alt="">' + trad("Pillards") + '</span><span><img src="images/avantposte/reperes/ruine.webp" alt="">' + trad("Ruine") + '</span></span><button class="apc-x" data-act="apCarteFermer" aria-label="' + trad("Fermer") + '">✕</button></div>'
     + '<div class="apc-vue"><div class="apc-monde"></div></div><div class="apc-msg">' + trad("Chargement de la carte…") + '</div><div class="apc-fiche"></div>';
-  el.style.display = "flex"; apCarteSel = null;
+  el.style.display = "flex"; apCarteSel = null; apPlacerCarte();
   apEnvoyer(true).then(function(d){ return d && !d.erreur ? d : apAppel({ action:"carte" }); }).then(function(d){
     apCarteData = d && !d.erreur ? d : null;
     if(apCarteData && apCarteData.jour) apNoterJour(apCarteData.jour);
@@ -427,6 +427,16 @@ function openCarte(){
     apDessinerCarte(true);
   }).catch(function(){ apCarteData = null; apDessinerCarte(true); var msg = el.querySelector(".apc-msg"); if(msg) msg.textContent = trad("Hors ligne : seule ta base est affichée."); });
 }
+// La carte se pose dans la scène du jeu (sur téléphone, entre l'en-tête et les cartes de la famille ; sur PC, par le style)
+function apPlacerCarte(){
+  var el = document.getElementById("apCarte"); if(!el || el.style.display === "none") return;
+  if(document.body.classList.contains("pc") && !document.body.classList.contains("scene-petite")){ el.classList.remove("dans-scene"); el.style.top = el.style.height = ""; return; }
+  var chap = document.querySelector(".scene"), bas = document.querySelector(".scene > .row") || document.querySelector(".scene .grid2");
+  var haut = chap ? chap.getBoundingClientRect().top + 2 : 0, fin = bas ? bas.getBoundingClientRect().top - 4 : 0;
+  if(chap && bas && fin - haut >= 260){ el.classList.add("dans-scene"); el.style.top = haut + "px"; el.style.height = (fin - haut) + "px"; }
+  else { el.classList.remove("dans-scene"); el.style.top = el.style.height = ""; }
+}
+window.addEventListener("resize", function(){ try{ apPlacerCarte(); }catch(e){} });
 function apReperes(){
   var D = apCarteData, nS = D ? D.secteurs : 2, L = [];
   for(var s = 0; s < nS; s++){
@@ -523,7 +533,7 @@ document.addEventListener("click", function(e){
   if(a === "apCarte"){ openCarte(); return; }
   if(a === "apCarteFermer"){ var el = document.getElementById("apCarte"); if(el) el.style.display = "none"; return; }
   if(a === "apFicheFermer"){ var f = document.querySelector("#apCarte .apc-fiche"); if(f) f.classList.remove("on"); return; }
-  if(a === "apRepere"){ if(apDernierGlisse > 6){ apDernierGlisse = 0; return; } apFicheRepere(+b.getAttribute("data-id")); return; }
+  if(a === "apRepere"){ if(apDernierGlisse > 6){ apDernierGlisse = 0; return; } apCibleI = null; apFicheRepere(+b.getAttribute("data-id")); return; }
 });
 // Au lancement : relire le jour d'accès (réglage de l'administration)
 setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && !apLocal()) apAppel({ action:"reglage" }).then(function(d){ if(d && d.jour){ apNoterJour(d.jour); if(typeof render === "function" && typeof G !== "undefined" && G && G.ph === "game") render(); } }).catch(function(){}); }catch(e){} }, 2500);
@@ -535,6 +545,11 @@ setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && APS.debloque) apEnvoyer(false
    du jeu, et on peut être pillé. Engagement de 3 jours relancé à chaque attaque (le serveur décide). 2 membres de la famille
    partent, comme un assaut de guerre (creerAssaut de logique.js) ; la fin du combat passe par terminerAssaut, enveloppée ici.
    Récompense du risque : +25 % de production à l'avant-poste. */
+if(typeof ZOMBIES !== "undefined" && !ZOMBIES.some(function(z){ return z.id === "pillardAp"; })){
+  ZOMBIES.push({ id:"pillardAp", nom:"Pillard", icone:"🧔", pv:12, degats:[4, 8], jour:99999, poids:0, attente:true, desc:"Un pillard qui défend son camp. La palissade le rend plus coriace." });
+  if(typeof SPRITES_ZOMBIES !== "undefined") SPRITES_ZOMBIES.pillardAp = "images/zombies/defenseur.webp";
+  if(typeof PORTRAITS_PNJ !== "undefined" && PORTRAITS_PNJ.defenseur) PORTRAITS_PNJ.pillardAp = PORTRAITS_PNJ.defenseur;
+}
 var AP_PNJ_PAUSE = 24 * 3600e3, AP_BONUS_PILLARD = 1.25, AP_ENERGIE = (typeof BAL !== "undefined" && BAL.energieAssaut) || 40;
 function apPillard(){ return !!(APS.pillard && APS.pillard.on); }
 function apNoterServeur(d){
@@ -615,31 +630,47 @@ function apRaisonAttaque(){
   if(typeof equipeAssaut !== "function" || !equipeAssaut().length) return trad("Personne n’a assez d’énergie ({n} ⚡) ni de vie pour partir piller. Reviens après une nuit de repos.", { n:AP_ENERGIE });
   return "";
 }
-function apLancerCombat(params, info){
-  var eq = equipeAssaut();
+function apLancerCombat(params, info, eq){
+  eq = eq && eq.length ? eq : equipeAssaut();
   var el = document.getElementById("apCarte"); if(el) el.style.display = "none";
   creerAssaut(Object.assign({ assaut:"ap-" + Date.now(), clan:"", cible:info.pseudo || trad("Pillards") }, params), eq);
   G.exp.pillage = info; G.exp.nomLieu = info.pnj ? trad("le camp de pillards") : trad("l’avant-poste de {p}", { p:info.pseudo || "?" });
+  G.combat.zombies.forEach(function(z){ if(z.id === "defenseur") z.id = "pillardAp"; }); // texte des pillards, pas des clans
   if(typeof render === "function") render(); if(typeof sauver === "function") sauver();
   if(typeof choixCombat !== "undefined"){ choixCombat = {}; cibleCombat = 0; dernierPV = null; }
   openCombat();
 }
+// Choix des survivants qui partent (2 au plus), dans la fiche de la carte
+var apEquipe = [], apCibleI = null;
+function apPeutPartir(x){ return x.al && !x.raid && x.en >= AP_ENERGIE && x.hp > 25; }
+function apChoixEquipe(i){
+  var raison = apRaisonAttaque(); if(raison){ apMsgFiche(raison); return; }
+  if(apCibleI !== i){ apCibleI = i; apEquipe = equipeAssaut().slice(); }
+  var max = (typeof BAL !== "undefined" && BAL.membresParExpedition) || 2, f = document.querySelector("#apCarte .apc-fiche"); if(!f) return;
+  var h = '<button class="apc-fx" data-act="apFicheFermer" aria-label="' + trad("Fermer") + '">✕</button><b class="apc-eq-t">⚔️ ' + trad("Qui part piller ?") + '</b><small class="apc-eq-s">' + trad("{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles", { n:max, e:AP_ENERGIE }) + '</small><div class="apc-eq">';
+  G.m.forEach(function(x, j){ if(!x.al) return;
+    var ok = apPeutPartir(x), sel = apEquipe.indexOf(j) >= 0;
+    h += '<button class="apc-mb' + (sel ? " sel" : "") + '" data-act="apEquipier" data-id="' + j + '"' + (ok ? "" : " disabled") + '>' + (typeof iconeMembre === "function" ? '<span class="apc-mp">' + iconeMembre(x) + '</span>' : '') + '<b>' + apEchap(x.nom) + '</b><small>' + (x.raid ? trad("Au bastion") : "❤️ " + Math.round(x.hp) + " · ⚡ " + Math.round(x.en)) + '</small></button>'; });
+  h += '</div><button class="btn apc-go" data-act="apGo"' + (apEquipe.length ? "" : " disabled") + '>⚔️ ' + (apEquipe.length ? trad("À l’assaut avec {l}", { l:apEquipe.map(function(j){ return G.m[j].nom; }).join(" + ") }) : trad("Choisis au moins un survivant")) + '</button>';
+  f.innerHTML = h; f.classList.add("on");
+}
 function apAttaquer(i){
   var L = apCarteData ? apCarteData._L : apCarteHors, P = L && L[i]; if(!P) return;
   var raison = apRaisonAttaque(); if(raison){ apMsgFiche(raison); return; }
+  var eq = apEquipe.filter(function(j){ return G.m[j] && apPeutPartir(G.m[j]); }); if(!eq.length) eq = equipeAssaut();
   if(P.pnj){
     var cle = P.s + ":" + P.p, vu = APS_PNJ()[cle] || 0;
     if(Date.now() - vu < AP_PNJ_PAUSE){ apMsgFiche(trad("Ce camp se reforme : reviens dans {t}.", { t:apFmt(AP_PNJ_PAUSE - (Date.now() - vu)) })); return; }
     var def = P.def || 3;
     apLancerCombat({ remparts:Math.max(0, Math.min(5, Math.floor(def / 3) - Math.ceil(apNiv("siege") / 2))), mines:Math.max(0, Math.min(4, apAnneau(P.s)) - apNiv("siege")), armurerie:P.s === 0 ? 1 : 0,
-      jourCible:(BAL.jourClans || 30) + Math.floor((P.niv || 0) / 6) * ((BAL.assaut && BAL.assaut.joursParForce) || 30) }, { pnj:true, cle:cle, niv:P.niv || 4 });
+      jourCible:(BAL.jourClans || 30) + Math.floor((P.niv || 0) / 6) * ((BAL.assaut && BAL.assaut.joursParForce) || 30) }, { pnj:true, cle:cle, niv:P.niv || 4 }, eq);
     return;
   }
   apAppel({ action:"attaquer", s:P.s, p:P.p }).then(function(d){
     if(!d || d.erreur){ apMsgFiche(d && d.erreur ? d.erreur : trad("Hors ligne : impossible d’attaquer.")); return; }
     apNoterServeur(d);
     var c = d.cible || {};
-    apLancerCombat(apParamsCible(c.bats || {}, c.niv), { joueur:true, pseudo:c.pseudo || "", niv:c.niv || 0 });
+    apLancerCombat(apParamsCible(c.bats || {}, c.niv), { joueur:true, pseudo:c.pseudo || "", niv:c.niv || 0 }, eq);
   }).catch(function(){ apMsgFiche(trad("Hors ligne : impossible d’attaquer.")); });
 }
 function apMsgFiche(t){ var f = document.querySelector("#apCarte .apc-fiche"); if(!f) return; var m = f.querySelector(".apc-err"); if(!m){ f.insertAdjacentHTML("beforeend", '<p class="msg b2 apc-err"></p>'); m = f.querySelector(".apc-err"); } m.textContent = t; }
@@ -691,7 +722,13 @@ document.addEventListener("click", function(e){
       .catch(function(){ apMsg = "❌ " + trad("Hors ligne : impossible de changer de mode."); openCamp(); });
     return;
   }
-  if(a === "apAttaquer"){ apAttaquer(+b.getAttribute("data-id")); return; }
+  if(a === "apAttaquer"){ var ii = +b.getAttribute("data-id"), LL = apCarteData ? apCarteData._L : apCarteHors, PP = LL && LL[ii];
+    if(PP && PP.pnj){ var vu = APS_PNJ()[PP.s + ":" + PP.p] || 0; if(Date.now() - vu < AP_PNJ_PAUSE){ apMsgFiche(trad("Ce camp se reforme : reviens dans {t}.", { t:apFmt(AP_PNJ_PAUSE - (Date.now() - vu)) })); return; } }
+    apChoixEquipe(ii); return; }
+  if(a === "apEquipier"){ var j = +b.getAttribute("data-id"), max = (typeof BAL !== "undefined" && BAL.membresParExpedition) || 2, k = apEquipe.indexOf(j);
+    if(k >= 0) apEquipe.splice(k, 1); else { apEquipe.push(j); if(apEquipe.length > max) apEquipe.shift(); }
+    apChoixEquipe(apCibleI); return; }
+  if(a === "apGo"){ apAttaquer(apCibleI); return; }
 });
 
 /* ---------- Guide du survivant : une règle de plus (thème « Progresser ») ---------- */
@@ -768,7 +805,9 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Attaquer le camp":"Attack the camp", "2 membres, −{n} ⚡ chacun":"2 members, −{n} ⚡ each", "Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.":"Switch to raider mode (in your outpost’s camp) to attack it.",
     "Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.":"Your outpost, in raider mode: other raiders can attack it.",
     "Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.":"Abandoned for {n} days: it’s a ruin, raiders can help themselves.",
-    "Pillard, mais pillé récemment : à l’abri encore {t}.":"A raider, but raided recently: safe for {t} more.", "En mode pillard : il peut être attaqué par les autres pillards.":"In raider mode: other raiders can attack it.", "Piller":"Raid", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
+    "Pillard, mais pillé récemment : à l’abri encore {t}.":"A raider, but raided recently: safe for {t} more.", "En mode pillard : il peut être attaqué par les autres pillards.":"In raider mode: other raiders can attack it.", "Piller":"Raid", "Pillard":"Raider", "Un pillard qui défend son camp. La palissade le rend plus coriace.":"A raider defending their camp. The palisade makes them tougher.",
+    "Qui part piller ?":"Who goes raiding?", "{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles":"{n} survivors max · −{e} ⚡ each · real wounds and deaths", "Au bastion":"At the stronghold",
+    "À l’assaut avec {l}":"Attack with {l}", "Choisis au moins un survivant":"Choose at least one survivor", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }

@@ -84,3 +84,24 @@
 /* L'icône du marteau dans le compteur : les images de #decor sont en position absolue (style.css), pas celle-ci */
 #decor .ap-chip{display:flex;align-items:center;gap:5px}
 #decor .ap-chip img,#decor .ap-chip .ico{position:static;width:16px;height:16px;filter:none;flex:none}
+
+/* Sur PC, la carte se pose dans la scène du jeu (comme le combat), le panneau de droite reste visible */
+body.pc:not(.scene-petite) #apCarte{inset:auto;left:var(--scene-x,20px);top:var(--scene-y,60px);width:var(--scene-w,1000px);height:var(--scene-h,680px);border:3px solid var(--bois);border-radius:12px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:4}
+body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
+/* Choix de l'équipe dans la fiche */
+.apc-eq-t{display:block;font-size:17px;padding-right:34px}
+.apc-eq-s{display:block;color:var(--mut);font-size:12.5px;margin:2px 0 8px}
+.apc-eq{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.apc-mb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border:2px solid var(--bois);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer;box-shadow:0 3px 0 var(--line)}
+.apc-mb b{font-size:13px}
+.apc-mb small{font-size:11px;color:var(--mut)}
+.apc-mp{width:44px;height:44px;display:block}
+.apc-mp .portrait,.apc-mp img{width:44px;height:44px}
+.apc-mb.sel{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 20%,var(--card));box-shadow:0 3px 0 var(--acc)}
+.apc-mb:disabled{opacity:.45;cursor:default}
+
+/* Sur téléphone : la carte prend la place de la scène (entre l'en-tête et les cartes de la famille) */
+#apCarte.dans-scene{inset:auto;left:0;right:0;border-top:3px solid var(--bois);border-bottom:3px solid var(--bois);z-index:4}
+#apCarte.dans-scene .apc-haut{padding-top:6px;padding-bottom:6px}
+#apCarte.dans-scene .apc-haut > b{font-size:20px}
+#apCarte.dans-scene .apc-fiche{bottom:8px}
