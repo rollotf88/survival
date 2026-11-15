@@ -900,7 +900,7 @@ async function adminPost(request, env){
     case "clans": {
       const C = await lireClans(env), R = await lireReglages(env);
       if(C._change) await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
-      return repAdmin({ jourMin: R.jourMinClan, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { bot: !!c.bot, bots: c.membres.filter((m) => m.bot).length, enGuerre: !!c.guerre, recherche: !!c.recherche, liste: c.membres.map((m) => (m.bot ? "🤖 " : "") + m.pseudo + " (j" + m.jour + ")").join(", ") })) });
+      return repAdmin({ jourMin: R.jourMinClan, jourAvantposte: R.jourAvantposte || 50 /* AVANT-POSTE */, clans: Object.values(C.clans).map((c) => Object.assign(resumeClan(c), { bot: !!c.bot, bots: c.membres.filter((m) => m.bot).length, enGuerre: !!c.guerre, recherche: !!c.recherche, liste: c.membres.map((m) => (m.bot ? "🤖 " : "") + m.pseudo + " (j" + m.jour + ")").join(", ") })) });
     }
     case "botsCreer": {
       const C = await lireClans(env), n = Math.max(1, Math.min(3, Math.floor(+d.clans) || 1)), now2 = Date.now(), noms = [];
@@ -951,6 +951,11 @@ async function adminPost(request, env){
       await env.CLASSEMENT.put(CLE_CLANS, JSON.stringify(C));
       const L = await lireListe(env), L2 = L.filter((e) => !estBot(e.id)); if(L2.length !== L.length) await env.CLASSEMENT.put(CLE, JSON.stringify(L2));
       return repAdmin({ ok: true, supprimes: nb });
+    }
+    case "reglageJourAvantposte": { // AVANT-POSTE : jour d'accès (clé « reglages », champ jourAvantposte)
+      const R = await lireReglages(env), j = Math.floor(+d.jour);
+      if(!(j >= 1 && j <= 1000)) return repAdmin({ erreur: "Entre 1 et 1000 jours." }, 400);
+      R.jourAvantposte = j; await env.CLASSEMENT.put(CLE_REGLAGES, JSON.stringify(R)); return repAdmin({ ok: true });
     }
     case "reglageJourClan": {
       const R = await lireReglages(env), j = Math.floor(+d.jour);

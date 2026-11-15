@@ -48,8 +48,11 @@ function vue(C, id, now){
 export async function avantpostePost(request, env, O){
   let d; try{ d = await request.json(); }catch(e){ return O.reponse({ erreur: "Demande illisible." }, 400); }
   const id = String(d.id || "").replace(/[^\w-]/g, "").slice(0, 40);
-  if(!id) return O.reponse({ erreur: "Identifiant manquant." }, 400);
-  const now = Date.now(), C = await lire(env);
+  if(!id && d.action !== "reglage") return O.reponse({ erreur: "Identifiant manquant." }, 400);
+  const now = Date.now();
+  const RG = (await env.CLASSEMENT.get("reglages", { type: "json" })) || {}, jourAcces = RG.jourAvantposte >= 1 ? RG.jourAvantposte : 50;
+  if(d.action === "reglage") return O.reponse({ jour: jourAcces });
+  const C = await lire(env);
   let change = nettoyer(C, now);
   if(d.action === "maj"){
     const P = C.postes[id] || {};
@@ -67,5 +70,5 @@ export async function avantpostePost(request, env, O){
     C.postes[id] = P; change = true;
   }
   if(change) await env.CLASSEMENT.put("ap_carte", JSON.stringify(C));
-  return O.reponse(vue(C, id, now));
+  return O.reponse(Object.assign(vue(C, id, now), { jour: jourAcces }));
 }

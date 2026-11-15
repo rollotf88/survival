@@ -188,6 +188,9 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
     if(onglet === "clans"){
       h = '<div class="carte"><form id="formJour" class="row"><label for="jourMin" style="font-weight:700">Jours de survie pour accéder aux clans</label><input id="jourMin" type="number" min="1" max="1000" value="' + d.jourMin + '" style="width:110px"><button type="submit">Enregistrer</button></form>'
         + '<p class="sub" style="margin-top:8px">100 par défaut. Baisse-le (ex. 1) pour tester les clans avec tes amis, puis remets 100.</p></div>'
+        // AVANT-POSTE : jour d'accès à l'avant-poste
+        + '<div class="carte"><form id="formJourAp" class="row"><label for="jourAp" style="font-weight:700">Jours de survie pour accéder à l’avant-poste</label><input id="jourAp" type="number" min="1" max="1000" value="' + (d.jourAvantposte || 50) + '" style="width:110px"><button type="submit">Enregistrer</button></form>'
+        + '<p class="sub" style="margin-top:8px">50 par défaut. Baisse-le (ex. 1) pour tester l’avant-poste, puis remets 50. Le jeu le relit au lancement ; une fois débloqué sur un appareil, l’avant-poste y reste.</p></div>'
         + '<div class="carte"><b>🤖 Bots de test</b><p class="sub" style="margin:4px 0 8px">Des faux joueurs pour tester les clans, les guerres, les cadres et le classement. Les clans de bots cherchent toujours une guerre ; pendant une guerre, les bots (ennemis et équipiers) lancent leur assaut chaque jour tout seuls.</p>'
         + '<div class="row"><button data-botscreer="1">Créer 1 clan de bots</button><button data-botscreer="2">Créer 2 clans de bots</button><button class="danger" data-botssuppr="1">Supprimer tous les bots</button></div></div>'
         + '<div class="carte tableau"><table><tr><th>Clan</th><th>Chef</th><th>Familles</th><th>Jours</th><th>Membres</th><th></th></tr>'
@@ -205,6 +208,7 @@ textarea{font:inherit;width:100%;padding:10px 12px;border:2px solid var(--bois);
     var tm1 = $("testMail"); if(tm1) tm1.addEventListener("click", function(){ testerMail(tm1, {}); });
     var tm2 = $("testMailAvis"); if(tm2) tm2.addEventListener("click", function(){ testerMail(tm2, { commeAvis: true }); });
     var fj = $("formJour"); if(fj) fj.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourClan", { jour:$("jourMin").value }, "Réglage enregistré."); });
+    var fa = $("formJourAp"); if(fa) fa.addEventListener("submit", function(e){ e.preventDefault(); action("reglageJourAvantposte", { jour:$("jourAp").value }, "Réglage enregistré."); }); // AVANT-POSTE
     var f = $("formCode"); if(f) f.addEventListener("submit", function(e){ e.preventDefault(); action("codeCreer", { code:$("nouveauCode").value }, "Code créé."); });
   }
   function action(a, extra, ok){ appel(a, extra).then(function(d){ if(d.erreur){ message(d.erreur); return; } charger(); setTimeout(function(){ message(ok, true); }, 300); }).catch(function(){ message("Impossible de joindre le serveur."); }); }

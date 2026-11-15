@@ -58,6 +58,9 @@ function apLire(){
   return s;
 }
 var APS = apLire();
+// Jour d'accès réglable dans l'administration (onglet Clans) : relu au lancement, gardé sur l'appareil
+try{ var apJourGarde = +localStorage.getItem("survival_ap_jour"); if(apJourGarde >= 1) AP.jour = apJourGarde; }catch(e){}
+function apNoterJour(j){ j = Math.floor(+j); if(!(j >= 1)) return; AP.jour = j; try{ localStorage.setItem("survival_ap_jour", String(j)); }catch(e){} }
 function apSauver(){ try{ localStorage.setItem(AP_CLE, JSON.stringify(APS)); }catch(e){} }
 try{ if(/[?&]avantposte=1/.test(location.search) && !APS.debloque){ APS.debloque = Date.now(); APS.tProd = APS.tAtt = Date.now(); apSauver(); } }catch(e){}
 
@@ -416,6 +419,7 @@ function openCarte(){
   el.style.display = "flex"; apCarteSel = null;
   apEnvoyer(true).then(function(d){ return d && !d.erreur ? d : apAppel({ action:"carte" }); }).then(function(d){
     apCarteData = d && !d.erreur ? d : null;
+    if(apCarteData && apCarteData.jour) apNoterJour(apCarteData.jour);
     var msg = el.querySelector(".apc-msg");
     if(msg) msg.textContent = apCarteData ? "" : (d && d.erreur ? d.erreur + " " : "") + trad("Hors ligne : seule ta base est affichée.");
     if(msg && !msg.textContent) msg.style.display = "none";
@@ -512,6 +516,8 @@ document.addEventListener("click", function(e){
   if(a === "apFicheFermer"){ var f = document.querySelector("#apCarte .apc-fiche"); if(f) f.classList.remove("on"); return; }
   if(a === "apRepere"){ if(apDernierGlisse > 6){ apDernierGlisse = 0; return; } apFicheRepere(+b.getAttribute("data-id")); return; }
 });
+// Au lancement : relire le jour d'accès (réglage de l'administration)
+setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && !apLocal()) apAppel({ action:"reglage" }).then(function(d){ if(d && d.jour){ apNoterJour(d.jour); if(typeof render === "function" && typeof G !== "undefined" && G && G.ph === "game") render(); } }).catch(function(){}); }catch(e){} }, 2500);
 // Envoi régulier de son avant-poste (au lancement, puis au plus toutes les 10 min quand il change)
 setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && APS.debloque) apEnvoyer(false); }catch(e){} }, 5000);
 
