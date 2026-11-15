@@ -75,11 +75,12 @@ function traduireNoeud(racine){
   if(LANGUE === "fr" || !racine) return;
   var ignorer = function(el){ return !el || el.closest && el.closest(".sans-trad, input, textarea, script, style, [contenteditable]"); };
   if(racine.nodeType === 3){ if(!ignorer(racine.parentElement)){ var r = traduireTexteEcran(racine.nodeValue); if(r !== null && r !== racine.nodeValue) racine.nodeValue = r; } return; }
-  if(racine.nodeType !== 1 || ignorer(racine)) return;
+  if(racine.nodeType !== 1) return;
+  if(ignorer(racine)){ if(racine.matches && racine.matches("input, textarea") && !racine.closest(".sans-trad")){ var ph = racine.getAttribute("placeholder"), rp = ph && traduireTexteEcran(ph); if(rp) racine.setAttribute("placeholder", rp); } return; }
   var w = document.createTreeWalker(racine, NodeFilter.SHOW_TEXT), n, liste = [];
   while((n = w.nextNode())) liste.push(n);
   liste.forEach(function(x){ if(!ignorer(x.parentElement)){ var r = traduireTexteEcran(x.nodeValue); if(r !== null && r !== x.nodeValue) x.nodeValue = r; } });
-  ["placeholder", "aria-label", "title"].forEach(function(a){ racine.querySelectorAll("[" + a + "]").forEach(function(el){ if(ignorer(el)) return; var r = traduireTexteEcran(el.getAttribute(a)); if(r !== null) el.setAttribute(a, r); }); });
+  ["placeholder", "aria-label", "title"].forEach(function(a){ racine.querySelectorAll("[" + a + "]").forEach(function(el){ if(el.closest(".sans-trad")) return; /* le texte gris d’un champ se traduit, pas ce qu’on y tape */ var r = traduireTexteEcran(el.getAttribute(a)); if(r !== null) el.setAttribute(a, r); }); });
 }
 // Règle du guide : texte anglais rangé par titre (REGLES_EN), les nombres repris dans l'ordre du texte français
 function tradRegle(titre, fr){

@@ -1556,3 +1556,29 @@ TRAD_MOTIFS.unshift(
 );
 Object.assign(TRAD_ECRAN, { "S’est enfui": "Ran off", "À terre": "Down" });
 Object.assign(TRAD_ECRAN, { "touche pour la retirer": "tap to remove", "touche pour le retirer": "tap to remove", "Touche pour la retirer": "Tap to remove", "Touche pour le retirer": "Tap to remove" });
+/* Relecture du 2026-11-15 (3) : clans, échanges */
+Object.assign(TRAD_ECRAN, {
+  "Vraiment quitter ? Tu devras attendre {#} h avant un autre clan": "Really leave? You’ll have to wait {#} h before another clan",
+  "{#}/{#} volontaires": "{#}/{#} volunteers", "{#} / {#} volontaires": "{#} / {#} volunteers", "{#} / {#} volontaires · dont le tien": "{#} / {#} volunteers · including yours",
+  "Écrire au clan": "Write to the clan", "Écrire au clan…": "Write to the clan…", "Tu demandes": "You ask for", "Tu donnes": "You give", "Ton offre": "Your offer", "Contre": "In exchange for", "Donne": "Gives",
+  "Il te manque des objets": "You’re missing items", "Pendant une partie seulement": "During a game only", "Tu as fait cet échange": "You made this trade",
+  "Choisis au moins un objet à donner et un objet à demander": "Choose at least one item to give and one to ask for",
+  "Les échanges se font pendant une partie, au refuge": "Trades happen during a game, at the refuge",
+  "Tu as déjà une offre en cours : annule-la ou attends qu’elle soit prise": "You already have an open offer: cancel it or wait until it’s taken",
+  "Tu demandes beaucoup plus que ce que tu donnes : ajoute un objet ou demande moins": "You’re asking for much more than you give: add an item or ask for less",
+  "Tu n’as plus tous les objets que tu proposes": "You no longer have all the items you’re offering",
+  "Ton offre est publiée. Ce que tu donnes est mis de côté jusqu’à ce qu’un membre accepte": "Your offer is posted. What you give is set aside until a member accepts",
+  "Expirée": "Expired", "Annulée": "Canceled", "Acceptée": "Accepted"
+});
+TRAD_MOTIFS.unshift(
+  [/^En attente · encore (.+)$/, "Waiting · $1 left"], [/^Ton prochain échange dans (.+)$/, "Your next trade in $1"],
+  [/^Pris par (.+)$/, "Taken by $1"], [/^Échangé avec (.+)$/, "Traded with $1"], [/^(.+) propose un échange$/, "$1 offers a trade"],
+  [/^(.+) a déposé (.+)$/, "$1 deposited $2"], [/^(.+) a pris (\d+) (.+)$/, "$1 took $2 $3"], [/^(.+) a construit : (.+)$/, "$1 built: $2"],
+  [/^(\d+) bots? (?:ont|a) rejoint le clan \(test$/, "$1 bot(s) joined the clan (test"]
+);
+Object.assign(TRAD_ECRAN, {
+  "Que s’est-il passé ? Sur quel écran ? Qu’attendais-tu": "What happened? On which screen? What did you expect", "Ton idée pour améliorer le jeu": "Your idea to improve the game",
+  "Ton message": "Your message", "Ex. : Renard du quartier": "E.g.: Neighborhood Fox", "Ex. BL{#}": "E.g. BL{#}",
+  "Chercher dans les règles": "Search the rules", "Chercher dans les objets": "Search the items", "Chercher dans les lieux": "Search the places",
+  "Chercher dans les zombies": "Search the zombies", "Chercher dans la famille": "Search the family"
+});
