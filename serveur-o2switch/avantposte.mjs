@@ -18,6 +18,20 @@ const TYPES = ["quartier", "foret", "industrie", "riviere", "autoroute"];
 export function typeSecteur(s){ return s === 0 ? "centre" : TYPES[(s * 3 + 1) % TYPES.length]; }
 const BATS_OK = ["citerne", "serre", "scierie", "palissade", "entrepot", "infirmerie", "forge", "radio", "tour", "garage", "planque", "pieges", "charrette", "siege"];
 const JOUR = 86400000, RUINE = 30 * JOUR, OUBLI = 60 * JOUR;
+// Mode pillard : on ne peut piller (et être pillé) que si on l'a activé ; engagement de 3 jours relancé à chaque attaque ;
+// 24 h de bouclier après avoir été pillé ; 10 à 20 % du stock non récolté (moins la planque), plafonné par la charrette.
+const ENGAGE = 3 * JOUR, BOUCLIER = JOUR, RES_OK = ["eau", "nour", "planche", "herbes", "bandage", "clous", "ferraille", "jerrican"];
+const PLANQUE = [15, 25, 35, 45, 60];
+function peutCibler(A, P, now){
+  if(!P) return "Cet avant-poste n’existe plus.";
+  if(P === A) return "Tu ne peux pas te piller toi-même.";
+  if(!A.pillard) return "Active d’abord le mode pillard.";
+  const ruine = now - (P.vu || 0) > RUINE;
+  if(!ruine && !P.pillard) return "Cet avant-poste est protégé : il n’est pas en mode pillard.";
+  if((P.bouclier || 0) > now) return "Cet avant-poste vient d’être pillé : il est à l’abri encore un moment.";
+  if(!ruine && (P.niv || 0) < Math.floor((A.niv || 0) / 2) && (P.niv || 0) < 10) return "Cet avant-poste est bien plus petit que le tien : ce ne serait pas juste.";
+  return "";
+}
 
 async function lire(env){ return (await env.CLASSEMENT.get("ap_carte", { type: "json" })) || { postes: {} }; }
 function nettoyer(C, now){
@@ -38,9 +52,10 @@ function vue(C, id, now){
   let sMax = 1;
   const postes = Object.keys(C.postes).map(function(k){
     const P = C.postes[k]; if(P.s > sMax) sMax = P.s;
-    return { s: P.s, p: P.p, pseudo: P.pseudo || "", avatar: P.avatar || "", niv: P.niv || 0, def: P.def || 0, bats: P.bats || {}, ruine: now - (P.vu || 0) > RUINE, absent: Math.floor((now - (P.vu || 0)) / JOUR), moi: k === id };
+    return { s: P.s, p: P.p, pseudo: P.pseudo || "", avatar: P.avatar || "", niv: P.niv || 0, def: P.def || 0, bats: P.bats || {}, ruine: now - (P.vu || 0) > RUINE, absent: Math.floor((now - (P.vu || 0)) / JOUR), moi: k === id,
+      pillard: !!P.pillard, bouclier: (P.bouclier || 0) > now ? P.bouclier : 0 };
   });
-  const moi = C.postes[id] ? { s: C.postes[id].s, p: C.postes[id].p } : null;
+  const M = C.postes[id], moi = M ? { s: M.s, p: M.p, pillard: !!M.pillard, engage: M.engage || 0 } : null;
   return { secteurs: sMax + 1, moi, postes };
 }
 
@@ -66,9 +81,46 @@ export async function avantpostePost(request, env, O){
     BATS_OK.forEach(function(k){ const n = Math.floor(+b[k]) || 0; if(n > 0) P.bats[k] = Math.min(5, n); });
     P.jour = Math.max(0, Math.min(5000, Math.floor(+d.jour) || 0));
     P.vu = now;
+    // Le stock non récolté (sert à calculer ce qu'un pillard peut prendre)
+    P.stock = {}; const st = d.stock && typeof d.stock === "object" ? d.stock : {};
+    RES_OK.forEach(function(r){ const n = Math.floor(+st[r]) || 0; if(n > 0) P.stock[r] = Math.min(200, n); });
     if(P.s == null){ const pl = placeLibre(C); if(!pl) return O.reponse({ erreur: "La carte est pleine." }, 503); P.s = pl.s; P.p = pl.p; }
     C.postes[id] = P; change = true;
   }
+  let extra = {};
+  const A = C.postes[id];
+  // Pillages subis depuis la dernière fois : envoyés une fois, puis effacés
+  if(d.action === "maj" && A && A.pille && A.pille.length){ extra.pillages = A.pille; A.pille = []; change = true; }
+  if(d.action === "pillard"){
+    if(!A) return O.reponse({ erreur: "Ton avant-poste n’est pas encore sur la carte." });
+    if(d.on){ A.pillard = true; A.engage = Math.max(A.engage || 0, now + ENGAGE); }
+    else { if((A.engage || 0) > now) return O.reponse({ erreur: "Tu t’es engagé : le mode pillard reste actif encore un peu." }); A.pillard = false; }
+    change = true;
+  }
+  if(d.action === "attaquer"){
+    if(!A) return O.reponse({ erreur: "Ton avant-poste n’est pas encore sur la carte." });
+    const cid = Object.keys(C.postes).find(function(k){ return C.postes[k].s === +d.s && C.postes[k].p === +d.p; }), P = cid && C.postes[cid];
+    const raison = peutCibler(A, P, now);
+    if(raison) return O.reponse({ erreur: raison });
+    A.engage = now + ENGAGE; A.attaque = { cible: cid, t: now }; change = true;
+    extra.cible = { pseudo: P.pseudo || "", niv: P.niv || 0, bats: P.bats || {}, ruine: now - (P.vu || 0) > RUINE };
+  }
+  if(d.action === "finAttaque"){
+    if(!A || !A.attaque || now - A.attaque.t > 2 * 3600000) return O.reponse({ erreur: "Aucune attaque en cours." });
+    const P = C.postes[A.attaque.cible]; delete A.attaque; change = true;
+    if(!P) return O.reponse({ erreur: "Cet avant-poste n’existe plus." });
+    if(d.victoire){
+      const pl = (P.bats && P.bats.planque) || 0, frac = (0.10 + Math.min(0.10, (+d.etoiles || 0) * 0.033)) * (1 - (pl ? PLANQUE[pl - 1] / 100 : 0));
+      const cap = 6 + 6 * Math.min(5, (A.bats && A.bats.charrette) || 0);
+      let total = 0; const butin = [];
+      RES_OK.forEach(function(r){ const dispo = (P.stock && P.stock[r]) || 0; let n = Math.floor(dispo * frac); if(n < 1 && dispo >= 3) n = 1; n = Math.min(n, cap - total); if(n > 0){ butin.push([r, n]); total += n; P.stock[r] = dispo - n; } });
+      P.bouclier = now + BOUCLIER;
+      P.pille = (P.pille || []).concat([{ t: now, par: A.pseudo || "", ok: false, pertes: butin }]).slice(-10);
+      extra.butin = butin;
+    } else {
+      P.pille = (P.pille || []).concat([{ t: now, par: A.pseudo || "", ok: true, pertes: [] }]).slice(-10);
+    }
+  }
   if(change) await env.CLASSEMENT.put("ap_carte", JSON.stringify(C));
-  return O.reponse(Object.assign(vue(C, id, now), { jour: jourAcces }));
+  return O.reponse(Object.assign(vue(C, id, now), { jour: jourAcces }, extra));
 }

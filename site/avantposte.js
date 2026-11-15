@@ -43,8 +43,8 @@ var AP_BAT = {
   garage:     { nom:"Garage", ico:"⛽", cout:{ ferraille:3, planche:3 }, prod:{ jerrican:[0.25, 0.5, 0.75, 1, 1.5] }, desc:"Siphonne les épaves du quartier : de l’essence pour la voiture." },
   planque:    { nom:"Planque", ico:"🕳️", cout:{ planche:4, ruban:1 }, planque:[15, 25, 35, 45, 60], desc:"Une part du stock est cachée et ne peut pas être volée." },
   pieges:     { nom:"Pièges", ico:"🪤", cout:{ ferraille:2, clous:2 }, def:[2, 4, 6, 8, 10], desc:"Blessent les assaillants avant qu’ils n’atteignent la palissade." },
-  charrette:  { nom:"Charrette", ico:"🛒", pillard:true, desc:"Pour ramener le butin des pillages." },
-  siege:      { nom:"Atelier de siège", ico:"🪓", pillard:true, desc:"Pour enfoncer les défenses des autres avant-postes." }
+  charrette:  { nom:"Charrette", ico:"🛒", cout:{ planche:4, ferraille:2 }, desc:"Pour ramener plus de butin des pillages." },
+  siege:      { nom:"Atelier de siège", ico:"🪓", cout:{ planche:5, ferraille:3 }, desc:"Affaiblit la palissade et les pièges des avant-postes que tu pilles." }
 };
 var AP_RES = ["eau", "nour", "planche", "herbes", "bandage", "clous", "ferraille", "jerrican"];
 function apIcoRes(r){ return r === "eau" ? ic("bouteille", "💧") : r === "nour" ? ic("conserve", "🥫") : icone(r); }
@@ -267,7 +267,7 @@ function openCamp(){
   h += '<p class="titre-butin">⚔️ ' + trad("Attaques") + '</p>';
   h += APS.log.length ? '<div class="ap-log">' + APS.log.slice(0, 5).map(function(L){
     var pertes = Object.keys(L.pertes).map(function(r){ return apNomRes(r, L.pertes[r]); }).join(", ");
-    return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt">' + apQuand(L.t) + ' · <b>' + (L.ok ? trad("repoussée") : trad("perdue")) + '</b> · ' + trad("force {f} contre défense {d}", { f:L.force, d:L.def }) + (pertes ? ' · −' + pertes : '') + '</span></div>'; }).join("") + '</div>'
+    return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt">' + apQuand(L.t) + ' · <b>' + (L.pvp ? (L.ok ? trad("{p} repoussé", { p:apEchap(L.par || trad("Un pillard")) }) : trad("pillé par {p}", { p:apEchap(L.par || trad("un pillard")) })) : (L.ok ? trad("repoussée") : trad("perdue"))) + '</b>' + (L.pvp ? '' : ' · ' + trad("force {f} contre défense {d}", { f:L.force, d:L.def })) + (pertes ? ' · −' + pertes : '') + '</span></div>'; }).join("") + '</div>'
     : '<p class="ap-note">' + trad("Aucune attaque pour l’instant. Toutes les 8 h, des zombies ou des pillards peuvent venir : palissade, tour et pièges le défendent.") + '</p>';
   h += '<p class="ap-note">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille. La carte et le mode pillard arriveront bientôt.") + '</p>';
   show(h + '</div>' + BTN_FERMER());
@@ -420,6 +420,7 @@ function openCarte(){
   apEnvoyer(true).then(function(d){ return d && !d.erreur ? d : apAppel({ action:"carte" }); }).then(function(d){
     apCarteData = d && !d.erreur ? d : null;
     if(apCarteData && apCarteData.jour) apNoterJour(apCarteData.jour);
+    if(apCarteData && typeof apNoterServeur === "function") apNoterServeur(apCarteData);
     var msg = el.querySelector(".apc-msg");
     if(msg) msg.textContent = apCarteData ? "" : (d && d.erreur ? d.erreur + " " : "") + trad("Hors ligne : seule ta base est affichée.");
     if(msg && !msg.textContent) msg.style.display = "none";
@@ -443,7 +444,7 @@ function apDessinerCarte(centrer){
     h += '<img class="apc-sect" src="images/avantposte/secteurs/' + apTypeSecteur(s) + '.webp" alt="" style="left:' + (q[0] * AP_TAILLE_SECTEUR) + 'px;top:' + (q[1] * AP_TAILLE_SECTEUR) + 'px" draggable="false">'; }
   R.L.forEach(function(P, i){
     var q = apSpirale(P.s), pos = AP_SECTEURS[apTypeSecteur(P.s)][P.p]; if(!pos) return;
-    var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : "protege";
+    var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : P.pillard ? "pillard" : "protege";
     var x = q[0] * AP_TAILLE_SECTEUR + pos[0], y = q[1] * AP_TAILLE_SECTEUR + pos[1];
     h += '<button class="apc-m' + (P.moi ? " moi" : "") + '" data-act="apRepere" data-id="' + i + '" style="left:' + x + 'px;top:' + y + 'px;width:' + AP_TAILLE_REPERE + 'px"><img src="images/avantposte/reperes/' + img + '.webp" alt="" draggable="false">'
       + (P.pnj ? '' : '<span class="apc-nom">' + apEchap(P.pseudo || trad("Sans pseudo")) + '</span>') + '</button>';
@@ -498,13 +499,21 @@ function apFicheRepere(i){
   var h = '<button class="apc-fx" data-act="apFicheFermer" aria-label="' + trad("Fermer") + '">✕</button>';
   if(P.pnj){
     h += '<div class="apc-ft"><img class="apc-fi" src="images/avantposte/reperes/pnj.webp" alt=""><div><b>' + trad("Camp de pillards") + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv, d:P.def }) + '</small></div></div>'
-      + '<p class="apc-fp">' + (P.s === 0 ? trad("Le centre-ville est tenu par les bandes les plus dangereuses.") : trad("Une bande de pillards s’est installée ici.")) + ' ' + trad("Tu pourras l’attaquer avec le mode pillard, bientôt.") + '</p>';
+      + '<p class="apc-fp">' + (P.s === 0 ? trad("Le centre-ville est tenu par les bandes les plus dangereuses.") : trad("Une bande de pillards s’est installée ici.")) + '</p>'
+      + (apPillard() ? '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Attaquer le camp") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>'
+        : '<p class="apc-fp"><b>' + trad("Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.") + '</b></p>');
   } else {
     var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
     h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
     var b = P.bats || {}, ks = Object.keys(b);
     h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
-    h += '<p class="apc-fp">' + (P.moi ? trad("Ton avant-poste. Il est protégé : personne ne peut le piller.") : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine.", { n:P.absent || 30 }) : trad("Avant-poste protégé : il ne peut pas être pillé.")) + '</p>';
+    var pill = P.pillard && !P.ruine, bouclier = P.bouclier && P.bouclier > Date.now();
+    h += '<p class="apc-fp">' + (P.moi ? (apPillard() ? trad("Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.") : trad("Ton avant-poste. Il est protégé : personne ne peut le piller."))
+      : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.", { n:P.absent || 30 })
+      : pill ? (bouclier ? trad("Pillard, mais pillé récemment : à l’abri encore {t}.", { t:apFmt(P.bouclier - Date.now()) }) : trad("En mode pillard : il peut être attaqué par les autres pillards."))
+      : trad("Avant-poste protégé : il ne peut pas être pillé.")) + '</p>';
+    if(!P.moi && (pill || P.ruine) && !bouclier) h += apPillard() ? '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Piller") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:AP_ENERGIE }) + ')</small></button>'
+      : '<p class="apc-fp"><b>' + trad("Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.") + '</b></p>';
   }
   el.innerHTML = h; el.classList.add("on");
 }
@@ -521,12 +530,176 @@ setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && !apLocal()) apAppel({ action:
 // Envoi régulier de son avant-poste (au lancement, puis au plus toutes les 10 min quand il change)
 setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && APS.debloque) apEnvoyer(false); }catch(e){} }, 5000);
 
+/* ---------- Le mode pillard (2026-11-15) ----------
+   Activé par le joueur (par défaut on est protégé) : on peut alors piller les autres pillards, les ruines et les camps de pillards
+   du jeu, et on peut être pillé. Engagement de 3 jours relancé à chaque attaque (le serveur décide). 2 membres de la famille
+   partent, comme un assaut de guerre (creerAssaut de logique.js) ; la fin du combat passe par terminerAssaut, enveloppée ici.
+   Récompense du risque : +25 % de production à l'avant-poste. */
+var AP_PNJ_PAUSE = 24 * 3600e3, AP_BONUS_PILLARD = 1.25, AP_ENERGIE = (typeof BAL !== "undefined" && BAL.energieAssaut) || 40;
+function apPillard(){ return !!(APS.pillard && APS.pillard.on); }
+function apNoterServeur(d){
+  if(!d || d.erreur) return d;
+  if(d.moi){ APS.pillard = { on:!!d.moi.pillard, engage:d.moi.engage || 0 }; apSauver(); }
+  if(d.jour) apNoterJour(d.jour);
+  // Pillages subis pendant l'absence : retirés du stock non récolté, notés dans le journal
+  if(d.pillages && d.pillages.length){
+    d.pillages.forEach(function(E){
+      var pertes = {}; (E.pertes || []).forEach(function(p){ pertes[p[0]] = p[1]; APS.acc[p[0]] = Math.max(0, (APS.acc[p[0]] || 0) - p[1]); });
+      APS.log.unshift({ t:E.t, pvp:true, par:E.par || "", ok:!!E.ok, force:0, def:apDefense(), pertes:pertes });
+      if(typeof fileSucces !== "undefined") fileSucces.push({ icone:"🏴", titre:E.ok ? trad("Pillage repoussé !") : trad("Ton avant-poste a été pillé"), nom:E.ok ? trad("{p} a tenté de piller ton avant-poste et a échoué.", { p:E.par || trad("Un pillard") }) : trad("{p} est reparti avec une partie de ton stock.", { p:E.par || trad("Un pillard") }) });
+    });
+    APS.log = APS.log.slice(0, 10); apSauver();
+  }
+  return d;
+}
+// Envoi de l'avant-poste : on y ajoute le stock non récolté, et on traite la réponse
+var apEnvoyerBase = apEnvoyer;
+apEnvoyer = function(force){
+  if(!APS.debloque) return Promise.resolve(null);
+  var t = 0; try{ t = +localStorage.getItem("survival_ap_envoi") || 0; }catch(e){}
+  if(!force && Date.now() - t < 600000) return Promise.resolve(null);
+  try{ localStorage.setItem("survival_ap_envoi", String(Date.now())); }catch(e){}
+  apMaj();
+  var bats = {}, stock = {}; for(var k in APS.plots) if(APS.plots[k].niv) bats[APS.plots[k].id] = APS.plots[k].niv;
+  for(var r in APS.acc) if(APS.acc[r] >= 1) stock[r] = Math.floor(APS.acc[r]);
+  return apAppel({ action:"maj", pseudo:typeof lirePseudo === "function" ? lirePseudo() : "", avatar:typeof lireAvatar === "function" ? lireAvatar() : "",
+    niv:apNiveauTotal(), def:apDefense(), bats:bats, stock:stock, jour:typeof G !== "undefined" && G ? G.day : 0 }).then(apNoterServeur).catch(function(){ return null; });
+};
+// Bonus de production des pillards
+var apProdJourBase = apProdJour;
+apProdJour = function(){ var p = apProdJourBase(); if(apPillard()) for(var r in p) p[r] *= AP_BONUS_PILLARD; return p; };
+
+// Effet de la charrette et de l'atelier de siège
+var apEffetBase = apEffet;
+apEffet = function(id, n){
+  if(n && id === "charrette") return "🛒 " + trad("Butin d’un pillage : {n} objets au plus", { n:6 + 6 * n });
+  if(n && id === "siege") return "🪓 " + trad("Défenses adverses affaiblies : palissade −{a}, pièges −{b}", { a:Math.ceil(n / 2), b:n });
+  return apEffetBase(id, n);
+};
+
+/* Bloc « Mode pillard » de la fenêtre du camp */
+function apBlocPillard(){
+  var h = '<p class="titre-butin">🏴 ' + trad("Mode pillard") + '</p>';
+  if(!apPillard()){
+    h += '<p class="ap-note">' + trad("Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.") + '</p>'
+      + '<button class="loc" data-act="apPillardOn"><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + trad("Engagement de 3 jours, relancé à chaque attaque") + '</small></button>';
+  } else {
+    var reste = (APS.pillard.engage || 0) - Date.now();
+    h += '<p class="msg b2">🏴 ' + trad("Mode pillard actif : +25 % de production, mais tu peux être pillé.") + '</p>'
+      + '<button class="loc" data-act="apPillardOff"' + (reste > 0 ? " disabled" : "") + '><b>🛡️ ' + trad("Revenir en mode protégé") + '</b><small>' + (reste > 0 ? trad("Engagé encore {t}", { t:apFmt(reste) }) : trad("Possible maintenant")) + '</small></button>';
+  }
+  return h;
+}
+var openCampBase = openCamp;
+openCamp = function(){
+  openCampBase();
+  var sheet = document.getElementById("sheet"), carte = sheet && sheet.querySelector(".ap-carte-b");
+  if(carte) carte.insertAdjacentHTML("afterend", '<div class="ap-pill">' + apBlocPillard() + '</div>');
+};
+function apConfirmerPillard(){
+  show('<div class="ap"><h2>🏴 ' + trad("Passer en mode pillard ?") + '</h2><p>' + trad("Tu pourras piller les autres pillards, les ruines et les camps de pillards du jeu, et ta production montera de 25 %.") + '</p>'
+    + '<p class="msg b2">⚠️ ' + trad("Mais d’autres pillards pourront attaquer ton avant-poste et repartir avec une partie de ton stock non récolté (palissade, tour et pièges le défendent, la planque en cache une part). Tu restes en mode pillard au moins 3 jours, et chaque attaque que tu lances relance ce délai.") + '</p>'
+    + '<button class="btn" style="width:100%;margin-bottom:8px" data-act="apPillardOui">🏴 ' + trad("Oui, devenir pillard") + '</button><button class="btn alt" style="width:100%" data-act="apCamp">' + trad("Non, rester protégé") + '</button></div>');
+}
+
+/* Attaquer depuis la carte */
+var APS_PNJ = function(){ APS.pnj = APS.pnj || {}; return APS.pnj; };
+function apParamsCible(bats, niv){
+  var sg = apNiv("siege");
+  return { remparts:Math.max(0, Math.min(5, (bats.palissade || 0) - Math.ceil(sg / 2))), mines:Math.max(0, (bats.pieges || 0) - sg), armurerie:Math.min(3, Math.floor((bats.tour || 0) / 2)),
+    jourCible:(BAL.jourClans || 30) + Math.floor((niv || 0) / 6) * ((BAL.assaut && BAL.assaut.joursParForce) || 30) };
+}
+function apRaisonAttaque(){
+  if(!apEnJeu()) return trad("Pendant une partie seulement");
+  if(G.exp || G.combat || G.rencontre) return trad("Termine d’abord ce que fait ta famille.");
+  if(typeof equipeAssaut !== "function" || !equipeAssaut().length) return trad("Personne n’a assez d’énergie ({n} ⚡) ni de vie pour partir piller. Reviens après une nuit de repos.", { n:AP_ENERGIE });
+  return "";
+}
+function apLancerCombat(params, info){
+  var eq = equipeAssaut();
+  var el = document.getElementById("apCarte"); if(el) el.style.display = "none";
+  creerAssaut(Object.assign({ assaut:"ap-" + Date.now(), clan:"", cible:info.pseudo || trad("Pillards") }, params), eq);
+  G.exp.pillage = info; G.exp.nomLieu = info.pnj ? trad("le camp de pillards") : trad("l’avant-poste de {p}", { p:info.pseudo || "?" });
+  if(typeof render === "function") render(); if(typeof sauver === "function") sauver();
+  if(typeof choixCombat !== "undefined"){ choixCombat = {}; cibleCombat = 0; dernierPV = null; }
+  openCombat();
+}
+function apAttaquer(i){
+  var L = apCarteData ? apCarteData._L : apCarteHors, P = L && L[i]; if(!P) return;
+  var raison = apRaisonAttaque(); if(raison){ apMsgFiche(raison); return; }
+  if(P.pnj){
+    var cle = P.s + ":" + P.p, vu = APS_PNJ()[cle] || 0;
+    if(Date.now() - vu < AP_PNJ_PAUSE){ apMsgFiche(trad("Ce camp se reforme : reviens dans {t}.", { t:apFmt(AP_PNJ_PAUSE - (Date.now() - vu)) })); return; }
+    var def = P.def || 3;
+    apLancerCombat({ remparts:Math.max(0, Math.min(5, Math.floor(def / 3) - Math.ceil(apNiv("siege") / 2))), mines:Math.max(0, Math.min(4, apAnneau(P.s)) - apNiv("siege")), armurerie:P.s === 0 ? 1 : 0,
+      jourCible:(BAL.jourClans || 30) + Math.floor((P.niv || 0) / 6) * ((BAL.assaut && BAL.assaut.joursParForce) || 30) }, { pnj:true, cle:cle, niv:P.niv || 4 });
+    return;
+  }
+  apAppel({ action:"attaquer", s:P.s, p:P.p }).then(function(d){
+    if(!d || d.erreur){ apMsgFiche(d && d.erreur ? d.erreur : trad("Hors ligne : impossible d’attaquer.")); return; }
+    apNoterServeur(d);
+    var c = d.cible || {};
+    apLancerCombat(apParamsCible(c.bats || {}, c.niv), { joueur:true, pseudo:c.pseudo || "", niv:c.niv || 0 });
+  }).catch(function(){ apMsgFiche(trad("Hors ligne : impossible d’attaquer.")); });
+}
+function apMsgFiche(t){ var f = document.querySelector("#apCarte .apc-fiche"); if(!f) return; var m = f.querySelector(".apc-err"); if(!m){ f.insertAdjacentHTML("beforeend", '<p class="msg b2 apc-err"></p>'); m = f.querySelector(".apc-err"); } m.textContent = t; }
+// Butin d'un camp de pillards du jeu
+function apButinPnj(niv, etoiles){
+  var T = [["eau", 3], ["nour", 3], ["planche", 3], ["ferraille", 2], ["clous", 2], ["bandage", 1], ["balle", 1], ["cartouche", 1], ["chiffon", 1], ["jerrican", 1]];
+  var n = 3 + Math.floor(niv / 4) + (etoiles || 0), tot = 0; T.forEach(function(t){ tot += t[1]; });
+  var B = {};
+  for(var i = 0; i < n; i++){ var x = Math.random() * tot; for(var k = 0; k < T.length; k++){ x -= T[k][1]; if(x <= 0){ var r = T[k][0], q = r === "eau" || r === "nour" ? 2 + Math.floor(Math.random() * 3) : 1; B[r] = (B[r] || 0) + q; break; } } }
+  if(Math.random() < 0.12 + niv / 200) B[Math.random() < 0.5 ? "trousse" : "canette"] = 1;
+  return Object.keys(B).map(function(r){ return [r, B[r]]; });
+}
+function apDonner(butin){
+  var noms = [];
+  (butin || []).forEach(function(p){ var r = p[0], n = p[1]; if(!(n > 0)) return;
+    if(r === "eau" || r === "nour") G.reste[r] = (G.reste[r] || 0) + n; else if(OBJETS[r]) ajouter(r, n); else return;
+    noms.push(apNomRes(r, n)); });
+  return noms;
+}
+// Fin du combat d'un pillage (à la place de la fin d'un assaut de guerre)
+if(typeof terminerAssaut === "function"){
+  var apTerminerAssautBase = terminerAssaut;
+  terminerAssaut = function(){
+    if(!(G.exp && G.exp.pillage)) return apTerminerAssautBase.apply(this, arguments);
+    var X = G.exp.pillage, b = bilanAssaut(); finirAssaut();
+    if(typeof retourPiece !== "undefined") retourPiece = "avantposte";
+    var fin = function(butin, err){
+      var noms = apDonner(butin);
+      if(typeof render === "function") render(); if(typeof sauver === "function") sauver();
+      show('<div class="ap"><h2>' + (b.victoire ? "🏴 " + trad("Pillage réussi !") : "🛡️ " + trad("Pillage repoussé")) + '</h2><p class="gu-etoiles">' + (b.etoiles ? "★".repeat(b.etoiles) + "☆".repeat(3 - b.etoiles) : "☆☆☆") + '</p>'
+        + (b.resume.length && typeof puces === "function" ? puces(b.resume) : '')
+        + (noms.length ? '<p>🎒 ' + trad("Vous rapportez : {l}.", { l:noms.join(", ") }) + '</p>' : b.victoire ? '<p class="sub">' + trad("Il n’y avait rien à prendre.") + '</p>' : '')
+        + (err ? '<p class="msg">❌ ' + err + '</p>' : '')
+        + '<div class="row"><button class="btn" data-act="apCarte">🗺️ ' + trad("La carte") + '</button><button class="btn alt" data-act="close">' + trad("Fermer") + '</button></div></div>');
+      if(typeof finiSiMorts === "function") finiSiMorts();
+    };
+    if(X.pnj){ if(b.victoire){ APS_PNJ()[X.cle] = Date.now(); apSauver(); } fin(b.victoire ? apButinPnj(X.niv, b.etoiles) : []); return; }
+    apAppel({ action:"finAttaque", victoire:b.victoire, etoiles:b.etoiles }).then(function(d){ apNoterServeur(d); fin(d && !d.erreur ? d.butin : [], d && d.erreur); })
+      .catch(function(){ fin([], trad("Hors ligne : le butin n’a pas pu être récupéré.")); });
+  };
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest && e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  var a = b.getAttribute("data-act");
+  if(a === "apPillardOn"){ apConfirmerPillard(); return; }
+  if(a === "apPillardOui" || a === "apPillardOff"){
+    var on = a === "apPillardOui";
+    apEnvoyer(true).then(function(){ return apAppel({ action:"pillard", on:on }); }).then(function(d){ apNoterServeur(d); apMsg = d && d.erreur ? "❌ " + d.erreur : on ? "🏴 " + trad("Tu es maintenant en mode pillard.") : "🛡️ " + trad("Tu es de nouveau protégé."); openCamp(); if(apIci() && typeof placerPiece === "function") placerPiece(); })
+      .catch(function(){ apMsg = "❌ " + trad("Hors ligne : impossible de changer de mode."); openCamp(); });
+    return;
+  }
+  if(a === "apAttaquer"){ apAttaquer(+b.getAttribute("data-id")); return; }
+});
+
 /* ---------- Guide du survivant : une règle de plus (thème « Progresser ») ---------- */
 if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
   var apReglesOrigine = reglesGuide;
   reglesGuide = function(){
     var R = apReglesOrigine.apply(this, arguments);
-    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour tout rapporter au refuge. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille."]);
+    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour tout rapporter au refuge. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Par défaut tu es protégé ; en mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque), 2 membres de ta famille peuvent piller les autres pillards, les ruines et les camps de pillards, mais tu peux aussi être pillé (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri)."]);
     return R;
   };
   if(typeof THEMES_GUIDE !== "undefined") THEMES_GUIDE.forEach(function(T){ if(T[0] === "Progresser") T[2].push("L’avant-poste"); });
@@ -575,8 +748,28 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Une courte pub divise le temps restant par deux · encore {n} aujourd’hui":"A short ad halves the remaining time · {n} left today",
     "Le chantier commence : {b} niveau {n}.":"Construction starts: {b} level {n}.", "Rapporté au refuge : {l}.":"Brought back to the refuge: {l}.",
     "Publicité (simulation)":"Ad (simulation)", "Ici s’affichera plus tard une vraie pub récompensée.":"A real rewarded ad will show here later.",
-    "Pub en cours… {n} s":"Ad playing… {n} s", "La carte":"The map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
+    "Pub en cours… {n} s":"Ad playing… {n} s",
+    "Pour ramener plus de butin des pillages.":"To bring back more loot from raids.", "Affaiblit la palissade et les pièges des avant-postes que tu pilles.":"Weakens the palisade and traps of the outposts you raid.",
+    "Pillage repoussé !":"Raid repelled!", "Ton avant-poste a été pillé":"Your outpost was raided", "{p} a tenté de piller ton avant-poste et a échoué.":"{p} tried to raid your outpost and failed.",
+    "{p} est reparti avec une partie de ton stock.":"{p} left with part of your stock.", "Un pillard":"A raider",
+    "Butin d’un pillage : {n} objets au plus":"Loot from a raid: {n} items max", "Défenses adverses affaiblies : palissade −{a}, pièges −{b}":"Enemy defenses weakened: palisade −{a}, traps −{b}",
+    "Mode pillard":"Raider mode", "Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. In raider mode, you can attack other raiders, ruins and raider camps (2 members of your family go), your production rises by 25%… but other raiders can raid you.",
+    "Passer en mode pillard":"Switch to raider mode", "Engagement de 3 jours, relancé à chaque attaque":"3-day commitment, renewed with every attack",
+    "Mode pillard actif : +25 % de production, mais tu peux être pillé.":"Raider mode on: +25% production, but you can be raided.", "Revenir en mode protégé":"Go back to protected mode",
+    "Engagé encore {t}":"Committed for {t} more", "Possible maintenant":"Possible now", "Passer en mode pillard ?":"Switch to raider mode?",
+    "Tu pourras piller les autres pillards, les ruines et les camps de pillards du jeu, et ta production montera de 25 %.":"You’ll be able to raid other raiders, ruins and the game’s raider camps, and your production will rise by 25%.",
+    "Mais d’autres pillards pourront attaquer ton avant-poste et repartir avec une partie de ton stock non récolté (palissade, tour et pièges le défendent, la planque en cache une part). Tu restes en mode pillard au moins 3 jours, et chaque attaque que tu lances relance ce délai.":"But other raiders will be able to attack your outpost and leave with part of your unharvested stock (palisade, tower and traps defend it, the hideout hides some). You stay in raider mode at least 3 days, and every attack you launch renews that delay.",
+    "Oui, devenir pillard":"Yes, let’s raid", "Non":"No", "Non, rester protégé":"No, stay protected", "Termine d’abord ce que fait ta famille.":"First finish what your family is doing.",
+    "Personne n’a assez d’énergie ({n} ⚡) ni de vie pour partir piller. Reviens après une nuit de repos.":"Nobody has enough energy ({n} ⚡) or health to go raiding. Come back after a night’s rest.",
+    "le camp de pillards":"the raider camp", "l’avant-poste de {p}":"{p}’s outpost", "Ce camp se reforme : reviens dans {t}.":"This camp is regrouping: come back in {t}.",
+    "Hors ligne : impossible d’attaquer.":"Offline: can’t attack.", "Pillage réussi !":"Raid successful!", "Pillage repoussé":"Raid repelled", "Vous rapportez : {l}.":"You bring back: {l}.",
+    "Il n’y avait rien à prendre.":"There was nothing to take.", "Hors ligne : le butin n’a pas pu être récupéré.":"Offline: the loot couldn’t be collected.",
+    "Tu es maintenant en mode pillard.":"You’re now in raider mode.", "Tu es de nouveau protégé.":"You’re protected again.", "Hors ligne : impossible de changer de mode.":"Offline: can’t change mode.",
+    "Attaquer le camp":"Attack the camp", "2 membres, −{n} ⚡ chacun":"2 members, −{n} ⚡ each", "Passe en mode pillard (dans le camp de ton avant-poste) pour l’attaquer.":"Switch to raider mode (in your outpost’s camp) to attack it.",
+    "Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.":"Your outpost, in raider mode: other raiders can attack it.",
+    "Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.":"Abandoned for {n} days: it’s a ruin, raiders can help themselves.",
+    "Pillard, mais pillé récemment : à l’abri encore {t}.":"A raider, but raided recently: safe for {t} more.", "En mode pillard : il peut être attaqué par les autres pillards.":"In raider mode: other raiders can attack it.", "Piller":"Raid", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
-if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death.";
+if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. By default you’re protected; in raider mode ({#}% more production, at least {#} days, renewed with every attack), 2 members of your family can raid other raiders, ruins and raider camps, but you can be raided too (up to {#}% of your unharvested stock, then {#} hours of safety).";
