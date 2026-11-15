@@ -6,7 +6,7 @@ import os, shutil, re, time
 
 ici = os.path.dirname(os.path.abspath(__file__))
 os.chdir(ici)
-FICHIERS = ["index.html", "transfert.js", "langue.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "manifest.json", "sw.js", "admin.html"]
+FICHIERS = ["index.html", "transfert.js", "langue.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "avantposte.js", "avantposte.css", "manifest.json", "sw.js", "admin.html"]  # AVANT-POSTE : avantposte.js et avantposte.css
 
 if os.path.isdir("site"): shutil.rmtree("site")
 os.makedirs("site/images"); os.makedirs("site/sons")
@@ -14,7 +14,7 @@ for f in FICHIERS: shutil.copy(f, "site/" + f)
 for f in os.listdir("images"):
     if f.endswith((".webp", ".png")): shutil.copy("images/" + f, "site/images/" + f)
 # Illustrations des lieux et des événements (sous-dossiers)
-for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie"]:
+for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie", "avantposte"]:  # AVANT-POSTE : dossier images/avantposte
     if os.path.isdir("images/" + sd):
         os.makedirs("site/images/" + sd)
         for f in os.listdir("images/" + sd):

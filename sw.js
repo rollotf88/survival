@@ -24,6 +24,7 @@ var FICHIERS = [
   "succes.js",
   "defis.js",
   "piece.js",
+  "avantposte.js", "avantposte.css", // AVANT-POSTE
   "manifest.json",
   "images/refuge-fond.webp",
   "images/piece-atelier.webp",
