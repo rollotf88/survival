@@ -1936,3 +1936,14 @@ TRAD_MOTIFS.unshift(
 );
 /* Écran de maintenance (maintenance.js) */
 Object.assign(TRADUCTIONS.en, { "Le refuge est en travaux":"The refuge is under repair", "Nous améliorons le jeu. Revenez dans quelques minutes : votre partie est gardée sur votre appareil.":"We’re improving the game. Come back in a few minutes: your game is kept on your device.", "Cette page se rechargera toute seule dès que ce sera fini.":"This page will reload by itself as soon as it’s done." });
+
+// Fenêtres de découverte (2026-11-15)
+Object.assign(TRADUCTIONS.en, {
+  "Plus tard":"Later", "Nouveau !":"New!", "Les clans s’ouvrent":"Clans are open",
+  "Ta famille a tenu {n} jours : tu n’es plus seul. D’autres survivants cherchent des alliés.":"Your family has lasted {n} days: you’re no longer alone. Other survivors are looking for allies.",
+  "Rejoins ou fonde un clan":"Join or found a clan", "Jusqu’à 5 familles. Chacune garde sa maison et sa partie : le clan s’ajoute, il ne remplace rien.":"Up to 5 families. Each keeps its own home and game: the clan adds to it, it replaces nothing.",
+  "Un bastion commun":"A shared stronghold", "Dépose vivres et matériaux dans la réserve, construisez remparts, mines et tours de guet. Les tours protègent aussi ta maison la nuit.":"Drop supplies and materials in the stockpile, build ramparts, mines and watchtowers together. The towers also protect your home at night.",
+  "Des guerres entre clans":"Wars between clans", "3 jours contre un clan de ta ligue : chaque jour, 2 survivants partent à l’assaut. Butin et trophées… mais blessures et morts sont réelles.":"3 days against a clan from your league: each day, 2 survivors go on the assault. Loot and trophies… but wounds and deaths are real.",
+  "Opérations, échanges, discussion":"Operations, trades, chat", "Le raid de l’immeuble, des échanges d’objets entre membres et une discussion pour s’organiser.":"The apartment block raid, item trades between members and a chat to get organized.",
+  "Rien n’est obligatoire : tu peux aussi continuer seul.":"Nothing is mandatory: you can also carry on alone.", "Voir les clans":"See the clans",
+});

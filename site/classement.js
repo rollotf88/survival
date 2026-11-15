@@ -1185,3 +1185,22 @@ document.addEventListener("click", function(e){
 setTimeout(verifierCadeaux, 4000);
 setInterval(verifierCadeaux, 3 * 60 * 1000);
 setInterval(function(){ if(cadeauxRecus.length) montrerCadeau(); }, 3000);
+
+/* ---------- Découverte des clans (2026-11-15) : une fois, quand la famille atteint le jour d'ouverture des clans ---------- */
+var CLE_INTRO_CLANS = "survival_intro_clans";
+function introClansVue(){ try{ return localStorage.getItem(CLE_INTRO_CLANS) === "1"; }catch(e){ return true; } }
+function openIntroClans(){
+  try{ localStorage.setItem(CLE_INTRO_CLANS, "1"); }catch(e){}
+  var j = (typeof etatClans !== "undefined" && etatClans && etatClans.jourMin) || BAL.jourClans || 30;
+  fenetreDecouverte({ img:"images/piece-bastion-salle.webp", badge:trad("Nouveau !"), titre:"⚔️ " + trad("Les clans s’ouvrent"),
+    sous:trad("Ta famille a tenu {n} jours : tu n’es plus seul. D’autres survivants cherchent des alliés.", { n:j }),
+    points:[["👥", trad("Rejoins ou fonde un clan"), trad("Jusqu’à 5 familles. Chacune garde sa maison et sa partie : le clan s’ajoute, il ne remplace rien.")],
+      ["🏰", trad("Un bastion commun"), trad("Dépose vivres et matériaux dans la réserve, construisez remparts, mines et tours de guet. Les tours protègent aussi ta maison la nuit.")],
+      ["⚔️", trad("Des guerres entre clans"), trad("3 jours contre un clan de ta ligue : chaque jour, 2 survivants partent à l’assaut. Butin et trophées… mais blessures et morts sont réelles.")],
+      ["💬", trad("Opérations, échanges, discussion"), trad("Le raid de l’immeuble, des échanges d’objets entre membres et une discussion pour s’organiser.")]],
+    fin:trad("Rien n’est obligatoire : tu peux aussi continuer seul."), bouton:["⚔️ " + trad("Voir les clans"), "dcvClans"] });
+}
+setInterval(function(){ try{ if(introClansVue() || typeof momentCalme !== "function" || !momentCalme()) return;
+  var j = (typeof etatClans !== "undefined" && etatClans && etatClans.jourMin) || BAL.jourClans || 30;
+  if(G.day >= j) openIntroClans(); }catch(e){} }, 2000);
+document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest('[data-act="dcvClans"]'); if(!b) return; hide(); openClans(); });

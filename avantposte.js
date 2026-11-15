@@ -103,8 +103,7 @@ function apProdJour(){
 function apVisible(){
   if(!AVANTPOSTE_ACTIF) return false;
   if(!APS.debloque && typeof G !== "undefined" && G && G.ph === "game" && !G.bacASable && G.day >= AP.jour){
-    APS.debloque = APS.tProd = APS.tAtt = Date.now(); apSauver();
-    if(typeof fileSucces !== "undefined") fileSucces.push({ icone:"🏕️", titre:trad("L’avant-poste est débloqué !"), nom:trad("Une nouvelle pièce t’attend : construis, récolte, défends.") });
+    APS.debloque = APS.tProd = APS.tAtt = Date.now(); apSauver(); // la fenêtre de découverte s'ouvre au premier moment calme (apIntro)
   }
   return !!APS.debloque;
 }
@@ -909,3 +908,24 @@ if(typeof TRADUCTIONS !== "undefined"){
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost", "Dès {#} jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux":"From day {#}, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps", "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
 if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to harvest. The road to the refuge is long: it only brings back {#} water rations and {#} meals every {#} days (herbs without limit); planks, nails and scrap metal stay at the outpost and pay for its construction, the infirmary’s bandages heal your team when it returns from a raid, and the garage’s fuel takes it raiding by car (half as tiring). Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
+
+/* ---------- Découverte de l'avant-poste (2026-11-15) : une fois, au premier moment calme après le déblocage ---------- */
+function openIntroAvantposte(){
+  APS.introVue = 1; apSauver();
+  fenetreDecouverte({ img:"images/vitrine-avantposte.webp", badge:trad("Nouveau !"), titre:"🏕️ " + trad("Ton avant-poste"),
+    sous:trad("Un terrain à l’écart du refuge, rien qu’à toi. Si ta famille meurt, la suivante en hérite dès son premier jour."),
+    points:[["🔨", trad("Construis ton camp"), trad("14 bâtiments à 5 niveaux : citerne, serre, scierie, palissade… Un chantier à la fois, de 10 minutes à 24 heures en vrai.")],
+      ["⏳", trad("Il travaille sans toi"), trad("Il produit même quand tu ne joues pas. Le chemin est long : 3 rations d’eau et 3 repas tous les 4 jours pour le refuge, le reste sert à l’avant-poste.")],
+      ["🛡️", trad("Il faut le défendre"), trad("Toutes les 8 heures, des zombies ou des pillards peuvent l’attaquer : palissade, tour et pièges le protègent.")],
+      ["🗺️", trad("La carte et les pillards"), trad("Attaque les camps de pillards quand tu veux. Après {n} jours, le mode pillard permet de piller d’autres joueurs… qui pourront te piller aussi.", { n:AP_JOUR_PVP })]],
+    fin:trad("Par défaut, ton avant-poste est protégé : personne ne peut le piller."), bouton:["🏕️ " + trad("Y aller"), "dcvAp"] });
+}
+setInterval(function(){ try{ if(!AVANTPOSTE_ACTIF || !APS.debloque || APS.introVue || typeof momentCalme !== "function" || !momentCalme()) return; if(apVisible()) openIntroAvantposte(); }catch(e){} }, 2000);
+document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest('[data-act="dcvAp"]'); if(!b) return; hide(); if(typeof allerPieceId === "function") allerPieceId("avantposte"); setTimeout(function(){ try{ openCamp(); }catch(e){} }, 400); });
+if(typeof TRADUCTIONS !== "undefined"){ TRADUCTIONS.en = TRADUCTIONS.en || {}; Object.assign(TRADUCTIONS.en, {
+  "Ton avant-poste":"Your outpost", "Un terrain à l’écart du refuge, rien qu’à toi. Si ta famille meurt, la suivante en hérite dès son premier jour.":"A piece of land away from the refuge, all yours. If your family dies, the next one inherits it from day one.",
+  "Construis ton camp":"Build your camp", "14 bâtiments à 5 niveaux : citerne, serre, scierie, palissade… Un chantier à la fois, de 10 minutes à 24 heures en vrai.":"14 buildings with 5 levels: cistern, greenhouse, sawmill, palisade… One construction at a time, from 10 minutes to 24 hours in real time.",
+  "Il travaille sans toi":"It works without you", "Il produit même quand tu ne joues pas. Le chemin est long : 3 rations d’eau et 3 repas tous les 4 jours pour le refuge, le reste sert à l’avant-poste.":"It produces even when you’re not playing. The road is long: 3 water rations and 3 meals every 4 days for the refuge, the rest is used at the outpost.",
+  "Il faut le défendre":"It must be defended", "Toutes les 8 heures, des zombies ou des pillards peuvent l’attaquer : palissade, tour et pièges le protègent.":"Every 8 hours, zombies or raiders may attack it: palisade, tower and traps protect it.",
+  "La carte et les pillards":"The map and the raiders", "Attaque les camps de pillards quand tu veux. Après {n} jours, le mode pillard permet de piller d’autres joueurs… qui pourront te piller aussi.":"Attack raider camps whenever you like. After {n} days, raider mode lets you raid other players… who can raid you too.",
+  "Par défaut, ton avant-poste est protégé : personne ne peut le piller.":"By default, your outpost is protected: nobody can raid it.", "Aller à l’avant-poste":"Go to the outpost", "Y aller":"Go there" }); }

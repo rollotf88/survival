@@ -55,7 +55,7 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x", "a-onglets", "guide-pc"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x", "a-onglets", "guide-pc", "dcv-scene"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
   // Fenêtres à onglets (stock, refuge, bastion…) : hauteur fixe, pour que la fenêtre ne monte ni ne descende en changeant d'onglet (2026-11-11, retour de Fabien)
   if(h.indexOf('class="tabs onglets"') >= 0 || h.indexOf('class="invtabs"') >= 0) $("sheet").classList.add("a-onglets");
   // Cadre commun (2026-11-11) : une croix en haut à droite de toute fenêtre qu'on peut fermer (sauf si elle a déjà la sienne)
@@ -1900,3 +1900,22 @@ document.addEventListener("click", function(e){
   croix.click();
   if(dessous && typeof openMenu === "function") setTimeout(function(){ if($("modal").style.display === "none"){ confirmerNouvelle = false; openMenu(); } }, 30);
 });
+
+/* ---------- Fenêtre de découverte (2026-11-15, demande de Fabien) ----------
+   Présente une grande nouveauté la première fois qu'elle se débloque (clans, avant-poste) : grande image, titre, 4 cartes, bouton.
+   Sur PC elle se pose sur la scène (image en fond), sur téléphone c'est une fenêtre normale avec l'image en bandeau.
+   o = { img, badge, titre, sous, points:[[icône, titre, texte]…], bouton:[libellé, data-act], fin } — textes déjà traduits. */
+function fenetreDecouverte(o){
+  var h = '<div class="dcv"><div class="dcv-haut" style="background-image:url(\'' + o.img + '\')"><span class="dcv-badge">' + o.badge + '</span><h2>' + o.titre + '</h2><p>' + o.sous + '</p></div>'
+    + '<div class="dcv-pts">' + o.points.map(function(p){ return '<div class="dcv-pt"><span class="dcv-ico">' + p[0] + '</span><span class="dcv-t"><b>' + p[1] + '</b><small>' + p[2] + '</small></span></div>'; }).join("") + '</div>'
+    + (o.fin ? '<p class="dcv-fin">' + o.fin + '</p>' : '')
+    + '<div class="row dcv-bt"><button class="btn" data-act="' + o.bouton[1] + '">' + o.bouton[0] + '</button><button class="btn alt" data-act="close">' + trad("Plus tard") + '</button></div></div>';
+  show(h);
+  if(poserDansScene(o.img)) $("sheet").classList.add("dcv-scene");
+}
+// Peut-on ouvrir une fenêtre toute seule maintenant ? (partie en cours, rien d'autre d'ouvert ni en route)
+function momentCalme(){
+  var m = $("modal");
+  return typeof G !== "undefined" && G && G.ph === "game" && !G.bacASable && !G.exp && !G.combat && !G.rencontre && !G.siphon && !G.ev && !G.nuit
+    && m && m.style.display !== "flex" && m.style.display !== "block" && !$("gameover") && !document.querySelector("#astuce.on");
+}
