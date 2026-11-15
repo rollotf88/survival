@@ -1921,3 +1921,11 @@ Object.assign(TRAD_ECRAN, {
   "Regarder une courte pub · encore {#} aujourd’hui": "Watch a short ad · {#} left today"
 });
 Object.assign(TRAD_ECRAN, { "Second souffle : +{#} ⚡ pour toute la famille": "Second wind: +{#} ⚡ for the whole family", "Second souffle: +{#}": "Second wind: +{#}" });
+Object.assign(TRADUCTIONS.en, {
+  "{n} point": "{n} point", "{n} points": "{n} points", "{n} jour": "{n} day", "{n} jours": "{n} days",
+  "{n} joueur": "{n} player", "{n} joueurs": "{n} players", "ce mois-ci": "this month",
+  "meilleur score d’une partie classée (1 point par jour et par survivant)": "best score from a ranked game (1 point per day per survivor)",
+  "Tu as {n} succès": "You have {n} achievements", "{n} cadre débloqué": "{n} frame unlocked", "{n} cadres débloqués": "{n} frames unlocked",
+  "prochain : {c} dans {n} succès": "next: {c} in {n} achievements", "Bois": "Wood", "Bronze": "Bronze", "Argent": "Silver", "Or": "Gold", "Mythique": "Mythic"
+});
+Object.assign(TRADUCTIONS.en, { "Tu as {n} succès (1)": "You have {n} achievement", "prochain : {c} dans {n} succès (1)": "next: {c} in {n} achievement" });

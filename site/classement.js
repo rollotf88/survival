@@ -76,7 +76,7 @@ function openClassement(message){
   }).catch(function(){ var el = $("listecl"); if(el) el.textContent = MSG_HORS_LIGNE; });
 }
 // « ⭐ 271 points · 110 jours » en entier (2026-11-12, demande de Fabien : il y a la place)
-function ptsJours(sc, j){ return '⭐ ' + sc + ' point' + (sc > 1 ? 's' : '') + ' · ' + j + ' jour' + (j > 1 ? 's' : ''); }
+function ptsJours(sc, j){ return '⭐ ' + tradN(sc, "{n} point", "{n} points") + ' · ' + tradN(j, "{n} jour", "{n} jours"); }
 function ligneCl(e, k){ return '<li class="' + (e.moi ? "moi" : "") + (e.legende ? " leg" : "") + '"><span class="rang">' + (k < 3 ? ic("medaille" + (k + 1), ["🥇","🥈","🥉"][k]) : (k + 1) + ".") + '</span>' + avatarHtml(e.avatar, e.pseudo, "cl-av", !!e.legende) + '<b>' + pseudoCadre(e.pseudo, e.cadre, !!e.legende) + (e.enCours ? '<small class="cl-live">● en cours</small>' : '') + '</b><span class="pts">' + ptsJours(e.score, e.jours) + '</span></li>'; }
 // Onglet « Ce mois-ci » : dire pourquoi sa partie n'y est pas (2026-11-12, retour de Fabien : sa partie à 73 points n'apparaissait pas)
 function pourquoiAbsent(S){
@@ -103,7 +103,7 @@ function contenuClassement(d){
   h += '<ol class="classement">' + liste.map(ligneCl).join("") + '</ol>';
   if(ongletCl === "toujours" && d.moi && d.monRang > liste.length) h += '<ol class="classement"><li class="moi"><span class="rang">' + d.monRang + '.</span><b>' + pseudoCadre(d.moi.pseudo, d.moi.cadre) + '</b><span class="pts">' + ptsJours(d.moi.score, d.moi.jours) + '</span></li></ol>';
   else if(ongletCl === "mois" && rang > liste.length) h += '<p class="sub">Tu es ' + eme(rang) + ' ce mois-ci.</p>';
-  return h + '<p class="sub">' + total + ' joueur' + (total > 1 ? "s" : "") + (ongletCl === "mois" ? " ce mois-ci" : "") + ' · ⭐ = meilleur score d’une partie classée (1 point par jour et par survivant)' + (ongletCl === "mois" ? ' · ● en cours = partie encore en vie, score mis à jour en direct' : '') + '</p>';
+  return h + '<p class="sub">' + tradN(total, "{n} joueur", "{n} joueurs") + (ongletCl === "mois" ? " " + trad("ce mois-ci") : "") + ' · ⭐ = ' + trad("meilleur score d’une partie classée (1 point par jour et par survivant)") + (ongletCl === "mois" ? ' · ● en cours = partie encore en vie, score mis à jour en direct' : '') + '</p>';
 }
 function carteLegende(S){
   // Depuis le 2026-11-12 (choix de Fabien) : la Légende = le n°1 du mois précédent, elle règne tout ce mois ; le mois en cours est la course à la couronne
@@ -816,7 +816,7 @@ function openCadres(msg){
   var a = cadreActif(), n = nbSuccesSur(), ex = typeof iconeMembre === "function" ? iconeMembre({ nom:"Papa", r:"Papa", icone:"👨", al:true, hp:100, en:100, faim:100, soif:100 }) : "👤";
   show('<h2>🖼️ Mon cadre</h2>' + (msg ? '<p class="g2 msg">' + msg + '</p>' : '') + '<p class="sub">Ton cadre entoure ton pseudo dans le classement, les clans et les guerres. Les plus beaux se débloquent avec les succès.</p>'
     + (function(){ var suiv = CADRES.find(function(c){ return !cadreDebloque(c); }), nc = CADRES.filter(cadreDebloque).length; // 2026-11-12 : le chiffre affiché comptait les succès, on croyait que c'était les cadres
-        return '<p class="msg">🏅 Tu as ' + n + ' succès · ' + nc + ' cadre' + (nc > 1 ? "s" : "") + ' débloqué' + (nc > 1 ? "s" : "") + (suiv ? ' · prochain : <b>' + suiv.nom + '</b> dans ' + (cadreMin(suiv) - n) + ' succès' : '') + '</p>'; })()
+        return '<p class="msg">🏅 ' + tradN(n, "Tu as {n} succès (1)", "Tu as {n} succès").replace(" (1)", "") + ' · ' + tradN(nc, "{n} cadre débloqué", "{n} cadres débloqués") + (suiv ? ' · ' + tradN(cadreMin(suiv) - n, "prochain : {c} dans {n} succès (1)", "prochain : {c} dans {n} succès", { c:'<b>' + trad(suiv.nom) + '</b>' }).replace(" (1)", "") : '') + '</p>'; })()
     + carteCadreLegende()
     + '<div class="cadres">' + CADRES.map(function(c){ var ok = cadreDebloque(c);
       return '<button class="cadre-choix' + (c.id === a ? " on" : "") + '" data-act="choixcadre" data-id="' + c.id + '"' + (ok ? "" : " disabled") + '><span class="cadre-ex cadre-' + c.id + '">' + ex + '</span><b>' + c.nom + '</b><small>' + (ok ? (c.id === a ? "✔ Porté" : c.desc) : "🔒 " + c.desc) + '</small></button>'; }).join("") + '</div>'
