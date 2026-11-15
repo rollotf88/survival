@@ -55,7 +55,7 @@ function puces(n){
     return '<div class="deuil"><span class="em">' + iconeMembre({ nom:a[2], al:false, hp:0, en:0, faim:0, soif:0, icone:"💀" }) + '</span><span><b>💀 ' + a[1] + '</b><small>Repose en paix.</small></span></div>';
   }).join("") + (autres.length ? '<div class="fil">' + autres.map(ligneJournal).join("") + '</div>' : '');
 }
-function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x", "a-onglets"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
+function show(h){ var l = $("locuteur"); if(l) l.remove(); $("sheet").classList.remove("parle", "large", "parle-dedans", "resultat", "avec-x", "a-onglets", "guide-pc"); $("sheet").style.backgroundImage = ""; $("sheet").innerHTML = h;
   // Fenêtres à onglets (stock, refuge, bastion…) : hauteur fixe, pour que la fenêtre ne monte ni ne descende en changeant d'onglet (2026-11-11, retour de Fabien)
   if(h.indexOf('class="tabs onglets"') >= 0 || h.indexOf('class="invtabs"') >= 0) $("sheet").classList.add("a-onglets");
   // Cadre commun (2026-11-11) : une croix en haut à droite de toute fenêtre qu'on peut fermer (sauf si elle a déjà la sienne)
@@ -1315,16 +1315,16 @@ document.addEventListener("click", function(e){ if(Date.now() - finGlisse < 300)
 /* ---------- Vitrine : ce qui attend le joueur (cartes illustrées qui défilent toutes seules) ---------- */
 var VITRINE = [
   ["images/piece-cuisine-feu.webp", "🏚️ Ton refuge, pièce par pièce", "Salon, cuisine, chambre, atelier, garage, cour… barricade, cultive, cuisine au feu de bois."],
-  ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets se découvrent avec le temps, jusqu’au zoo abandonné et à la prison."],
-  ["images/evenements/horde.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés, chacun son piège, et des zombies célèbres à traquer."],
+  ["images/lieux/super.webp", "🗺️ Plus de 20 lieux à fouiller", "Chaque objet trouvé ne revient jamais. Des lieux secrets s’ouvrent avec le temps, jusqu’au zoo et à la prison."],
+  ["images/evenements/horde.webp", "⚔️ Des combats tactiques", "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés et des zombies célèbres à traquer."],
   ["images/evenements/marchand.webp", "🗣️ Des rencontres et des choix", "Aider, mentir, voler ou fuir : chaque décision peut sauver ou condamner les tiens."],
   ["images/evenements/dispute.webp", "👪 Ta famille, tes règles", "Renomme-les, choisis leurs traits, regarde-les devenir Vétéran ou Éclaireur… La mort est définitive."],
   ["images/lieux/foret.webp", "🌲 Forêt, étang, potager, poules", "Coupe du bois, pêche, élève des poules : rien n’est infini, tout s’épuise."],
   ["images/vitrine-voiture.webp", "🚗 Répare la vieille voiture", "Trouve batterie, roue et courroie pour atteindre les zones lointaines, riches et dangereuses."],
-  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Après 30 jours, rejoins un clan de 5 familles : bastion commun, réserve, défenses, discussion et échanges entre membres, et guerres de 3 jours contre d’autres clans."],
-  ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Préparez un raid ensemble : chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
+  ["images/piece-bastion-salle.webp", "🏰 Clans et guerres", "Dès 30 jours, rejoins un clan de 5 familles : bastion, réserve, défenses, échanges et guerres contre d’autres clans."],
+  ["images/immeuble/exterieur.webp", "🎯 Opérations de clan", "Chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé."],
   ["images/nuit.webp", "🌙 Nuits et saisons", "Les zombies attaquent, l’hiver gèle l’étang, l’été donne soif, la folie guette. Tiendras-tu jusqu’au matin ?"],
-  ["images/vitrine-legende.webp", "👑 La Légende du mois", "Le meilleur joueur du mois est couronné Légende pour tout le mois suivant, avec Raja le tigre. La même partie pour tous chaque jour, des défis et une grande horde chaque week-end : à toi de prendre la couronne !"]
+  ["images/vitrine-legende.webp", "👑 La Légende du mois", "Le meilleur joueur du mois devient la Légende du mois suivant, avec Raja le tigre. Défis chaque jour, horde chaque week-end."]
 ];
 var minuteurVitrine = null;
 function vitrine(){

@@ -1846,3 +1846,15 @@ TRAD_MOTIFS.unshift(
   [/^Pas pendant une guerre de clans · un changement tous les (\d+) jours, jamais en guerre$/, "Not during a clan war · one change every $1 days, never during a war"],
   [/^(.+) · un changement tous les (\d+) jours, jamais en guerre$/, function(m, r, n){ return (TRAD_ECRAN[r] || r) + " · one change every " + n + " days, never during a war"; }]
 );
+/* Vitrine raccourcie (128 caractères au plus, 2026-11-15) */
+Object.assign(TRAD_ECRAN, {
+  "Chaque objet trouvé ne revient jamais. Des lieux secrets s’ouvrent avec le temps, jusqu’au zoo et à la prison": "Every item you find is gone for good. Secret places open up over time, all the way to the zoo and the prison",
+  "Vise la tête, pousse, soigne, lance un cocktail… Des zombies variés et des zombies célèbres à traquer": "Aim for the head, shove, heal, throw a Molotov… All kinds of zombies, and famous ones to hunt down",
+  "Dès 30 jours, rejoins un clan de 5 familles : bastion, réserve, défenses, échanges et guerres contre d’autres clans": "From day 30, join a clan of 5 families: stronghold, stockpile, defenses, trades and wars against other clans",
+  "Chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de 5 étages. Replay pour tous, butin partagé": "Everyone sends a volunteer, the leader storms a 5-floor apartment block. Replay for all, shared loot",
+  "Le meilleur joueur du mois devient la Légende du mois suivant, avec Raja le tigre. Défis chaque jour, horde chaque week-end": "The month’s best player becomes the next month’s Legend, with Raja the tiger. Daily challenges, a horde every weekend"
+});
+Object.assign(TRAD_ECRAN, {
+  "Dès {#} jours, rejoins un clan de {#} familles : bastion, réserve, défenses, échanges et guerres contre d’autres clans": "From day {#}, join a clan of {#} families: stronghold, stockpile, defenses, trades and wars against other clans",
+  "Chacun envoie un volontaire, le chef mène l’assaut d’un immeuble de {#} étages. Replay pour tous, butin partagé": "Everyone sends a volunteer, the leader storms a {#}-floor apartment block. Replay for all, shared loot"
+});

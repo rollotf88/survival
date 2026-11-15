@@ -253,6 +253,8 @@ function openGuide(){
   }
   show(h + (V ? '<div class="row"><button class="btn alt" data-act="gretour">' + retour + '</button><button class="btn alt" data-act="close">Fermer</button></div>'
     : '<div class="row"><button class="btn alt" data-act="revoirastuces" aria-label="Revoir les astuces">💡 Astuces</button><button class="btn" data-act="close">Fermer</button></div>'));
+  // Sur PC, hors partie (accueil « Partie en cours ») : grande fenêtre centrée au lieu de la petite fenêtre du bas du téléphone (2026-11-15, retour de Fabien)
+  if(!document.body.classList.contains("pc") && window.matchMedia && matchMedia("(min-width:1100px) and (min-height:620px)").matches) $("sheet").classList.add("guide-pc");
   $("sheet").scrollTop = 0;
 }
 // Recherche : cache les tuiles qui ne correspondent pas (dans les objets, cherche dans toutes les catégories)

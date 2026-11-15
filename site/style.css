@@ -2982,3 +2982,14 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 .liens-legaux a{color:var(--mut);text-decoration:underline;text-underline-offset:2px}
 .panneau.intro .liens-legaux{flex:none;margin-top:6px}
 @media (orientation:landscape) and (max-height:500px){ .liens-legaux.mn-legal{margin-top:1px;font-size:10px;line-height:1.1} }
+
+/* Guide ouvert sur PC hors partie (accueil « Partie en cours ») : grande fenêtre centrée (2026-11-15, retour de Fabien) */
+#modal:has(> #sheet.guide-pc){align-items:center;justify-content:center}
+#sheet.guide-pc{border-bottom:3px solid var(--bois);max-width:min(1080px,92vw);width:min(1080px,92vw);height:min(86vh,860px);max-height:86vh;border-radius:18px;padding:20px 24px}
+#sheet.guide-pc .gtuiles.regles{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+#sheet.guide-pc .gtuiles.regles .gtuile{padding:8px 10px}
+#sheet.guide-pc .gtuiles{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+#sheet.guide-pc .gtuiles.objets{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+#sheet.guide-pc .gtuiles.lieux{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+#sheet.guide-pc .gimg{max-height:340px}
+#sheet.guide-pc .gfiche p{font-size:16px;max-width:75ch}
