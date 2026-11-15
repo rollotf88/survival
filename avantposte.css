@@ -110,3 +110,7 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 #apCarte{overflow:hidden}
 .apc-fiche:not(.on){visibility:hidden}
 .apc-sect.brume{filter:brightness(.42) saturate(.55) blur(1px)}
+/* Plus de bandeau en haut de la carte : une croix ronde flottante (2026-11-15, retour de Fabien) */
+.apc-xf{position:absolute;top:10px;right:10px;z-index:3;width:42px;height:42px;font-size:20px;background:rgba(42,28,17,.88);box-shadow:0 3px 10px rgba(0,0,0,.5)}
+#apCarte .apc-msg{top:12px}
+.apc-sect.brume{filter:brightness(.58) saturate(.6) blur(.8px)}
