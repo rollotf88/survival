@@ -2996,3 +2996,6 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 
 /* Le ruban « conseillé » des soins est écrit par le style : version anglaise (2026-11-15) */
 html[lang="en"] .st-t.conseil::before{content:"advised"}
+/* Case d'équipement vide (2026-11-15, retour de Fabien) : l'icône repère reste petite, grise et discrète, pour ne pas ressembler à un objet équipé */
+.qpeq .slot .vide,.slots.grands .slot .vide{width:40%;height:40%;opacity:.28;filter:grayscale(1)}
+.slots.grands .slot.dispo .vide{opacity:.45;filter:none}
