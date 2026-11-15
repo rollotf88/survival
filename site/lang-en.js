@@ -1929,3 +1929,8 @@ Object.assign(TRADUCTIONS.en, {
   "prochain : {c} dans {n} succès": "next: {c} in {n} achievements", "Bois": "Wood", "Bronze": "Bronze", "Argent": "Silver", "Or": "Gold", "Mythique": "Mythic"
 });
 Object.assign(TRADUCTIONS.en, { "Tu as {n} succès (1)": "You have {n} achievement", "prochain : {c} dans {n} succès (1)": "next: {c} in {n} achievement" });
+/* Lignes de nuit déjà enregistrées avec le nom français de Marco (avant le 2026-11-15) */
+TRAD_MOTIFS.unshift(
+  [/^Marco le brocanteur has set up at the street corner today: go check out the market$/, "Marco the junk dealer has set up at the street corner today: go check out the market"],
+  [/^Marco le brocanteur s’installe au coin de la rue aujourd’hui : allez voir le marché$/, "Marco the junk dealer has set up at the street corner today: go check out the market"]
+);
