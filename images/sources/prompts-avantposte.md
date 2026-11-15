@@ -74,3 +74,31 @@ Fichiers attendus (Claude découpe et détoure) :
 - `images/avantposte/<batiment>-1|3|5.webp` (citerne, serre, scierie, palissade, entrepot, infirmerie, forge, radio, tour, garage, charrette, siege, planque, pieges)
 - `images/avantposte/secteurs/<nom>.webp` (quartier, foret, industrie, riviere, autoroute, centre)
 - `images/avantposte/reperes/<nom>.webp` (normal, pillard, protege, ruine, pnj, moi)
+
+---
+
+# Images en plus (Leonardo, 2026-11-15) : la vue de l'avant-poste
+
+À joindre comme **référence de style** : `images/refuge-fond.webp` et la planche `images/sources/avantposte/reperes-chatgpt.webp` (même univers).
+
+## Leonardo 1 – Le terrain de l'avant-poste (une seule image, format carré)
+
+> A square game background in a cartoon post-apocalyptic style (thick dark brown outlines, warm earthy colors, soft painted shading, hand-drawn look), seen from a high 3/4 top-down view like a mobile base-building game.
+> A cleared survivor camp area in the middle of an overgrown abandoned suburb: packed dirt ground with patches of dry grass, a few rocks, old tire tracks, a central campfire circle with logs around it, and a muddy path leading in from the bottom edge.
+> Around the campfire, 15 clearly visible EMPTY building plots: flat rectangular patches of leveled dirt outlined by small stones or wooden stakes, well spaced, all the same size, arranged in a loose ring (some near the edges, some closer to the center). NOTHING is built on them.
+> The edges of the image: dead trees, broken fences, ruined houses and rusty cars in the far background, slightly darker, to frame the camp. No characters, no zombies, no text, no UI.
+
+## Leonardo 2 – Chantier et panneaux (planche, fond vert)
+
+> A sprite sheet in the same cartoon post-apocalyptic style, on a plain flat pure green background (#00FF00). Grid of 3 columns x 2 rows, 6 equal cells, NO frame, NO grid lines, NO text. Wide empty green margin around each object, nothing touching the cell edges. 3/4 top-down view, same angle as a base-building game.
+> 1: wooden scaffolding around an empty plot, small (for a small building).
+> 2: the same scaffolding, medium size, with a ladder and a plank pile.
+> 3: the same scaffolding, large, with a pulley, ropes and a tarp.
+> 4: a small wooden sign planted in the ground with a hammer painted on it (empty plot, "build here").
+> 5: a small floating wooden crate overflowing with water bottles, canned food and planks (harvest ready).
+> 6: a small padlock on a wooden post (locked plot).
+
+## Leonardo 3 – Le terrain la nuit (même cadrage que l'image 1)
+
+> Exactly the same scene as the attached outpost background (same layout, same 15 empty plots, same camera), but at night: dark blue moonlight, the central campfire glowing warm orange and lighting the ground around it, a few lantern glows, light mist between the dead trees at the edges. Nothing else changes. No characters, no text.
+> (Attach the image 1 result as the reference for this one.)
