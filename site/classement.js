@@ -307,6 +307,8 @@ setTimeout(function(){ try{ poserMonde(); }catch(e){ console.error("poserMonde :
 
 /* ---------- Le choix impossible (contenu sensible) ---------- */
 function lireSensible(){ try{ return localStorage.getItem("survival_sensible") !== "0"; }catch(e){ return true; } }
+// 2026-11-15 (demande de Fabien) : réglage « Adulte » remis à « activé » une fois pour tout le monde (il avait été coupé pendant les tests) ; chacun peut le couper ensuite
+try{ if(!localStorage.getItem("survival_sensible_v2")){ localStorage.removeItem("survival_sensible"); localStorage.setItem("survival_sensible_v2", "1"); } }catch(e){}
 CONTENUS_SENSIBLES = lireSensible();
 function openSacrifice(choix, confirme){
   if(!sacrificePossible()){ show('<h2>🕯️ Le choix impossible</h2><p>Ce n’est plus nécessaire.</p>' + BTN_FERMER()); return; }

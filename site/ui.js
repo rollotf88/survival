@@ -757,7 +757,8 @@ function openChien(){
     + '<li>Sans manger ' + BAL.chien.nuitsSansManger + ' nuits de suite, il part chercher ailleurs.</li></ul>';
   h += '<p class="etat ' + (c.faim ? "ko" : "ok") + '">' + (c.faim ? "⚠️ Il n’a pas mangé hier soir. Ce soir, il faut une ration pour lui, sinon il part." : "✅ Il a mangé, il va bien.") + '</p>';
   if(!confirmerChien){
-    h += '<button class="loc" data-act="mangerchien"' + (famine() ? "" : " disabled") + '><b>😢 Manger ' + c.nom + '</b><small>' + (famine() ? "La famille n’a plus de quoi manger ce soir. +" + BAL.chien.viande + " rations, moral " + BAL.chien.moral + ", et plus de chien de garde." : "Seulement en cas de famine : quand il ne reste plus de quoi nourrir la famille ce soir.") + '</small></button>';
+    // 2026-11-15 (demande de Fabien) : le choix n'apparaît qu'en cas de famine, pour garder l'effet de surprise
+    if(famine()) h += '<button class="loc" data-act="mangerchien"><b>😢 Manger ' + c.nom + '</b><small>La famille n’a plus de quoi manger ce soir. +' + BAL.chien.viande + ' rations, moral ' + BAL.chien.moral + ', et plus de chien de garde.</small></button>';
   } else {
     h += '<p class="msg">Vraiment ? ' + c.nom + ' ne reviendra jamais, et toute la famille va le vivre très mal.</p><div class="row"><button class="btn" data-act="mangerchienok">Oui, il le faut</button><button class="btn alt" data-act="chien">Non</button></div>';
   }
