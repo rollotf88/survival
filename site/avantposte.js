@@ -315,7 +315,7 @@ function apFiche(id, niv, k){
   var B = AP_BAT[id], n = niv + 1, c = apCout(id, n), m = apManque(c), C = APS.chantier;
   var h = niv ? '' : '<div class="ap-tete">' + apImg(id, 1) + '<div><h3>' + B.ico + ' ' + trad(B.nom) + '</h3><p class="ap-desc">' + trad(B.desc) + '</p></div></div>';
   h += '<p class="titre-butin">' + (niv ? trad("Niveau {n}", { n:n }) : trad("Niveau 1")) + ' · ⏱ ' + apFmt(AP.durees[n - 1]) + '</p><p class="ap-eff">' + apEffet(id, n) + '</p>';
-  var raison = !apEnJeu() ? trad("Pendant une partie seulement") : C ? trad("Un seul chantier à la fois") : m.length ? trad("Il manque {l}", { l:nommerListe(m) }) : "";
+  var raison = !apEnJeu() ? trad("Pendant une partie seulement") : C ? trad("Un seul chantier à la fois") : m.length ? trad("Matériaux manquants") : ""; // le détail est déjà dans les cases rouges à côté
   h += '<div class="rf-action">' + ingredients(c) + '<button class="btn" data-act="apConstruire" data-id="' + k + ':' + id + '"' + (raison ? " disabled" : "") + '>' + (raison ? "❌ " + raison : (niv ? "⬆️ " + trad("Améliorer") : "🔨 " + trad("Construire"))) + '</button></div>';
   return h;
 }
@@ -808,7 +808,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Emplacement verrouillé":"Locked plot", "Monte la palissade au niveau {n} pour ouvrir cet emplacement.":"Raise the palisade to level {n} to open this plot.",
     "{b} en construction":"{b} under construction", "Emplacement libre":"Free plot", "bientôt (mode pillard)":"coming soon (raider mode)",
     "Niveau {n} / 5":"Level {n} / 5", "Niveau maximum atteint":"Maximum level reached", "Niveau {n}":"Level {n}", "Niveau 1":"Level 1",
-    "Un seul chantier à la fois":"One construction at a time", "Il manque {l}":"Missing {l}", "Améliorer":"Upgrade",
+    "Un seul chantier à la fois":"One construction at a time", "Matériaux manquants":"Missing materials", "Il manque {l}":"Missing {l}", "Améliorer":"Upgrade",
     "Chantier : niveau {n}":"Construction: level {n}", "Accélérer le chantier":"Speed up construction", "Plus de pub aujourd’hui":"No more ads today",
     "Une courte pub divise le temps restant par deux · encore {n} aujourd’hui":"A short ad halves the remaining time · {n} left today",
     "Le chantier commence : {b} niveau {n}.":"Construction starts: {b} level {n}.", "Rapporté au refuge : {l}.":"Brought back to the refuge: {l}.",

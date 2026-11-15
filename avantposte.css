@@ -140,3 +140,4 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .ap .ap-desc{font-size:12.5px;line-height:1.35;margin-top:2px}
 .ap .ap-eff{font-size:13px;margin-top:2px}
 .ap .titre-butin{margin-top:6px;margin-bottom:4px}
+.ap .rf-action .btn:disabled{font-size:14px;line-height:1.25}
