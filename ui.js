@@ -1063,13 +1063,13 @@ function openRef(onglet){
 function sceneFolie(n){
   if(typeof CONTENUS_SENSIBLES !== "undefined" && !CONTENUS_SENSIBLES) return null;
   var t = n.map(function(l){ return l[1] || ""; }).join(" | ");
-  if(/a perdu la raison\. Une nuit/.test(t)) return "regard";
+  if(/a perdu la raison\. Une nuit|lost their mind\. One night/.test(t)) return "regard";
   if(t.indexOf("🌀") < 0) return null;
-  if(/porte grande ouverte/.test(t)) return "porte";
-  if(/frappe violemment/.test(t)) return "frappe";
-  if(/en pleine nuit… et revient/.test(t)) return "dehors";
-  if(/hurlé toute la nuit/.test(t)) return "hurle";
-  if(/mangé en cachette/.test(t)) return "cachette";
+  if(/porte grande ouverte|door wide open/.test(t)) return "porte";
+  if(/frappe violemment|violently hits/.test(t)) return "frappe";
+  if(/en pleine nuit… et revient|in the middle of the night… and/.test(t)) return "dehors";
+  if(/hurlé toute la nuit|screamed all night/.test(t)) return "hurle";
+  if(/mangé en cachette|ate in secret/.test(t)) return "cachette";
   return null;
 }
 function regrouperNuit(n){
@@ -1081,8 +1081,8 @@ function regrouperNuit(n){
     else out.push(l);
   });
   var tous = function(noms){ return vivants().length > 1 && noms.length >= vivants().length; };
-  if(posF >= 0) out[posF] = ["b2", "🥫 " + (tous(faim) ? "Personne n’a mangé ce soir" : "Rien à manger pour " + liste(faim)) + " : la faim baisse."];
-  if(posS >= 0) out[posS] = ["b2", "💧 " + (tous(soif) ? "Personne n’a bu ce soir" : "Rien à boire pour " + liste(soif)) + " : la soif baisse."];
+  if(posF >= 0) out[posF] = ["b2", "🥫 " + (tous(faim) ? trad("Personne n’a mangé ce soir : la faim baisse.") : trad("Rien à manger pour {noms} : la faim baisse.", { noms:liste(faim) }))];
+  if(posS >= 0) out[posS] = ["b2", "💧 " + (tous(soif) ? trad("Personne n’a bu ce soir : la soif baisse.") : trad("Rien à boire pour {noms} : la soif baisse.", { noms:liste(soif) }))];
   return out;
 }
 function openNuit(n){

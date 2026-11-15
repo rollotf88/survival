@@ -8,6 +8,7 @@
    une image ou un SVG, sans toucher au reste du code. */
 // Traduction : trad() vient de langue.js ; sans lui (simulation), le texte français est rendu tel quel
 var trad = typeof trad === "function" ? trad : function(fr, v){ return v ? String(fr).replace(/\{(\w+)\}/g, function(m, k){ return v[k] != null ? v[k] : m; }) : fr; };
+var tradN = typeof tradN === "function" ? tradN : function(n, un, plusieurs, v){ return trad(n === 1 || n === 0 ? un : plusieurs, Object.assign({ n: n }, v || {})); };
 function icone(id){ return typeof ICONES_SVG !== "undefined" && (ICONES_SVG[id] || (typeof ICONES_IMG !== "undefined" && ICONES_IMG[id])) ? svgIcone(id) : OBJETS[id].icone; } // une icône peinte suffit (ex. cocktail, sans dessin en code)
 // Pareil pour les membres de la famille (les recrues gardent leur emoji) et les zombies
 var ICONE_MEMBRE = { "Papa":"papa", "Maman":"maman", "Léo":"leo", "Emma":"emma", "Sam":"sam", "Nora":"nora", "Inès":"ines", "Yanis":"yanis" };
