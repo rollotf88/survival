@@ -253,11 +253,11 @@ function openCamp(){
   var cap = apCap(), p = apProdJour(), h = '<div class="ap"><h2>🏕️ ' + trad("L’avant-poste") + '</h2>';
   h += '<div class="tuiles t3"><span class="tuile"><b>' + apDefense() + '</b><small>' + trad("défense") + '</small></span><span class="tuile"><b>' + apNiveauTotal() + '</b><small>' + trad("niveaux construits") + '</small></span><span class="tuile"><b>' + apLibres() + ' / ' + AP.plots.length + '</b><small>' + trad("emplacements") + '</small></span></div>';
   if(apMsg){ h += '<p class="msg g2">' + apMsg + '</p>'; apMsg = ""; }
-  h += '<button class="loc ap-carte-b" data-act="apCarte"><b>🗺️ ' + trad("Voir la carte") + '</b><small>' + trad("Les avant-postes des autres survivants et les camps de pillards") + '</small></button>';
+  h += '<button class="ap-carte-big ap-carte-b" data-act="apCarte"><img src="images/avantposte/secteurs/quartier.webp" alt=""><span class="ap-cb-t"><b>🗺️ ' + trad("Ouvrir la carte") + '</b><small>' + trad("Les avant-postes des autres survivants et les camps de pillards") + '</small></span><span class="ap-cb-f">›</span></button>';
   // Le stock à récolter
   var res = AP_RES.filter(function(r){ return p[r] || (APS.acc[r] || 0) >= 1; });
   h += '<p class="titre-butin">📦 ' + trad("À récolter") + ' <small>(' + trad("{n} au plus par ressource", { n:cap }) + ')</small></p>';
-  if(!res.length) h += '<p class="msg">' + trad("Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.") + '</p>';
+  if(!res.length) h += '<p class="ap-note">' + trad("Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.") + '</p>';
   else {
     h += '<div class="ap-stock">' + res.map(function(r){ var v = Math.floor(APS.acc[r] || 0);
       return '<span class="ap-res' + (v >= cap ? " plein" : "") + '"><span class="ap-res-i">' + apIcoRes(r) + '</span><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small></span>'; }).join("") + '</div>';
@@ -268,13 +268,14 @@ function openCamp(){
   // Le chantier
   if(APS.chantier){ var C = APS.chantier;
     h += '<p class="titre-butin">🔨 ' + trad("Chantier") + '</p><button class="loc" data-act="apSlot' + C.k + '"><b>' + trad("{b} niveau {n}", { b:trad(AP_BAT[C.id].nom), n:C.niv }) + '</b><small>' + trad("Fini dans {t}", { t:apFmt(C.fin - Date.now()) }) + '</small></button>'; }
+  h += '<div class="ap-pill-place"></div>';
   // Les attaques
   h += '<p class="titre-butin">⚔️ ' + trad("Attaques") + '</p>';
   h += APS.log.length ? '<div class="ap-log">' + APS.log.slice(0, 5).map(function(L){
     var pertes = Object.keys(L.pertes).map(function(r){ return apNomRes(r, L.pertes[r]); }).join(", ");
     return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt">' + apQuand(L.t) + ' · <b>' + (L.pvp ? (L.ok ? trad("{p} repoussé", { p:apEchap(L.par || trad("Un pillard")) }) : trad("pillé par {p}", { p:apEchap(L.par || trad("un pillard")) })) : (L.ok ? trad("repoussée") : trad("perdue"))) + '</b>' + (L.pvp ? '' : ' · ' + trad("force {f} contre défense {d}", { f:L.force, d:L.def })) + (pertes ? ' · −' + pertes : '') + '</span></div>'; }).join("") + '</div>'
     : '<p class="ap-note">' + trad("Aucune attaque pour l’instant. Toutes les 8 h, des zombies ou des pillards peuvent venir : palissade, tour et pièges le défendent.") + '</p>';
-  h += '<p class="ap-note">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille. La carte et le mode pillard arriveront bientôt.") + '</p>';
+  h += '<p class="ap-note">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille.") + '</p>';
   show(h + '</div>' + BTN_FERMER());
 }
 function apQuand(t){ var m = Math.round((Date.now() - t) / 60000); return m < 60 ? trad("il y a {n} min", { n:Math.max(1, m) }) : m < 1440 ? trad("il y a {n} h", { n:Math.round(m / 60) }) : trad("il y a {n} j", { n:Math.round(m / 1440) }); }
@@ -620,7 +621,7 @@ function apBlocPillard(){
       + '<button class="loc" data-act="apPillardOn"><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + trad("Engagement de 3 jours, relancé à chaque attaque") + '</small></button>';
   } else {
     var reste = (APS.pillard.engage || 0) - Date.now();
-    h += '<p class="msg b2">🏴 ' + trad("Mode pillard actif : +25 % de production, mais tu peux être pillé.") + '</p>'
+    h += '<p class="ap-note ap-pill-on">🏴 ' + trad("Mode pillard actif : +25 % de production, mais tu peux être pillé.") + '</p>'
       + '<button class="loc" data-act="apPillardOff"' + (reste > 0 ? " disabled" : "") + '><b>🛡️ ' + trad("Revenir en mode protégé") + '</b><small>' + (reste > 0 ? trad("Engagé encore {t}", { t:apFmt(reste) }) : trad("Possible maintenant")) + '</small></button>';
   }
   return h;
@@ -628,8 +629,8 @@ function apBlocPillard(){
 var openCampBase = openCamp;
 openCamp = function(){
   openCampBase();
-  var sheet = document.getElementById("sheet"), carte = sheet && sheet.querySelector(".ap-carte-b");
-  if(carte) carte.insertAdjacentHTML("afterend", '<div class="ap-pill">' + apBlocPillard() + '</div>');
+  var sheet = document.getElementById("sheet"), place = sheet && sheet.querySelector(".ap-pill-place");
+  if(place) place.outerHTML = '<div class="ap-pill">' + apBlocPillard() + '</div>';
 };
 function apConfirmerPillard(){
   show('<div class="ap"><h2>🏴 ' + trad("Passer en mode pillard ?") + '</h2><p>' + trad("Tu pourras piller les autres pillards, les ruines et les camps de pillards du jeu, et ta production montera de 25 %.") + '</p>'
@@ -802,7 +803,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Une ressource est pleine : sa production est arrêtée. Récolte ou agrandis l’entrepôt.":"A resource is full: its production has stopped. Harvest or upgrade the storehouse.",
     "Fini dans {t}":"Done in {t}", "force {f} contre défense {d}":"strength {f} vs defense {d}", "Attaques":"Attacks", "repoussée":"repelled", "perdue":"lost",
     "Aucune attaque pour l’instant. Toutes les 8 h, des zombies ou des pillards peuvent venir : palissade, tour et pièges le défendent.":"No attacks yet. Every 8 h, zombies or raiders may come: palisade, tower and traps defend it.",
-    "L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille. La carte et le mode pillard arriveront bientôt.":"The outpost is yours: it produces even when you’re not playing and survives your family’s death. The map and raider mode are coming soon.",
+    "L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille.":"The outpost is yours: it produces even when you’re not playing and survives your family’s death.", "_ancien":"The outpost is yours: it produces even when you’re not playing and survives your family’s death. The map and raider mode are coming soon.",
     "il y a {n} min":"{n} min ago", "il y a {n} h":"{n} h ago", "il y a {n} j":"{n} d ago",
     "Emplacement verrouillé":"Locked plot", "Monte la palissade au niveau {n} pour ouvrir cet emplacement.":"Raise the palisade to level {n} to open this plot.",
     "{b} en construction":"{b} under construction", "Emplacement libre":"Free plot", "bientôt (mode pillard)":"coming soon (raider mode)",
@@ -834,7 +835,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.":"Abandoned for {n} days: it’s a ruin, raiders can help themselves.",
     "Pillard, mais pillé récemment : à l’abri encore {t}.":"A raider, but raided recently: safe for {t} more.", "En mode pillard : il peut être attaqué par les autres pillards.":"In raider mode: other raiders can attack it.", "Piller":"Raid", "Pillard":"Raider", "Un pillard qui défend son camp. La palissade le rend plus coriace.":"A raider defending their camp. The palisade makes them tougher.",
     "Qui part piller ?":"Who goes raiding?", "Trop blessé":"Too wounded", "Trop blessée":"Too wounded", "Trop fatigué":"Too tired", "Trop fatiguée":"Too tired", "{n} survivants au plus · −{e} ⚡ chacun · blessures et morts réelles":"{n} survivors max · −{e} ⚡ each · real wounds and deaths", "Au bastion":"At the stronghold",
-    "À l’assaut avec {l}":"Attack with {l}", "Choisis au moins un survivant":"Choose at least one survivor", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Fermer la carte":"Close the map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
+    "À l’assaut avec {l}":"Attack with {l}", "Choisis au moins un survivant":"Choose at least one survivor", "{p} repoussé":"{p} repelled", "pillé par {p}":"raided by {p}", "un pillard":"a raider", "La carte":"The map", "Fermer la carte":"Close the map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Ouvrir la carte":"Open the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
