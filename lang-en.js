@@ -1440,3 +1440,99 @@ Object.assign(TRADUCTIONS.en, { "Partie classée du {date}": "Ranked game of {da
 TRAD_MOTIFS.unshift([/^Classée · (.+)$/, function(m, d){ return "Ranked · " + d; }], [/^Partie classée du (.+)$/, "Ranked game of $1"]);
 // Dates courtes françaises « 9 nov. » (le point final est retiré avant la recherche)
 TRAD_MOTIFS.unshift([/^(\d+) (janv|févr|mars|avr|avril|mai|juin|juil|août|sept|oct|nov|déc)\.?$/, function(m, j, mo){ return (MOIS_EN[mo + "."] || MOIS_EN[mo] || { avril:"Apr" }[mo] || mo) + " " + j; }]);
+/* Corrections du 2026-11-15 (relecture de Fabien) */
+Object.assign(TRAD_ECRAN, {
+  "Lancer une guerre": "Start a war", "Ton clan est complet : inscris-le": "Your clan is full: sign it up", "Guerre : ton assaut": "War: your assault", "Guerre en cours": "War underway",
+  "Dont {#} de défense grâce aux armes en main": "Including {#} defense from weapons in hand", "niveau {#}": "level {#}", "Niveau {#}": "Level {#}", "Bilan détaillé": "Full summary",
+  "Personne n’a bu ce soir : la soif baisse": "Nobody drank tonight: thirst rises", "Personne n’a mangé ce soir : la faim baisse": "Nobody ate tonight: hunger rises",
+  "La grande horde · encore {#} h {#}": "The great horde · {#} h {#} left", "La grande horde · encore {#} j {#} h": "The great horde · {#} d {#} h left", "Prochaine horde dans {#} j {#} h": "Next horde in {#} d {#} h",
+  "Abats {#} zombies": "Kill {#} zombies", "Fouille {#} lieux": "Search {#} places", "Cuisine {#} plats": "Cook {#} dishes", "Pêche {#} poissons": "Catch {#} fish",
+  "Coupe {#} planches en forêt": "Cut {#} planks in the forest", "Crochète une serrure": "Pick a lock", "Fais {#} travaux à l’atelier": "Do {#} workshop jobs", "Tiens {#} nuits": "Survive {#} nights",
+  "Abats {#} zombies cette semaine": "Kill {#} zombies this week", "Tiens {#} nuits cette semaine": "Survive {#} nights this week", "Fouille {#} lieux cette semaine": "Search {#} places this week",
+  "Fais {#} travaux à l’atelier cette semaine": "Do {#} workshop jobs this week",
+  "Tu récupères": "You get back", "Tu récupères :": "You get back:",
+  "{#} trajet vers une zone éloignée · cuve de la station : {#} L": "{#} trip to a distant zone · gas station tank: {#} L", "{#} trajets vers une zone éloignée · cuve de la station : {#} L": "{#} trips to a distant zone · gas station tank: {#} L",
+  "{#} jerrican · +{#} L chacun": "{#} jerry can · +{#} L each", "{#} jerricans · +{#} L chacun": "{#} jerry cans · +{#} L each"
+});
+TRAD_MOTIFS.push(
+  [/^Nuit glaciale pour (.+) : pas de feu ni assez de couvertures \(\+(\d+) (.*)au lieu de \+(\d+), −(\d+) PV\)$/, "A freezing night for $1: no fire and not enough blankets (+$2 $3instead of +$4, −$5 HP)"],
+  [/^Attaque de nuit \(force (\d+) contre votre défense (\d+)\)(.*)$/, "Night attack (strength $1 against your defense $2)$3"],
+  [/^Attaque de nuit repoussée \(force (\d+) contre votre défense (\d+)\)$/, "Night attack driven off (strength $1 against your defense $2)"],
+  [/^Rien à (manger|boire) pour (.+) : la (faim|soif) baisse$/, function(m, a, n, b){ return "Nothing to " + (a === "manger" ? "eat" : "drink") + " for " + n + ": " + (b === "faim" ? "hunger" : "thirst") + " rises"; }],
+  [/^(.+) · encore (\d+) nuits?$/, "$1 · $2 night(s) left"]
+);
+
+/* ---------- Balayage du 2026-11-15 : partie bien remplie ---------- */
+Object.assign(TRADUCTIONS.en, {
+  "La peluche d’Emma. Elle la serre fort chaque soir : tout le monde dort un peu mieux en la voyant.": "Emma’s teddy bear. She hugs it tight every night: everyone sleeps a little better seeing it.",
+  "La peluche d’Emma. On l’a gardée près du lit, en souvenir d’elle : elle donne du courage à tout le monde.": "Emma’s teddy bear. It’s kept by the bed, in her memory: it gives everyone courage.",
+  "La photo de famille d’avant. Elle rappelle pour qui on se bat.": "The family photo from before. It reminds you who you’re fighting for.",
+  "Un vieux jeu de cartes. Une partie le soir, et on oublie un moment les grattements dehors.": "An old deck of cards. A game in the evening, and for a while you forget the scratching outside.",
+  "La radio grésille. Elle capte parfois des messages : on sait mieux où sont les dangers.": "The radio crackles. It sometimes picks up messages: you know better where the dangers are."
+});
+Object.assign(TRAD_ECRAN, {
+  "Un objet peut être équipé": "An item can be equipped", "Un objet est disponible au stock": "An item is available in the stock",
+  "zombies. Objectif atteint = un colis pour chaque participant": "zombies. Goal reached = a package for every participant", "Trophées": "Trophies",
+  "Prêts": "Ready", "Prêts :": "Ready:",
+  "Le feu brûle toute la nuit ({#} planche pour {#} nuits": "The fire burns all night ({#} plank for {#} nights",
+  "Rex mange {#} ration et monte la garde": "Rex eats {#} ration and stands guard", "Les poules boivent {#} ration d’eau et pondent peut-être": "The chickens drink {#} water ration and may lay eggs",
+  "Touche une case pour voir l’objet": "Tap a slot to see the item", "Test sur l’ordinateur : rien n’est envoyé au serveur": "Testing on the computer: nothing is sent to the server",
+  "{#} · {#} de trop": "{#} · {#} wasted", "énergie pleine": "full energy", "Dans le stock ({#}": "In the stock ({#}",
+  "Coupe du bois": "Chops wood", "Éclaire": "Lights up", "Allume le feu": "Lights the fire", "Pêche": "Fishing", "Ouvre les portes": "Opens doors",
+  "Fouille moins bien, actes terribles la nuit ; à {#}, elle part": "Searches worse, terrible acts at night; at {#}, she leaves",
+  "Fouille moins bien, actes terribles la nuit ; à {#}, il part": "Searches worse, terrible acts at night; at {#}, he leaves",
+  "élevé": "high", "faible": "low", "moyen": "medium", "très élevé": "very high", "Danger élevé": "High danger", "Danger faible": "Low danger", "Danger moyen": "Medium danger", "Danger très élevé": "Very high danger",
+  "Solidité {#} / {#}": "Durability {#} / {#}", "Solidité {#} / {#} →": "Durability {#} / {#} →", "après réparation": "after repair",
+  "La barricade ajoute": "The barricade adds", "la nuit. Une attaque perdue en détruit un niveau": "at night. A lost attack destroys one level",
+  "Niveau suivant : +{#} de défense · coût": "Next level: +{#} defense · cost", "chaque nuit": "every night",
+  "Niveau suivant : +{#} ration de nourriture par nuit · coût": "Next level: +{#} food ration per night · cost", "{#} ration d’eau": "{#} water ration",
+  "Niveau suivant : +{#} ration d’eau par nuit · coût": "Next level: +{#} water ration per night · cost", "{#} œufs": "{#} eggs", "{#} œuf": "{#} egg",
+  "par nuit ({#} ration de nourriture chacun, {#} % de chances par poule": "per night ({#} food ration each, {#}% chance per chicken",
+  "par nuit, après la famille. Sans eau, l’une d’elles meurt": "per night, after the family. Without water, one of them dies",
+  "Leurs caquètements attirent les zombies": "Their clucking attracts zombies", "de risque d’attaque la nuit": "attack risk at night",
+  "Il réchauffe toute la famille la nuit": "It warms the whole family at night", "de repos et": "rest and", ". Il brûle": ". It burns",
+  "{#} planches au refuge : de quoi tenir {#} nuits · elles servent aussi à construire et à fabriquer": "{#} planks at the refuge: enough for {#} nights · they’re also used to build and craft",
+  "Éteindre le feu (garder les planches": "Put out the fire (save the planks", "Allumer le feu": "Light the fire",
+  "Jour {#} sur {#} de la saison · 🌱 Spring dans {#} jours": "Day {#} of {#} of the season · 🌱 Spring in {#} days",
+  "{#} de défense la nuit (une attaque perdue en détruit un niveau": "{#} defense at night (a lost attack destroys one level",
+  "{#} ration(s) d’eau chaque nuit": "{#} water ration(s) every night", "{#} ration(s) de nourriture chaque nuit": "{#} food ration(s) every night",
+  "{#} % de chances chaque nuit : +{#} ration(s) d’eau": "{#}% chance every night: +{#} water ration(s)", "{#} % de chances chaque nuit : +{#} ration(s) de nourriture": "{#}% chance every night: +{#} food ration(s)",
+  "{#} de défense contre la prochaine attaque de nuit (un piège par attaque": "{#} defense against the next night attack (one trap per attack",
+  "pondent ≈ {#} ration(s) par nuit · boivent {#} ration(s) d’eau · +{#} % de risque d’attaque": "lay ≈ {#} ration(s) per night · drink {#} water ration(s) · +{#}% attack risk",
+  "{#} de défense la nuit · mange {#} ration chaque soir": "{#} defense at night · eats {#} ration every evening", "Ça va": "OK",
+  "Le récupérateur rapporte {#} ration par nuit": "The collector gives {#} ration per night", "Le potager rapporte {#} ration par nuit": "The garden gives {#} ration per night",
+  "Piège à zombies : +{#} (un seul usage": "Zombie trap: +{#} (single use", "Rex monte la garde : +{#}": "Rex stands guard: +{#}",
+  "Seulement en cas de famine : quand il ne reste plus de quoi nourrir la famille ce soir": "Only in a famine: when there’s nothing left to feed the family tonight",
+  "Encore en liberté": "Still on the loose", "Tenir {#} jours": "Hold out {#} days",
+  "chaque nuit, tant qu’elle est au refuge (le moral baisse de {#} par nuit sinon": "every night, as long as it’s at the refuge (otherwise morale drops by {#} per night",
+  "chaque nuit, tant qu’il est au refuge (le moral baisse de {#} par nuit sinon": "every night, as long as it’s at the refuge (otherwise morale drops by {#} per night",
+  "À {#} de moral ou plus, l’équipe trouve {#} objet de plus en fouille ; sous {#}, elle fouille mal": "At {#} morale or more, the team finds {#} more item when searching; below {#}, it searches poorly"
+});
+TRAD_MOTIFS.push(
+  [/^Outil \/ éclairage de (.+) : vide, un objet est disponible au stock$/, "$1’s tool / light: empty, an item is available in the stock"],
+  [/^Arme de (.+) : vide, un objet est disponible au stock$/, "$1’s weapon: empty, an item is available in the stock"],
+  [/^Sac de (.+) : vide, un objet est disponible au stock$/, "$1’s bag: empty, an item is available in the stock"],
+  [/^Cuisinière à bois : a plank par plat \(il en reste (\d+)\) · (.*)$/, function(m, n, r){ return "Wood stove: one plank per dish (" + n + " left) · " + r.replace(/^.*Prêts : /, "Ready: "); }],
+  [/^(.+) : installée$/, "$1: installed"],
+  [/^(.+) · voir et modifier$/, "$1 · view and edit"],
+  [/^(.+) rôde ici$/, "$1 is prowling here"],
+  [/^Abattue? par (.+)$/, "Killed by $1"],
+  [/^(.+) \((\d+) \/ (\d+) PV\) rôde en ville, près de (.+)$/, "$1 ($2 / $3 HP) is prowling the town, near $4"]
+);
+// Les motifs précis passent avant les motifs généraux (« Arme de X »)
+TRAD_MOTIFS.unshift(
+  [/^Arme de (.+) : vide, un objet est disponible au stock$/, "$1’s weapon: empty, an item is available in the stock"],
+  [/^Arme d’(.+) : vide, un objet est disponible au stock$/, "$1’s weapon: empty, an item is available in the stock"],
+  [/^Sac de (.+) : vide, un objet est disponible au stock$/, "$1’s bag: empty, an item is available in the stock"],
+  [/^Sac d’(.+) : vide, un objet est disponible au stock$/, "$1’s bag: empty, an item is available in the stock"],
+  [/^Outil \/ éclairage d(?:e |’)(.+) : vide, un objet est disponible au stock$/, "$1’s tool / light: empty, an item is available in the stock"],
+  [/^Arme de (.+) : vide$/, "$1’s weapon: empty"], [/^Sac de (.+) : vide$/, "$1’s bag: empty"], [/^Outil \/ éclairage de (.+) : vide$/, "$1’s tool / light: empty"],
+  [/^(.+) · (\d+) j$/, function(m, t, n){ return (TRAD_ECRAN[t] || t) + " · " + n + " d"; }]
+);
+Object.assign(TRAD_ECRAN, { "pas besoin": "not needed", "pas faim": "not hungry", "pas soif": "not thirsty", "{#} rations d’eau": "{#} water rations",
+  "Les poules boivent {#} rations d’eau et pondent peut-être": "The chickens drink {#} water rations and may lay eggs" });
+TRAD_MOTIFS.unshift([/^Nuit glaciale pour (.+) : pas de feu ni assez de couvertures \(\+(\d+) (.*)au lieu de \+(\d+), −(\d+) PV$/, function(m, n, a, x, b, c){ return "A freezing night for " + n.replace(/ et /g, " and ") + ": no fire and not enough blankets (+" + a + " " + x + "instead of +" + b + ", −" + c + " HP"; }]);
+TRAD_MOTIFS.unshift(
+  [/^Attaque de nuit \(force (\d+) contre votre défense (\d+)$/, "Night attack (strength $1 against your defense $2"],
+  [/^Attaque de nuit repoussée \(force (\d+) contre votre défense (\d+)$/, "Night attack driven off (strength $1 against your defense $2"]
+);
