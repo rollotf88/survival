@@ -62,7 +62,7 @@ function traduireTexteEcran(t){
   var tr = TRAD_ECRAN[cle];
   if(tr === undefined){
     // Textes avec un nom dedans (« Arme de Papa : vide ») : modèles de TRAD_MOTIFS (lang-en.js)
-    for(var i = 0; i < TRAD_MOTIFS.length; i++){ if(TRAD_MOTIFS[i][0].test(core)) return m[1] + core.replace(TRAD_MOTIFS[i][0], TRAD_MOTIFS[i][1]) + m[3].replace(/^[\s  ]+(?=[:?!;])/, ""); }
+    for(var i = 0; i < TRAD_MOTIFS.length; i++){ if(TRAD_MOTIFS[i][0].test(core)){ var res = core.replace(TRAD_MOTIFS[i][0], TRAD_MOTIFS[i][1]); if(/^[A-Z][a-z]{2} \d+$/.test(res)) m[3] = m[3].replace(/^\./, ""); /* « 9 nov. » → « Nov 9 » */ return m[1] + res + m[3].replace(/^[\s  ]+(?=[:?!;])/, ""); } }
     ECRAN_MANQUANTS[cle] = (ECRAN_MANQUANTS[cle] || 0) + 1;
     // pas de traduction : au moins la ponctuation à l'anglaise (« Strong : … » → « Strong: … »)
     var fixe = t.replace(/[   ]+([:?!;])/g, "$1");

@@ -29,7 +29,7 @@ function hasard(){
 }
 function aleaR(tag, a, b){ return a + Math.floor(alea(tag) * (b - a + 1)); }
 function graineDuJour(d){ d = d || new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
-function dateGraine(seed){ var mois = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]; return (seed % 100) + " " + mois[Math.floor(seed / 100) % 100 - 1] + " " + Math.floor(seed / 10000); }
+function dateGraine(seed){ if(anglais()){ var m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]; return m[Math.floor(seed / 100) % 100 - 1] + " " + (seed % 100) + ", " + Math.floor(seed / 10000); } var mois = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]; return (seed % 100) + " " + mois[Math.floor(seed / 100) % 100 - 1] + " " + Math.floor(seed / 10000); }
 
 // seed : graine de la Partie du jour, ou rien pour une partie libre
 function nouvellePartie(seed){

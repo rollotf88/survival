@@ -1182,7 +1182,7 @@ function ecranGameOver(d, nouveau, jour, lv){
 
 // Texte à coller dans un message pour comparer avec ses amis (en attendant un vrai classement en ligne)
 function copierResultat(bouton){
-  var txt = "ZOMBRIA – Partie classée du " + dateGraine(G.seed) + " : ma famille a tenu " + (G.day - 1) + " jours, ⭐ " + G.score + " points. Tu fais mieux ?";
+  var txt = "ZOMBRIA – " + trad("Partie classée du {date} : ma famille a tenu {j} jours, ⭐ {s} points. Tu fais mieux ?", { date:dateGraine(G.seed), j:G.day - 1, s:G.score });
   var ok = function(){ bouton.textContent = "✅ Copié ! Colle-le dans un message."; };
   try{ navigator.clipboard.writeText(txt).then(ok, function(){ bouton.textContent = txt; }); }
   catch(e){ bouton.textContent = txt; }
@@ -1699,7 +1699,7 @@ if(enCours){
   if(window.matchMedia && matchMedia("(min-width:1100px) and (min-height:620px)").matches){
     document.body.classList.remove("accueil-ouvert");
     $("app").innerHTML = '<div class="panneau intro accueil-pc"><div class="tetejeu">' + titrePeint() + '</div>'
-      + '<div class="intro-recit"><div class="acc-carte"><p class="mf-titre">' + (enCours.seed ? "🏆 Partie classée du " + dateGraine(enCours.seed) : "🎲 Partie libre") + '</p>'
+      + '<div class="intro-recit"><div class="acc-carte"><p class="mf-titre">' + (enCours.seed ? "🏆 " + trad("Partie classée du {date}", { date:dateGraine(enCours.seed) }) : "🎲 " + trad("Partie libre")) + '</p>'
       + '<div class="acc-ligne"><span class="acc-jour">Jour ' + enCours.day + '</span><span class="acc-score">⭐ ' + enCours.score + ' <small>points</small></span></div>'
       + '<div class="acc-famille">' + enCours.m.map(function(x){ return '<span class="acc-m' + (x.al ? "" : " mort") + '"><span class="acc-por">' + iconeMembre(x) + '</span><b>' + x.nom + '</b><small>' + (x.al ? x.hp + " ❤️" : causeMort(roleDe(x), "mort")) + '</small></span>'; }).join("") + '</div></div></div>'
       + '<div class="acc-boutons"><button class="btn acc-go" data-act="continuer">▶️ Continuer la partie</button><div class="acc-sec"><button class="btn alt" data-act="guide">📖 Guide du survivant</button><button class="btn alt acc-nouv" data-act="nouvelle">🆕 Nouvelle famille</button></div><small class="acc-note">Commencer une nouvelle famille efface la partie en cours.</small></div>'

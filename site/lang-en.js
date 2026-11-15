@@ -1435,3 +1435,8 @@ Object.assign(TRAD_ECRAN, {
 });
 TRAD_MOTIFS.push([/^(.+?) · (\d+)$/, function(m, l, n){ var L = { "Ferraille":"Scrap", "Argent":"Silver", "Or":"Gold", "Légende":"Legend" }; return L[l] ? L[l] + " · " + n : m; }]);
 Object.assign(TRAD_ECRAN, { "Redescendre": "Go down" });
+Object.assign(TRADUCTIONS.en, { "Partie classée du {date}": "Ranked game of {date}", "Partie libre": "Free play",
+  "Partie classée du {date} : ma famille a tenu {j} jours, ⭐ {s} points. Tu fais mieux ?": "Ranked game of {date}: my family held out {j} days, ⭐ {s} points. Can you beat that?" });
+TRAD_MOTIFS.unshift([/^Classée · (.+)$/, function(m, d){ return "Ranked · " + d; }], [/^Partie classée du (.+)$/, "Ranked game of $1"]);
+// Dates courtes françaises « 9 nov. » (le point final est retiré avant la recherche)
+TRAD_MOTIFS.unshift([/^(\d+) (janv|févr|mars|avr|avril|mai|juin|juil|août|sept|oct|nov|déc)\.?$/, function(m, j, mo){ return (MOIS_EN[mo + "."] || MOIS_EN[mo] || { avril:"Apr" }[mo] || mo) + " " + j; }]);
