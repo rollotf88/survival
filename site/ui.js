@@ -566,6 +566,7 @@ function carteEquip(o, inst, act, id, bouton){
   return '<' + tag + ' class="se-carte' + (act ? " choix" : "") + '"' + (act ? ' data-act="' + act + '" data-id="' + id + '"' : '') + '><span class="se-case">' + icone(inst ? inst.id : o.id || "") + '</span>'
     + '<span class="se-t"><b>' + o.nom + '</b><span class="se-pills">' + pills + '</span>' + sol + '</span>' + (bouton || '') + '</' + tag + '>';
 }
+var msgSlot = "";
 function openSlot(i, slot){
   var x = G.m[i], e = EMPLACEMENTS.find(function(e){ return e[0] === slot; }), o = x.eq[slot];
   var de = /^[aeiouyéèêàâîïôûh]/i.test(x.nom) ? "d’" : "de ";
@@ -573,6 +574,12 @@ function openSlot(i, slot){
   h += '<p class="mf-titre">En main</p>';
   h += o ? carteEquip(OBJETS[o.id], o, null, null, '<button class="se-ranger" data-act="unequip" data-id="' + i + ':' + slot + '">↩️ Ranger</button>')
          : '<div class="se-vide"><span class="se-case">' + e[1] + '</span><span>Rien en main</span></div>';
+  // Arme abîmée : la réparer d'ici, sans passer par l'atelier (2026-11-15, demande de Fabien)
+  if(msgSlot){ h += '<p class="msg g2">' + msgSlot + '</p>'; msgSlot = ""; }
+  if(o && OBJETS[o.id].emplacement === "arme" && o.sol < OBJETS[o.id].sol){
+    var apres = Math.min(OBJETS[o.id].sol, o.sol + Math.round(OBJETS[o.id].sol * BAL.reparation));
+    h += '<div class="se-rep"><p class="titre-butin">🔧 Réparer · solidité ' + o.sol + ' → ' + apres + '</p><div class="rf-action">' + ingredients(REPARATION) + boutonTravail("🔧 Réparer", "slotrep", i + ':' + slot, REPARATION) + '</div></div>';
+  }
   var dispo = pourEmplacement(slot);
   h += '<p class="mf-titre">Dans le stock' + (dispo.length ? ' (' + dispo.length + ')' : '') + '</p>';
   h += dispo.length ? '<div class="se-liste">' + dispo.map(function(d){ return carteEquip(OBJETS[d.id], d, "equip", i + ':' + slot + ':' + d.uid, '<span class="se-go">Équiper</span>'); }).join("") + '</div>'
@@ -906,7 +913,7 @@ function boutonCuisine(r){
 }
 function boutonTravail(texte, act, id, ing, besoin){
   var manque = []; for(var k in ing || {}) if(compter(k) < ing[k]) manque.push({ id:k, n:ing[k] - compter(k) });
-  var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? "Il faut " + nommer(besoin, 1)
+  var x = artisan(), raison = besoin && !possede(function(o){ return o === OBJETS[besoin]; }) ? trad("Il faut {o}", { o:nommer(besoin, 1) })
     : manque.length ? trad("Il manque {l}", { l:nommerListe(manque) }) : !x ? "Tout le monde est trop fatigué" : "";
   return '<button class="btn travail" data-act="' + act + '" data-id="' + id + '"' + (raison ? " disabled" : "") + '>'
     + (raison ? '<span>❌ ' + raison + '</span>' : '<span>' + texte + '</span><small class="qui"><span class="mini">' + iconeMembre(x) + '</span>' + x.nom + ' · −' + coutTravail(x) + ' ⚡</small>') + '</button>';
@@ -1556,6 +1563,7 @@ document.addEventListener("click", function(e){
   else if(a === "equip"){ var q = id.split(":"); equiper(+q[0], q[1], +q[2]);
     if(retourEquip === "quipart" && typeof openQuiPart === "function"){ render(); openQuiPart(); return; }
     if(modeMini()){ render(); openMembre(+q[0]); return; } hide(); }
+  else if(a === "slotrep"){ var q2 = id.split(":"), o2 = G.m[+q2[0]].eq[q2[1]]; msgSlot = (o2 && reparer(o2.uid)) || ""; openSlot(+q2[0], q2[1]); render(); return; }
   else if(a === "unequip"){ var q = id.split(":"); desequiper(+q[0], q[1]); openSlot(+q[0], q[1]); render(); return; }
   else if(a === "fouille"){ if(typeof allerPieceId === "function") allerPieceId("garage"); if(!G.sel.length && typeof openQuiPart === "function"){ openQuiPart(); return; } openLoc(); return; }
   else if(a === "loc"){ apresEtape(expedition(i, enVoiture)); return; }
@@ -1865,7 +1873,7 @@ document.addEventListener("click", function(e){
     }
     else if(a === "cfin" || a === "forcer" || a === "suiteporte"){ if(a === "forcer") son("construire"); if(feuille.indexOf("Vous trouvez") >= 0) son("butin", a === "forcer" ? 250 : 0); else if(G.combat) son("zombie", 200); if(feuille.indexOf("abat un arbre") >= 0) son("hache", 150); }
     else if(a === "goupille"){ if(/^Clic/.test(msgSerrure)) son(G.exp && G.exp.serrure && G.exp.serrure.fin === "ouvert" ? "porte" : "goupille"); else son("casse"); }
-    else if(a === "craft" || a === "repair" || a === "salvage") son("atelier");
+    else if(a === "craft" || a === "repair" || a === "salvage" || a === "slotrep") son("atelier");
     else if(a === "build") son("construire");
     else if(a === "plein") son("piece");
     else if(a === "pslot") return; // le son est joué par poserPiece

@@ -1909,3 +1909,10 @@ TRAD_MOTIFS.unshift(
   [/^il manque (.+)$/, "missing $1"], [/^Il manque (.+)$/, "Missing $1"],
   [/^(.+) : case vide$/, "$1: empty slot"]
 );
+/* Le nom de Marco est glissé dans plusieurs phrases (marché, bilan de la nuit, panneau PC) : on le traduit dans les données (2026-11-15) */
+if(LANGUE === "en" && typeof MARCHE !== "undefined") MARCHE.nom = "Marco the junk dealer";
+Object.assign(TRAD_ECRAN, { "Marco the junk dealer est là aujourd’hui": "Marco the junk dealer is here today" });
+Object.assign(TRAD_ECRAN, {
+  "Réparer · solidité {#} → {#}": "Repair · durability {#} → {#}", "Réparer": "Repair",
+  "Pas encore de poule. On en trouve au": "No chickens yet. You can find some in the", "chez": "at", "le brocanteur, et parfois une poule égarée arrive le matin": "the junk dealer’s, and sometimes a stray chicken shows up in the morning"
+});
