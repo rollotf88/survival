@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261115-1621";
+var VERSION = "survival-20261115-1626";
 var FICHIERS = [
   "./",
   "index.html",

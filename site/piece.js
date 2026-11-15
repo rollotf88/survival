@@ -837,7 +837,7 @@ document.addEventListener("click", function(e){
 var RESERVE_RECRUES = {
   "Inès":  ["images/personnages/reserve-ines.webp", 0, 368, 407, 932, "gauche"],
   "Yanis": ["images/personnages/reserve-yanis.webp", 360, 287, 613, 893, "centre"],
-  "Nora":  ["images/personnages/reserve-nora.webp", 460, 550, 905, 945, "centre"],
+  "Nora":  ["images/personnages/reserve-nora.webp", 460, 482, 906, 1043, "centre"], // recoupée le 2026-11-15 (chignon, caisse et botte coupés)
   "Sam":   ["images/personnages/reserve-sam.webp", 340, 315, 949, 878, "centre"]
 };
 // Cette recrue est-elle dans la réserve ? (au refuge, pas épuisée, pas choisie pour partir, pas aux fourneaux, et sans place au salon)
