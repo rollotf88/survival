@@ -127,3 +127,16 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .ap-cb-t small{display:block;font-size:12.5px;opacity:.9;line-height:1.3}
 .ap-cb-f{flex:none;font-size:30px;font-weight:900;color:#ffd27a;padding-right:14px}
 .ap-pill-on{color:#c0392b;font-weight:800}
+/* Choix d'un bâtiment sans défiler sur téléphone (2026-11-15, retour de Fabien) : petites cases, 5 par ligne, fiche serrée */
+.ap-choix{grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:5px;margin:2px 0 8px}
+.ap-c{padding:4px 2px 5px;border-radius:10px;gap:1px}
+.ap-c img{width:46px;height:38px}
+.ap-c b{font-size:10.5px;line-height:1.1}
+.ap-c small{font-size:9px}
+.ap h2{font-size:22px}
+.ap .ap-tete{grid-template-columns:76px 1fr;gap:10px;margin-bottom:2px}
+.ap .ap-img{width:76px;height:66px}
+.ap .ap-tete h3{font-size:17px}
+.ap .ap-desc{font-size:12.5px;line-height:1.35;margin-top:2px}
+.ap .ap-eff{font-size:13px;margin-top:2px}
+.ap .titre-butin{margin-top:6px;margin-bottom:4px}
