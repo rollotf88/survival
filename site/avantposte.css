@@ -81,3 +81,6 @@
 .apc-go{width:100%;margin-top:8px}
 .apc-go small{font-weight:600;opacity:.85}
 .apc-err{margin-top:8px}
+/* L'icône du marteau dans le compteur : les images de #decor sont en position absolue (style.css), pas celle-ci */
+#decor .ap-chip{display:flex;align-items:center;gap:5px}
+#decor .ap-chip img,#decor .ap-chip .ico{position:static;width:16px;height:16px;filter:none;flex:none}
