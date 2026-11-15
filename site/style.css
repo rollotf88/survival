@@ -2993,3 +2993,6 @@ body.fond .scene .mc.couronnee > div:first-of-type{gap:0}
 #sheet.guide-pc .gtuiles.lieux{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
 #sheet.guide-pc .gimg{max-height:340px}
 #sheet.guide-pc .gfiche p{font-size:16px;max-width:75ch}
+
+/* Le ruban « conseillé » des soins est écrit par le style : version anglaise (2026-11-15) */
+html[lang="en"] .st-t.conseil::before{content:"advised"}
