@@ -44,7 +44,7 @@ var AP_BAT = {
   scierie:    { nom:"Scierie", ico:"🪵", cout:{ planche:2, clous:1 }, prod:{ planche:[1, 2, 3, 4, 6] }, desc:"Débite le bois mort des environs en planches." },
   palissade:  { nom:"Palissade", ico:"🧱", cout:{ planche:4, clous:1 }, def:[3, 5, 8, 11, 15], desc:"Protège l’avant-poste. Chaque niveau ouvre aussi 2 emplacements de plus." },
   entrepot:   { nom:"Entrepôt", ico:"📦", cout:{ planche:5, clous:2 }, cap:[20, 30, 40, 55, 70], desc:"Ce que l’avant-poste peut garder de chaque ressource avant que la production s’arrête." },
-  infirmerie: { nom:"Infirmerie", ico:"🩹", cout:{ planche:3, chiffon:2 }, prod:{ bandage:[0.5, 1, 1.5, 2, 3] }, desc:"Prépare des bandages avec ce qu’on trouve." },
+  infirmerie: { nom:"Infirmerie", ico:"🩹", cout:{ planche:3, chiffon:2 }, prod:{ bandage:[0.5, 1, 1.5, 2, 3] }, desc:"Prépare des bandages qui soignent ton équipe au retour d’un pillage." },
   forge:      { nom:"Forge", ico:"⚙️", cout:{ ferraille:3, planche:2 }, prod:{ clous:[1, 1, 2, 2, 3], ferraille:[0.5, 1, 1, 1.5, 2] }, desc:"Récupère le métal : clous et ferraille." },
   radio:      { nom:"Poste radio", ico:"📻", cout:{ ferraille:2, ruban:1 }, radio:[6, 12, 18, 24, 30], desc:"Écoute les pillards et prévient des attaques : moins de pertes." },
   tour:       { nom:"Tour de guet", ico:"🗼", cout:{ planche:5, clous:2 }, def:[2, 3, 4, 6, 8], desc:"Repère les assaillants de loin." },
@@ -55,6 +55,19 @@ var AP_BAT = {
   siege:      { nom:"Atelier de siège", ico:"🪓", cout:{ planche:5, ferraille:3 }, desc:"Affaiblit la palissade et les pièges des avant-postes que tu pilles." }
 };
 var AP_RES = ["eau", "nour", "planche", "herbes", "bandage", "clous", "ferraille", "jerrican"];
+// 2026-11-15 (simulation, choix de Fabien) : ce que l'avant-poste peut rapporter au refuge, par jour de jeu (droit qui s'accumule,
+// 3 au plus) : 3 rations d'eau et 3 repas tous les 4 jours, 1 jerrican tous les 4 jours ; les herbes sans limite.
+// Planches, clous et ferraille restent à l'avant-poste et paient ses chantiers ; les bandages y restent et soignent l'équipe au retour d'un pillage.
+// (Sans ces limites, une famille qui hérite d'un avant-poste au maximum ne mourait plus.)
+var AP_RAPPORT = { eau:0.75, nour:0.75, jerrican:0.25 }, AP_RAPPORT_MAX = 3, AP_LIBRE = ["herbes"], AP_GARDE = ["planche", "clous", "ferraille", "bandage"];
+function apCredit(){
+  if(typeof G === "undefined" || !G) return {};
+  var c = G.apCredit; if(!c || typeof c !== "object") c = G.apCredit = { j:G.day, eau:AP_RAPPORT_MAX, nour:AP_RAPPORT_MAX, jerrican:1 };
+  var d = Math.max(0, (G.day || 0) - (c.j || 0));
+  if(d){ for(var r in AP_RAPPORT) c[r] = Math.min(AP_RAPPORT_MAX, (c[r] || 0) + AP_RAPPORT[r] * d); c.j = G.day; }
+  return c;
+}
+function apGarde(k){ return AP_GARDE.indexOf(k) >= 0 ? Math.floor(APS.acc[k] || 0) : 0; }
 function apIcoRes(r){ return r === "eau" ? ic("bouteille", "💧") : r === "nour" ? ic("conserve", "🥫") : icone(r); }
 function apNomRes(r, n){ return r === "eau" ? tradN(n, "{n} ration d’eau", "{n} rations d’eau") : r === "nour" ? tradN(n, "{n} ration de nourriture", "{n} rations de nourriture") : nommer(r, n); }
 
@@ -240,7 +253,8 @@ var apFenetre = null, apSlotK = null, apChoix = null, apMsg = "";
 function apRouvrir(){ var m = document.getElementById("modal"); if(!m || m.style.display === "none"){ apFenetre = null; return; } if(apFenetre === "camp") openCamp(); else if(apFenetre === "slot") apOuvrirSlot(apSlotK); }
 function apEnJeu(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.bacASable; }
 function apCout(id, niv){ var c = {}, B = AP_BAT[id]; for(var k in B.cout) c[k] = Math.ceil(B.cout[k] * AP.mult[niv - 1]); return c; }
-function apManque(c){ var m = []; for(var k in c) if(compter(k) < c[k]) m.push({ id:k, n:c[k] - compter(k) }); return m; }
+function apDispo(k){ return compter(k) + apGarde(k); }
+function apManque(c){ var m = []; for(var k in c) if(apDispo(k) < c[k]) m.push({ id:k, n:c[k] - apDispo(k) }); return m; }
 function apParJour(q){
   if(!(q > 0)) return "—";
   var inv = 1 / q;
@@ -273,7 +287,11 @@ function openCamp(){
   else {
     h += '<div class="ap-stock">' + res.map(function(r){ var v = Math.floor(APS.acc[r] || 0);
       return '<span class="ap-res' + (v >= cap ? " plein" : "") + '"><span class="ap-res-i">' + apIcoRes(r) + '</span><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small></span>'; }).join("") + '</div>';
-    var peut = res.some(function(r){ return (APS.acc[r] || 0) >= 1; });
+    var cr = apCredit(), peut = res.some(function(r){ return AP_GARDE.indexOf(r) < 0 && (APS.acc[r] || 0) >= 1 && (AP_RAPPORT[r] == null || (cr[r] || 0) >= 1); });
+    var lim = Object.keys(AP_RAPPORT).filter(function(r){ return res.indexOf(r) >= 0; }).map(function(r){ var n = Math.floor(cr[r] || 0);
+      return apIcoRes(r) + " " + (n >= 1 ? trad("encore {n}", { n:n }) : trad("dans {n} j", { n:Math.ceil((1 - (cr[r] || 0)) / AP_RAPPORT[r]) })); });
+    h += '<p class="ap-note">🧺 ' + trad("Vers le refuge : 3 rations d’eau et 3 repas tous les 4 jours, 1 jerrican tous les 4 jours.") + (lim.length ? ' <b>' + lim.join(" · ") + '</b>' : '') + '</p>';
+    if(res.some(function(r){ return AP_GARDE.indexOf(r) >= 0; })) h += '<p class="ap-note">🔨 ' + trad("Planches, clous et ferraille restent ici pour les chantiers ; les bandages soignent ton équipe au retour d’un pillage.") + '</p>';
     h += '<button class="btn" style="width:100%" data-act="apRecolter"' + (peut && apEnJeu() ? "" : " disabled") + '>' + (apEnJeu() ? (peut ? "🧺 " + trad("Récolter pour le refuge") : trad("Rien à récolter")) : trad("Pendant une partie seulement")) + '</button>';
     if(res.some(function(r){ return (APS.acc[r] || 0) >= cap; })) h += '<p class="ap-note">⚠️ ' + trad("Une ressource est pleine : sa production est arrêtée. Récolte ou agrandis l’entrepôt.") + '</p>';
   }
@@ -328,7 +346,8 @@ function apFiche(id, niv, k){
   var h = niv ? '' : '<div class="ap-tete">' + apImg(id, 1) + '<div><h3>' + B.ico + ' ' + trad(B.nom) + '</h3><p class="ap-desc">' + trad(B.desc) + '</p></div></div>';
   h += '<p class="titre-butin">' + (niv ? trad("Niveau {n}", { n:n }) : trad("Niveau 1")) + ' · ⏱ ' + apFmt(AP.durees[n - 1]) + '</p><p class="ap-eff">' + apEffet(id, n) + '</p>';
   var raison = !apEnJeu() ? trad("Pendant une partie seulement") : C ? trad("Un seul chantier à la fois") : m.length ? trad("Matériaux manquants") : ""; // le détail est déjà dans les cases rouges à côté
-  h += '<div class="rf-action">' + ingredients(c) + '<button class="btn" data-act="apConstruire" data-id="' + k + ':' + id + '"' + (raison ? " disabled" : "") + '>' + (raison ? "❌ " + raison : (niv ? "⬆️ " + trad("Améliorer") : "🔨 " + trad("Construire"))) + '</button></div>';
+  var ingr; var compterVrai = compter; compter = apDispo; try{ ingr = ingredients(c); } finally { compter = compterVrai; } // cases : refuge + avant-poste
+  h += '<div class="rf-action">' + ingr + '<button class="btn" data-act="apConstruire" data-id="' + k + ':' + id + '"' + (raison ? " disabled" : "") + '>' + (raison ? "❌ " + raison : (niv ? "⬆️ " + trad("Améliorer") : "🔨 " + trad("Construire"))) + '</button></div>';
   return h;
 }
 function apBlocChantier(){
@@ -344,7 +363,7 @@ function apConstruire(k, id){
   var P = APS.plots[k]; if(P && P.id !== id) return;
   var n = (P ? P.niv : 0) + 1; if(n > 5) return;
   var c = apCout(id, n); if(apManque(c).length) return;
-  for(var r in c) consommer(r, c[r]);
+  for(var r in c){ var ici = Math.min(c[r], apGarde(r)); if(ici) APS.acc[r] -= ici; if(c[r] - ici > 0) consommer(r, c[r] - ici); }
   if(!P) APS.plots[k] = { id:id, niv:0 };
   APS.chantier = { k:k, id:id, niv:n, debut:Date.now(), fin:Date.now() + AP.durees[n - 1] };
   apSauver(); if(typeof son === "function") son("planches");
@@ -352,8 +371,10 @@ function apConstruire(k, id){
 }
 function apRecolter(){
   if(!apEnJeu()) return;
-  apMaj(); var pris = [];
+  apMaj(); var pris = [], cr = apCredit();
   AP_RES.forEach(function(r){ var v = Math.floor(APS.acc[r] || 0); if(v < 1) return;
+    if(AP_GARDE.indexOf(r) >= 0) return; // reste à l'avant-poste
+    if(AP_RAPPORT[r] != null){ v = Math.min(v, Math.floor(cr[r] || 0)); if(v < 1) return; cr[r] -= v; }
     APS.acc[r] -= v;
     if(r === "eau" || r === "nour") G.reste[r] = (G.reste[r] || 0) + v; else ajouter(r, v);
     pris.push(apNomRes(r, v)); });
@@ -749,7 +770,9 @@ if(typeof terminerAssaut === "function"){
   var apTerminerAssautBase = terminerAssaut;
   terminerAssaut = function(){
     if(!(G.exp && G.exp.pillage)) return apTerminerAssautBase.apply(this, arguments);
-    var X = G.exp.pillage, b = bilanAssaut(); finirAssaut();
+    var X = G.exp.pillage, eqP = (G.exp.equipe || []).slice(), b = bilanAssaut(); finirAssaut();
+    var soins = 0; eqP.forEach(function(i){ var x = G.m[i]; while(x && x.al && x.hp <= 70 && (APS.acc.bandage || 0) >= 1){ APS.acc.bandage -= 1; x.hp = Math.min(100, x.hp + OBJETS.bandage.soin); soins++; } });
+    if(soins){ apSauver(); b.resume.push("🩹 " + tradN(soins, "L’infirmerie de l’avant-poste utilise {n} bandage pour soigner l’équipe.", "L’infirmerie de l’avant-poste utilise {n} bandages pour soigner l’équipe.")); }
     if(typeof retourPiece !== "undefined") retourPiece = "avantposte";
     var fin = function(butin, err){
       var noms = apDonner(butin);
@@ -790,7 +813,7 @@ if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
   var apReglesOrigine = reglesGuide;
   reglesGuide = function(){
     var R = apReglesOrigine.apply(this, arguments);
-    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour tout rapporter au refuge. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Les camps de pillards du jeu s’attaquent à tout moment (2 membres de ta famille partent). Par défaut tu es protégé ; quand ta famille a tenu " + AP_JOUR_PVP + " jours, le mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque) permet aussi de piller les autres joueurs pillards et les ruines, mais tu peux être pillé à ton tour (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri). Quand ta famille meurt, l’avant-poste repasse en mode protégé avec 24 heures à l’abri, et la famille suivante y a accès dès son premier jour."]);
+    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque et pièges. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour récolter. Le chemin jusqu’au refuge est long : il ne rapporte que 3 rations d’eau et 3 repas tous les 4 jours, et 1 jerrican tous les 4 jours (les herbes sans limite) ; planches, clous et ferraille restent à l’avant-poste et paient ses chantiers, et les bandages de l’infirmerie soignent ton équipe au retour d’un pillage. Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Les camps de pillards du jeu s’attaquent à tout moment (2 membres de ta famille partent). Par défaut tu es protégé ; quand ta famille a tenu " + AP_JOUR_PVP + " jours, le mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque) permet aussi de piller les autres joueurs pillards et les ruines, mais tu peux être pillé à ton tour (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri). Quand ta famille meurt, l’avant-poste repasse en mode protégé avec 24 heures à l’abri, et la famille suivante y a accès dès son premier jour."]);
     return R;
   };
   if(typeof THEMES_GUIDE !== "undefined") THEMES_GUIDE.forEach(function(T){ if(T[0] === "Progresser") T[2].push("L’avant-poste"); });
@@ -807,7 +830,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Débite le bois mort des environs en planches.":"Cuts the dead wood around into planks.",
     "Protège l’avant-poste. Chaque niveau ouvre aussi 2 emplacements de plus.":"Protects the outpost. Each level also opens 2 more plots.",
     "Ce que l’avant-poste peut garder de chaque ressource avant que la production s’arrête.":"How much of each resource the outpost can hold before production stops.",
-    "Prépare des bandages avec ce qu’on trouve.":"Makes bandages from whatever is found.",
+    "Prépare des bandages qui soignent ton équipe au retour d’un pillage.":"Makes bandages that heal your team when it returns from a raid.",
     "Récupère le métal : clous et ferraille.":"Salvages metal: nails and scrap.",
     "Écoute les pillards et prévient des attaques : moins de pertes.":"Listens to the raiders and warns of attacks: fewer losses.",
     "Repère les assaillants de loin.":"Spots attackers from afar.",
@@ -845,7 +868,10 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Pillage repoussé !":"Raid repelled!", "Ton avant-poste a été pillé":"Your outpost was raided", "{p} a tenté de piller ton avant-poste et a échoué.":"{p} tried to raid your outpost and failed.",
     "{p} est reparti avec une partie de ton stock.":"{p} left with part of your stock.", "Un pillard":"A raider",
     "Butin d’un pillage : {n} objets au plus":"Loot from a raid: {n} items max", "Défenses adverses affaiblies : palissade −{a}, pièges −{b}":"Enemy defenses weakened: palisade −{a}, traps −{b}",
-    "Mode pillard":"Raider mode", "Ta famille doit avoir tenu {n} jours pour piller d’autres survivants.":"Your family must have lasted {n} days to raid other survivors.",
+    "Mode pillard":"Raider mode", "encore {n}":"{n} left", "dans {n} j":"in {n} d",
+    "Vers le refuge : 3 rations d’eau et 3 repas tous les 4 jours, 1 jerrican tous les 4 jours.":"To the refuge: 3 water rations and 3 meals every 4 days, 1 jerrycan every 4 days.",
+    "Planches, clous et ferraille restent ici pour les chantiers ; les bandages soignent ton équipe au retour d’un pillage.":"Planks, nails and scrap metal stay here for construction; bandages heal your team when it returns from a raid.",
+    "L’infirmerie de l’avant-poste utilise {n} bandage pour soigner l’équipe.":"The outpost’s infirmary uses {n} bandage to heal the team.", "L’infirmerie de l’avant-poste utilise {n} bandages pour soigner l’équipe.":"The outpost’s infirmary uses {n} bandages to heal the team.", "Ta famille doit avoir tenu {n} jours pour piller d’autres survivants.":"Your family must have lasted {n} days to raid other survivors.",
     "Ta famille doit avoir tenu 30 jours pour piller d’autres survivants.":"Your family must have lasted 30 days to raid other survivors.", "Après {n} jours de survie de ta famille":"After your family has survived {n} days",
     "Tu es protégé : personne ne peut piller ton avant-poste. Les camps de pillards de la carte s’attaquent à tout moment. En mode pillard, tu peux aussi piller les autres joueurs pillards et les ruines, et ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. The raider camps on the map can be attacked at any time. In raider mode, you can also raid other raider players and ruins, and your production rises by 25%… but other raiders can raid you.",
     "Tu pourras piller les autres joueurs pillards et les ruines, et ta production montera de 25 %.":"You’ll be able to raid other raider players and ruins, and your production will rise by 25%.", "Tu es protégé : personne ne peut piller ton avant-poste. En mode pillard, tu peux attaquer les autres pillards, les ruines et les camps de pillards (2 membres de ta famille partent), ta production monte de 25 %… mais d’autres pillards peuvent te piller.":"You’re protected: nobody can raid your outpost. In raider mode, you can attack other raiders, ruins and raider camps (2 members of your family go), your production rises by 25%… but other raiders can raid you.",
@@ -869,4 +895,4 @@ if(typeof TRADUCTIONS !== "undefined"){
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost", "Dès {#} jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux":"From day {#}, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps", "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
-if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to bring everything back to the refuge. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
+if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout and traps. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to harvest. The road to the refuge is long: it only brings back {#} water rations and {#} meals every {#} days, and {#} jerrycan every {#} days (herbs without limit); planks, nails and scrap metal stay at the outpost and pay for its construction, and the infirmary’s bandages heal your team when it returns from a raid. Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
