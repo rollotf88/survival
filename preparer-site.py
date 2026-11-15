@@ -14,7 +14,7 @@ for f in FICHIERS: shutil.copy(f, "site/" + f)
 for f in os.listdir("images"):
     if f.endswith((".webp", ".png")): shutil.copy("images/" + f, "site/images/" + f)
 # Illustrations des lieux et des événements (sous-dossiers)
-for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie", "avantposte"]:  # AVANT-POSTE : dossier images/avantposte
+for sd in ["lieux", "evenements", "combat", "blasons", "ligues", "zombies", "icones", "immeuble", "barricades", "feux", "personnages", "folie", "avantposte", "avantposte/secteurs", "avantposte/reperes"]:  # AVANT-POSTE : dossier images/avantposte
     if os.path.isdir("images/" + sd):
         os.makedirs("site/images/" + sd)
         for f in os.listdir("images/" + sd):
@@ -25,6 +25,7 @@ for f in os.listdir("sons"): shutil.copy("sons/" + f, "site/sons/" + f)
 shutil.copy("htaccess-o2switch.txt", "site/.htaccess")
 # Le serveur Node.js d'o2switch fait tourner le même code que le Worker Cloudflare : copie à jour
 shutil.copy("worker/index.js", "serveur-o2switch/worker.mjs")
+shutil.copy("worker/avantposte.mjs", "serveur-o2switch/avantposte.mjs")  # AVANT-POSTE : module de la carte
 
 # Nouvelle version du cache hors connexion (date + heure)
 version = "survival-" + time.strftime("%Y%m%d-%H%M")

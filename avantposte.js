@@ -151,7 +151,7 @@ function apDecor(){
   return D;
 }
 function apZones(){
-  var Z = [["apCamp", 590, 430, 770, 610, function(){ return "🔥"; }, trad("Le camp"), .5]];
+  var Z = [["apCamp", 590, 430, 770, 610, function(){ return "🔥"; }, trad("Le camp"), .5], ["apCarte", 640, 150, 740, 225, function(){ return "🗺️"; }, trad("La carte"), .5]];
   AP.plots.forEach(function(p, k){
     var P = APS.plots[k], lab = !apOuvert(k) ? "🔒" : P && P.niv ? trad(AP_BAT[P.id].nom) + " " + P.niv : APS.chantier && APS.chantier.k === k ? trad("Chantier") : trad("Construire");
     Z.push(["apSlot" + k, p[0] - 78, p[1] - 70, p[0] + 78, p[1] + 58, function(){ return ""; }, lab, .5]);
@@ -207,6 +207,7 @@ setInterval(function(){
       if(notes.length){
         if(typeof fileSucces !== "undefined") notes.forEach(function(n){ fileSucces.push(n); });
         if(apIci() && typeof placerPiece === "function") placerPiece();
+        if(notes.some(function(n){ return n.icone === "✅"; })) apEnvoyer(true);
         if(apFenetre) apRouvrir();
       }
     }
@@ -244,6 +245,7 @@ function openCamp(){
   var cap = apCap(), p = apProdJour(), h = '<div class="ap"><h2>🏕️ ' + trad("L’avant-poste") + '</h2>';
   h += '<div class="tuiles t3"><span class="tuile"><b>' + apDefense() + '</b><small>' + trad("défense") + '</small></span><span class="tuile"><b>' + apNiveauTotal() + '</b><small>' + trad("niveaux construits") + '</small></span><span class="tuile"><b>' + apLibres() + ' / ' + AP.plots.length + '</b><small>' + trad("emplacements") + '</small></span></div>';
   if(apMsg){ h += '<p class="msg g2">' + apMsg + '</p>'; apMsg = ""; }
+  h += '<button class="loc ap-carte-b" data-act="apCarte"><b>🗺️ ' + trad("Voir la carte") + '</b><small>' + trad("Les avant-postes des autres survivants et les camps de pillards") + '</small></button>';
   // Le stock à récolter
   var res = AP_RES.filter(function(r){ return p[r] || (APS.acc[r] || 0) >= 1; });
   h += '<p class="titre-butin">📦 ' + trad("À récolter") + ' <small>(' + trad("{n} au plus par ressource", { n:cap }) + ')</small></p>';
@@ -361,6 +363,158 @@ document.addEventListener("click", function(e){
     apDerniereMaj = 0; apOuvrirSlot(apSlotK); if(typeof placerPiece === "function") placerPiece(); return; }
 });
 
+/* ---------- La carte des avant-postes (version 1 : on voit les autres, pas encore de pillage) ----------
+   Secteurs de 512 px posés en spirale autour du centre-ville (secteur 0). Emplacements : AP_SECTEURS.
+   À GARDER IDENTIQUE à worker/avantposte.mjs : AP_SECTEURS et apTypeSecteur(). */
+var AP_SECTEURS = {
+  quartier: [[369, 25], [86, 49], [220, 74], [434, 159], [193, 187], [29, 195], [328, 198], [456, 236], [73, 296], [170, 339], [321, 344], [37, 425], [467, 471], [295, 473]],
+  foret: [[232, 73], [66, 100], [417, 107], [118, 156], [457, 197], [245, 232], [79, 266], [388, 305], [100, 378], [449, 402], [390, 449]],
+  industrie: [[40, 69], [441, 78], [283, 91], [196, 223], [305, 291], [205, 421], [136, 478], [43, 287], [117, 367], [309, 473], [443, 467]],
+  riviere: [[193, 43], [41, 125], [321, 151], [404, 181], [112, 189], [457, 276], [186, 311], [227, 365], [267, 459]],
+  autoroute: [[348, 203], [434, 255], [225, 423], [302, 455], [172, 37], [448, 51], [421, 155], [45, 288], [128, 361], [75, 428]],
+  centre: [[166, 36], [411, 51], [98, 102], [403, 171], [477, 279], [27, 299], [124, 325], [202, 431], [34, 444], [326, 469]]
+};
+var AP_TYPES = ["quartier", "foret", "industrie", "riviere", "autoroute"];
+function apTypeSecteur(s){ return s === 0 ? "centre" : AP_TYPES[(s * 3 + 1) % AP_TYPES.length]; }
+// Position (colonne, ligne) du secteur s sur la spirale
+function apSpirale(s){
+  var x = 0, y = 0, dx = 1, dy = 0, pas = 1, fait = 0, tour = 0;
+  for(var i = 0; i < s; i++){
+    x += dx; y += dy; fait++;
+    if(fait === pas){ fait = 0; var t = dx; dx = -dy; dy = t; tour++; if(tour % 2 === 0) pas++; }
+  }
+  return [x, y];
+}
+function apAnneau(s){ var p = apSpirale(s); return Math.max(Math.abs(p[0]), Math.abs(p[1])); }
+function apAdresse(){ return typeof adresseClassement === "function" ? adresseClassement().replace("/api/classement", "/api/avantposte") : "/api/avantposte"; }
+function apLocal(){ return /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !window.apServeurTest; }
+function apAppel(corps){
+  corps.id = typeof idAppareil === "function" ? idAppareil() : "";
+  if(window.apServeurTest) return window.apServeurTest(corps);
+  if(apLocal()) return Promise.resolve({ erreur:trad("(Test sur l’ordinateur : rien n’est envoyé au serveur.)") });
+  return fetch(apAdresse(), { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify(corps) }).then(function(r){ return r.json(); });
+}
+// Envoi de l'état de son avant-poste (au plus toutes les 10 min, sauf si forcé)
+function apEnvoyer(force){
+  if(!APS.debloque) return Promise.resolve(null);
+  var t = 0; try{ t = +localStorage.getItem("survival_ap_envoi") || 0; }catch(e){}
+  if(!force && Date.now() - t < 600000) return Promise.resolve(null);
+  try{ localStorage.setItem("survival_ap_envoi", String(Date.now())); }catch(e){}
+  var bats = {}; for(var k in APS.plots) if(APS.plots[k].niv) bats[APS.plots[k].id] = APS.plots[k].niv;
+  return apAppel({ action:"maj", pseudo:typeof lirePseudo === "function" ? lirePseudo() : "", avatar:typeof lireAvatar === "function" ? lireAvatar() : "",
+    niv:apNiveauTotal(), def:apDefense(), bats:bats, jour:typeof G !== "undefined" && G ? G.day : 0 }).catch(function(){ return null; });
+}
+
+var apCarteVue = { x:0, y:0, z:0.6 }, apCarteData = null, apCarteSel = null;
+var AP_TAILLE_SECTEUR = 512, AP_TAILLE_REPERE = 92;
+function openCarte(){
+  if(typeof hide === "function") hide();
+  var el = document.getElementById("apCarte");
+  if(!el){ el = document.createElement("div"); el.id = "apCarte"; document.body.appendChild(el); apBrancherCarte(el); }
+  el.innerHTML = '<div class="apc-haut"><b>🗺️ ' + trad("La carte") + '</b><span class="apc-leg"><span><img src="images/avantposte/reperes/moi.webp" alt="">' + trad("Toi") + '</span><span><img src="images/avantposte/reperes/protege.webp" alt="">' + trad("Protégé") + '</span><span><img src="images/avantposte/reperes/pnj.webp" alt="">' + trad("Pillards") + '</span><span><img src="images/avantposte/reperes/ruine.webp" alt="">' + trad("Ruine") + '</span></span><button class="apc-x" data-act="apCarteFermer" aria-label="' + trad("Fermer") + '">✕</button></div>'
+    + '<div class="apc-vue"><div class="apc-monde"></div></div><div class="apc-msg">' + trad("Chargement de la carte…") + '</div><div class="apc-fiche"></div>';
+  el.style.display = "flex"; apCarteSel = null;
+  apEnvoyer(true).then(function(d){ return d && !d.erreur ? d : apAppel({ action:"carte" }); }).then(function(d){
+    apCarteData = d && !d.erreur ? d : null;
+    var msg = el.querySelector(".apc-msg");
+    if(msg) msg.textContent = apCarteData ? "" : (d && d.erreur ? d.erreur + " " : "") + trad("Hors ligne : seule ta base est affichée.");
+    if(msg && !msg.textContent) msg.style.display = "none";
+    apDessinerCarte(true);
+  }).catch(function(){ apCarteData = null; apDessinerCarte(true); var msg = el.querySelector(".apc-msg"); if(msg) msg.textContent = trad("Hors ligne : seule ta base est affichée."); });
+}
+function apReperes(){
+  var D = apCarteData, nS = D ? D.secteurs : 2, L = [];
+  for(var s = 0; s < nS; s++){
+    var A = AP_SECTEURS[apTypeSecteur(s)], ring = apAnneau(s);
+    for(var p = 0; p < A.length; p++) if(s === 0 || p === 0) L.push({ s:s, p:p, pnj:true, niv:4 + 6 * ring + (s === 0 ? 6 : 0) + (p % 3), def:3 + 3 * ring + (s === 0 ? 4 : 0) + (p % 2) });
+  }
+  if(D) D.postes.forEach(function(P){ L.push(P); });
+  else L.push({ s:1, p:1, moi:true, pseudo:typeof lirePseudo === "function" ? lirePseudo() : "", niv:apNiveauTotal(), def:apDefense(), bats:(function(){ var b = {}; for(var k in APS.plots) if(APS.plots[k].niv) b[APS.plots[k].id] = APS.plots[k].niv; return b; })() });
+  return { nS:nS, L:L };
+}
+function apDessinerCarte(centrer){
+  var el = document.getElementById("apCarte"); if(!el) return;
+  var monde = el.querySelector(".apc-monde"), R = apReperes(), h = "";
+  for(var s = 0; s < R.nS; s++){ var q = apSpirale(s);
+    h += '<img class="apc-sect" src="images/avantposte/secteurs/' + apTypeSecteur(s) + '.webp" alt="" style="left:' + (q[0] * AP_TAILLE_SECTEUR) + 'px;top:' + (q[1] * AP_TAILLE_SECTEUR) + 'px" draggable="false">'; }
+  R.L.forEach(function(P, i){
+    var q = apSpirale(P.s), pos = AP_SECTEURS[apTypeSecteur(P.s)][P.p]; if(!pos) return;
+    var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : "protege";
+    var x = q[0] * AP_TAILLE_SECTEUR + pos[0], y = q[1] * AP_TAILLE_SECTEUR + pos[1];
+    h += '<button class="apc-m' + (P.moi ? " moi" : "") + '" data-act="apRepere" data-id="' + i + '" style="left:' + x + 'px;top:' + y + 'px;width:' + AP_TAILLE_REPERE + 'px"><img src="images/avantposte/reperes/' + img + '.webp" alt="" draggable="false">'
+      + (P.pnj ? '' : '<span class="apc-nom">' + apEchap(P.pseudo || trad("Sans pseudo")) + '</span>') + '</button>';
+    if(P.moi) R.moi = [x, y];
+  });
+  monde.innerHTML = h; apCarteData && (apCarteData._L = R.L); if(!apCarteData) apCarteHors = R.L;
+  if(centrer){ var vue = el.querySelector(".apc-vue"), w = vue.clientWidth, hh = vue.clientHeight, c = R.moi || [AP_TAILLE_SECTEUR / 2, AP_TAILLE_SECTEUR / 2];
+    apCarteVue.z = Math.max(0.35, Math.min(1, w / 900)); apCarteVue.x = w / 2 - c[0] * apCarteVue.z; apCarteVue.y = hh / 2 - c[1] * apCarteVue.z; }
+  apAppliquerVue();
+}
+var apCarteHors = null;
+function apEchap(t){ return String(t).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
+function apAppliquerVue(){ var m = document.querySelector("#apCarte .apc-monde"); if(m) m.style.transform = "translate(" + apCarteVue.x + "px," + apCarteVue.y + "px) scale(" + apCarteVue.z + ")"; }
+function apZoom(f, cx, cy){
+  var z = Math.max(0.25, Math.min(1.6, apCarteVue.z * f)); f = z / apCarteVue.z;
+  apCarteVue.x = cx - (cx - apCarteVue.x) * f; apCarteVue.y = cy - (cy - apCarteVue.y) * f; apCarteVue.z = z; apAppliquerVue();
+}
+// Glisser (souris ou doigt), pincer pour zoomer, molette sur PC
+var apGlisse = null, apDoigts = {};
+function apBrancherCarte(el){
+  el.addEventListener("pointerdown", function(e){
+    var vue = e.target.closest(".apc-vue"); if(!vue) return;
+    apDoigts[e.pointerId] = { x:e.clientX, y:e.clientY };
+    apGlisse = { x:e.clientX, y:e.clientY, vx:apCarteVue.x, vy:apCarteVue.y, bouge:0 };
+    try{ vue.setPointerCapture(e.pointerId); }catch(er){}
+  });
+  el.addEventListener("pointermove", function(e){
+    if(!apDoigts[e.pointerId]) return;
+    var ids = Object.keys(apDoigts);
+    if(ids.length >= 2){
+      var a = apDoigts[ids[0]], b = apDoigts[ids[1]], d0 = Math.hypot(a.x - b.x, a.y - b.y);
+      apDoigts[e.pointerId] = { x:e.clientX, y:e.clientY };
+      a = apDoigts[ids[0]]; b = apDoigts[ids[1]];
+      var d1 = Math.hypot(a.x - b.x, a.y - b.y), r = el.querySelector(".apc-vue").getBoundingClientRect();
+      if(d0 > 0) apZoom(d1 / d0, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+      if(apGlisse) apGlisse.bouge = 99; return;
+    }
+    apDoigts[e.pointerId] = { x:e.clientX, y:e.clientY };
+    if(!apGlisse) return;
+    var dx = e.clientX - apGlisse.x, dy = e.clientY - apGlisse.y;
+    apGlisse.bouge = Math.max(apGlisse.bouge, Math.abs(dx) + Math.abs(dy));
+    apCarteVue.x = apGlisse.vx + dx; apCarteVue.y = apGlisse.vy + dy; apAppliquerVue();
+  });
+  var fin = function(e){ delete apDoigts[e.pointerId]; if(!Object.keys(apDoigts).length){ apDernierGlisse = apGlisse ? apGlisse.bouge : 0; apGlisse = null; } };
+  el.addEventListener("pointerup", fin); el.addEventListener("pointercancel", fin);
+  el.addEventListener("wheel", function(e){ if(!e.target.closest(".apc-vue")) return; e.preventDefault(); var r = el.querySelector(".apc-vue").getBoundingClientRect(); apZoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive:false });
+}
+var apDernierGlisse = 0;
+function apFicheRepere(i){
+  var L = apCarteData ? apCarteData._L : apCarteHors, P = L && L[i]; if(!P) return;
+  var el = document.querySelector("#apCarte .apc-fiche"); if(!el) return;
+  var h = '<button class="apc-fx" data-act="apFicheFermer" aria-label="' + trad("Fermer") + '">✕</button>';
+  if(P.pnj){
+    h += '<div class="apc-ft"><img class="apc-fi" src="images/avantposte/reperes/pnj.webp" alt=""><div><b>' + trad("Camp de pillards") + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv, d:P.def }) + '</small></div></div>'
+      + '<p class="apc-fp">' + (P.s === 0 ? trad("Le centre-ville est tenu par les bandes les plus dangereuses.") : trad("Une bande de pillards s’est installée ici.")) + ' ' + trad("Tu pourras l’attaquer avec le mode pillard, bientôt.") + '</p>';
+  } else {
+    var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
+    h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
+    var b = P.bats || {}, ks = Object.keys(b);
+    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
+    h += '<p class="apc-fp">' + (P.moi ? trad("Ton avant-poste. Il est protégé : personne ne peut le piller.") : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine.", { n:P.absent || 30 }) : trad("Avant-poste protégé : il ne peut pas être pillé.")) + '</p>';
+  }
+  el.innerHTML = h; el.classList.add("on");
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest && e.target.closest("[data-act]"); if(!b) return;
+  var a = b.getAttribute("data-act");
+  if(a === "apCarte"){ openCarte(); return; }
+  if(a === "apCarteFermer"){ var el = document.getElementById("apCarte"); if(el) el.style.display = "none"; return; }
+  if(a === "apFicheFermer"){ var f = document.querySelector("#apCarte .apc-fiche"); if(f) f.classList.remove("on"); return; }
+  if(a === "apRepere"){ if(apDernierGlisse > 6){ apDernierGlisse = 0; return; } apFicheRepere(+b.getAttribute("data-id")); return; }
+});
+// Envoi régulier de son avant-poste (au lancement, puis au plus toutes les 10 min quand il change)
+setTimeout(function(){ try{ if(AVANTPOSTE_ACTIF && APS.debloque) apEnvoyer(false); }catch(e){} }, 5000);
+
 /* ---------- Guide du survivant : une règle de plus (thème « Progresser ») ---------- */
 if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
   var apReglesOrigine = reglesGuide;
@@ -415,7 +569,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Une courte pub divise le temps restant par deux · encore {n} aujourd’hui":"A short ad halves the remaining time · {n} left today",
     "Le chantier commence : {b} niveau {n}.":"Construction starts: {b} level {n}.", "Rapporté au refuge : {l}.":"Brought back to the refuge: {l}.",
     "Publicité (simulation)":"Ad (simulation)", "Ici s’affichera plus tard une vraie pub récompensée.":"A real rewarded ad will show here later.",
-    "Pub en cours… {n} s":"Ad playing… {n} s", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
+    "Pub en cours… {n} s":"Ad playing… {n} s", "La carte":"The map", "Toi":"You", "Protégé":"Protected", "Pillards":"Raiders", "Ruine":"Ruin", "Fermer":"Close", "Chargement de la carte…":"Loading the map…", "Hors ligne : seule ta base est affichée.":"Offline: only your base is shown.", "(Test sur l’ordinateur : rien n’est envoyé au serveur.)":"(Testing on the computer: nothing is sent to the server.)", "Sans pseudo":"No username", "Camp de pillards":"Raider camp", "Niveau {n} · défense {d}":"Level {n} · defense {d}", "Le centre-ville est tenu par les bandes les plus dangereuses.":"The city center is held by the most dangerous gangs.", "Une bande de pillards s’est installée ici.":"A raider gang has settled here.", "Tu pourras l’attaquer avec le mode pillard, bientôt.":"You’ll be able to attack it with raider mode, soon.", "toi":"you", "Rien de construit pour l’instant.":"Nothing built yet.", "Ton avant-poste. Il est protégé : personne ne peut le piller.":"Your outpost. It’s protected: nobody can loot it.", "Abandonné depuis {n} jours : c’est une ruine.":"Abandoned for {n} days: it’s a ruin.", "Avant-poste protégé : il ne peut pas être pillé.":"Protected outpost: it can’t be looted.", "Voir la carte":"See the map", "Les avant-postes des autres survivants et les camps de pillards":"Other survivors’ outposts and raider camps", "Récompense prête !":"Reward ready!", "Récupérer la récompense":"Collect the reward", "Chantier accéléré !":"Construction sped up!"
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }

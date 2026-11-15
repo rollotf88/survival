@@ -1145,6 +1145,13 @@ export default {
       if(request.method === "POST") return avisPost(request, env);
       return reponse({ erreur: "méthode" }, 405);
     }
+    // AVANT-POSTE : la carte des avant-postes (module à part : worker/avantposte.mjs)
+    if(url.pathname === "/api/avantposte"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST"){ const M = await import("./avantposte.mjs"); return M.avantpostePost(request, env, { reponse, texteInterdit, nomPropre, avatarDe }); }
+      return reponse({ erreur: "méthode" }, 405);
+    }
     if(url.pathname === "/api/monde"){
       if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
       if(request.method === "OPTIONS") return onRequestOptions();
