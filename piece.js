@@ -633,7 +633,7 @@ document.addEventListener("click", function(e){
    niveau de barricade (1, 2, 3). La cuisine et la chambre étaient déjà barricadées sur l'image d'origine : leur
    niveau 0 est une vitre propre. Toucher une fenêtre ouvre la fiche de la barricade. Images : images/barricades/. */
 var BARRICADES = { salon:[[0, 158, 198, 612]], cuisine:[[348, 172, 682, 462]], chambre:[[0, 172, 178, 452]],
-  reserve:[[640, 55, 842, 232], [858, 55, 1024, 312]], atelier:[[8, 172, 178, 432]] };
+  reserve:[[609, 24, 1024, 347]] /* une seule découpe qui suit les planches (2026-11-15, retour de Fabien : les deux rectangles coupaient les planches) */, atelier:[[8, 172, 178, 432]] };
 var BARRICADE_NIV0 = { cuisine:1, chambre:1 };
 // zone touchable de chaque fenêtre (plus petite que la découpe, pour ne pas gêner les autres zones)
 var FENETRES = { salon:[0, 185, 110, 420], cuisine:[370, 200, 650, 440], chambre:[0, 185, 150, 435], reserve:[650, 120, 1010, 300], atelier:[25, 190, 160, 335] };
