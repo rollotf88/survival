@@ -450,8 +450,15 @@ function apReperes(){
 function apDessinerCarte(centrer){
   var el = document.getElementById("apCarte"); if(!el) return;
   var monde = el.querySelector(".apc-monde"), R = apReperes(), h = "";
-  for(var s = 0; s < R.nS; s++){ var q = apSpirale(s);
-    h += '<img class="apc-sect" src="images/avantposte/secteurs/' + apTypeSecteur(s) + '.webp" alt="" style="left:' + (q[0] * AP_TAILLE_SECTEUR) + 'px;top:' + (q[1] * AP_TAILLE_SECTEUR) + 'px" draggable="false">'; }
+  // Les vrais secteurs, puis une couronne de secteurs « dans la brume » (assombris, sans emplacement) pour remplir la scène
+  var x0 = 0, y0 = 0, x1 = 0, y1 = 0, pris = {};
+  for(var s = 0; s < R.nS; s++){ var q = apSpirale(s); pris[q[0] + ":" + q[1]] = s;
+    x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); }
+  x0 -= 3; y0 -= 3; x1 += 3; y1 += 3; // 3 secteurs de brume tout autour : un rectangle plein
+  for(var gy = y0; gy <= y1; gy++) for(var gx = x0; gx <= x1; gx++){
+    var vrai = pris[gx + ":" + gy], typ = vrai != null ? apTypeSecteur(vrai) : AP_TYPES[Math.abs(gx * 7 + gy * 13) % AP_TYPES.length];
+    h += '<img class="apc-sect' + (vrai != null ? "" : " brume") + '" src="images/avantposte/secteurs/' + typ + '.webp" alt="" style="left:' + (gx * AP_TAILLE_SECTEUR) + 'px;top:' + (gy * AP_TAILLE_SECTEUR) + 'px" draggable="false">'; }
+  apBornes = { x0:x0 * AP_TAILLE_SECTEUR, y0:y0 * AP_TAILLE_SECTEUR, x1:(x1 + 1) * AP_TAILLE_SECTEUR, y1:(y1 + 1) * AP_TAILLE_SECTEUR };
   R.L.forEach(function(P, i){
     var q = apSpirale(P.s), pos = AP_SECTEURS[apTypeSecteur(P.s)][P.p]; if(!pos) return;
     var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : P.pillard ? "pillard" : "protege";
@@ -467,7 +474,16 @@ function apDessinerCarte(centrer){
 }
 var apCarteHors = null;
 function apEchap(t){ return String(t).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
-function apAppliquerVue(){ var m = document.querySelector("#apCarte .apc-monde"); if(m) m.style.transform = "translate(" + apCarteVue.x + "px," + apCarteVue.y + "px) scale(" + apCarteVue.z + ")"; }
+var apBornes = null;
+// On ne peut pas faire glisser la carte dans le vide, ni dézoomer au point d'en voir le bord
+function apBorner(){
+  var v = document.querySelector("#apCarte .apc-vue"); if(!v || !apBornes) return;
+  var w = v.clientWidth, h = v.clientHeight, B = apBornes, Z = apCarteVue;
+  Z.z = Math.max(Z.z, w / (B.x1 - B.x0), h / (B.y1 - B.y0));
+  Z.x = Math.min(-B.x0 * Z.z, Math.max(w - B.x1 * Z.z, Z.x));
+  Z.y = Math.min(-B.y0 * Z.z, Math.max(h - B.y1 * Z.z, Z.y));
+}
+function apAppliquerVue(){ apBorner(); var m = document.querySelector("#apCarte .apc-monde"); if(m) m.style.transform = "translate(" + apCarteVue.x + "px," + apCarteVue.y + "px) scale(" + apCarteVue.z + ")"; }
 function apZoom(f, cx, cy){
   var z = Math.max(0.25, Math.min(1.6, apCarteVue.z * f)); f = z / apCarteVue.z;
   apCarteVue.x = cx - (cx - apCarteVue.x) * f; apCarteVue.y = cy - (cy - apCarteVue.y) * f; apCarteVue.z = z; apAppliquerVue();

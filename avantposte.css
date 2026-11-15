@@ -105,3 +105,8 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 #apCarte.dans-scene .apc-haut{padding-top:6px;padding-bottom:6px}
 #apCarte.dans-scene .apc-haut > b{font-size:20px}
 #apCarte.dans-scene .apc-fiche{bottom:8px}
+
+/* La fiche cachée ne doit pas dépasser sous la carte ; secteurs « dans la brume » autour des vrais */
+#apCarte{overflow:hidden}
+.apc-fiche:not(.on){visibility:hidden}
+.apc-sect.brume{filter:brightness(.42) saturate(.55) blur(1px)}
