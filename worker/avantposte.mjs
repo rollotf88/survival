@@ -16,7 +16,7 @@ export const AP_SECTEURS = {
 };
 const TYPES = ["quartier", "foret", "industrie", "riviere", "autoroute"];
 export function typeSecteur(s){ return s === 0 ? "centre" : TYPES[(s * 3 + 1) % TYPES.length]; }
-const BATS_OK = ["citerne", "serre", "scierie", "palissade", "entrepot", "infirmerie", "forge", "radio", "tour", "garage", "planque", "pieges", "charrette", "siege"];
+const BATS_OK = ["citerne", "serre", "scierie", "palissade", "entrepot", "infirmerie", "forge", "radio", "tour", "garage", "planque", "pieges", "charrette", "siege", "chenil"];
 const JOUR = 86400000, RUINE = 30 * JOUR, OUBLI = 60 * JOUR;
 // Mode pillard : on ne peut piller (et être pillé) que si on l'a activé ; engagement de 3 jours relancé à chaque attaque ;
 // 24 h de bouclier après avoir été pillé ; 10 à 20 % du stock non récolté (moins la planque), plafonné par la charrette.

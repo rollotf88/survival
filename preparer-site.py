@@ -33,4 +33,11 @@ version = "survival-" + time.strftime("%Y%m%d-%H%M")
 sw = open("site/sw.js", encoding="utf-8").read()
 sw = re.sub(r'var VERSION = "[^"]*";', 'var VERSION = "' + version + '";', sw)
 open("site/sw.js", "w", encoding="utf-8").write(sw)
+# Numéro de version sur les scripts et styles de la page (2026-11-16) : le navigateur est obligé de les recharger
+# à chaque mise à jour, même s'il garde une vieille copie en mémoire
+v = time.strftime("%Y%m%d%H%M")
+for page in ("site/index.html",):
+    h = open(page, encoding="utf-8").read()
+    h = re.sub(r'(src|href)="((?!https?:|//)[^"?]+\.(?:js|css))"', lambda m: m.group(1) + '="' + m.group(2) + '?v=' + v + '"', h)
+    open(page, "w", encoding="utf-8").write(h)
 print("Dossier site prêt (" + version + ")")
