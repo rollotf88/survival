@@ -283,32 +283,37 @@ function apEffet(id, n){
 function apImg(id, n){ return '<img class="ap-img" src="images/avantposte/bat4/' + id + "-" + apStade(n || 1) + '.webp" alt="">'; }
 
 function openCamp(){
+  // Mise en page refaite le 2026-11-16 (retour de Fabien « assez moche ») : bandeau illustré avec statut et chiffres, blocs en cartes
   apMaj(); apFenetre = "camp";
-  var cap = apCap(), p = apProdJour(), h = '<div class="ap"><h2>🏕️ ' + trad("L’avant-poste") + '</h2>';
-  h += '<div class="tuiles t3"><span class="tuile"><b>' + apDefense() + '</b><small>' + trad("défense") + '</small></span><span class="tuile"><b>' + apNiveauTotal() + '</b><small>' + trad("niveaux construits") + '</small></span><span class="tuile"><b>' + apLibres() + ' / ' + AP.plots.length + '</b><small>' + trad("emplacements") + '</small></span></div>';
+  var cap = apCap(), p = apProdJour(), pill = apPillard();
+  var h = '<div class="ap apx">';
+  h += '<div class="apx-tete"><img src="images/vitrine-avantposte.webp" alt=""><div class="apx-tete-t"><h2>🏕️ ' + trad("L’avant-poste") + '</h2>'
+    + '<span class="apx-statut' + (pill ? " pill" : "") + '">' + (pill ? "🏴 " + trad("Pillard") : "🛡️ " + trad("Protégé")) + '</span></div>'
+    + '<div class="apx-chiffres"><span><b>' + apDefense() + '</b><small>' + trad("défense") + '</small></span><span><b>' + apNiveauTotal() + '</b><small>' + trad("niveaux") + '</small></span><span><b>' + apLibres() + '<i>/' + AP.plots.length + '</i></b><small>' + trad("emplacements") + '</small></span></div></div>';
   if(apMsg){ h += '<p class="msg g2">' + apMsg + '</p>'; apMsg = ""; }
   h += '<button class="ap-carte-big ap-carte-b" data-act="apCarte"><img src="images/avantposte/secteurs/quartier.webp" alt=""><span class="ap-cb-t"><b>🗺️ ' + trad("Ouvrir la carte") + '</b><small>' + trad("Les avant-postes des autres survivants et les camps de pillards") + '</small></span><span class="ap-cb-f">›</span></button>';
-  // Le stock à récolter
+  // La récolte
   var res = AP_RES.filter(function(r){ return p[r] || (APS.acc[r] || 0) >= 1; });
-  h += '<p class="titre-butin">📦 ' + trad("À récolter") + ' <small>(' + trad("{n} au plus par ressource", { n:cap }) + ')</small></p>';
+  h += '<div class="apx-bloc"><div class="apx-bt"><span>📦 ' + trad("À récolter") + '</span><small>' + trad("{n} au plus", { n:cap }) + '</small></div>';
   if(!res.length) h += '<p class="ap-note">' + trad("Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.") + '</p>';
   else {
-    h += '<div class="ap-stock">' + res.map(function(r){ var v = Math.floor(APS.acc[r] || 0);
-      return '<span class="ap-res' + (v >= cap ? " plein" : "") + '"><span class="ap-res-i">' + apIcoRes(r) + '</span><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small>' + (AP_GARDE.indexOf(r) >= 0 ? '<i class="ap-ici">' + trad("reste ici") + '</i>' : '') + '</span>'; }).join("") + '</div>';
+    h += '<div class="apx-res">' + res.map(function(r){ var v = Math.floor(APS.acc[r] || 0), ici = AP_GARDE.indexOf(r) >= 0;
+      return '<span class="apx-r' + (v >= cap ? " plein" : "") + (ici ? " ici" : "") + '"><span class="apx-ri">' + apIcoRes(r) + '</span><span class="apx-rt"><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small></span>' + (ici ? '<i>' + trad("reste ici") + '</i>' : '') + '</span>'; }).join("") + '</div>';
     var cr = apCredit(), peut = res.some(function(r){ return AP_GARDE.indexOf(r) < 0 && (APS.acc[r] || 0) >= 1 && (AP_RAPPORT[r] == null || (cr[r] || 0) >= 1); });
     var lim = Object.keys(AP_RAPPORT).filter(function(r){ return res.indexOf(r) >= 0; }).map(function(r){ var n = Math.floor(cr[r] || 0);
-      return apIcoRes(r) + " " + (n >= 1 ? trad("encore {n}", { n:n }) : trad("dans {n} j", { n:Math.ceil((1 - (cr[r] || 0)) / AP_RAPPORT[r]) })); });
-    h += '<div class="ap-vers"><span>🧺 ' + trad("Vers le refuge") + '</span>' + lim.map(function(t){ return '<b class="ap-pas">' + t + '</b>'; }).join("") + '<small>' + trad("3 eau et 3 repas tous les 4 jours") + '</small></div>';
-    if(res.some(function(r){ return AP_GARDE.indexOf(r) >= 0; })) h += '<p class="ap-note">' + trad("Le reste sert ici : chantiers, soins et essence des pillages.") + '</p>';
-    h += '<button class="btn" style="width:100%" data-act="apRecolter"' + (peut && apEnJeu() ? "" : " disabled") + '>' + (apEnJeu() ? (peut ? "🧺 " + trad("Récolter pour le refuge") : trad("Rien à récolter")) : trad("Pendant une partie seulement")) + '</button>';
+      return '<b class="ap-pas">' + apIcoRes(r) + " " + (n >= 1 ? trad("encore {n}", { n:n }) : trad("dans {n} j", { n:Math.ceil((1 - (cr[r] || 0)) / AP_RAPPORT[r]) })) + '</b>'; });
+    if(lim.length) h += '<div class="apx-vers"><span>🧺 ' + trad("Vers le refuge") + '</span>' + lim.join("") + '</div>';
+    h += '<button class="btn apx-recolte" data-act="apRecolter"' + (peut && apEnJeu() ? "" : " disabled") + '>' + (apEnJeu() ? (peut ? "🧺 " + trad("Récolter pour le refuge") : trad("Rien à récolter")) : trad("Pendant une partie seulement")) + '</button>';
     if(res.some(function(r){ return (APS.acc[r] || 0) >= cap; })) h += '<p class="ap-note">⚠️ ' + trad("Une ressource est pleine : sa production est arrêtée. Récolte ou agrandis l’entrepôt.") + '</p>';
+    else h += '<p class="ap-note">' + trad("3 eau et 3 repas tous les 4 jours. Le reste sert ici : chantiers, soins et essence des pillages.") + '</p>';
   }
+  h += '</div>';
   // Le chantier
   if(APS.chantier){ var C = APS.chantier;
-    h += '<p class="titre-butin">🔨 ' + trad("Chantier") + '</p><button class="loc" data-act="apSlot' + C.k + '"><b>' + trad("{b} niveau {n}", { b:trad(AP_BAT[C.id].nom), n:C.niv }) + '</b><small>' + trad("Fini dans {t}", { t:apFmt(C.fin - Date.now()) }) + '</small></button>'; }
+    h += '<button class="apx-bloc apx-chantier" data-act="apSlot' + C.k + '">' + apImg(C.id, C.niv) + '<span><small>🔨 ' + trad("Chantier") + '</small><b>' + trad("{b} niveau {n}", { b:trad(AP_BAT[C.id].nom), n:C.niv }) + '</b><small>⏱ ' + trad("Fini dans {t}", { t:apFmt(C.fin - Date.now()) }) + '</small></span><span class="ap-cb-f">›</span></button>'; }
   h += '<div class="ap-pill-place"></div>';
   // Les attaques
-  h += '<p class="titre-butin">⚔️ ' + trad("Attaques") + '</p>';
+  h += '<div class="apx-bloc"><div class="apx-bt"><span>⚔️ ' + trad("Attaques") + '</span></div>';
   h += APS.log.length ? '<div class="ap-log">' + APS.log.slice(0, 5).map(function(L){
     var pertes = Object.keys(L.pertes || {}).filter(function(r){ return L.pertes[r] > 0; }).map(function(r){ return "−" + apNomRes(r, L.pertes[r]).replace(/^(une?|an?) /, "1 "); }).join(", ");
     var qui = apEchap(L.par || trad("Un pillard"));
@@ -319,8 +324,9 @@ function openCamp(){
     if(!L.ok) detail.push(pertes || trad("il n’y avait rien à prendre"));
     return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt"><b>' + titre + '</b><small class="ap-lj-d">' + detail.join(" · ") + '</small></span></div>'; }).join("") + '</div>'
     : '<p class="ap-note">' + trad("Aucune attaque pour l’instant. Toutes les 8 h, des zombies ou des pillards peuvent venir : palissade, tour et pièges le défendent.") + '</p>';
-  if(APS.log.length && !apDefense() && APS.log.slice(0, 5).some(function(L){ return !L.ok; })) h += '<p class="ap-note ap-conseil">🧱 ' + trad("Ton camp n’a aucune défense : une palissade, une tour de guet ou des pièges repoussent les attaques.") + '</p>';
-  h += '<p class="ap-note">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille.") + '</p>';
+  if(APS.log.length && !apDefense() && APS.log.slice(0, 5).some(function(L){ return !L.ok; })) h += '<p class="msg b2 apx-conseil">🧱 ' + trad("Ton camp n’a aucune défense : une palissade, une tour de guet ou des pièges repoussent les attaques.") + '</p>';
+  h += '</div>';
+  h += '<p class="ap-note apx-pied">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille.") + '</p>';
   show(h + '</div>' + BTN_FERMER());
 }
 function apQuand(t){ var m = Math.round((Date.now() - t) / 60000); return m < 60 ? trad("il y a {n} min", { n:Math.max(1, m) }) : m < 1440 ? trad("il y a {n} h", { n:Math.round(m / 60) }) : trad("il y a {n} j", { n:Math.round(m / 1440) }); }
@@ -680,23 +686,23 @@ apEffet = function(id, n){
 
 /* Bloc « Mode pillard » de la fenêtre du camp */
 function apBlocPillard(){
-  var h = '<p class="titre-butin">🏴 ' + trad("Mode pillard") + '</p>';
+  var h = '<div class="apx-bloc apx-pill' + (apPillard() ? " on" : "") + '">';
   if(!apPillard()){
     var vieux = apAssezVieux();
-    h += '<p class="ap-note">' + trad("Tu es protégé : personne ne peut piller ton avant-poste. Les camps de pillards de la carte s’attaquent à tout moment. En mode pillard, tu peux aussi piller les autres joueurs pillards et les ruines, et ta production monte de 25 %… mais d’autres pillards peuvent te piller.") + '</p>'
-      + '<button class="loc" data-act="apPillardOn"' + (vieux ? '' : ' disabled') + '><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + (vieux ? trad("Engagement de 3 jours, relancé à chaque attaque") : trad("Après {n} jours de survie de ta famille", { n:AP_JOUR_PVP })) + '</small></button>';
+    h += '<div class="apx-pt"><span class="apx-pi">🛡️</span><span><b>' + trad("Mode protégé") + '</b><small>' + trad("Personne ne peut te piller. Les camps de pillards de la carte s’attaquent quand tu veux.") + '</small></span></div>'
+      + '<button class="loc" data-act="apPillardOn"' + (vieux ? '' : ' disabled') + '><b>🏴 ' + trad("Passer en mode pillard") + '</b><small>' + (vieux ? trad("+25 % de production, piller les autres pillards · 3 jours au moins") : trad("Après {n} jours de survie de ta famille", { n:AP_JOUR_PVP })) + '</small></button>';
   } else {
     var reste = (APS.pillard.engage || 0) - Date.now();
-    h += '<p class="ap-note ap-pill-on">🏴 ' + trad("Mode pillard actif : +25 % de production, mais tu peux être pillé.") + '</p>'
-      + '<button class="loc" data-act="apPillardOff"' + (reste > 0 ? " disabled" : "") + '><b>🛡️ ' + trad("Revenir en mode protégé") + '</b><small>' + (reste > 0 ? trad("Engagé encore {t}", { t:apFmt(reste) }) : trad("Possible maintenant")) + '</small></button>';
+    h += '<div class="apx-pt"><span class="apx-pi">🏴</span><span><b>' + trad("Mode pillard") + '</b><small>' + trad("+25 % de production, mais d’autres pillards peuvent te piller.") + '</small></span></div>'
+      + '<button class="loc" data-act="apPillardOff"' + (reste > 0 ? " disabled" : "") + '><b>🛡️ ' + trad("Revenir en mode protégé") + '</b><small>' + (reste > 0 ? trad("Possible dans {t}", { t:apFmt(reste) }) : trad("Possible maintenant")) + '</small></button>';
   }
-  return h;
+  return h + '</div>';
 }
 var openCampBase = openCamp;
 openCamp = function(){
   openCampBase();
   var sheet = document.getElementById("sheet"), place = sheet && sheet.querySelector(".ap-pill-place");
-  if(place) place.outerHTML = '<div class="ap-pill">' + apBlocPillard() + '</div>';
+  if(place) place.outerHTML = apBlocPillard();
 };
 function apConfirmerPillard(){
   show('<div class="ap"><h2>🏴 ' + trad("Passer en mode pillard ?") + '</h2><p>' + trad("Tu pourras piller les autres joueurs pillards et les ruines, et ta production montera de 25 %.") + '</p>'
@@ -879,6 +885,11 @@ if(typeof TRADUCTIONS !== "undefined"){
     "L’avant-poste":"The outpost", "défense":"defense", "niveaux construits":"levels built", "emplacements":"plots",
     "À récolter":"To harvest", "{n} au plus par ressource":"{n} max per resource",
     "Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.":"Nothing yet: build a cistern, a greenhouse or a sawmill to produce.",
+    "Pillard":"Raider", "Protégé":"Protected", "niveaux":"levels", "{n} au plus":"{n} max", "Mode protégé":"Protected mode",
+    "3 eau et 3 repas tous les 4 jours. Le reste sert ici : chantiers, soins et essence des pillages.":"3 water and 3 meals every 4 days. The rest is used here: building, healing and fuel for raids.",
+    "Personne ne peut te piller. Les camps de pillards de la carte s’attaquent quand tu veux.":"No one can raid you. Raider camps on the map can be attacked whenever you like.",
+    "+25 % de production, piller les autres pillards · 3 jours au moins":"+25% production, raid other raiders · 3 days minimum",
+    "+25 % de production, mais d’autres pillards peuvent te piller.":"+25% production, but other raiders can raid you.", "Possible dans {t}":"Possible in {t}",
     "Récolter pour le refuge":"Harvest for the refuge", "Rien à récolter":"Nothing to harvest", "Pendant une partie seulement":"During a game only",
     "Une ressource est pleine : sa production est arrêtée. Récolte ou agrandis l’entrepôt.":"A resource is full: its production has stopped. Harvest or upgrade the storehouse.",
     "Fini dans {t}":"Done in {t}", "force {f} contre défense {d}":"strength {f} vs defense {d}", "Attaques":"Attacks", "repoussée":"repelled", "perdue":"lost",
