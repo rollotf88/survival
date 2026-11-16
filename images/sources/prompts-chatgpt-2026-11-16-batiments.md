@@ -25,3 +25,7 @@ Image 1 = 8 bâtiments (4 lignes), image 2 = 6 bâtiments (3 lignes).
 
 ## Ensuite (Claude)
 Découpe des 42 bâtiments (fond vert), mêmes noms de fichiers qu'aujourd'hui (`images/avantposte/<bâtiment>-1|3|5.webp`) : le jeu les prend sans autre changement ; contrôle de la taille de chacun sur les 15 enclos.
+
+## Image 3 : le terrain sans les enclos (pour effacer l'enclos sous un bâtiment terminé)
+À joindre : `images/sources/avantposte/terrain-vide.png`
+> Reprends EXACTEMENT cette image, au pixel près, même cadrage et même taille (1024 × 1024). Retire seulement les 15 enclos rectangulaires (les bordures de pierres et leurs petits piquets en bois) et remplace-les par le même sol de terre battue et d'herbe sèche que tout autour, comme s'ils n'avaient jamais existé. Ne change RIEN d'autre : le feu de camp, les rondins, le chemin, les clôtures, les arbres, les maisons, les voitures et les cailloux restent identiques et à la même place.
