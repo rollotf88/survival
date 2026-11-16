@@ -29,3 +29,8 @@ Découpe des 42 bâtiments (fond vert), mêmes noms de fichiers qu'aujourd'hui (
 ## Image 3 : le terrain sans les enclos (pour effacer l'enclos sous un bâtiment terminé)
 À joindre : `images/sources/avantposte/terrain-vide.png`
 > Reprends EXACTEMENT cette image, au pixel près, même cadrage et même taille (1024 × 1024). Retire seulement les 15 enclos rectangulaires (les bordures de pierres et leurs petits piquets en bois) et remplace-les par le même sol de terre battue et d'herbe sèche que tout autour, comme s'ils n'avaient jamais existé. Ne change RIEN d'autre : le feu de camp, les rondins, le chemin, les clôtures, les arbres, les maisons, les voitures et les cailloux restent identiques et à la même place.
+
+## Image 4 : le chenil (15e bâtiment, choix de Fabien le 2026-11-16)
+À joindre : `images/sources/avantposte/batiments-planche1-chatgpt.webp` (la planche déjà faite, comme modèle exact de style et de taille)
+> Ajoute UN nouveau bâtiment dans EXACTEMENT le même style, la même taille, le même angle de vue et le même petit carré de terre que les bâtiments de l'image jointe. Format paysage, fond vert uni #00FF00, une seule ligne de 3 cases de même taille, chaque bâtiment centré avec une large marge de vert autour, sans ombre portée sur le vert, aucun texte, aucun personnage.
+> CHENIL : niche en planches de récupération avec une gamelle et un chien couché devant → chenil en bois avec un petit enclos grillagé et deux chiens → grand chenil fortifié en bois et tôle avec trois chiens de garde, un toit, des gamelles et une clôture.
