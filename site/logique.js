@@ -92,7 +92,14 @@ function etatLieu(L, b){ var l = { butin:b }; if(L.peche) l.poissons = BAL.peche
 // Litres encore dans la cuve de la station (les anciennes parties n'avaient pas de cuve : elle est pleine)
 function cuveLieu(i){ var l = G.lieux[i]; if(!LIEUX[i].cuve) return 0; if(l.essence === undefined) l.essence = BAL.station.litres; return l.essence; }
 // Anciennes sauvegardes (avant l'étang) : on insère l'étang à sa place dans la liste des lieux
+// Prénom laissé par défaut = il suit la langue du jeu (« Mom » redevient « Maman » en français) ; un prénom choisi ne change pas (2026-11-16)
+var PRENOMS_DEFAUT = { "Papa":["Papa", "Dad"], "Maman":["Maman", "Mom"] };
+function prenomsSelonLangue(g){
+  var conv = function(o){ var r = o && o.r, L = r && PRENOMS_DEFAUT[r]; if(L && L.indexOf(o.n != null ? o.n : o.nom) >= 0){ var v = typeof prenomDefaut === "function" ? prenomDefaut(r) : r; if(o.n != null) o.n = v; else o.nom = v; } };
+  (g.m || []).forEach(conv); (g.dd || []).forEach(conv);
+}
 function migrerPartie(g){
+  prenomsSelonLangue(g);
   var ie = LIEUX.findIndex(function(L){ return L.peche; });
   if(g.lieux && g.lieux.length === LIEUX_AVANT_ETANG){
     var b = []; for(var id in LIEUX[ie].butin) for(var k = 0; k < LIEUX[ie].butin[id]; k++) b.push(id);

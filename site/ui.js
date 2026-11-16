@@ -1397,7 +1397,7 @@ function rIntro(){
 // Noms et traits de la dernière famille (gardés dans le navigateur)
 function familleRetenue(){
   var f = null; try{ f = JSON.parse(localStorage.getItem("survival_famille")); }catch(e){}
-  return FAMILLE.map(function(m, k){ var c = f && f[k] || {}; return { nom:c.nom && c.nom !== m.nom ? c.nom : (typeof prenomDefaut === "function" ? prenomDefaut(m.nom) : m.nom), trait:TRAITS[c.trait] ? c.trait : m.trait }; });
+  return FAMILLE.map(function(m, k){ var c = f && f[k] || {}; return { nom:c.nom && !(PRENOMS_DEFAUT[m.nom] && PRENOMS_DEFAUT[m.nom].indexOf(c.nom) >= 0) && c.nom !== m.nom ? c.nom : (typeof prenomDefaut === "function" ? prenomDefaut(m.nom) : m.nom), trait:TRAITS[c.trait] ? c.trait : m.trait }; });
 }
 function texteTrait(t){ var T = TRAITS[t]; return '<span class="plus">+ ' + T.plus + '</span><span class="moins">− ' + T.moins + '</span>'; }
 function rFamille(){
