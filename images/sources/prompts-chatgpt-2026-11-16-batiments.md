@@ -1,44 +1,27 @@
-# Bâtiments de l'avant-poste pour ChatGPT (2026-11-16) : 5 images en grille
+# Bâtiments de l'avant-poste pour ChatGPT (2026-11-16) : 2 images seulement
 
-Chaque image = une grille de 3 colonnes (niveau 1, niveau 3, niveau 5) × 3 lignes (3 bâtiments), sur fond vert uni.
-14 bâtiments → 5 images (3 + 3 + 3 + 3 + 2).
+Chaque image = format paysage, grille de 6 colonnes × 4 lignes (24 cases). Chaque ligne contient 2 bâtiments : colonnes 1-2-3 = bâtiment A (niveaux 1, 3, 5), colonnes 4-5-6 = bâtiment B (niveaux 1, 3, 5).
+Image 1 = 8 bâtiments (4 lignes), image 2 = 6 bâtiments (3 lignes).
 
-## À joindre à chaque image
+## À joindre aux deux images
 `images/sources/avantposte/batiments-terrain-4-gemini.jpg` (modèle de style, d'angle et de lumière)
 
-## Début commun (à copier au début de chaque demande)
-> Crée une planche de sprites pour un jeu mobile de survie, dans EXACTEMENT le style de l'image jointe : dessin cartoon peint à la main, contours brun foncé épais, couleurs chaudes et un peu passées, lumière qui vient du haut à gauche, vue de trois quarts légèrement en plongée (comme les bâtiments de l'image jointe).
-> Format carré. Fond vert uni #00FF00 partout. Grille invisible de 3 colonnes et 3 lignes : chaque case contient UN seul bâtiment, centré, entièrement visible, avec une large marge de vert autour, sans jamais toucher le bord de sa case ni un autre bâtiment. Chaque bâtiment est posé sur un petit carré de terre battue. Pas d'ombre portée sur le vert, pas de texte, pas de cadre, pas de personnage. Monde post-apocalyptique sans électricité (bois, tôle rouillée, bâches, cordes, récupération).
-> Colonne de gauche = niveau 1 (petit, de fortune), colonne du milieu = niveau 3 (solide), colonne de droite = niveau 5 (grand, renforcé, impressionnant). Même taille de case pour tous ; le niveau 5 peut être plus grand mais doit rester dans sa case.
+## Image 1 (à copier telle quelle)
+> Crée une planche de sprites pour un jeu mobile de survie, dans EXACTEMENT le style de l'image jointe : dessin cartoon peint à la main, contours brun foncé épais, couleurs chaudes et un peu passées, lumière du haut à gauche, vue de trois quarts légèrement en plongée comme les bâtiments de l'image jointe.
+> Format paysage. Fond vert uni #00FF00 partout. Grille invisible de 6 colonnes et 4 lignes, toutes les cases de la même taille : chaque case contient UN seul petit bâtiment, centré, entièrement visible, avec une marge de vert tout autour, sans toucher le bord de sa case ni un voisin. Chaque bâtiment est posé sur un petit carré de terre battue. Pas d'ombre portée sur le vert, pas de texte, pas de cadre, pas de personnage. Monde post-apocalyptique sans électricité (bois, tôle rouillée, bâches, cordes, récupération).
+> Dans chaque ligne : colonnes 1, 2, 3 = premier bâtiment au niveau 1 (petit, de fortune), niveau 3 (solide), niveau 5 (grand, renforcé) ; colonnes 4, 5, 6 = second bâtiment aux mêmes 3 niveaux.
+> Ligne 1 : CITERNE (tonneaux reliés par une bâche → cuve en bois cerclée de fer sur un socle → château d'eau en bois et fer sur pieds) puis SERRE (bâche transparente sur des bacs de légumes → serre en bois et plastique → grande serre vitrée pleine de plantes).
+> Ligne 2 : SCIERIE (billot avec une hache plantée et des bûches → cabane avec une grande scie à manivelle → scierie couverte avec piles de planches) puis PALISSADE (quelques planches clouées en barrière → palissade de rondins pointus → rempart en rondins et tôle avec chemin de ronde).
+> Ligne 3 : ENTREPÔT (caisses sous une bâche → cabane de planches → grand entrepôt en tôle avec grande porte) puis INFIRMERIE (bâche tendue avec lit de camp et caisse à croix rouge → cabane de planches avec drapeau à croix rouge → infirmerie en tôle avec drapeau et armoire à pharmacie).
+> Ligne 4 : FORGE (enclume sur un billot et petit foyer de pierres → forge avec cheminée en pierre et soufflet → forge avec haute cheminée en briques et outils) puis POSTE RADIO (vieille radio sur une caisse avec antenne bricolée → cabane radio avec grande antenne → poste radio avec antenne parabolique et pylône).
 
-## Image 1
-> [Début commun]
-> Ligne 1 — CITERNE : tonneaux reliés par une bâche qui récupère la pluie → cuve en bois cerclée de fer sur un socle → grand château d'eau en bois et fer sur pieds.
-> Ligne 2 — SERRE : bâche transparente sur quelques bacs de légumes → serre en bois et plastique avec rangées de légumes → grande serre vitrée pleine de plantes.
-> Ligne 3 — SCIERIE : billot avec une hache plantée et un tas de bûches → cabane avec une grande scie circulaire à manivelle → grande scierie couverte avec piles de planches.
-
-## Image 2
-> [Début commun]
-> Ligne 1 — PALISSADE : quelques planches clouées en barrière → palissade de rondins pointus → rempart en rondins et tôle avec chemin de ronde.
-> Ligne 2 — ENTREPÔT : caisses empilées sous une bâche → cabane de planches → grand entrepôt en tôle avec une grande porte.
-> Ligne 3 — INFIRMERIE : bâche tendue avec un lit de camp et une caisse à croix rouge → cabane de planches avec un drapeau à croix rouge → infirmerie en tôle et planches avec drapeau, lits et armoire à pharmacie.
-
-## Image 3
-> [Début commun]
-> Ligne 1 — FORGE : enclume sur un billot et petit foyer de pierres → forge avec cheminée en pierre et soufflet → forge avec haute cheminée en briques et râtelier d'outils.
-> Ligne 2 — POSTE RADIO : vieille radio posée sur une caisse avec une antenne bricolée → cabane radio avec une grande antenne en métal → poste radio avec antenne parabolique bricolée et pylône.
-> Ligne 3 — TOUR DE GUET : grand poteau avec une échelle et une petite plate-forme → tour en bois sur quatre pieds avec un toit → haute tour blindée de tôle avec sacs de sable et une grosse lanterne.
-
-## Image 4
-> [Début commun]
-> Ligne 1 — GARAGE : bâche avec jerricans et quelques outils → abri en tôle avec établi et pneus → grand garage en tôle avec une vieille camionnette sur un pont.
-> Ligne 2 — PLANQUE : trappe en planches dans le sol → trappe renforcée entourée de sacs de sable → bunker enterré avec porte blindée et filet de camouflage.
-> Ligne 3 — PIÈGES : quelques pieux taillés et un piège à mâchoires → fosse à pieux et pièges à mâchoires → champ de pièges avec pieux, mâchoires et fil barbelé.
-
-## Image 5 (2 lignes seulement)
-> [Début commun, en remplaçant « 3 lignes » par « 2 lignes »]
-> Ligne 1 — CHARRETTE : brouette en métal rouillé → charrette en bois à deux roues chargée de caisses → grand chariot blindé à quatre roues chargé de butin.
-> Ligne 2 — ATELIER DE SIÈGE : établi avec un petit bélier en bois → bélier sur roues → bélier blindé sur roues avec une petite catapulte.
+## Image 2 (à copier telle quelle)
+> Crée une planche de sprites pour un jeu mobile de survie, dans EXACTEMENT le style de l'image jointe : dessin cartoon peint à la main, contours brun foncé épais, couleurs chaudes et un peu passées, lumière du haut à gauche, vue de trois quarts légèrement en plongée comme les bâtiments de l'image jointe.
+> Format paysage. Fond vert uni #00FF00 partout. Grille invisible de 6 colonnes et 3 lignes, toutes les cases de la même taille : chaque case contient UN seul petit bâtiment, centré, entièrement visible, avec une marge de vert tout autour, sans toucher le bord de sa case ni un voisin. Chaque bâtiment est posé sur un petit carré de terre battue. Pas d'ombre portée sur le vert, pas de texte, pas de cadre, pas de personnage. Monde post-apocalyptique sans électricité (bois, tôle rouillée, bâches, cordes, récupération).
+> Dans chaque ligne : colonnes 1, 2, 3 = premier bâtiment au niveau 1 (petit, de fortune), niveau 3 (solide), niveau 5 (grand, renforcé) ; colonnes 4, 5, 6 = second bâtiment aux mêmes 3 niveaux.
+> Ligne 1 : TOUR DE GUET (grand poteau avec échelle et petite plate-forme → tour en bois sur quatre pieds avec toit → haute tour blindée de tôle avec sacs de sable et grosse lanterne) puis GARAGE (bâche avec jerricans et outils → abri en tôle avec établi et pneus → grand garage en tôle avec une vieille camionnette).
+> Ligne 2 : PLANQUE (trappe en planches dans le sol → trappe entourée de sacs de sable → bunker enterré avec porte blindée et filet de camouflage) puis PIÈGES (quelques pieux taillés et un piège à mâchoires → fosse à pieux → champ de pièges avec pieux, mâchoires et fil barbelé).
+> Ligne 3 : CHARRETTE (brouette en métal rouillé → charrette en bois à deux roues chargée de caisses → chariot blindé à quatre roues chargé de butin) puis ATELIER DE SIÈGE (établi avec un petit bélier en bois → bélier sur roues → bélier blindé avec une petite catapulte).
 
 ## Ensuite (Claude)
 Découpe des 42 bâtiments (fond vert), mêmes noms de fichiers qu'aujourd'hui (`images/avantposte/<bâtiment>-1|3|5.webp`) : le jeu les prend sans autre changement ; contrôle de la taille de chacun sur les 15 enclos.
