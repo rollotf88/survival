@@ -154,8 +154,8 @@ function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // centre = true : l'objet est centré sur l'emplacement (panneau, cadenas) au lieu d'être posé « par le pied » (bâtiments)
 // Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
 var AP_ECH_BAT = {}; // (réglages des anciens dessins, plus utiles : les nouveaux ont tous la même taille de base)
-// Morceau de sol sans enclos de chaque emplacement (boîte en pixels du terrain, découpé à la forme exacte de l'enclos)
-var AP_SOL = [[620, 154, 743, 356], [465, 170, 626, 380], [334, 235, 555, 435], [246, 333, 480, 506], [213, 463, 426, 589], [234, 552, 473, 717], [319, 625, 547, 815], [446, 680, 638, 885], [717, 180, 900, 385], [799, 246, 1020, 439], [874, 341, 1105, 511], [925, 470, 1134, 592], [884, 554, 1105, 717], [799, 626, 1020, 814], [716, 682, 908, 870]];
+// Morceau de sol sans enclos de chaque emplacement (boîte en pixels du terrain, forme = enveloppe des vraies pierres de l'enclos)
+var AP_SOL = [[622, 171, 739, 346], [472, 180, 638, 371], [343, 244, 544, 449], [257, 345, 464, 517], [220, 470, 417, 586], [241, 565, 462, 710], [330, 620, 537, 811], [453, 687, 628, 874], [719, 194, 891, 375], [810, 258, 1011, 451], [884, 348, 1097, 523], [936, 478, 1129, 592], [898, 551, 1097, 739], [810, 614, 1017, 807], [726, 688, 900, 879]];
 function apRect(nom, x, y, ech, centre){
   var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
   var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + 22 : y + 48; // panneau et cadenas : le pied du poteau un peu sous le centre de l'enclos
@@ -167,7 +167,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol2/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
+    D.push([function(){ return "images/avantposte/sol3/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
