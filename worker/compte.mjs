@@ -8,7 +8,10 @@
      supprimer  {jeton}                                                       → compte et sauvegarde effacés
    Ce qui est gardé : l'identifiant Google (un numéro, pas l'adresse e-mail), le prénom affiché par Google, l'identifiant
    de joueur du jeu, la date de création, la sauvegarde (clés « survival_… » du navigateur) et le jeton de la session en cours.
-   Une seule session à la fois : se connecter ailleurs rend l'ancien jeton invalide (l'autre appareil le voit au prochain envoi).
+   Plusieurs appareils connectés à la fois (2026-11-16, demande de Fabien) : une session par appareil (C.sessions, 8 au plus).
+   « sauver » envoie « base » = date de la sauvegarde dont l'appareil est parti : si le compte a reçu entre-temps une
+   sauvegarde d'un AUTRE appareil, rien n'est écrasé et le serveur répond {conflit, save} (sauf force:true).
+     etat       {jeton}                                                       → {t, jour, appareil, nomAppareil}
    Clés KV : « compte_<sub> » (le compte), « jeton_<jeton> » (sub du compte). Identifiant client Google : reglages.json
    (GOOGLE_CLIENT_ID) ou réglage par défaut ci-dessous.
    ===================================================================== */
@@ -43,7 +46,11 @@ export async function comptePost(request, env, O){
   const KV = env.CLASSEMENT, now = Date.now();
   const lireCompte = async (sub) => sub ? await KV.get("compte_" + sub, { type: "json" }) : null;
   const ecrireCompte = (C) => KV.put("compte_" + C.sub, JSON.stringify(C));
-  const parJeton = async () => { const j = String(d.jeton || "").replace(/[^a-f0-9]/g, ""); if(!j) return null; const sub = await KV.get("jeton_" + j); if(!sub) return null; const C = await lireCompte(sub); return C && C.session && C.session.jeton === j ? C : null; };
+  const sessionsDe = (C) => { if(!C.sessions){ C.sessions = {}; if(C.session && C.session.jeton) C.sessions[C.session.jeton] = C.session; } delete C.session; return C.sessions; };
+  let jetonCourant = "";
+  const parJeton = async () => { const j = String(d.jeton || "").replace(/[^a-f0-9]/g, ""); if(!j) return null; const sub = await KV.get("jeton_" + j); if(!sub) return null; const C = await lireCompte(sub); if(!C || !sessionsDe(C)[j]) return null; jetonCourant = j; return C; };
+  const nomApp = String(d.nomAppareil || "").replace(/[<>]/g, "").slice(0, 20);
+  const infoSave = (C) => C.save ? { t: C.save.t, jour: C.save.jour, appareil: C.save.appareil, nomAppareil: C.save.nomAppareil || "" } : null;
 
   if(d.action === "connexion"){
     const clientId = env.GOOGLE_CLIENT_ID || CLIENT_PAR_DEFAUT;
@@ -56,23 +63,31 @@ export async function comptePost(request, env, O){
     if(!C) C = { sub, idJoueur: appareil || nouveauJeton().slice(0, 16), cree: now, nom: "", appareils: {}, save: null };
     C.nom = String(g.given_name || g.name || "").replace(/[<>]/g, "").slice(0, 30);
     if(appareil) C.appareils[appareil] = now;
-    // une seule session : l'ancien jeton ne marche plus
-    if(C.session && C.session.jeton) await KV.delete("jeton_" + C.session.jeton);
-    const jeton = nouveauJeton(); C.session = { jeton, appareil, t: now };
+    // une session par appareil : l'ancienne session de CET appareil est remplacée, les autres appareils restent connectés
+    const S = sessionsDe(C);
+    for(const j in S){ if(S[j].appareil && S[j].appareil === appareil){ await KV.delete("jeton_" + j); delete S[j]; } }
+    const ids = Object.keys(S).sort((a, b) => (S[a].t || 0) - (S[b].t || 0));
+    while(ids.length >= 8){ const j = ids.shift(); await KV.delete("jeton_" + j); delete S[j]; }
+    const jeton = nouveauJeton(); S[jeton] = { jeton, appareil, nomAppareil: nomApp, t: now };
     await ecrireCompte(C); await KV.put("jeton_" + jeton, sub);
-    return O.reponse({ jeton, idJoueur: C.idJoueur, nom: C.nom, sauvegarde: C.save ? { t: C.save.t, jour: C.save.jour, appareil: C.save.appareil } : null });
+    return O.reponse({ jeton, idJoueur: C.idJoueur, nom: C.nom, sauvegarde: infoSave(C) });
   }
   const C = await parJeton();
-  if(!C) return O.reponse({ erreur: "Session terminée : ton compte est ouvert sur un autre appareil, ou tu as été déconnecté.", session: false }, 401);
+  if(!C) return O.reponse({ erreur: "Session terminée : tu as été déconnecté de ton compte.", session: false }, 401);
+  const maSession = C.sessions[jetonCourant];
+  if(d.action === "etat") return O.reponse({ ...(infoSave(C) || { t: 0, jour: 0 }), moi: maSession.appareil });
   if(d.action === "sauver"){
     const donnees = d.donnees && typeof d.donnees === "object" ? d.donnees : null; if(!donnees) return O.reponse({ erreur: "Rien à enregistrer." }, 400);
     const propre = {}; for(const k in donnees){ if(/^survival_[\w-]{1,60}$/.test(k) && typeof donnees[k] === "string") propre[k] = donnees[k]; }
     const brut = JSON.stringify(propre); if(brut.length > TAILLE_MAX) return O.reponse({ erreur: "Sauvegarde trop grosse." }, 413);
-    C.save = { t: now, jour: Math.max(0, Math.min(5000, Math.floor(+d.jour) || 0)), appareil: C.session.appareil, donnees: propre };
+    // une partie plus récente est arrivée d'un autre appareil depuis que celui-ci l'a reçue : on n'écrase pas
+    if(!d.force && C.save && C.save.t !== +d.base && C.save.appareil !== maSession.appareil) return O.reponse({ conflit: true, save: infoSave(C) });
+    C.save = { t: now, jour: Math.max(0, Math.min(5000, Math.floor(+d.jour) || 0)), appareil: maSession.appareil, nomAppareil: nomApp || maSession.nomAppareil || "", donnees: propre };
+    maSession.t = now;
     await ecrireCompte(C); return O.reponse({ ok: true, t: now });
   }
-  if(d.action === "charger") return O.reponse({ donnees: C.save ? C.save.donnees : null, t: C.save ? C.save.t : 0, jour: C.save ? C.save.jour : 0, idJoueur: C.idJoueur });
-  if(d.action === "deconnexion"){ await KV.delete("jeton_" + C.session.jeton); C.session = null; await ecrireCompte(C); return O.reponse({ ok: true }); }
-  if(d.action === "supprimer"){ await KV.delete("jeton_" + C.session.jeton); await KV.delete("compte_" + C.sub); return O.reponse({ ok: true }); }
+  if(d.action === "charger") return O.reponse({ donnees: C.save ? C.save.donnees : null, t: C.save ? C.save.t : 0, jour: C.save ? C.save.jour : 0, nomAppareil: C.save ? C.save.nomAppareil || "" : "", idJoueur: C.idJoueur });
+  if(d.action === "deconnexion"){ await KV.delete("jeton_" + jetonCourant); delete C.sessions[jetonCourant]; await ecrireCompte(C); return O.reponse({ ok: true }); }
+  if(d.action === "supprimer"){ for(const j in C.sessions) await KV.delete("jeton_" + j); await KV.delete("compte_" + C.sub); return O.reponse({ ok: true }); }
   return O.reponse({ erreur: "Action inconnue." }, 400);
 }
