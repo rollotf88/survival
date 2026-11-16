@@ -253,7 +253,8 @@ var apFenetre = null, apSlotK = null, apChoix = null, apMsg = "";
 function apRouvrir(){ var m = document.getElementById("modal"); if(!m || m.style.display === "none"){ apFenetre = null; return; } if(apFenetre === "camp") openCamp(); else if(apFenetre === "slot") apOuvrirSlot(apSlotK); }
 function apEnJeu(){ return typeof G !== "undefined" && G && G.ph === "game" && !G.bacASable; }
 function apCout(id, niv){ var c = {}, B = AP_BAT[id]; for(var k in B.cout) c[k] = Math.ceil(B.cout[k] * AP.mult[niv - 1]); return c; }
-function apDispo(k){ return compter(k) + apGarde(k); }
+var apCompterRefuge = compter; // le vrai compteur du refuge (compter est remplacé un instant pendant l'affichage des matériaux)
+function apDispo(k){ return apCompterRefuge(k) + apGarde(k); }
 function apManque(c){ var m = []; for(var k in c) if(apDispo(k) < c[k]) m.push({ id:k, n:c[k] - apDispo(k) }); return m; }
 function apParJour(q){
   if(!(q > 0)) return "—";
