@@ -168,7 +168,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol6/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
+    D.push([function(){ return "images/avantposte/sol6/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }, "filter:none"]); // bâtiment posé OU chantier en cours ; sans le filtre des décors (ombre et assombrissement : losange visible)
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
@@ -177,7 +177,7 @@ function apDecor(){
     r = apRect("cadenas", x, y, .3, true); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
     Object.keys(AP_BAT).forEach(function(b){ if(AP_BAT[b].pillard) return;
       [1, 3, 5].forEach(function(s){ var rr = apRect(b + "-" + s, x, y);
-        D.push(["images/avantposte/bat4/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
+        D.push(["images/avantposte/bat4/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : "filter:none"); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
     r = apRect("echafaudage-1", x, y, .5); D.push(["images/avantposte/echafaudage-1.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && (!P || !P.niv); }]);
     r = apRect("echafaudage-3", x + 10, y - 10, .38); D.push(["images/avantposte/echafaudage-3.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && !!P && P.niv > 0; }]);
   });
