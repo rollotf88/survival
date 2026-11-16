@@ -35,7 +35,7 @@ var AP = {
 // Ordre d'ouverture des emplacements (les plus proches du feu d'abord)
 var AP_ORDRE = [0, 1, 8, 2, 9, 3, 10, 4, 11, 5, 12, 6, 13, 7, 14];
 // Taille des images (pour les poser sans déformation)
-var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[229, 222], "charrette-3":[243, 220], "charrette-5":[247, 256], "citerne-1":[235, 149], "citerne-3":[228, 179], "citerne-5":[220, 223], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[246, 173], "entrepot-3":[238, 201], "entrepot-5":[249, 211], "forge-1":[240, 204], "forge-3":[238, 254], "forge-5":[241, 261], "garage-1":[232, 236], "garage-3":[244, 247], "garage-5":[240, 284], "infirmerie-1":[233, 195], "infirmerie-3":[235, 201], "infirmerie-5":[246, 224], "palissade-1":[232, 172], "palissade-3":[233, 173], "palissade-5":[239, 207], "panneau":[241, 273], "pieges-1":[235, 218], "pieges-3":[242, 212], "pieges-5":[250, 245], "planque-1":[246, 190], "planque-3":[237, 200], "planque-5":[250, 245], "radio-1":[224, 238], "radio-3":[229, 257], "radio-5":[239, 266], "recolte":[177, 188], "scierie-1":[236, 169], "scierie-3":[237, 203], "scierie-5":[240, 202], "serre-1":[226, 167], "serre-3":[233, 181], "serre-5":[243, 213], "siege-1":[236, 244], "siege-3":[242, 238], "siege-5":[243, 279], "tour-1":[204, 269], "tour-3":[210, 292], "tour-5":[209, 325]};
+var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[229, 222], "charrette-3":[243, 220], "charrette-5":[247, 256], "citerne-1":[235, 149], "citerne-3":[228, 179], "citerne-5":[220, 223], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[246, 173], "entrepot-3":[238, 201], "entrepot-5":[249, 211], "forge-1":[240, 204], "forge-3":[238, 254], "forge-5":[241, 261], "garage-1":[232, 236], "garage-3":[244, 247], "garage-5":[240, 284], "infirmerie-1":[233, 195], "infirmerie-3":[235, 201], "infirmerie-5":[246, 224], "palissade-1":[232, 172], "palissade-3":[233, 173], "palissade-5":[239, 207], "panneau":[110, 220], "pieges-1":[235, 218], "pieges-3":[242, 212], "pieges-5":[250, 245], "planque-1":[246, 190], "planque-3":[237, 200], "planque-5":[250, 245], "radio-1":[224, 238], "radio-3":[229, 257], "radio-5":[239, 266], "recolte":[177, 188], "scierie-1":[236, 169], "scierie-3":[237, 203], "scierie-5":[240, 202], "serre-1":[226, 167], "serre-3":[233, 181], "serre-5":[243, 213], "siege-1":[236, 244], "siege-3":[242, 238], "siege-5":[243, 279], "tour-1":[204, 269], "tour-3":[210, 292], "tour-5":[209, 325]};
 
 // Les bâtiments. prod = par jour réel et par niveau ; def = défense ; cout = coût de base (× AP.mult)
 var AP_BAT = {
@@ -154,9 +154,11 @@ function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // centre = true : l'objet est centré sur l'emplacement (panneau, cadenas) au lieu d'être posé « par le pied » (bâtiments)
 // Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
 var AP_ECH_BAT = {}; // (réglages des anciens dessins, plus utiles : les nouveaux ont tous la même taille de base)
+// Morceau de sol sans enclos de chaque emplacement (boîte en pixels du terrain, découpé à la forme exacte de l'enclos)
+var AP_SOL = [[620, 154, 743, 356], [465, 170, 626, 380], [334, 235, 555, 435], [246, 333, 480, 506], [213, 463, 426, 589], [234, 552, 473, 717], [319, 625, 547, 815], [446, 680, 638, 885], [717, 180, 900, 385], [799, 246, 1020, 439], [874, 341, 1105, 511], [925, 470, 1134, 592], [884, 554, 1105, 717], [799, 626, 1020, 814], [716, 682, 908, 870]];
 function apRect(nom, x, y, ech, centre){
   var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
-  var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + h * .5 + 6 : y + 48;
+  var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + 22 : y + 48; // panneau et cadenas : le pied du poteau un peu sous le centre de l'enclos
   return [Math.round(x - w / 2), Math.round(y1 - h), Math.round(x + w / 2), Math.round(y1)];
 }
 function apDecor(){
@@ -164,8 +166,8 @@ function apDecor(){
   // Repère invisible sur toute l'image : sert à placer les compteurs des chantiers
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
-  AP.plots.forEach(function(p, k){
-    D.push([function(){ return "images/avantposte/sol/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, p[0] - 125, p[1] - 105, p[0] + 125, p[1] + 105, function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
+  AP_SOL.forEach(function(b, k){
+    D.push([function(){ return "images/avantposte/sol/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
