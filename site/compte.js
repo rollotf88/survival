@@ -8,7 +8,7 @@
      les 60 s quand elles ont changé, et quand la page passe en arrière-plan.
    - Une seule session : si le compte s'ouvre ailleurs, cet appareil est prévenu et peut « reprendre ici ».
    ===================================================================== */
-var GOOGLE_CLIENT_ID = ""; // identifiant client Google (Google Cloud → Identifiants), public ; vide = bouton « bientôt »
+var GOOGLE_CLIENT_ID = "570011998343-473gla1lkci91v7oamt8lc45edt8hr3h.apps.googleusercontent.com"; // identifiant client Google (Google Cloud → Identifiants), public ; vide = bouton « bientôt »
 var CLE_COMPTE = "survival_compte";
 var CLES_LOCALES = ["survival_compte", "survival_id", "survival_monde_cache", "survival_ap_envoi", "survival_maintenance_passe", "survival_transfere", "survival_compte_hash"];
 function lireCompteLocal(){ try{ return JSON.parse(localStorage.getItem(CLE_COMPTE) || "null"); }catch(e){ return null; } }

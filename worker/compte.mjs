@@ -13,7 +13,7 @@
    (GOOGLE_CLIENT_ID) ou réglage par défaut ci-dessous.
    ===================================================================== */
 const TAILLE_MAX = 400 * 1024; // une sauvegarde de 400 Ko au plus
-const CLIENT_PAR_DEFAUT = ""; // rempli quand Fabien aura créé l'identifiant client Google
+const CLIENT_PAR_DEFAUT = "570011998343-473gla1lkci91v7oamt8lc45edt8hr3h.apps.googleusercontent.com"; // rempli quand Fabien aura créé l'identifiant client Google
 let certs = null, certsT = 0;
 
 function b64url(s){ s = s.replace(/-/g, "+").replace(/_/g, "/"); while(s.length % 4) s += "="; return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); }
