@@ -182,7 +182,7 @@ function poserBoutonGoogle(){
   chargerGSI().then(function(){
     if(!window.google || !google.accounts || !google.accounts.id) return;
     google.accounts.id.initialize({ client_id:GOOGLE_CLIENT_ID, callback:apresConnexionGoogle, ux_mode:"popup" });
-    google.accounts.id.renderButton(el, { theme:"outline", size:"large", text:"signin_with", shape:"pill", locale:typeof LANGUE !== "undefined" ? LANGUE : "fr" });
+    google.accounts.id.renderButton(el, { theme:"outline", size:el.dataset.taille || "large", text:el.dataset.taille ? "signin" : "signin_with", shape:"pill", locale:typeof LANGUE !== "undefined" ? LANGUE : "fr" });
   }).catch(function(){ el.innerHTML = '<p class="sub">' + trad("Connexion Google indisponible pour l’instant.") + '</p>'; });
 }
 // Le bloc est posé par openProfil (classement.js) ; le bouton Google est dessiné juste après
@@ -212,5 +212,6 @@ if(typeof TRADUCTIONS !== "undefined"){ TRADUCTIONS.en = TRADUCTIONS.en || {}; O
   "Tu as été déconnecté de ton compte. Reconnecte-toi pour enregistrer ta partie.":"You were signed out of your account. Sign in again to save your game.",
   "Ta partie a avancé sur un autre appareil":"Your game moved on on another device", "Tu as aussi joué ici depuis. Laquelle veux-tu garder ? L’autre sera remplacée.":"You also played here since. Which one do you want to keep? The other will be replaced.",
   "Celle de {app}":"The one from {app}", "Celle de cet appareil":"This device’s", "Partie reprise depuis {app}":"Game picked up from {app}", "Tu continues au jour {n}.":"You continue on day {n}.",
+  "partie synchronisée":"game synced", "Joue sur tous tes appareils":"Play on all your devices", "Ta partie te suit du téléphone à l’ordinateur":"Your game follows you from phone to computer",
   "ta tablette":"your tablet", "ton téléphone":"your phone", "ton ordinateur":"your computer", "un autre appareil":"another device"
 }); }

@@ -165,8 +165,13 @@ function openMenuComplet(){
   var rec = Math.max(RECORD || 0, G.score || 0);
   var h = '<h2>☰ Menu</h2>';
   // La carte du haut ouvre « Mon profil » (2026-11-12, idée de Fabien)
-  h += '<button class="mn-tete mn-profil" data-act="profil">' + (typeof avatarHtml === "function" ? avatarHtml(lireAvatar(), lirePseudo() || "?", "mn-av") : '') + '<div><b>Mon profil</b><small>' + (lirePseudo() ? echapper(lirePseudo()) + ' · ' : '') + 'voir et modifier</small></div>'
+  var avecCpt = typeof blocCompte === "function" && GOOGLE_CLIENT_ID && (!compteConnecte() || compteSessionPerdue);
+  h += '<div class="mn-haut' + (avecCpt ? ' avec-cpt' : '') + '"><button class="mn-tete mn-profil" data-act="profil">' + (typeof avatarHtml === "function" ? avatarHtml(lireAvatar(), lirePseudo() || "?", "mn-av") : '') + '<div><b>Mon profil</b><small>' + (lirePseudo() ? echapper(lirePseudo()) + ' · ' : '') + (typeof compteConnecte === "function" && compteConnecte() && !compteSessionPerdue ? '☁️ ' + trad("partie synchronisée") : 'voir et modifier') + '</small></div>'
     + (G.ph === "game" ? '<span class="mn-p">⭐ ' + (G.score || 0) + '<small>score</small></span><span class="mn-p">🏆 ' + rec + '<small>record</small></span>' : '') + '</button>';
+  // COMPTES (2026-11-16, demande de Fabien) : le bouton Google directement dans le menu tant qu'on n'est pas connecté
+  if(avecCpt)
+    h += '<div class="mn-cpt"><span class="mn-cpt-t"><b>☁️ ' + trad("Joue sur tous tes appareils") + '</b><small>' + trad("Ta partie te suit du téléphone à l’ordinateur") + '</small></span><div id="gsiBouton" class="cpt-gsi" data-taille="medium"></div></div>';
+  h += '</div>';
   h += '<div class="menugrille">';
   h += t("guide", "📖", "Guide", "Règles, objets, lieux");
   if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length, hm = typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE;

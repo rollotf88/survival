@@ -3055,3 +3055,17 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat::before{display:none} /*
 .cpt-suppr{color:#b3261e}
 .cpt-gsi{display:flex;justify-content:center;min-height:44px;margin:6px 0}
 .cpt-choix{display:flex;flex-direction:column;gap:8px}
+
+/* Menu : se connecter avec Google sans passer par le profil (2026-11-16) */
+.mn-cpt{display:flex;align-items:center;gap:10px;justify-content:space-between;background:var(--card);border:1.5px solid var(--acc);border-radius:14px;padding:8px 10px;margin:8px 0;box-shadow:0 3px 0 rgba(46,31,21,.18)}
+.mn-cpt-t{display:flex;flex-direction:column;min-width:0}
+.mn-cpt-t b{font-size:14px}
+.mn-cpt-t small{color:var(--mut);font-size:12px;line-height:1.25}
+.mn-cpt .cpt-gsi{flex:none;min-height:32px;margin:0}
+@media (max-height:760px){ .mn-cpt{padding:5px 8px;margin:6px 0} .mn-cpt-t small{display:none} .mn-cpt-t b{font-size:13px} }
+@media (max-height:480px) and (min-width:600px){
+  .mn-haut.avec-cpt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+  .mn-haut.avec-cpt .mn-cpt, .mn-haut.avec-cpt .mn-tete{margin:0}
+  .mn-haut.avec-cpt{margin-bottom:3px}
+  .mn-haut.avec-cpt .mn-cpt-t b{font-size:12px;max-width:120px}
+}
