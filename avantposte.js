@@ -167,7 +167,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol3/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
+    D.push([function(){ return "images/avantposte/sol3/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
