@@ -141,3 +141,12 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .ap .ap-eff{font-size:13px;margin-top:2px}
 .ap .titre-butin{margin-top:6px;margin-bottom:4px}
 .ap .rf-action .btn:disabled{font-size:14px;line-height:1.25}
+
+/* Fenêtre du camp, retouches (2026-11-16) */
+.ap-ici{display:block;font-style:normal;font-size:10.5px;font-weight:800;color:var(--mut);opacity:.85}
+.ap-vers{display:flex;flex-wrap:wrap;align-items:center;gap:5px 6px;margin:4px 0 6px;font-size:13px}
+.ap-vers > span{font-weight:800}
+.ap-pas{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:99px;background:color-mix(in srgb,var(--acc) 22%,var(--card));border:1.5px solid var(--bois);font-size:12.5px}
+.ap-vers small{flex-basis:100%;color:var(--mut);font-size:11.5px}
+.ap-lj-d{display:block;color:var(--mut);font-size:12px;font-weight:600;margin-top:1px}
+.ap-conseil{color:#b5541b;font-weight:700}

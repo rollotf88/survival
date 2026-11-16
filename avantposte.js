@@ -293,12 +293,12 @@ function openCamp(){
   if(!res.length) h += '<p class="ap-note">' + trad("Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.") + '</p>';
   else {
     h += '<div class="ap-stock">' + res.map(function(r){ var v = Math.floor(APS.acc[r] || 0);
-      return '<span class="ap-res' + (v >= cap ? " plein" : "") + '"><span class="ap-res-i">' + apIcoRes(r) + '</span><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small></span>'; }).join("") + '</div>';
+      return '<span class="ap-res' + (v >= cap ? " plein" : "") + '"><span class="ap-res-i">' + apIcoRes(r) + '</span><b>' + v + '</b><small>' + (p[r] ? apParJour(p[r]) : "") + '</small>' + (AP_GARDE.indexOf(r) >= 0 ? '<i class="ap-ici">' + trad("reste ici") + '</i>' : '') + '</span>'; }).join("") + '</div>';
     var cr = apCredit(), peut = res.some(function(r){ return AP_GARDE.indexOf(r) < 0 && (APS.acc[r] || 0) >= 1 && (AP_RAPPORT[r] == null || (cr[r] || 0) >= 1); });
     var lim = Object.keys(AP_RAPPORT).filter(function(r){ return res.indexOf(r) >= 0; }).map(function(r){ var n = Math.floor(cr[r] || 0);
       return apIcoRes(r) + " " + (n >= 1 ? trad("encore {n}", { n:n }) : trad("dans {n} j", { n:Math.ceil((1 - (cr[r] || 0)) / AP_RAPPORT[r]) })); });
-    h += '<p class="ap-note">🧺 ' + trad("Vers le refuge : 3 rations d’eau et 3 repas tous les 4 jours.") + (lim.length ? ' <b>' + lim.join(" · ") + '</b>' : '') + '</p>';
-    if(res.some(function(r){ return AP_GARDE.indexOf(r) >= 0; })) h += '<p class="ap-note">🔨 ' + trad("Planches, clous et ferraille restent ici pour les chantiers ; les bandages soignent ton équipe au retour d’un pillage ; l’essence l’emmène piller en voiture.") + '</p>';
+    h += '<div class="ap-vers"><span>🧺 ' + trad("Vers le refuge") + '</span>' + lim.map(function(t){ return '<b class="ap-pas">' + t + '</b>'; }).join("") + '<small>' + trad("3 eau et 3 repas tous les 4 jours") + '</small></div>';
+    if(res.some(function(r){ return AP_GARDE.indexOf(r) >= 0; })) h += '<p class="ap-note">' + trad("Le reste sert ici : chantiers, soins et essence des pillages.") + '</p>';
     h += '<button class="btn" style="width:100%" data-act="apRecolter"' + (peut && apEnJeu() ? "" : " disabled") + '>' + (apEnJeu() ? (peut ? "🧺 " + trad("Récolter pour le refuge") : trad("Rien à récolter")) : trad("Pendant une partie seulement")) + '</button>';
     if(res.some(function(r){ return (APS.acc[r] || 0) >= cap; })) h += '<p class="ap-note">⚠️ ' + trad("Une ressource est pleine : sa production est arrêtée. Récolte ou agrandis l’entrepôt.") + '</p>';
   }
@@ -309,9 +309,16 @@ function openCamp(){
   // Les attaques
   h += '<p class="titre-butin">⚔️ ' + trad("Attaques") + '</p>';
   h += APS.log.length ? '<div class="ap-log">' + APS.log.slice(0, 5).map(function(L){
-    var pertes = Object.keys(L.pertes).map(function(r){ return apNomRes(r, L.pertes[r]); }).join(", ");
-    return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt">' + apQuand(L.t) + ' · <b>' + (L.pvp ? (L.ok ? trad("{p} repoussé", { p:apEchap(L.par || trad("Un pillard")) }) : trad("pillé par {p}", { p:apEchap(L.par || trad("un pillard")) })) : (L.ok ? trad("repoussée") : trad("perdue"))) + '</b>' + (L.pvp ? '' : ' · ' + trad("force {f} contre défense {d}", { f:L.force, d:L.def })) + (pertes ? ' · −' + pertes : '') + '</span></div>'; }).join("") + '</div>'
+    var pertes = Object.keys(L.pertes || {}).filter(function(r){ return L.pertes[r] > 0; }).map(function(r){ return "−" + apNomRes(r, L.pertes[r]).replace(/^(une?|an?) /, "1 "); }).join(", ");
+    var qui = apEchap(L.par || trad("Un pillard"));
+    var titre = L.pvp ? (L.ok ? trad("{p} a tenté de te piller : repoussé !", { p:qui }) : trad("{p} a pillé ton avant-poste", { p:qui }))
+      : (L.ok ? trad("Attaque de zombies et de pillards repoussée") : trad("Des zombies et des pillards ont forcé le camp"));
+    var detail = [apQuand(L.t)];
+    if(!L.pvp) detail.push(trad("force {f} contre défense {d}", { f:L.force, d:L.def }));
+    if(!L.ok) detail.push(pertes || trad("il n’y avait rien à prendre"));
+    return '<div class="lj ' + (L.ok ? "bon" : "mauvais") + '"><span class="lj-ico">' + (L.ok ? "🛡️" : "🔥") + '</span><span class="lj-txt"><b>' + titre + '</b><small class="ap-lj-d">' + detail.join(" · ") + '</small></span></div>'; }).join("") + '</div>'
     : '<p class="ap-note">' + trad("Aucune attaque pour l’instant. Toutes les 8 h, des zombies ou des pillards peuvent venir : palissade, tour et pièges le défendent.") + '</p>';
+  if(APS.log.length && !apDefense() && APS.log.slice(0, 5).some(function(L){ return !L.ok; })) h += '<p class="ap-note ap-conseil">🧱 ' + trad("Ton camp n’a aucune défense : une palissade, une tour de guet ou des pièges repoussent les attaques.") + '</p>';
   h += '<p class="ap-note">' + trad("L’avant-poste t’appartient : il produit même quand tu ne joues pas et survit à la mort de ta famille.") + '</p>';
   show(h + '</div>' + BTN_FERMER());
 }
@@ -886,7 +893,11 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Pillage repoussé !":"Raid repelled!", "Ton avant-poste a été pillé":"Your outpost was raided", "{p} a tenté de piller ton avant-poste et a échoué.":"{p} tried to raid your outpost and failed.",
     "{p} est reparti avec une partie de ton stock.":"{p} left with part of your stock.", "Un pillard":"A raider",
     "Butin d’un pillage : {n} objets au plus":"Loot from a raid: {n} items max", "Défenses adverses affaiblies : palissade −{a}, pièges −{b}":"Enemy defenses weakened: palisade −{a}, traps −{b}",
-    "Mode pillard":"Raider mode", "encore {n}":"{n} left", "dans {n} j":"in {n} d",
+    "Mode pillard":"Raider mode", "reste ici":"stays here", "Vers le refuge":"To the refuge", "3 eau et 3 repas tous les 4 jours":"3 water and 3 meals every 4 days",
+    "Le reste sert ici : chantiers, soins et essence des pillages.":"The rest is used here: construction, healing and fuel for raids.",
+    "{p} a tenté de te piller : repoussé !":"{p} tried to raid you: repelled!", "{p} a pillé ton avant-poste":"{p} raided your outpost",
+    "Attaque de zombies et de pillards repoussée":"Zombie and raider attack repelled", "Des zombies et des pillards ont forcé le camp":"Zombies and raiders broke into the camp",
+    "il n’y avait rien à prendre":"there was nothing to take", "Ton camp n’a aucune défense : une palissade, une tour de guet ou des pièges repoussent les attaques.":"Your camp has no defense: a palisade, a watchtower or traps repel attacks.", "encore {n}":"{n} left", "dans {n} j":"in {n} d",
     "Vers le refuge : 3 rations d’eau et 3 repas tous les 4 jours.":"To the refuge: 3 water rations and 3 meals every 4 days.", "en voiture (1 jerrican)":"by car (1 jerrycan)",
     "L’équipe part en voiture avec un jerrican de l’avant-poste : moitié moins de fatigue.":"The team leaves by car with a jerrycan from the outpost: half as tiring.",
     "Planches, clous et ferraille restent ici pour les chantiers ; les bandages soignent ton équipe au retour d’un pillage ; l’essence l’emmène piller en voiture.":"Planks, nails and scrap metal stay here for construction; bandages heal your team when it returns from a raid; fuel takes it raiding by car.",
