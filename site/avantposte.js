@@ -52,7 +52,7 @@ var AP_BAT = {
   planque:    { nom:"Planque", ico:"🕳️", cout:{ planche:4, ruban:1 }, planque:[15, 25, 35, 45, 60], desc:"Une part du stock est cachée et ne peut pas être volée." },
   pieges:     { nom:"Pièges", ico:"🪤", cout:{ ferraille:2, clous:2 }, def:[2, 4, 6, 8, 10], desc:"Blessent les assaillants avant qu’ils n’atteignent la palissade." },
   charrette:  { nom:"Charrette", ico:"🛒", cout:{ planche:4, ferraille:2 }, desc:"Pour ramener plus de butin des pillages." },
-  chenil:     { nom:"Chenil", ico:"🐕", cout:{ planche:3, clous:2 }, def:[2, 3, 5, 7, 9], chenil:[10, 15, 20, 25, 35], desc:"Des chiens de garde : ils repoussent zombies et pillards et limitent les pertes quand le camp est forcé." },
+  chenil:     { nom:"Chenil", ico:"🐕", cout:{ planche:3, clous:2 }, def:[2, 3, 5, 7, 9], chenil:[10, 15, 20, 25, 35], desc:"Des chiens de garde : ils repoussent zombies et pillards, limitent les pertes quand le camp est forcé et repèrent les éclaireurs." },
   siege:      { nom:"Atelier de siège", ico:"🪓", cout:{ planche:5, ferraille:3 }, desc:"Affaiblit la palissade et les pièges des avant-postes que tu pilles." }
 };
 var AP_RES = ["eau", "nour", "planche", "herbes", "bandage", "clous", "ferraille", "jerrican"];
@@ -317,6 +317,7 @@ function openCamp(){
   h += APS.log.length ? '<div class="ap-log">' + APS.log.slice(0, 5).map(function(L){
     var pertes = Object.keys(L.pertes || {}).filter(function(r){ return L.pertes[r] > 0; }).map(function(r){ return "−" + apNomRes(r, L.pertes[r]).replace(/^(une?|an?) /, "1 "); }).join(", ");
     var qui = apEchap(L.par || trad("Un pillard"));
+    if(L.espion) return '<div class="lj bon"><span class="lj-ico">🐕</span><span class="lj-txt"><b>' + trad("Tes chiens ont repéré un éclaireur de {p}", { p:qui }) + '</b><small class="ap-lj-d">' + apQuand(L.t) + '</small></span></div>';
     var titre = L.pvp ? (L.ok ? trad("{p} a tenté de te piller : repoussé !", { p:qui }) : trad("{p} a pillé ton avant-poste", { p:qui }))
       : (L.ok ? trad("Attaque de zombies et de pillards repoussée") : trad("Des zombies et des pillards ont forcé le camp"));
     var detail = [apQuand(L.t)];
@@ -582,6 +583,47 @@ function apBrancherCarte(el){
   el.addEventListener("wheel", function(e){ if(!e.target.closest(".apc-vue")) return; e.preventDefault(); var r = el.querySelector(".apc-vue").getBoundingClientRect(); apZoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX - r.left, e.clientY - r.top); }, { passive:false });
 }
 var apDernierGlisse = 0;
+/* ---------- Éclaireurs (2026-11-16, idée de Fabien) ----------
+   Le serveur ne donne les bâtiments et la défense d'un autre joueur qu'avec un rapport d'éclaireur (5 min, valable 24 h).
+   Le chenil de la cible le repère (15 % par niveau, plus 4 % par niveau de tour), la radio de l'espion donne le stock exact. */
+var AP_ECL_ENERGIE = 10;
+function apBatsHtml(b){
+  var ks = Object.keys(b || {});
+  return ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat4/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
+}
+function apEclaireurDispo(){ // le survivant le plus reposé, au refuge
+  if(typeof G === "undefined" || !G || G.ph !== "game" || G.bacASable) return null;
+  var L = G.m.filter(function(x){ return x.al && !x.raid && x.en >= AP_ECL_ENERGIE; }).sort(function(a, b){ return b.en - a.en; });
+  return L[0] || null;
+}
+function apBlocEclaireur(P, i){
+  if(P.moi || P.ruine) return apBatsHtml(P.bats);
+  var h = '';
+  if(P.rapport){
+    var R = P.rapport, st = R.stock;
+    h += '<div class="apc-rap"><b>🔭 ' + trad("Rapport de ton éclaireur") + '</b><small>' + trad("il y a {t} · valable encore {r}", { t:apFmt(Date.now() - R.t), r:apFmt(R.t + 86400000 - Date.now()) }) + '</small></div>' + apBatsHtml(R.bats)
+      + '<p class="apc-fp">📦 ' + (st ? (Object.keys(st).length ? Object.keys(st).map(function(r){ return apIcoRes(r) + " " + st[r]; }).join(" · ") : trad("Stock vide")) : trad("Stock : {q}", { q:[trad("vide"), trad("peu"), trad("moyen"), trad("beaucoup")][R.niveauStock || 0] }) + ' <small>' + trad("(un poste radio donne le chiffre exact)") + '</small>') + '</p>';
+    return h;
+  }
+  if(P.eclaireur && P.eclaireur > Date.now()) return '<p class="apc-fp apc-ecl">🔭 ' + trad("Ton éclaireur est en route : retour dans {t}.", { t:apFmt(P.eclaireur - Date.now()) }) + '</p>';
+  if(P.repere) h += '<p class="apc-fp apc-rep">🐕 ' + trad("Ton éclaireur a été repéré par les chiens du camp ! Nouvel essai possible dans {t}.", { t:apFmt(P.repere + 3600000 - Date.now()) }) + '</p>';
+  else {
+    var x = apEclaireurDispo();
+    h += '<p class="apc-fp">' + trad("On ne voit pas ses défenses d’ici. Envoie un éclaireur pour savoir ce qu’il a construit.") + '</p>'
+      + '<button class="btn alt apc-go" data-act="apEclaireur" data-id="' + i + '"' + (x ? '' : ' disabled') + '>🔭 ' + trad("Envoyer un éclaireur") + ' <small>(' + (x ? trad("{p}, −{n} ⚡ · 5 min", { p:apEchap(x.nom), n:AP_ECL_ENERGIE }) : trad("personne d’assez reposé")) + ')</small></button>';
+  }
+  return h;
+}
+function apEnvoyerEclaireur(i){
+  var L = apCarteData ? apCarteData._L : null, P = L && L[i], x = apEclaireurDispo(); if(!P || !x) return;
+  apAppel({ action:"eclaireur", s:P.s, p:P.p }).then(function(d){
+    if(!d || d.erreur){ var f = document.querySelector("#apCarte .apc-fiche"); if(f) f.insertAdjacentHTML("beforeend", '<p class="apc-fp apc-rep">' + trad((d && d.erreur) || "Connexion impossible pour l’instant.") + '</p>'); return; }
+    x.en = Math.max(0, x.en - AP_ECL_ENERGIE); if(typeof sauver === "function") sauver(); if(typeof render === "function") render();
+    apCarteData = d; apNoterServeur(d); apDessinerCarte(false);
+    var L2 = apCarteData._L || [], j = L2.findIndex(function(Q){ return !Q.pnj && Q.s === P.s && Q.p === P.p; });
+    if(j >= 0) apFicheRepere(j);
+  }).catch(function(){});
+}
 function apFicheRepere(i){
   var L = apCarteData ? apCarteData._L : apCarteHors, P = L && L[i]; if(!P) return;
   var el = document.querySelector("#apCarte .apc-fiche"); if(!el) return;
@@ -592,9 +634,8 @@ function apFicheRepere(i){
       + '<button class="btn apc-go" data-act="apAttaquer" data-id="' + i + '">⚔️ ' + trad("Attaquer le camp") + ' <small>(' + trad("2 membres, −{n} ⚡ chacun", { n:apCoutEnergie() }) + (apEnVoiture() ? " · 🚗" : "") + ')</small></button>';
   } else {
     var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
-    h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
-    var b = P.bats || {}, ks = Object.keys(b);
-    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat4/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
+    h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + (P.bats || P.rapport ? trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.bats ? P.def || 0 : P.rapport.def || 0 }) : trad("Niveau {n} · défense inconnue", { n:P.niv || 0 })) + '</small></div></div>';
+    h += apBlocEclaireur(P, i);
     var pill = P.pillard && !P.ruine, bouclier = P.bouclier && P.bouclier > Date.now();
     h += '<p class="apc-fp">' + (P.moi ? (apPillard() ? trad("Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.") : trad("Ton avant-poste. Il est protégé : personne ne peut le piller."))
       : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.", { n:P.absent || 30 })
@@ -611,6 +652,7 @@ document.addEventListener("click", function(e){
   if(a === "apCarte"){ openCarte(); return; }
   if(a === "apCarteFermer"){ var el = document.getElementById("apCarte"); if(el) el.style.display = "none"; return; }
   if(a === "apFicheFermer"){ var f = document.querySelector("#apCarte .apc-fiche"); if(f) f.classList.remove("on"); return; }
+  if(a === "apEclaireur"){ apEnvoyerEclaireur(+b.getAttribute("data-id")); return; }
   if(a === "apRepere"){ if(apDernierGlisse > 6){ apDernierGlisse = 0; return; } apCibleI = null; apFicheRepere(+b.getAttribute("data-id")); return; }
 });
 // Au lancement : relire le jour d'accès (réglage de l'administration)
@@ -647,6 +689,13 @@ function apNoterServeur(d){
   if(!d || d.erreur) return d;
   if(d.moi){ APS.pillard = { on:!!d.moi.pillard, engage:d.moi.engage || 0 }; apSauver(); }
   if(d.jour) apNoterJour(d.jour);
+  if(d.espions && d.espions.length){
+    d.espions.forEach(function(E){
+      APS.log.unshift({ t:E.t, espion:true, par:E.par || "", ok:true, pertes:{} });
+      if(typeof fileSucces !== "undefined") fileSucces.push({ icone:"🐕", titre:trad("Un éclaireur repéré !"), nom:trad("Tes chiens ont repéré un éclaireur de {p} près de ton avant-poste.", { p:E.par || trad("un pillard") }) });
+    });
+    APS.log = APS.log.slice(0, 10); apSauver(); if(typeof montrerSucces === "function") montrerSucces();
+  }
   // Pillages subis pendant l'absence : retirés du stock non récolté, notés dans le journal
   if(d.pillages && d.pillages.length){
     d.pillages.forEach(function(E){
@@ -849,7 +898,7 @@ if(AVANTPOSTE_ACTIF && typeof reglesGuide === "function"){
   var apReglesOrigine = reglesGuide;
   reglesGuide = function(){
     var R = apReglesOrigine.apply(this, arguments);
-    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque, pièges et chenil. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour récolter. Le chemin jusqu’au refuge est long : il ne rapporte que 3 rations d’eau et 3 repas tous les 4 jours (les herbes sans limite) ; planches, clous et ferraille restent à l’avant-poste et paient ses chantiers, les bandages de l’infirmerie soignent ton équipe au retour d’un pillage, et l’essence du garage l’emmène piller en voiture (deux fois moins de fatigue). Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Les camps de pillards du jeu s’attaquent à tout moment (2 membres de ta famille partent). Par défaut tu es protégé ; quand ta famille a tenu " + AP_JOUR_PVP + " jours, le mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque) permet aussi de piller les autres joueurs pillards et les ruines, mais tu peux être pillé à ton tour (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri). Quand ta famille meurt, l’avant-poste repasse en mode protégé avec 24 heures à l’abri, et la famille suivante y a accès dès son premier jour."]);
+    R.push(["L’avant-poste", "🏕️", "À partir du jour " + AP.jour + ", une nouvelle pièce s’ouvre : l’avant-poste. Sur ses 15 emplacements (" + AP.libres + " au départ, 2 de plus par niveau de palissade), tu construis des bâtiments avec les matériaux du refuge : citerne, serre, scierie, palissade, entrepôt, infirmerie, forge, poste radio, tour de guet, garage, planque, pièges et chenil. Chacun a 5 niveaux ; un chantier dure de 10 minutes à 24 heures en temps réel, un seul à la fois (une pub peut diviser le temps restant par deux, " + AP.pubs + " fois par jour). Les bâtiments produisent même quand tu ne joues pas : touche le feu de camp pour récolter. Le chemin jusqu’au refuge est long : il ne rapporte que 3 rations d’eau et 3 repas tous les 4 jours (les herbes sans limite) ; planches, clous et ferraille restent à l’avant-poste et paient ses chantiers, les bandages de l’infirmerie soignent ton équipe au retour d’un pillage, et l’essence du garage l’emmène piller en voiture (deux fois moins de fatigue). Toutes les 8 heures, des zombies ou des pillards peuvent attaquer : palissade, tour et pièges le défendent, la planque et la radio limitent les pertes. L’avant-poste t’appartient : il survit à la mort de ta famille. Depuis le camp, la carte montre les avant-postes des autres survivants. Leurs défenses restent cachées : un éclaireur (" + AP_ECL_ENERGIE + " ⚡, 5 minutes) rapporte leurs bâtiments pour 24 heures, sauf si les chiens de leur chenil le repèrent (15 % par niveau) ; ton propre chenil repère ceux des autres, et un poste radio donne le stock exact. Les camps de pillards du jeu s’attaquent à tout moment (2 membres de ta famille partent). Par défaut tu es protégé ; quand ta famille a tenu " + AP_JOUR_PVP + " jours, le mode pillard (" + Math.round((AP_BONUS_PILLARD - 1) * 100) + " % de production en plus, au moins 3 jours, relancés à chaque attaque) permet aussi de piller les autres joueurs pillards et les ruines, mais tu peux être pillé à ton tour (jusqu’à 20 % de ton stock non récolté, puis 24 heures à l’abri). Quand ta famille meurt, l’avant-poste repasse en mode protégé avec 24 heures à l’abri, et la famille suivante y a accès dès son premier jour."]);
     return R;
   };
   if(typeof THEMES_GUIDE !== "undefined") THEMES_GUIDE.forEach(function(T){ if(T[0] === "Progresser") T[2].push("L’avant-poste"); });
@@ -885,6 +934,16 @@ if(typeof TRADUCTIONS !== "undefined"){
     "L’avant-poste":"The outpost", "défense":"defense", "niveaux construits":"levels built", "emplacements":"plots",
     "À récolter":"To harvest", "{n} au plus par ressource":"{n} max per resource",
     "Rien pour l’instant : construis une citerne, une serre ou une scierie pour produire.":"Nothing yet: build a cistern, a greenhouse or a sawmill to produce.",
+    "Niveau {n} · défense inconnue":"Level {n} · defense unknown", "Rapport de ton éclaireur":"Your scout’s report", "il y a {t} · valable encore {r}":"{t} ago · valid for {r}",
+    "Stock vide":"Empty stock", "Stock : {q}":"Stock: {q}", "vide":"empty", "peu":"a little", "moyen":"some", "beaucoup":"a lot", "(un poste radio donne le chiffre exact)":"(a radio post gives the exact number)",
+    "Ton éclaireur est en route : retour dans {t}.":"Your scout is on the way: back in {t}.", "Ton éclaireur a été repéré par les chiens du camp ! Nouvel essai possible dans {t}.":"Your scout was spotted by the camp’s dogs! You can try again in {t}.",
+    "On ne voit pas ses défenses d’ici. Envoie un éclaireur pour savoir ce qu’il a construit.":"You can’t see its defenses from here. Send a scout to find out what it has built.",
+    "Envoyer un éclaireur":"Send a scout", "{p}, −{n} ⚡ · 5 min":"{p}, −{n} ⚡ · 5 min", "personne d’assez reposé":"no one rested enough",
+    "Un éclaireur repéré !":"Scout spotted!", "Tes chiens ont repéré un éclaireur de {p} près de ton avant-poste.":"Your dogs spotted a scout from {p} near your outpost.", "un pillard":"a raider",
+    "Tes chiens ont repéré un éclaireur de {p}":"Your dogs spotted a scout from {p}",
+    "Ton éclaireur est déjà en route.":"Your scout is already on the way.", "Ton dernier éclaireur a été repéré : attends un peu avant d’en renvoyer un.":"Your last scout was spotted: wait a little before sending another.",
+    "Tous tes éclaireurs sont déjà dehors.":"All your scouts are already out.", "C’est ton propre avant-poste.":"This is your own outpost.",
+    "Des chiens de garde : ils repoussent zombies et pillards, limitent les pertes quand le camp est forcé et repèrent les éclaireurs.":"Guard dogs: they drive off zombies and raiders, limit losses when the camp is broken into, and spot scouts.",
     "Pillard":"Raider", "Protégé":"Protected", "niveaux":"levels", "{n} au plus":"{n} max", "Mode protégé":"Protected mode",
     "3 eau et 3 repas tous les 4 jours. Le reste sert ici : chantiers, soins et essence des pillages.":"3 water and 3 meals every 4 days. The rest is used here: building, healing and fuel for raids.",
     "Personne ne peut te piller. Les camps de pillards de la carte s’attaquent quand tu veux.":"No one can raid you. Raider camps on the map can be attacked whenever you like.",
@@ -942,7 +1001,7 @@ if(typeof TRADUCTIONS !== "undefined"){
   });
   if(typeof TRAD_ECRAN !== "undefined") Object.assign(TRAD_ECRAN, { "Ton avant-poste":"Your outpost", "Voir : Ton avant-poste":"See: Your outpost", "Dès {#} jours, bâtis ton camp : citerne, serre, scierie… Il produit même sans toi. En mode pillard, attaque les camps rivaux":"From day {#}, build your camp: water tank, greenhouse, sawmill… It produces even without you. In raider mode, attack rival camps", "Avant-poste":"Outpost", "L’avant-poste":"The outpost" });
 }
-if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout, traps and kennel. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to harvest. The road to the refuge is long: it only brings back {#} water rations and {#} meals every {#} days (herbs without limit); planks, nails and scrap metal stay at the outpost and pay for its construction, the infirmary’s bandages heal your team when it returns from a raid, and the garage’s fuel takes it raiding by car (half as tiring). Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
+if(typeof REGLES_EN !== "undefined") REGLES_EN["L’avant-poste"] = "From day {#}, a new room opens: the outpost. On its {#} plots ({#} at the start, {#} more per palisade level), you build with materials from the refuge: cistern, greenhouse, sawmill, palisade, storehouse, infirmary, forge, radio post, watchtower, garage, hideout, traps and kennel. Each has {#} levels; a construction takes from {#} minutes to {#} hours in real time, one at a time (an ad can halve the remaining time, {#} times a day). Buildings produce even when you’re not playing: tap the campfire to harvest. The road to the refuge is long: it only brings back {#} water rations and {#} meals every {#} days (herbs without limit); planks, nails and scrap metal stay at the outpost and pay for its construction, the infirmary’s bandages heal your team when it returns from a raid, and the garage’s fuel takes it raiding by car (half as tiring). Every {#} hours, zombies or raiders may attack: palisade, tower and traps defend it, the hideout and the radio limit losses. The outpost is yours: it survives your family’s death. From the camp, the map shows other survivors’ outposts. Their defenses stay hidden: a scout ({#} ⚡, {#} minutes) reports their buildings for {#} hours, unless their kennel’s dogs spot it ({#}% per level); your own kennel spots other players’ scouts, and a radio post gives the exact stock. The game’s raider camps can be attacked at any time ({#} members of your family go). By default you’re protected; once your family has lasted {#} days, raider mode ({#}% more production, at least {#} days, renewed with every attack) also lets you raid other raider players and ruins, but you can be raided in turn (up to {#}% of your unharvested stock, then {#} hours of safety). When your family dies, the outpost goes back to protected mode with {#} hours of safety, and the next family can use it from day one.";
 
 /* ---------- Découverte de l'avant-poste (2026-11-15) : une fois, au premier moment calme après le déblocage ---------- */
 function openIntroAvantposte(){

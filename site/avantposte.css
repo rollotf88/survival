@@ -214,3 +214,10 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .apx .ap-carte-big > img{width:84px;height:58px}
 .apx .ap-carte-big .ap-cb-t small{font-size:11.5px;line-height:1.25}
 @media (max-height:960px){ .apx-pied{display:none} }
+
+/* Éclaireurs (2026-11-16) */
+.apc-rap{display:flex;flex-direction:column;margin-top:8px}
+.apc-rap small{font-size:11.5px;color:var(--mut)}
+.apc-ecl{font-weight:700}
+.apc-rep{color:var(--bad);font-weight:700}
+.apc-fp small{color:var(--mut);font-size:11.5px}
