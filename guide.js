@@ -103,7 +103,7 @@ function reglesGuide(){
       "Chaque nuit, tu gagnes 1 point par membre en vie : garder toute la famille en vie rapporte le plus. Les chapitres donnent des objectifs et des récompenses ; ensuite, « Tenir bon » revient tous les 10 jours. " +
       "En Partie du jour, tout le monde a la même partie : mêmes choix, même résultat. Compare ton score !"],
     ["Crédits", "🙏",
-      "Musique : « EmptyCity » par yd (domaine public, CC0). " +
+      "Musiques et bruitages : créés pour le jeu (Suno, ElevenLabs). Polices : Bangers et Nunito, licence SIL Open Font License 1.1. " +
       "Filtre des noms : une partie des mots vient de la liste « List of Dirty, Naughty, Obscene and Otherwise Bad Words » (LDNOOBW, github.com/LDNOOBW), licence CC BY 4.0, triée et complétée pour le jeu."]
   ];
 }

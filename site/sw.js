@@ -4,10 +4,12 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261116-1349";
+var VERSION = "survival-20261116-1400";
 var FICHIERS = [
   "./",
   "index.html",
+  "polices/bangers-latin.woff2",
+  "polices/nunito-latin.woff2",
   "transfert.js",
   "langue.js",
   "maintenance.js",

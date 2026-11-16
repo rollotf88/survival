@@ -5,6 +5,7 @@
 # 3) Le fichier sw.js (copie hors connexion) n'est jamais gardé en cache, sinon les mises à jour n'arriveraient pas.
 
 RewriteEngine On
+AddType font/woff2 .woff2
 
 # (sauf .well-known : o2switch s'en sert pour renouveler le certificat https)
 RewriteCond %{REQUEST_URI} !^/\.well-known/

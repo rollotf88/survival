@@ -8,6 +8,8 @@ var VERSION = "survival-1";
 var FICHIERS = [
   "./",
   "index.html",
+  "polices/bangers-latin.woff2",
+  "polices/nunito-latin.woff2",
   "transfert.js",
   "langue.js",
   "maintenance.js",

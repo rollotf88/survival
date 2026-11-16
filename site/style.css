@@ -1,3 +1,6 @@
+/* Polices hébergées sur zombria.com (2026-11-16 : plus d'appel à Google Fonts). SIL Open Font License, voir licences/ */
+@font-face{font-family:"Bangers";font-style:normal;font-weight:400;font-display:swap;src:url("polices/bangers-latin.woff2") format("woff2")}
+@font-face{font-family:"Nunito";font-style:normal;font-weight:200 1000;font-display:swap;src:url("polices/nunito-latin.woff2") format("woff2")}
 :root{--bg:#e8d9bc;--card:#f7eedb;--ink:#2e1f15;--mut:#6e5640;--acc:#d98e2b;--accink:#2e1f15;--ok:#3f6c2b;--bad:#b23b26;--line:#c2a982;--bois:#7a4e2d;--boisClair:#a8774c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1e1611;--card:#2d221a;--ink:#f1e4cc;--mut:#b49c80;--acc:#e8a33d;--accink:#2a1c12;--ok:#8cc46c;--bad:#ff8f73;--line:#4d3b2c;--bois:#5a3a22;--boisClair:#7a5434;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#1e1611;--card:#2d221a;--ink:#f1e4cc;--mut:#b49c80;--acc:#e8a33d;--accink:#2a1c12;--ok:#8cc46c;--bad:#ff8f73;--line:#4d3b2c;--bois:#5a3a22;--boisClair:#7a5434;color-scheme:dark}

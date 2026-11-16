@@ -1,3 +1,4 @@
+@font-face{font-family:"Nunito";font-style:normal;font-weight:200 1000;font-display:swap;src:url("polices/nunito-latin.woff2") format("woff2")}
 /* Pages « Mentions légales » et « Confidentialité » (2026-11-14) : même palette que le jeu (parchemin, bois, ambre) */
 :root{--bg:#efe3cc;--carte:#fbf4e6;--encre:#2c1d12;--doux:#6b5541;--bois:#7a5232;--acc:#b8721f;--ligne:#d9c6a5}
 @media (prefers-color-scheme:dark){:root{--bg:#1d140d;--carte:#2a1e15;--encre:#f3e6cf;--doux:#c7b39a;--bois:#a87b52;--acc:#f0b45a;--ligne:#4a3726}}
