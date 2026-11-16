@@ -176,7 +176,7 @@ function apDecor(){
     r = apRect("cadenas", x, y, .3, true); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
     Object.keys(AP_BAT).forEach(function(b){ if(AP_BAT[b].pillard) return;
       [1, 3, 5].forEach(function(s){ var rr = apRect(b + "-" + s, x, y);
-        D.push(["images/avantposte/bat3/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
+        D.push(["images/avantposte/bat4/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
     r = apRect("echafaudage-1", x, y, .5); D.push(["images/avantposte/echafaudage-1.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && (!P || !P.niv); }]);
     r = apRect("echafaudage-3", x + 10, y - 10, .38); D.push(["images/avantposte/echafaudage-3.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && !!P && P.niv > 0; }]);
   });
@@ -279,7 +279,7 @@ function apEffet(id, n){
   if(B.planque) return "🕳️ " + trad("{n} % du stock à l’abri", { n:B.planque[n - 1] });
   return "";
 }
-function apImg(id, n){ return '<img class="ap-img" src="images/avantposte/bat3/' + id + "-" + apStade(n || 1) + '.webp" alt="">'; }
+function apImg(id, n){ return '<img class="ap-img" src="images/avantposte/bat4/' + id + "-" + apStade(n || 1) + '.webp" alt="">'; }
 
 function openCamp(){
   apMaj(); apFenetre = "camp";
@@ -341,7 +341,7 @@ function apOuvrirSlot(k){
     var dispo = Object.keys(AP_BAT).filter(function(b){ return !apNiv(b) && !(C && C.id === b); });
     if(!apChoix || dispo.indexOf(apChoix) < 0) apChoix = dispo.filter(function(b){ return !AP_BAT[b].pillard; })[0] || null;
     h += '<h2>🏗️ ' + trad("Emplacement libre") + '</h2><div class="ap-choix">' + dispo.map(function(b){ var B = AP_BAT[b];
-      return '<button class="ap-c' + (b === apChoix ? " sel" : "") + (B.pillard ? " bientot" : "") + '" data-act="apChoisir" data-id="' + b + '"' + (B.pillard ? " disabled" : "") + '><img src="images/avantposte/bat3/' + b + '-1.webp" alt=""><b>' + trad(B.nom) + '</b>' + (B.pillard ? '<small>' + trad("bientôt (mode pillard)") + '</small>' : '') + '</button>'; }).join("") + '</div>';
+      return '<button class="ap-c' + (b === apChoix ? " sel" : "") + (B.pillard ? " bientot" : "") + '" data-act="apChoisir" data-id="' + b + '"' + (B.pillard ? " disabled" : "") + '><img src="images/avantposte/bat4/' + b + '-1.webp" alt=""><b>' + trad(B.nom) + '</b>' + (B.pillard ? '<small>' + trad("bientôt (mode pillard)") + '</small>' : '') + '</button>'; }).join("") + '</div>';
     if(apChoix) h += apFiche(apChoix, 0, k);
     show(h + '</div>' + BTN_FERMER());
     return;
@@ -584,7 +584,7 @@ function apFicheRepere(i){
     var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
     h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
     var b = P.bats || {}, ks = Object.keys(b);
-    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat3/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
+    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat4/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
     var pill = P.pillard && !P.ruine, bouclier = P.bouclier && P.bouclier > Date.now();
     h += '<p class="apc-fp">' + (P.moi ? (apPillard() ? trad("Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.") : trad("Ton avant-poste. Il est protégé : personne ne peut le piller."))
       : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.", { n:P.absent || 30 })
