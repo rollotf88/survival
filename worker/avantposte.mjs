@@ -118,6 +118,7 @@ export async function avantpostePost(request, env, O){
   }
   if(d.action === "finAttaque"){
     if(!A || !A.attaque || now - A.attaque.t > 2 * 3600000) return O.reponse({ erreur: "Aucune attaque en cours." });
+    if(d.victoire && now - A.attaque.t < 5000) return O.reponse({ erreur: "Combat trop rapide : résultat refusé." }); // SÉCURITÉ (2026-11-16)
     const P = C.postes[A.attaque.cible]; delete A.attaque; change = true;
     if(!P) return O.reponse({ erreur: "Cet avant-poste n’existe plus." });
     if(d.victoire){

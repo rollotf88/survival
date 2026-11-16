@@ -87,7 +87,7 @@ async function onRequestPost({ request, env }){
   const pseudoBrut = String(d.pseudo || "").replace(/[^\p{L}\p{N} _\-'.]/gu, "").trim().slice(0, 16), pseudo = texteInterdit(pseudoBrut) ? "" : pseudoBrut;
   const id = String(d.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
   // Vérifications simples : un score impossible est refusé (au plus 4 points par jour tenu)
-  if(!pseudo || id.length < 8 || !(jours >= 0 && jours <= 400) || !(score >= 0 && score <= jours * 4))
+  if(!pseudo || id.length < 8 || !(await scorePossible(env, id, score, jours)))
     return reponse({ erreur: "score refusé" }, 400);
   const liste = await lireListe(env);
   const ancien = liste.find((e) => e.id === id);
@@ -153,14 +153,14 @@ async function mondePost(request, env){
   const eid = idHordeServeur(now), avant = m.j[id] && m.j[id].e;
   m.j[id] = { v: entier(d.vivants, 4), d: entier(d.jour, 400), n: pseudo, m: entier(d.morts, 100000), z: entier(d.zombies, 1000000), p: entier(d.parties, 10000), t: now };
   if(eid && d.evt && String(d.evt.id) === eid) m.j[id].e = { id: eid, z: Math.min(2000, entier(d.evt.z, 2000)) }; else if(avant && avant.id === eid) m.j[id].e = avant;
-  if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 400), s: entier(d.fin.score, 1600), t: now }].concat(m.tombes || []).slice(0, 10); }
+  if(d.fin){ m.tombes = [{ n: pseudo, j: entier(d.fin.jour, 5000), s: entier(d.fin.score, 20000), t: now }].concat(m.tombes || []).slice(0, 10); }
   const ids = Object.keys(m.j);
   if(ids.length > MAX_APPAREILS) ids.sort((a, b) => m.j[a].t - m.j[b].t).slice(0, ids.length - MAX_APPAREILS).forEach((k) => delete m.j[k]);
   await env.CLASSEMENT.put(CLE_MONDE, JSON.stringify(m));
   // Classement du mois en direct (2026-11-12, idée de Fabien) : une partie CLASSÉE en cours y entre avec son score du moment
   // (seulement s'il dépasse le meilleur score du mois de cet appareil, pour limiter les écritures)
-  const sc = Math.floor(+d.score), jr = entier(d.jour, 400);
-  if(d.classee && pseudo && entier(d.vivants, 4) > 0 && sc > 0 && sc <= jr * 4){
+  const sc = Math.floor(+d.score), jr = entier(d.jour, 5000);
+  if(d.classee && pseudo && entier(d.vivants, 4) > 0 && sc > 0 && (await scorePossible(env, id, sc, jr))){
     const { S } = await lireSaison(env, now), e = S.scores.find((x) => x.id === id), cadre = cadreDe(d), avatar = avatarDe(d);
     if(!e || sc > e.score){
       if(e){ e.score = sc; e.jours = jr; e.pseudo = pseudo; if(cadre) e.cadre = cadre; e.avatar = avatar; e.live = true; e.t = now; }
@@ -532,6 +532,12 @@ async function clansPost(request, env){
       if(!mon) return reponse({ erreur: "Tu n’as pas de clan." });
       bastionDe(mon); const o = d.objets || {}, liste = [];
       const moi = mon.membres.find((x) => x.id === id);
+      // SÉCURITÉ : au plus 10 + 1 objet par tranche de 5 jours tenus, 40 au maximum, par joueur et par jour
+      const plafondDepot = Math.min(40, 10 + Math.floor(((moi && moi.jour) || 0) / 5));
+      const dj = moi && moi.depots && moi.depots.jour === aujourdhui() ? moi.depots : { jour: aujourdhui(), n: 0 };
+      let total = 0; for(const k in o){ const n = Math.floor(+o[k]); if(DEPOSABLES.indexOf(k) >= 0 && n >= 1) total += n; }
+      if(dj.n + total > plafondDepot) return reponse({ erreur: "Tu ne peux plus déposer que " + Math.max(0, plafondDepot - dj.n) + " objets aujourd’hui (" + plafondDepot + " par jour pour une famille de " + ((moi && moi.jour) || 0) + " jours)." });
+      if(moi){ dj.n += total; moi.depots = dj; }
       for(const k in o){ const n = Math.floor(+o[k]); if(DEPOSABLES.indexOf(k) < 0 || !(n >= 1 && n <= 500)) continue; mon.reserve[k] = (mon.reserve[k] || 0) + n; liste.push(n + " " + k); if(moi) moi.depose = (moi.depose || 0) + n; }
       if(!liste.length) return reponse({ erreur: "Rien à déposer." });
       noter(mon, pseudo || "?", "a déposé " + liste.join(", ")); await sauver();
@@ -770,7 +776,7 @@ async function clansPost(request, env){
       bastionDe(mon); bastionDe(adv); const mines = Math.min(3, adv.def.mines || 0); adv.def.mines -= mines;
       W.assauts = W.assauts.filter((s) => !(s.par === id && s.fini === false)); // un assaut abandonné ne compte pas
       const sid = "s" + Math.random().toString(36).slice(2, 9);
-      W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [] });
+      W.assauts.push({ id: sid, par: id, pseudo, camp, cible: cible.id, ciblePseudo: cible.pseudo, jour: j, fini: false, etoiles: 0, butin: [], debut: now });
       if(mines) noter(adv, "💣", mines + " mine" + (mines > 1 ? "s ont" : " a") + " explosé sous les pieds de " + (pseudo || "?"));
       await sauver();
       return reponse({ ok: true, assaut: sid, clan: adv.nom, cible: cible.pseudo, jourCible: cible.jour || 30, remparts: adv.def.remparts || 0, armurerie: adv.def.armurerie || 0, mines, camion: { parebuffle: mon.def.parebuffle || 0, blindage: mon.def.blindage || 0, tourelle: mon.def.tourelle || 0 } });
@@ -779,6 +785,9 @@ async function clansPost(request, env){
       if(!mon || !mon.guerre) return reponse({ erreur: "Ton clan n’est pas en guerre." });
       const W = C.guerres[mon.guerre], s = W.assauts.find((x) => x.id === String(d.assaut || "") && x.par === id && x.fini === false);
       if(!s) return reponse({ erreur: "Assaut introuvable." });
+      // SÉCURITÉ : un vrai combat dure au moins 5 secondes (un seul tour avec Raja) et se termine dans les 2 heures
+      if(s.debut && d.victoire && now - s.debut < 5000) return reponse({ erreur: "Combat trop rapide : résultat refusé." });
+      if(s.debut && now - s.debut > 2 * 3600000){ s.fini = true; s.etoiles = 0; await sauver(); return reponse({ erreur: "Cet assaut a duré trop longtemps : il compte comme perdu." }); }
       const camp = s.camp, adv = bastionDe(C.clans[camp === "a" ? W.b : W.a] || { reserve: {} });
       s.fini = true; s.etoiles = d.victoire ? Math.max(1, Math.min(3, Math.floor(+d.etoiles) || 1)) : 0;
       // On garde la meilleure attaque par cible et par jour : seules les étoiles en plus comptent
@@ -818,11 +827,11 @@ const ENTETES_ADMIN = { "Content-Type": "application/json; charset=utf-8", "Cach
 const repAdmin = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: ENTETES_ADMIN });
 async function empreinte(t){ return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(t)))); }
 async function memeMdp(a, b){ const x = await empreinte(a), y = await empreinte(b); let d = 0; for(let i = 0; i < x.length; i++) d |= x[i] ^ y[i]; return d === 0; }
-// Mot de passe PROVISOIRE (demande de Fabien, 2026-11-09, en attendant son propre hébergeur) : utilisé tant que le
-// secret ADMIN_MDP n'existe pas. À remplacer avant une vraie sortie : n'importe qui peut deviner « 123456 ».
-const MDP_PROVISOIRE = "123456";
+// SÉCURITÉ (2026-11-16) : plus de mot de passe de secours. Sans ADMIN_MDP (reglages.json sur o2switch),
+// l'administration reste fermée.
 async function adminPost(request, env){
-  const mdpAdmin = env.ADMIN_MDP || MDP_PROVISOIRE;
+  const mdpAdmin = String(env.ADMIN_MDP || "");
+  if(!mdpAdmin) return repAdmin({ erreur: "Administration fermée : le mot de passe n’est pas configuré sur le serveur (reglages.json)." }, 503);
   const ip = request.headers.get("CF-Connecting-IP") || "inconnue", cleEchecs = "admin_echecs_" + ip;
   const echecs = +(await env.CLASSEMENT.get(cleEchecs)) || 0;
   if(echecs >= 5) return repAdmin({ erreur: "Trop d’essais. Réessaie dans 15 minutes." }, 429);
@@ -851,7 +860,26 @@ async function adminPost(request, env){
         speciaux: Object.keys(parr.speciaux).map((c) => ({ code: c, actif: !!parr.speciaux[c].actif, n: parr.speciaux[c].n || 0 })),
         tombes: monde.tombes || [] });
     }
-    case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500) });
+    case "joueurs": return repAdmin({ joueurs: joueurs().slice(0, 500), bannis: await lireBannis(env, true) });
+    case "bannir": { // SÉCURITÉ (2026-11-16) : l'appareil ne peut plus rien écrire ; retiré du monde, du classement, de la saison, de son clan et de la carte
+      const id = String(d.id || "").replace(/[^\w-]/g, ""); if(!id) return repAdmin({ erreur: "id" }, 400);
+      const B = await lireBannis(env, true), jj = monde.j[id] || {};
+      B[id] = { t: Date.now(), pseudo: String(d.pseudo || jj.pseudo || "").slice(0, 20), raison: String(d.raison || "").replace(/[<>]/g, "").slice(0, 120) };
+      await env.CLASSEMENT.put("bannis", JSON.stringify(B)); cacheBannis = B; cacheBannisT = Date.now();
+      delete monde.j[id]; const k = liste.findIndex((e) => e.id === id); if(k >= 0) liste.splice(k, 1);
+      await ecrireMonde(); if(k >= 0) await ecrireListe(); await retirerDeSaison(env, id);
+      const C = await lireClans(env), cid = C.parJoueur && C.parJoueur[id];
+      if(cid && C.clans[cid]){ const c = C.clans[cid]; c.membres = c.membres.filter((m) => m.id !== id); delete C.parJoueur[id];
+        if(!c.membres.length) delete C.clans[cid]; else if(c.chef === id) c.chef = c.membres[0].id;
+        await env.CLASSEMENT.put("clans", JSON.stringify(C)); }
+      const AP = await env.CLASSEMENT.get("ap_carte", { type: "json" }); if(AP && AP.postes && AP.postes[id]){ delete AP.postes[id]; await env.CLASSEMENT.put("ap_carte", JSON.stringify(AP)); }
+      return repAdmin({ ok: true });
+    }
+    case "debannir": {
+      const id = String(d.id || ""), B = await lireBannis(env, true); delete B[id];
+      await env.CLASSEMENT.put("bannis", JSON.stringify(B)); cacheBannis = B; cacheBannisT = Date.now();
+      return repAdmin({ ok: true });
+    }
     // Export de toutes les données (2026-11-14 : déménagement vers zombria.com chez o2switch) : { clé : valeur en texte }
     case "exporter": {
       const cles = [CLE, CLE_SAISON, CLE_MONDE, CLE_PARR, CLE_CLANS, CLE_REGLAGES, CLE_AVIS], C = (await env.CLASSEMENT.get(CLE_CLANS, { type: "json" })) || {};
@@ -1117,10 +1145,54 @@ function demenagement(url){
   return new Response(PAGE_TRANSFERT, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Robots-Tag": "noindex" } });
 }
 
+/* ---------- SÉCURITÉ, niveau 1 (2026-11-16) ----------
+   - limite d'envois par adresse : 90 écritures par minute (un joueur normal en fait quelques-unes)
+   - appareils bannis (clé « bannis », gérée dans l'administration) : plus aucune écriture
+   - premier passage de chaque appareil (clé « premiers ») : sert à refuser les scores impossibles */
+const ENVOIS_MINUTE = 90, envoisParIp = new Map();
+function tropDEnvois(ip){
+  const now = Date.now(), e = envoisParIp.get(ip) || { t: now, n: 0 };
+  if(now - e.t > 60000){ e.t = now; e.n = 0; }
+  e.n++; envoisParIp.set(ip, e);
+  if(envoisParIp.size > 20000) envoisParIp.clear();
+  return e.n > ENVOIS_MINUTE;
+}
+let cacheBannis = null, cacheBannisT = 0;
+async function lireBannis(env, frais){
+  if(!frais && cacheBannis && Date.now() - cacheBannisT < 30000) return cacheBannis;
+  cacheBannis = (await env.CLASSEMENT.get("bannis", { type: "json" })) || {}; cacheBannisT = Date.now(); return cacheBannis;
+}
+async function premierPassage(env, id){
+  if(!id) return Date.now();
+  let P = await env.CLASSEMENT.get("premiers", { type: "json" });
+  if(!P){ // tout premier lancement : les joueurs déjà connus sont considérés comme anciens (leurs scores restent acceptés)
+    P = {}; const vieux = Date.now() - 1000 * 24 * 3600000;
+    try{ const m = await lireMonde(env); Object.keys(m.j || {}).forEach((k) => { P[k] = vieux; }); }catch(e){}
+    try{ (await lireListe(env)).forEach((e) => { P[e.id] = vieux; }); }catch(e){}
+    await env.CLASSEMENT.put("premiers", JSON.stringify(P));
+  }
+  if(!P[id]){ P[id] = Date.now(); await env.CLASSEMENT.put("premiers", JSON.stringify(P)); }
+  return P[id];
+}
+// Un score est-il possible ? Au plus 4 points par jour tenu, et pas plus de jours de jeu que le temps réel passé ne permet
+// (90 jours de jeu par heure, très large ; 40 jours d'avance pour un appareil tout neuf)
+async function scorePossible(env, id, score, jours){
+  if(!(jours >= 0 && jours <= 5000) || !(score >= 0 && score <= jours * 4)) return false;
+  const t0 = await premierPassage(env, id), heures = (Date.now() - t0) / 3600000;
+  return jours <= 40 + heures * 90;
+}
+
 export default {
   async fetch(request, env){
     const url = new URL(request.url);
     const dem = demenagement(url); if(dem) return dem;
+    // SÉCURITÉ : limite d'envois et appareils bannis (toutes les écritures sauf l'administration)
+    if(request.method === "POST" && url.pathname.indexOf("/api/") === 0 && url.pathname !== "/api/admin" && env.CLASSEMENT){
+      const ip = request.headers.get("CF-Connecting-IP") || "inconnue";
+      if(tropDEnvois(ip)) return reponse({ erreur: "Trop de demandes : attends une minute." }, 429);
+      let idB = ""; try{ const c = await request.clone().json(); idB = String((c && c.id) || "").replace(/[^\w-]/g, ""); }catch(e){}
+      if(idB && (await lireBannis(env))[idB]) return reponse({ erreur: "Cet appareil a été banni du jeu en ligne." }, 403);
+    }
     if(url.pathname === "/api/classement"){
       if(request.method === "OPTIONS") return onRequestOptions();
       if(request.method === "GET") return onRequestGet({ request, env });

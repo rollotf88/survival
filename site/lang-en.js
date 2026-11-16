@@ -1947,3 +1947,11 @@ Object.assign(TRADUCTIONS.en, {
   "Opérations, échanges, discussion":"Operations, trades, chat", "Le raid de l’immeuble, des échanges d’objets entre membres et une discussion pour s’organiser.":"The apartment block raid, item trades between members and a chat to get organized.",
   "Rien n’est obligatoire : tu peux aussi continuer seul.":"Nothing is mandatory: you can also carry on alone.", "Voir les clans":"See the clans",
 });
+
+// Erreurs de sécurité du serveur (2026-11-16)
+Object.assign(TRADUCTIONS.en, {
+  "Trop de demandes : attends une minute.":"Too many requests: wait a minute.", "Cet appareil a été banni du jeu en ligne.":"This device has been banned from online play.",
+  "Combat trop rapide : résultat refusé.":"Fight too fast: result refused.", "Cet assaut a duré trop longtemps : il compte comme perdu.":"This assault lasted too long: it counts as lost.",
+  "score refusé":"score refused"
+});
+if(typeof TRAD_MOTIFS !== "undefined") TRAD_MOTIFS.unshift([/^Tu ne peux plus déposer que (\d+) objets aujourd’hui \((\d+) par jour pour une famille de (\d+) jours\)$/, "You can only drop $1 more items today ($2 a day for a family of $3 days)"]);
