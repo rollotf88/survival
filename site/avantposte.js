@@ -546,8 +546,8 @@ function apBrancherCarte(el){
   el.addEventListener("pointerdown", function(e){
     var vue = e.target.closest(".apc-vue"); if(!vue) return;
     apDoigts[e.pointerId] = { x:e.clientX, y:e.clientY };
-    apGlisse = { x:e.clientX, y:e.clientY, vx:apCarteVue.x, vy:apCarteVue.y, bouge:0 };
-    try{ vue.setPointerCapture(e.pointerId); }catch(er){}
+    apGlisse = { x:e.clientX, y:e.clientY, vx:apCarteVue.x, vy:apCarteVue.y, bouge:0, vue:vue, id:e.pointerId };
+    /* pas de capture tout de suite : avec une souris, le clic irait à la carte entière au lieu du repère touché (2026-11-16) */
   });
   el.addEventListener("pointermove", function(e){
     if(!apDoigts[e.pointerId]) return;
@@ -564,6 +564,7 @@ function apBrancherCarte(el){
     if(!apGlisse) return;
     var dx = e.clientX - apGlisse.x, dy = e.clientY - apGlisse.y;
     apGlisse.bouge = Math.max(apGlisse.bouge, Math.abs(dx) + Math.abs(dy));
+    if(apGlisse.bouge > 6 && !apGlisse.capture){ apGlisse.capture = true; try{ apGlisse.vue.setPointerCapture(apGlisse.id); }catch(er){} } // on glisse vraiment : la carte suit le pointeur
     apCarteVue.x = apGlisse.vx + dx; apCarteVue.y = apGlisse.vy + dy; apAppliquerVue();
   });
   var fin = function(e){ delete apDoigts[e.pointerId]; if(!Object.keys(apDoigts).length){ apDernierGlisse = apGlisse ? apGlisse.bouge : 0; apGlisse = null; } };
