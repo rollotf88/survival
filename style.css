@@ -557,9 +557,9 @@ body.fond{touch-action:pan-y}
 #piece .navpieces{pointer-events:none}
 #piece.navvue .navpieces{pointer-events:auto}
 /* ---------- Stock en cases (façon jeu mobile) ---------- */
-.invtabs{display:flex;gap:4px;overflow-x:auto;margin:2px 0 8px;padding-bottom:2px;scrollbar-width:none}
+.invtabs{display:flex;gap:3px;overflow-x:auto;margin:2px 0 8px;padding-bottom:2px;scrollbar-width:none}
 .invtabs::-webkit-scrollbar{display:none}
-.invtab{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;min-width:52px;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:3px 6px;font-size:17px;line-height:1.1;cursor:pointer;color:var(--ink)}
+.invtab{flex:1 0 auto;display:flex;flex-direction:column;align-items:center;min-width:52px;border:2px solid var(--bois);border-radius:12px;background:var(--bg);padding:3px 4px;font-size:17px;line-height:1.1;cursor:pointer;color:var(--ink)}
 .invtab small{font-size:10px;font-weight:800}
 .invtab.on{background:linear-gradient(180deg,#f0ad4e,var(--acc));color:var(--accink)}
 .invtab:disabled{opacity:.4}
@@ -616,7 +616,7 @@ body.fond{touch-action:pan-y}
 .cl-reste{position:absolute;right:4px;top:4px;background:rgba(29,20,14,.78);color:#fff6e6;font-size:11px;font-weight:800;border-radius:8px;padding:1px 6px}
 .cl-mission{position:absolute;left:4px;top:4px;font-size:16px}
 .cl-pourquoi{position:absolute;left:0;right:0;bottom:0;background:rgba(178,59,38,.85);color:#fff;font-size:10.5px;font-weight:800;text-align:center;padding:1px 2px}
-.cl-nom{display:block;font-weight:800;font-size:13px;line-height:1.15;padding:4px 6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-nom{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-weight:800;font-size:13px;line-height:1.15;padding:4px 6px 0;white-space:normal;overflow:hidden;overflow-wrap:anywhere} /* 2 lignes au lieu de « … » (2026-11-16) */
 .cl-infos{display:flex;justify-content:space-between;gap:4px;padding:1px 6px 0;font-size:11px;font-weight:700;color:var(--mut)}
 .cl-infos .dg.ok{color:var(--ok)}.cl-infos .dg.moy{color:var(--acc)}.cl-infos .dg.ko{color:var(--bad)}
 .cl-conds{display:flex;gap:3px;padding:2px 6px 5px;font-size:13px}
@@ -3069,3 +3069,25 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat::before{display:none} /*
   .mn-haut.avec-cpt{margin-bottom:3px}
   .mn-haut.avec-cpt .mn-cpt-t b{font-size:12px;max-width:120px}
 }
+/* PC : le panneau de droite est étroit (440 px) : 2 cartes de lieux par ligne, sinon les noms sont coupés (2026-11-16) */
+body.pc:not(.scene-petite) #modal .lieux{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Revue visuelle avec le mode dev (2026-11-16) : plus de textes coupés par « … » en paysage et sur petit téléphone */
+@media (max-height:480px), (max-width:380px){
+  .md b,.st-t b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-overflow:clip;overflow:hidden;font-size:10px;line-height:1.05}
+}
+@media (max-height:480px){
+  #sheet .mt .mt-t small,#sheet .mn-tete small{display:none}
+  .sheet .tuile b{white-space:normal;text-overflow:clip}
+  .mf-trait{font-size:12px;padding:2px 8px;max-width:none}
+}
+@media (max-width:380px){
+  .onglets .tab{font-size:15px;padding:4px 1px}
+  .tabs.onglets{gap:4px}
+}
+@media (max-height:480px){
+  .mn-haut.avec-cpt .mn-cpt-t{display:none}
+  .mn-haut.avec-cpt .mn-cpt{padding:4px 6px}
+  #sheet .mn-reglages .mr small{display:none}
+}
+@media (max-width:440px){ .invtab{flex:1 1 0;min-width:0;padding:3px 1px} .invtab small{font-size:9px;letter-spacing:-.2px;max-width:100%;overflow:hidden} }
+@media (max-width:380px){ .invtab small{display:none} .invtab{padding:5px 1px} }

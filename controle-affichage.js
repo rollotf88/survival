@@ -15,6 +15,10 @@ function controleAffichage(){
     for(var i = 0; i < el.length; i++) for(var j = 0; j < i; j++) if(chevauche(rect(el[i]), rect(el[j]))) pb.push(quoi + " : " + nom(el[i]) + " chevauche " + nom(el[j]));
   }
   function q(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); }
+  // 0) textes tronqués par « … » (2026-11-16 : noms de lieux coupés sur PC) et rangées d'onglets qui débordent
+  q("#app *, #modal *").filter(function(e){ if(!vis(e) || !e.childNodes.length) return false; var cs = getComputedStyle(e); return cs.textOverflow === "ellipsis" && e.scrollWidth > e.clientWidth + 1; })
+    .slice(0, 8).forEach(function(e){ pb.push("Texte tronqué : " + nom(e)); });
+  q("#modal .invtabs, #modal .tabs").filter(vis).forEach(function(t){ if(t.scrollWidth > t.clientWidth + 2) pb.push("Onglets qui débordent (" + t.scrollWidth + " px pour " + t.clientWidth + ")"); });
   // 1) pas de défilement horizontal
   if(document.documentElement.scrollWidth > vw + 1) pb.push("Défilement horizontal : page de " + document.documentElement.scrollWidth + " px pour un écran de " + vw);
   // 1 bis) une fenêtre ne doit pas défiler de côté, et la page ne doit pas recevoir de style d'un autre élément (bug « .pc » du 2026-11-10)

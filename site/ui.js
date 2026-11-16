@@ -113,7 +113,7 @@ function famillePick(k){
   if(o.emplacement === "outil" || o.emplacement === "sac") return "outil";
   return "moral";
 }
-var NOM_COURT = { epices:"Épices", huile:"Huile", farine:"Farine", champignons:"Champignons", baies:"Baies", herbes:"Herbes", soupe:"Soupe", poissonHerbes:"Poisson", ragout:"Ragoût", galettes:"Galettes", rizSaute:"Riz sauté", tarte:"Tarte", eau:"Eau", clous:"Clous", ruban:"Adhésif", chiffon:"Chiffon", ferraille:"Ferraille", alcool:"Alcool", epingle:"Épingles", jerrican:"Jerrican", bouteille:"Eau", conserve:"Conserve", batterie:"Batterie", courroie:"Courroie", bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
+var NOM_COURT = { pates:"Pâtes", epices:"Épices", huile:"Huile", farine:"Farine", champignons:"Champignons", baies:"Baies", herbes:"Herbes", soupe:"Soupe", poissonHerbes:"Poisson", ragout:"Ragoût", galettes:"Galettes", rizSaute:"Riz sauté", tarte:"Tarte", eau:"Eau", clous:"Clous", ruban:"Adhésif", chiffon:"Chiffon", ferraille:"Ferraille", alcool:"Alcool", epingle:"Épingles", jerrican:"Jerrican", bouteille:"Eau", conserve:"Conserve", batterie:"Batterie", courroie:"Courroie", bidon:"Eau", conserves:"Conserves", biscuits:"Biscuits", trousse:"Trousse", antibio:"Antibio", couverture:"Couverture",
   lampe:"Lampe", peluche:"Peluche", photo:"Photo", cartes:"Cartes", outils:"Outils", sacados:"Sac à dos", riz:"Riz", fusil:"Fusil",
   boiteCart:"Cartouches", pdb:"Pied-de-biche", canette:"Canette", sacoche:"Sacoche" };
 // « Ce qu'il te manque » : une case par besoin, cochée dès qu'un objet du sac y répond

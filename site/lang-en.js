@@ -77,7 +77,7 @@ var DONNEES_EN = {
     poule:["Chicken","Chickens","Often lays an egg at night (+1 ration), but drinks and attracts zombies"],
     piege:["Zombie trap","Zombie traps","+3 defense against one night attack, then broken"]
   },
-  court: { epices:"Spices", huile:"Oil", farine:"Flour", champignons:"Mushrooms", baies:"Berries", herbes:"Herbs", soupe:"Soup", poissonHerbes:"Fish",
+  court: { pates:"Pasta", epices:"Spices", huile:"Oil", farine:"Flour", champignons:"Mushrooms", baies:"Berries", herbes:"Herbs", soupe:"Soup", poissonHerbes:"Fish",
     ragout:"Stew", galettes:"Flatbreads", rizSaute:"Fried rice", tarte:"Pie", eau:"Water", clous:"Nails", ruban:"Tape", chiffon:"Rag", ferraille:"Scrap",
     alcool:"Alcohol", epingle:"Hairpins", jerrican:"Jerry can", bouteille:"Water", conserve:"Can", batterie:"Battery", courroie:"Belt", bidon:"Water",
     conserves:"Cans", biscuits:"Biscuits", trousse:"First aid", antibio:"Antibiotics", couverture:"Blanket", lampe:"Flashlight", peluche:"Teddy", photo:"Photo",
@@ -762,7 +762,7 @@ Object.assign(TRAD_ECRAN, {
   "Grande salle": "Great hall", "Salle du trésor": "Treasury", "Cour fortifiée": "Fortified yard", "La maison": "The house", "Le bastion du clan": "The clan stronghold",
   "Pièce précédente": "Previous room", "Pièce suivante": "Next room",
   // Menu
-  "Menu": "Menu", "Mon profil": "My profile", "voir et modifier": "view and edit", "Règles, objets, lieux": "Rules, items, places",
+  "Menu": "Menu", "Mon profil": "My profile", "voir et modifier": "view and edit", "Règles, objets, lieux": "Rules, items, places", "Règles et fiches": "Rules & guides", "Vibreur": "Vibrate",
   "Défis": "Challenges", "La horde est là": "The horde is here", "Classement": "Leaderboard", "Tous les joueurs": "All players",
   "Succès": "Achievements", "{#} / {#} débloqués": "{#} / {#} unlocked", "Clans": "Clans", "Dès le jour {#}": "From day {#}", "Fonder ou rejoindre": "Found or join",
   "Inviter": "Invite", "{#} / {#} bonus gardés": "{#} / {#} bonuses saved", "{#} colis à ouvrir": "{#} packages to open",

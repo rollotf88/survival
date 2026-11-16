@@ -173,7 +173,7 @@ function openMenuComplet(){
     h += '<div class="mn-cpt"><span class="mn-cpt-t"><b>☁️ ' + trad("Joue sur tous tes appareils") + '</b><small>' + trad("Ta partie te suit du téléphone à l’ordinateur") + '</small></span><div id="gsiBouton" class="cpt-gsi" data-taille="medium"></div></div>';
   h += '</div>';
   h += '<div class="menugrille">';
-  h += t("guide", "📖", "Guide", "Règles, objets, lieux");
+  h += t("guide", "📖", "Guide", "Règles et fiches");
   if(typeof openDefis === "function"){ var dD = lireDefis(), nD = defisDuJour().filter(function(D){ return dD.faits[D.id]; }).length, hm = typeof HORDE_MONDIALE !== "undefined" && HORDE_MONDIALE;
     h += t("defis", hm ? "🌍" : "🎯", "Défis", hm ? "La horde est là !" : nD + " / 3 aujourd’hui", hm); }
   if(typeof openClassement === "function") h += t("classement", "🏆", "Classement", "Tous les joueurs");
@@ -188,7 +188,7 @@ function openMenuComplet(){
   h += '</div><div class="mn-reglages">';
   h += r("menuson", "🔊", "Son", sonEstActif());
   if(typeof basculerMusique === "function") h += r("menumusique", "🎵", "Musique", musiqueActive());
-  if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibrations", vibrationsActives());
+  if(typeof basculerVibrations === "function" && navigator.vibrate) h += r("menuvibre", "📳", "Vibreur", vibrationsActives());
   h += r("menusensible", "🕯️", "Adulte", CONTENUS_SENSIBLES); // « Contenus durs » était coupé sur téléphone (2026-11-12, choix de Fabien)
   // Langue (2026-11-14, début de la traduction) : la pastille dit la langue actuelle, toucher passe à l'autre (la page se recharge)
   if(typeof LANGUES !== "undefined" && (LANGUES_PRETES.en || LANGUE !== "fr" || /langue=/.test(location.search))) h += '<button class="mr on" data-act="menulangue"><span class="mr-i">🌐</span><small>' + trad("Langue") + '</small><i>' + (LANGUE === "fr" ? "FR" : "EN") + '</i></button>';
