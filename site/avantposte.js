@@ -155,7 +155,7 @@ function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
 var AP_ECH_BAT = {}; // (réglages des anciens dessins, plus utiles : les nouveaux ont tous la même taille de base)
 // Morceau de sol sans enclos de chaque emplacement (boîte en pixels du terrain, forme = enveloppe des vraies pierres de l'enclos)
-var AP_SOL = [[611, 160, 747, 355], [463, 173, 645, 382], [335, 236, 552, 457], [248, 332, 473, 528], [211, 461, 426, 592], [233, 557, 470, 718], [321, 615, 546, 819], [444, 656, 638, 883], [711, 184, 900, 391], [801, 251, 1018, 460], [876, 339, 1105, 529], [927, 469, 1136, 600], [890, 543, 1105, 747], [802, 606, 1025, 815], [718, 651, 910, 884]];
+var AP_SOL = [[598, 161, 746, 369], [464, 172, 643, 381], [336, 237, 559, 443], [249, 333, 476, 512], [212, 458, 429, 607], [234, 554, 470, 719], [322, 627, 545, 819], [445, 657, 637, 882], [711, 185, 899, 383], [801, 250, 1018, 474], [876, 341, 1105, 517], [920, 470, 1136, 600], [872, 555, 1106, 735], [803, 631, 1024, 817], [719, 652, 909, 886]];
 function apRect(nom, x, y, ech, centre){
   var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
   var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + 22 : y + 48; // panneau et cadenas : le pied du poteau un peu sous le centre de l'enclos
@@ -167,7 +167,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol5/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
+    D.push([function(){ return "images/avantposte/sol6/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
