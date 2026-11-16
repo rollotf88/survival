@@ -35,7 +35,7 @@ var AP = {
 // Ordre d'ouverture des emplacements (les plus proches du feu d'abord)
 var AP_ORDRE = [0, 1, 8, 2, 9, 3, 10, 4, 11, 5, 12, 6, 13, 7, 14];
 // Taille des images (pour les poser sans déformation)
-var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[223, 218], "charrette-3":[237, 216], "charrette-5":[242, 253], "citerne-1":[229, 146], "citerne-3":[223, 175], "citerne-5":[214, 217], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[240, 170], "entrepot-3":[233, 197], "entrepot-5":[245, 207], "forge-1":[234, 200], "forge-3":[232, 252], "forge-5":[235, 257], "garage-1":[226, 232], "garage-3":[233, 243], "garage-5":[234, 280], "infirmerie-1":[227, 190], "infirmerie-3":[229, 197], "infirmerie-5":[240, 216], "palissade-1":[227, 169], "palissade-3":[228, 168], "palissade-5":[234, 202], "panneau":[110, 220], "panneau2":[110, 220], "pieges-1":[229, 212], "pieges-3":[235, 207], "pieges-5":[237, 240], "planque-1":[238, 187], "planque-3":[226, 197], "planque-5":[243, 240], "radio-1":[219, 203], "radio-3":[224, 244], "radio-5":[234, 258], "recolte":[177, 188], "scierie-1":[229, 164], "scierie-3":[231, 199], "scierie-5":[235, 199], "serre-1":[220, 163], "serre-3":[228, 177], "serre-5":[237, 208], "siege-1":[230, 240], "siege-3":[234, 236], "siege-5":[236, 273], "tour-1":[199, 265], "tour-3":[205, 289], "tour-5":[203, 321]};
+var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[229, 222], "charrette-3":[243, 220], "charrette-5":[246, 256], "citerne-1":[235, 149], "citerne-3":[228, 179], "citerne-5":[220, 222], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[245, 172], "entrepot-3":[238, 200], "entrepot-5":[249, 210], "forge-1":[239, 204], "forge-3":[238, 254], "forge-5":[241, 260], "garage-1":[232, 236], "garage-3":[244, 247], "garage-5":[240, 284], "infirmerie-1":[233, 194], "infirmerie-3":[234, 200], "infirmerie-5":[245, 224], "palissade-1":[231, 172], "palissade-3":[232, 173], "palissade-5":[239, 206], "panneau":[110, 220], "panneau2":[110, 220], "pieges-1":[235, 218], "pieges-3":[242, 212], "pieges-5":[249, 245], "planque-1":[245, 190], "planque-3":[236, 200], "planque-5":[249, 245], "radio-1":[224, 238], "radio-3":[228, 257], "radio-5":[239, 266], "recolte":[177, 188], "scierie-1":[235, 167], "scierie-3":[237, 203], "scierie-5":[240, 202], "serre-1":[226, 167], "serre-3":[233, 181], "serre-5":[242, 212], "siege-1":[236, 244], "siege-3":[242, 238], "siege-5":[243, 279], "tour-1":[203, 268], "tour-3":[210, 292], "tour-5":[208, 325]};
 
 // Les bâtiments. prod = par jour réel et par niveau ; def = défense ; cout = coût de base (× AP.mult)
 var AP_BAT = {
@@ -155,7 +155,7 @@ function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
 var AP_ECH_BAT = {}; // (réglages des anciens dessins, plus utiles : les nouveaux ont tous la même taille de base)
 // Morceau de sol sans enclos de chaque emplacement (boîte en pixels du terrain, forme = enveloppe des vraies pierres de l'enclos)
-var AP_SOL = [[622, 171, 739, 346], [472, 180, 638, 371], [343, 244, 544, 449], [257, 345, 464, 517], [220, 470, 417, 586], [241, 565, 462, 710], [330, 620, 537, 811], [453, 687, 628, 874], [719, 194, 891, 375], [810, 258, 1011, 451], [884, 348, 1097, 523], [936, 478, 1129, 592], [898, 551, 1097, 739], [810, 614, 1017, 807], [726, 688, 900, 879]];
+var AP_SOL = [[611, 160, 747, 355], [463, 173, 645, 382], [335, 236, 552, 457], [248, 332, 473, 528], [211, 461, 426, 592], [233, 557, 470, 718], [321, 615, 546, 819], [444, 656, 638, 883], [711, 184, 900, 391], [801, 251, 1018, 460], [876, 339, 1105, 529], [927, 469, 1136, 600], [890, 543, 1105, 747], [802, 606, 1025, 815], [718, 651, 910, 884]];
 function apRect(nom, x, y, ech, centre){
   var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
   var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + 22 : y + 48; // panneau et cadenas : le pied du poteau un peu sous le centre de l'enclos
@@ -167,7 +167,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol4/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
+    D.push([function(){ return "images/avantposte/sol5/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }]); // bâtiment posé OU chantier en cours
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
@@ -176,7 +176,7 @@ function apDecor(){
     r = apRect("cadenas", x, y, .3, true); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
     Object.keys(AP_BAT).forEach(function(b){ if(AP_BAT[b].pillard) return;
       [1, 3, 5].forEach(function(s){ var rr = apRect(b + "-" + s, x, y);
-        D.push(["images/avantposte/bat2/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
+        D.push(["images/avantposte/bat3/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
     r = apRect("echafaudage-1", x, y, .5); D.push(["images/avantposte/echafaudage-1.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && (!P || !P.niv); }]);
     r = apRect("echafaudage-3", x + 10, y - 10, .38); D.push(["images/avantposte/echafaudage-3.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && !!P && P.niv > 0; }]);
   });
@@ -279,7 +279,7 @@ function apEffet(id, n){
   if(B.planque) return "🕳️ " + trad("{n} % du stock à l’abri", { n:B.planque[n - 1] });
   return "";
 }
-function apImg(id, n){ return '<img class="ap-img" src="images/avantposte/bat2/' + id + "-" + apStade(n || 1) + '.webp" alt="">'; }
+function apImg(id, n){ return '<img class="ap-img" src="images/avantposte/bat3/' + id + "-" + apStade(n || 1) + '.webp" alt="">'; }
 
 function openCamp(){
   apMaj(); apFenetre = "camp";
@@ -334,7 +334,7 @@ function apOuvrirSlot(k){
     var dispo = Object.keys(AP_BAT).filter(function(b){ return !apNiv(b) && !(C && C.id === b); });
     if(!apChoix || dispo.indexOf(apChoix) < 0) apChoix = dispo.filter(function(b){ return !AP_BAT[b].pillard; })[0] || null;
     h += '<h2>🏗️ ' + trad("Emplacement libre") + '</h2><div class="ap-choix">' + dispo.map(function(b){ var B = AP_BAT[b];
-      return '<button class="ap-c' + (b === apChoix ? " sel" : "") + (B.pillard ? " bientot" : "") + '" data-act="apChoisir" data-id="' + b + '"' + (B.pillard ? " disabled" : "") + '><img src="images/avantposte/bat2/' + b + '-1.webp" alt=""><b>' + trad(B.nom) + '</b>' + (B.pillard ? '<small>' + trad("bientôt (mode pillard)") + '</small>' : '') + '</button>'; }).join("") + '</div>';
+      return '<button class="ap-c' + (b === apChoix ? " sel" : "") + (B.pillard ? " bientot" : "") + '" data-act="apChoisir" data-id="' + b + '"' + (B.pillard ? " disabled" : "") + '><img src="images/avantposte/bat3/' + b + '-1.webp" alt=""><b>' + trad(B.nom) + '</b>' + (B.pillard ? '<small>' + trad("bientôt (mode pillard)") + '</small>' : '') + '</button>'; }).join("") + '</div>';
     if(apChoix) h += apFiche(apChoix, 0, k);
     show(h + '</div>' + BTN_FERMER());
     return;
@@ -576,7 +576,7 @@ function apFicheRepere(i){
     var av = typeof avatarHtml === "function" ? avatarHtml(P.avatar, P.pseudo || "?", "apc-av") : "";
     h += '<div class="apc-ft">' + av + '<div><b>' + apEchap(P.pseudo || trad("Sans pseudo")) + (P.moi ? ' <span class="apc-toi">' + trad("toi") + '</span>' : '') + '</b><small>' + trad("Niveau {n} · défense {d}", { n:P.niv || 0, d:P.def || 0 }) + '</small></div></div>';
     var b = P.bats || {}, ks = Object.keys(b);
-    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat2/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
+    h += ks.length ? '<div class="apc-bats">' + ks.map(function(k){ return '<span title="' + trad(AP_BAT[k] ? AP_BAT[k].nom : k) + '"><img src="images/avantposte/bat3/' + k + '-' + apStade(b[k]) + '.webp" alt=""><i>' + b[k] + '</i></span>'; }).join("") + '</div>' : '<p class="apc-fp">' + trad("Rien de construit pour l’instant.") + '</p>';
     var pill = P.pillard && !P.ruine, bouclier = P.bouclier && P.bouclier > Date.now();
     h += '<p class="apc-fp">' + (P.moi ? (apPillard() ? trad("Ton avant-poste, en mode pillard : d’autres pillards peuvent l’attaquer.") : trad("Ton avant-poste. Il est protégé : personne ne peut le piller."))
       : P.ruine ? trad("Abandonné depuis {n} jours : c’est une ruine, les pillards peuvent s’y servir.", { n:P.absent || 30 })
