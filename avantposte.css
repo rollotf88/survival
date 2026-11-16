@@ -155,3 +155,6 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .apc-m{position:absolute}
 .apc-dome{position:absolute;left:-8%;top:-14%;width:116%;opacity:.75;pointer-events:none}
 .apc-abri{position:absolute;left:50%;top:-6px;transform:translateX(-50%);white-space:nowrap;padding:1px 7px;border-radius:99px;background:#2f6fb0;color:#fff;font-weight:800;font-size:11px;border:1.5px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.apc-abri{display:inline-flex;align-items:center;gap:3px;line-height:1.2;z-index:2}
+.apc-abri img.ico-img,.apc-abri img.emo{width:13px!important;height:13px!important;min-width:0;flex:none;margin:0}
+.apc-m .apc-nom{position:relative;z-index:2}
