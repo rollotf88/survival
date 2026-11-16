@@ -154,7 +154,7 @@ function placerDecor(dx, dy, s, boite){
   if(boite){ d.style.cssText = "left:" + boite.x + "px;top:" + boite.y + "px;width:" + boite.l + "px;height:" + boite.h + "px;right:auto;bottom:auto;border-radius:12px"; dx -= boite.x; dy -= boite.y; }
   else d.style.cssText = "";
   d.innerHTML = (sceneLieu() ? [] : PIECES[pieceIdx].decor).filter(function(e){ return e[5](); }).map(function(e){
-    return '<img src="' + (typeof e[0] === "function" ? e[0]() : e[0]) + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px">';
+    return '<img src="' + (typeof e[0] === "function" ? e[0]() : e[0]) + '" alt="" style="left:' + (dx + e[1] * s) + 'px;top:' + (dy + e[2] * s) + 'px;width:' + ((e[3] - e[1]) * s) + 'px;height:' + ((e[4] - e[2]) * s) + 'px' + (e[6] ? ';' + (typeof e[6] === "function" ? e[6]() : e[6]) : '') + '">'; /* 7e case : style en plus (ex. retourné), texte ou fonction */
   }).join("");
 }
 

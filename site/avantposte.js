@@ -25,7 +25,7 @@ var AP = {
   libres: 6,                                  // emplacements ouverts au départ ; +2 par niveau de palissade
   attaque: { toutes: 8 * 3600e3, chance: 0.3, base: 3, pertes: 0.35, maxRattrapage: 6 },
   pubs: 2,                                    // pubs pour accélérer un chantier, par jour réel
-  echelle: 0.52,                              // taille des bâtiments sur le terrain
+  echelle: 0.6,                               // taille des bâtiments sur le terrain (dessins ChatGPT du 2026-11-16, ~240 px de large)
   // Emplacements (centre, en pixels de images/avantposte/terrain-jour.webp, 1344 × 1024 : l'image Leonardo de 1024 px
   // élargie de 160 px de chaque côté pour tenir dans une scène large, d'où le +160)
   largeur: 1344,
@@ -35,7 +35,7 @@ var AP = {
 // Ordre d'ouverture des emplacements (les plus proches du feu d'abord)
 var AP_ORDRE = [0, 1, 8, 2, 9, 3, 10, 4, 11, 5, 12, 6, 13, 7, 14];
 // Taille des images (pour les poser sans déformation)
-var AP_TAILLES = {"cadenas":[110,284], "charrette-1":[232,214], "charrette-3":[280,240], "charrette-5":[324,304], "citerne-1":[243,215], "citerne-3":[246,232], "citerne-5":[239,280], "echafaudage-1":[244,302], "echafaudage-2":[249,309], "echafaudage-3":[238,323], "entrepot-1":[243,215], "entrepot-3":[245,229], "entrepot-5":[288,284], "forge-1":[240,158], "forge-3":[268,216], "forge-5":[294,280], "garage-1":[228,221], "garage-3":[268,258], "garage-5":[299,297], "infirmerie-1":[251,226], "infirmerie-3":[270,260], "infirmerie-5":[292,259], "palissade-1":[212,221], "palissade-3":[247,237], "palissade-5":[279,274], "panneau":[241,273], "pieges-1":[253,171], "pieges-3":[252,186], "pieges-5":[336,214], "planque-1":[282,165], "planque-3":[320,232], "planque-5":[341,236], "radio-1":[198,262], "radio-3":[191,327], "radio-5":[211,326], "recolte":[177,188], "scierie-1":[234,168], "scierie-3":[268,191], "scierie-5":[294,262], "serre-1":[251,221], "serre-3":[270,254], "serre-5":[290,267], "siege-1":[271,220], "siege-3":[256,241], "siege-5":[286,279], "tour-1":[149,440], "tour-3":[226,451], "tour-5":[248,470]};
+var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[229, 222], "charrette-3":[243, 220], "charrette-5":[247, 256], "citerne-1":[235, 149], "citerne-3":[228, 179], "citerne-5":[220, 223], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[246, 173], "entrepot-3":[238, 201], "entrepot-5":[249, 211], "forge-1":[240, 204], "forge-3":[238, 254], "forge-5":[241, 261], "garage-1":[232, 236], "garage-3":[244, 247], "garage-5":[240, 284], "infirmerie-1":[233, 195], "infirmerie-3":[235, 201], "infirmerie-5":[246, 224], "palissade-1":[232, 172], "palissade-3":[233, 173], "palissade-5":[239, 207], "panneau":[241, 273], "pieges-1":[235, 218], "pieges-3":[242, 212], "pieges-5":[250, 245], "planque-1":[246, 190], "planque-3":[237, 200], "planque-5":[250, 245], "radio-1":[224, 238], "radio-3":[229, 257], "radio-5":[239, 266], "recolte":[177, 188], "scierie-1":[236, 169], "scierie-3":[237, 203], "scierie-5":[240, 202], "serre-1":[226, 167], "serre-3":[233, 181], "serre-5":[243, 213], "siege-1":[236, 244], "siege-3":[242, 238], "siege-5":[243, 279], "tour-1":[204, 269], "tour-3":[210, 292], "tour-5":[209, 325]};
 
 // Les bâtiments. prod = par jour réel et par niveau ; def = défense ; cout = coût de base (× AP.mult)
 var AP_BAT = {
@@ -153,16 +153,20 @@ function apMaj(){
 function apNuit(){ var h = new Date().getHours(); return h >= 20 || h < 7; }
 // centre = true : l'objet est centré sur l'emplacement (panneau, cadenas) au lieu d'être posé « par le pied » (bâtiments)
 // Taille propre à chaque bâtiment (réglée sur des aperçus des 15 enclos : les plus grands débordaient)
-var AP_ECH_BAT = { tour:.72, radio:.85, charrette:.82, planque:.85, pieges:.85, siege:.9 };
+var AP_ECH_BAT = {}; // (réglages des anciens dessins, plus utiles : les nouveaux ont tous la même taille de base)
 function apRect(nom, x, y, ech, centre){
   var e = ech || AP.echelle * (AP_ECH_BAT[nom.split("-")[0]] || 1);
-  var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + h * .5 + 6 : y + (ech ? 48 : 42);
+  var t = AP_TAILLES[nom], w = t[0] * e, h = t[1] * e, y1 = centre ? y + h * .5 + 6 : y + 48;
   return [Math.round(x - w / 2), Math.round(y1 - h), Math.round(x + w / 2), Math.round(y1)];
 }
 function apDecor(){
   var D = [];
   // Repère invisible sur toute l'image : sert à placer les compteurs des chantiers
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
+  // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
+  AP.plots.forEach(function(p, k){
+    D.push([function(){ return "images/avantposte/sol/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, p[0] - 125, p[1] - 105, p[0] + 125, p[1] + 105, function(){ var P = APS.plots[k]; return !!P && P.niv > 0; }]);
+  });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
     var x = AP.plots[k][0], y = AP.plots[k][1];
@@ -170,7 +174,7 @@ function apDecor(){
     r = apRect("cadenas", x, y, .3, true); D.push(["images/avantposte/cadenas.webp", r[0], r[1], r[2], r[3], function(){ return !apOuvert(k); }]);
     Object.keys(AP_BAT).forEach(function(b){ if(AP_BAT[b].pillard) return;
       [1, 3, 5].forEach(function(s){ var rr = apRect(b + "-" + s, x, y);
-        D.push(["images/avantposte/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }]); }); });
+        D.push(["images/avantposte/" + b + "-" + s + ".webp", rr[0], rr[1], rr[2], rr[3], function(){ var P = APS.plots[k]; return !!P && P.id === b && P.niv > 0 && apStade(P.niv) === s; }, (function(dr){ return function(){ return (dr ? "transform:scaleX(-1);" : "") + (apNuit() ? "filter:brightness(.72) saturate(.85)" : ""); }; })(x > AP.largeur / 2 + 20)]); }); }); // côté droit : retourné pour regarder le feu ; la nuit, plus sombre
     r = apRect("echafaudage-1", x, y, .5); D.push(["images/avantposte/echafaudage-1.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && (!P || !P.niv); }]);
     r = apRect("echafaudage-3", x + 10, y - 10, .38); D.push(["images/avantposte/echafaudage-3.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && !!P && P.niv > 0; }]);
   });
