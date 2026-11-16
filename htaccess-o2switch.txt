@@ -14,6 +14,15 @@ RewriteCond %{REQUEST_URI} !^/\.well-known/
 RewriteCond %{HTTPS} off
 RewriteRule ^(.*)$ https://zombria.com/$1 [R=301,L]
 
+# 4) Pages, scripts, styles et données : le navigateur doit toujours revérifier (sinon il garde un vieux script
+#    qui pointe vers d'anciennes images, même avec F5 ; 2026-11-16). Les images gardent le cache normal :
+#    une image redessinée prend toujours un nouveau nom.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css|json|txt|xml)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
 <IfModule mod_headers.c>
   <Files "sw.js">
     Header set Cache-Control "no-cache, no-store, must-revalidate"

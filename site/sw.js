@@ -4,7 +4,7 @@
    IMPORTANT : à chaque mise à jour du jeu, changer VERSION (sinon les
    téléphones garderaient l'ancienne copie).
    ===================================================================== */
-var VERSION = "survival-20261116-1251";
+var VERSION = "survival-20261116-1255";
 var FICHIERS = [
   "./",
   "index.html",
@@ -178,7 +178,9 @@ self.addEventListener("activate", function(e){
 // Réseau d'abord (pour avoir la dernière version), copie si pas de connexion
 self.addEventListener("fetch", function(e){
   if(e.request.method !== "GET") return;
-  e.respondWith(fetch(e.request).then(function(r){
+  // pages, scripts et styles : toujours revérifiés auprès du serveur (sinon le navigateur peut ressortir une vieille copie)
+  var u = new URL(e.request.url), frais = u.origin === location.origin && !/\.(webp|png|jpe?g|gif|mp3|ogg|wav)$/i.test(u.pathname);
+  e.respondWith(fetch(frais ? new Request(e.request, { cache:"no-cache" }) : e.request).then(function(r){
     if(r.ok && new URL(e.request.url).origin === location.origin){ var copie = r.clone(); caches.open(VERSION).then(function(c){ c.put(e.request, copie); }); }
     return r;
   }).catch(function(){ return caches.match(e.request, { ignoreSearch:true }); }));
