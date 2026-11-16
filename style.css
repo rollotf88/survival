@@ -3034,3 +3034,12 @@ html[lang="en"] .st-t.conseil::before{content:"advised"}
 @media (max-height:700px){ .dcv{gap:7px} .dcv-fin{display:none} .dcv-haut{min-height:96px;padding:10px 12px 9px} .dcv-haut p{font-size:12.5px} .dcv-pts{gap:5px} .dcv-t b{font-size:13.5px} .dcv-t small{font-size:11.5px;line-height:1.3} }
 /* Paysage bas : pas d'image, titre seul, cartes sur deux colonnes */
 @media (max-height:450px){ .dcv-haut{min-height:0;background:none!important;box-shadow:none;padding:0;margin:0;color:var(--ink)} .dcv-haut h2{font-size:22px;color:var(--ink);text-shadow:none} .dcv-haut p,.dcv-badge{display:none} .dcv-pt{padding:5px 8px;gap:8px} .dcv-ico{width:28px;height:28px;font-size:15px} .dcv-ico img.ico-img{width:18px;height:18px} .dcv-t small{font-size:11px} }
+/* Fenêtre de découverte posée sur la scène (PC) : centrée, texte lisible sur la carte claire (2026-11-16, retour de Fabien) */
+body.pc:not(.scene-petite) #modal .sheet.large.resultat.dcv-scene{justify-content:center}
+#sheet.dcv-scene .res-carte{width:min(820px,100%);max-width:820px}
+#sheet.dcv-scene .dcv-haut{color:var(--ink);align-items:flex-start}
+#sheet.dcv-scene .dcv-haut h2{color:var(--ink);text-shadow:none}
+#sheet.dcv-scene .dcv-haut p{color:var(--mut);text-shadow:none;font-size:15px}
+#sheet.dcv-scene .dcv-badge{box-shadow:none}
+#sheet.dcv-scene .dcv-pts{grid-template-columns:1fr 1fr}
+body.pc:not(.scene-petite) #modal .sheet.large.resultat::before{display:none} /* pas de poignée « glisser pour fermer » sur une fenêtre posée sur la scène */
