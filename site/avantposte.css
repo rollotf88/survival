@@ -150,3 +150,8 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .ap-vers small{flex-basis:100%;color:var(--mut);font-size:11.5px}
 .ap-lj-d{display:block;color:var(--mut);font-size:12px;font-weight:600;margin-top:1px}
 .ap-conseil{color:#b5541b;font-weight:700}
+
+/* Carte : bulle de protection (2026-11-16) — dôme sur ma base quand elle est protégée, compte à rebours de l'abri de 24 h */
+.apc-m{position:absolute}
+.apc-dome{position:absolute;left:-8%;top:-14%;width:116%;opacity:.75;pointer-events:none}
+.apc-abri{position:absolute;left:50%;top:-6px;transform:translateX(-50%);white-space:nowrap;padding:1px 7px;border-radius:99px;background:#2f6fb0;color:#fff;font-weight:800;font-size:11px;border:1.5px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.4)}

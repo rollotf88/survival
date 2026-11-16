@@ -513,10 +513,13 @@ function apDessinerCarte(centrer){
   apBornes = { x0:x0 * AP_TAILLE_SECTEUR, y0:y0 * AP_TAILLE_SECTEUR, x1:(x1 + 1) * AP_TAILLE_SECTEUR, y1:(y1 + 1) * AP_TAILLE_SECTEUR };
   R.L.forEach(function(P, i){
     var q = apSpirale(P.s), pos = AP_SECTEURS[apTypeSecteur(P.s)][P.p]; if(!pos) return;
-    var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : P.pillard ? "pillard" : "protege";
+    var abri = !P.pnj && P.bouclier && P.bouclier > Date.now(), protege = !P.pnj && !P.ruine && (!P.pillard || abri);
+    var img = P.moi ? "moi" : P.pnj ? "pnj" : P.ruine ? "ruine" : P.pillard && !abri ? "pillard" : "protege"; // pillard à l'abri 24 h : dôme aussi
     var x = q[0] * AP_TAILLE_SECTEUR + pos[0], y = q[1] * AP_TAILLE_SECTEUR + pos[1];
     h += '<button class="apc-m' + (P.moi ? " moi" : "") + '" data-act="apRepere" data-id="' + i + '" style="left:' + x + 'px;top:' + y + 'px;width:' + AP_TAILLE_REPERE + 'px"><img src="images/avantposte/reperes/' + img + '.webp" alt="" draggable="false">'
-      + (P.pnj ? '' : '<span class="apc-nom">' + apEchap(P.pseudo || trad("Sans pseudo")) + '</span>') + '</button>';
+      + (P.moi && protege ? '<img class="apc-dome" src="images/avantposte/reperes/protege.webp" alt="" draggable="false">' : '')
+      + (P.pnj ? '' : '<span class="apc-nom">' + apEchap(P.pseudo || trad("Sans pseudo")) + '</span>')
+      + (abri ? '<span class="apc-abri">🛡️ ' + apFmt(P.bouclier - Date.now()) + '</span>' : '') + '</button>';
     if(P.moi) R.moi = [x, y];
   });
   monde.innerHTML = h; apCarteData && (apCarteData._L = R.L); if(!apCarteData) apCarteHors = R.L;
