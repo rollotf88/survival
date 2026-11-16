@@ -188,7 +188,7 @@ function apDecor(){
 function apZones(){
   var Z = [["apCamp", 590, 430, 770, 610, function(){ return "🔥"; }, trad("Le camp"), .5], ["apCarte", 640, 150, 740, 225, function(){ return "🗺️"; }, trad("La carte"), .5]];
   AP.plots.forEach(function(p, k){
-    var P = APS.plots[k], lab = !apOuvert(k) ? "🔒" : P && P.niv ? trad(AP_BAT[P.id].nom) + " " + P.niv : APS.chantier && APS.chantier.k === k ? trad("Chantier") : trad("Construire");
+    var P = APS.plots[k], lab = !apOuvert(k) ? "🔒" : P && P.niv ? trad(AP_BAT[P.id].nom) : APS.chantier && APS.chantier.k === k ? trad("Chantier") : trad("Construire");
     Z.push(["apSlot" + k, p[0] - 78, p[1] - 70, p[0] + 78, p[1] + 58, function(){ return ""; }, lab, .5]);
   });
   return Z;
