@@ -3043,3 +3043,12 @@ body.pc:not(.scene-petite) #modal .sheet.large.resultat.dcv-scene{justify-conten
 #sheet.dcv-scene .dcv-badge{box-shadow:none}
 #sheet.dcv-scene .dcv-pts{grid-template-columns:1fr 1fr}
 body.pc:not(.scene-petite) #modal .sheet.large.resultat::before{display:none} /* pas de poignée « glisser pour fermer » sur une fenêtre posée sur la scène */
+
+/* Comptes (compte.js, 2026-11-16) */
+.cpt-ok{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--bois);border-radius:14px;background:var(--card);box-shadow:0 3px 0 var(--line)}
+.cpt-ok small{display:block;color:var(--mut);font-size:12px}
+.cpt-g{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#4285f4;font-weight:900;font-size:19px;border:2px solid var(--bois)}
+.cpt-bts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.cpt-bts .btn{flex:1;min-width:140px}
+.cpt-suppr{color:#b3261e}
+.cpt-gsi{display:flex;justify-content:center;min-height:44px;margin:6px 0}
+.cpt-choix{display:flex;flex-direction:column;gap:8px}

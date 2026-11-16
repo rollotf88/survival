@@ -19,7 +19,7 @@ var FICHIERS = [
   "ui.js",
   "guide.js",
   "moderation.js",
-  "classement.js",
+  "classement.js", "compte.js",
   "raid.js",
   "chat.js",
   "succes.js",

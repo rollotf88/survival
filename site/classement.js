@@ -1095,7 +1095,8 @@ function openProfil(msg){
     h += tuiles([["familles", J.parties || 0], ["meilleur score", (J.meilleur || 0) + " ⭐", "ok"], ["plus longue survie", (J.plusLongue || 0) + " j"], ["zombies abattus", J.zombies || 0]]).replace('class="tuiles', 'class="tuiles t4 pf-tuiles');
     h += '<div class="pf-lignes"><button class="loc" data-act="cadres"><b>🖼️ Mon cadre : ' + cad.nom + '</b><small>Débloque de nouveaux cadres avec les succès</small></button>'
       + '<button class="loc" data-act="stats"><b>📊 Toutes mes stats</b><small>Poissons, planches, missions, morts…</small></button></div>';
-    h += '<p class="titre-butin">🔗 Retrouver ma partie partout</p><div class="pf-comptes">'
+    if(typeof blocCompte === "function") h += blocCompte(); // COMPTES (compte.js) : connexion Google
+    else h += '<p class="titre-butin">🔗 Retrouver ma partie partout</p><div class="pf-comptes">'
       + ['Google', 'Apple', 'Steam'].map(function(n){ return '<button class="pf-compte" disabled>' + n + '<small>bientôt</small></button>'; }).join("") + '</div>'
       + '<p class="sub">Pour l’instant, ta partie est gardée sur cet appareil. Lier un compte permettra de la retrouver sur ton téléphone, ta tablette et ton ordinateur.</p>';
   }

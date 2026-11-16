@@ -93,7 +93,7 @@ http.createServer(async (req, res) => {
     const entetes = new Headers(); Object.keys(req.headers).forEach((h) => { const v = req.headers[h]; if(v !== undefined) entetes.set(h, Array.isArray(v) ? v.join(", ") : v); });
     entetes.set("CF-Connecting-IP", ip);
     const requete = new Request("https://" + hote + chemin, { method: req.method, headers: entetes, body: ["GET", "HEAD"].includes(req.method) || !corps.length ? undefined : corps });
-    const env = { CLASSEMENT: KV, ADMIN_MDP: reglages().ADMIN_MDP || "", NOTIFIER: notifier, ASSETS: { fetch: async () => new Response("Introuvable", { status: 404 }) } };
+    const env = { CLASSEMENT: KV, ADMIN_MDP: reglages().ADMIN_MDP || "", GOOGLE_CLIENT_ID: reglages().GOOGLE_CLIENT_ID || "", NOTIFIER: notifier, ASSETS: { fetch: async () => new Response("Introuvable", { status: 404 }) } };
     const rep = await worker.fetch(requete, env);
     const h = {}; rep.headers.forEach((v, k) => { h[k] = v; });
     res.writeHead(rep.status, h);

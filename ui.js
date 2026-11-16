@@ -1656,6 +1656,7 @@ try{ RECORD = +localStorage.getItem("survival_record") || 0; }catch(e){}
    anciennes sauvegardes seront alors ignorées au lieu de planter. */
 var VERSION_SAUVEGARDE = 1, CLE_SAUVEGARDE = "survival_partie";
 function sauver(){
+  if(window.pasDeSauvegarde) return; // COMPTES : une partie reprise du compte est en train de remplacer celle-ci
   if(!G || G.ph !== "game" || !vivants().length || G.bacASable) return; // pendant un raid de l'immeuble, la vraie partie est à l'abri (G_MAISON)
   try{
     // G.ev contient des fonctions : on garde seulement son numéro (G.evIdx)

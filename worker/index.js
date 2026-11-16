@@ -1235,6 +1235,13 @@ export default {
       if(request.method === "POST"){ const M = await import("./avantposte.mjs"); return M.avantpostePost(request, env, { reponse, texteInterdit, nomPropre, avatarDe }); }
       return reponse({ erreur: "méthode" }, 405);
     }
+    // COMPTES : connexion Google et sauvegarde sur le serveur (module à part : worker/compte.mjs)
+    if(url.pathname === "/api/compte"){
+      if(!env.CLASSEMENT) return reponse({ erreur: "stockage non relié (CLASSEMENT)" }, 500);
+      if(request.method === "OPTIONS") return onRequestOptions();
+      if(request.method === "POST"){ const M = await import("./compte.mjs"); return M.comptePost(request, env, { reponse }); }
+      return reponse({ erreur: "méthode" }, 405);
+    }
     // MAINTENANCE : le jeu demande si le site est en maintenance (clé « reglages », champ maintenance)
     if(url.pathname === "/api/maintenance"){
       if(request.method === "OPTIONS") return onRequestOptions();
