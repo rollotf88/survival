@@ -1130,3 +1130,79 @@ var ASTUCES = {
   mission:    "🎯 Une mission ! Elle a un délai : touche le bouton 🎯 en bas de l’écran pour la voir et livrer ce qu’il faut. Réussir rapporte des objets et du moral.",
   serrure:    "🗝️ Appuie quand le curseur rouge passe dans la zone verte. Chaque raté casse une épingle."
 };
+
+/* =====================================================================
+   LA FAMILLE (2026-11-21, demande de Fabien : s'attacher aux survivants)
+   - Liens : chacun tient surtout à quelqu'un ; quand il meurt, ce survivant est en deuil quelques jours
+   - Envies : chacun a un souhait à la fois ; l'exaucer donne du moral et une phrase de joie
+   - Moments de famille : événements du matin avec des choix (à la fin de EVENEMENTS, champ parle = qui parle)
+   Les paroles affichées en bulles sont dans paroles.js (interface seulement)
+   ===================================================================== */
+BAL.famille = {
+  deuil: { jours:5, moralProche:-8, repos:15 },  // en deuil : 5 jours, moral −8 de plus pour le plus proche, 15 ⚡ de repos en moins la nuit
+  envies: { moral:10, pause:3, chance:0.5 },     // envie exaucée : moral +10 ; une nouvelle envie 3 jours après (1 chance sur 2 par nuit)
+  recueillirDeuil: 2                              // se recueillir sur les tombes raccourcit les deuils de 2 jours
+};
+// Qui tient le plus à qui (le premier est le plus proche)
+var LIENS = { "Papa":["Léo", "Maman", "Emma"], "Maman":["Emma", "Papa", "Léo"], "Léo":["Papa", "Emma", "Maman"], "Emma":["Maman", "Léo", "Papa"] };
+// Les envies : par rôle (les recrues piochent dans « autres ») ; ok = la condition est remplie ; joie = la phrase quand elle est exaucée
+var ENVIES = {
+  radio:     { texte:"avoir des nouvelles du monde : trouver une radio", ok:function(){ return compter("radio") > 0; }, joie:"{nom} colle l’oreille à la radio : des voix, quelque part. Il y a encore du monde dehors." },
+  voiture:   { texte:"remettre la vieille voiture en état", ok:function(){ return voitureReparee(); }, joie:"{nom} fait tourner le moteur et éclate de rire. « On n’est plus coincés ici. »" },
+  barricade: { texte:"une vraie barricade (niveau 2)", ok:function(){ return G.ref.barr >= 2; }, joie:"{nom} frappe les planches du plat de la main : « Qu’ils viennent. » Tout le monde dort mieux." },
+  potager:   { texte:"faire pousser quelque chose : un potager", ok:function(){ return G.ref.pot >= 1; }, joie:"{nom} plante les premières graines, les mains dans la terre. Elle sourit." },
+  trousse:   { texte:"avoir une trousse de soins de côté, au cas où", ok:function(){ return compter("trousse") > 0; }, joie:"{nom} range la trousse en haut de l’étagère. « Comme ça, je suis tranquille. »" },
+  plat:      { texte:"un vrai repas chaud, comme avant", ok:function(){ return G.stock.o.some(function(o){ return OBJETS[o.id] && OBJETS[o.id].cat === "plat"; }); }, joie:"{nom} ferme les yeux à la première bouchée. Pendant un instant, c’est comme avant." },
+  cartes:    { texte:"un jeu de cartes pour tuer l’ennui", ok:function(){ return compter("cartes") > 0; }, joie:"{nom} bat les cartes et défie tout le monde. Le soir, on rit enfin un peu." },
+  arme:      { texte:"avoir sa propre arme", ok:function(x){ return !!(x && x.eq && x.eq.arme); }, joie:"{nom} soupèse son arme, fier. « Maintenant, je peux vous protéger aussi. »" },
+  chien:     { texte:"un chien, rien qu’un chien", ok:function(){ return !!G.chien; }, joie:"{nom} ne lâche plus le chien. Pour la première fois depuis longtemps, ses yeux brillent." },
+  peluche:   { texte:"retrouver sa peluche", ok:function(){ return compter("peluche") > 0; }, joie:"{nom} serre sa peluche contre elle et s’endort tout de suite." },
+  poules:    { texte:"des poules à nourrir", ok:function(){ return compter("poule") > 0; }, joie:"{nom} donne un nom à chaque poule et leur parle tout bas." },
+  feu:       { texte:"un feu dans la cheminée, le soir", ok:function(){ return !!G.feu; }, joie:"{nom} s’assoit devant le feu, les mains tendues. « Ça sent la maison. »" }
+};
+var ENVIES_ROLE = { "Papa":["radio", "voiture", "barricade"], "Maman":["potager", "trousse", "plat"], "Léo":["cartes", "arme", "chien"], "Emma":["peluche", "poules", "feu"], autres:["feu", "plat", "barricade", "cartes"] };
+
+// Moments de famille : à la fin des événements du matin (les numéros des anciens ne bougent pas)
+EVENEMENTS.push(
+  { titre:"🎂 Un anniversaire", famille:true, si:function(){ var e = parRole("Emma"); return G.day >= 8 && e && e.al; }, parle:function(){ return parRole("Emma"); },
+    texte:function(){ return trad("C’est l’anniversaire de {nom}. Elle n’a rien demandé… mais elle regarde la boîte de pêches au sirop qu’on garde pour les grandes occasions.", { nom:parRole("Emma").nom }); }, choix:[
+    ["Ouvrir la boîte (−1 nourriture)", function(){ if(rations("nour") < 1) return trad("Il n’y a plus rien à ouvrir. Vous lui chantez une chanson à la place. Moral +4."); prendreRations("nour", 1); changerMoral(12); return trad("Elle partage les pêches avec tout le monde. On chante faux, on rit. Moral +12."); }],
+    ["Faire comme si de rien n’était", function(){ changerMoral(-8); return trad("Elle ne dit rien. Le soir, on l’entend pleurer. Moral −8."); }]
+  ]},
+  { titre:"🥊 Apprends-moi", famille:true, si:function(){ var p = parRole("Papa"), l = parRole("Léo"); return G.day >= 5 && p && p.al && l && l.al; }, parle:function(){ return parRole("Léo"); },
+    texte:function(){ return trad("{leo} demande à {papa} de lui apprendre à se battre. « Je veux pas rester derrière quand ça tourne mal. »", { leo:parRole("Léo").nom, papa:parRole("Papa").nom }); }, choix:[
+    ["Une heure d’entraînement (−10 ⚡ chacun)", function(){ var p = parRole("Papa"), l = parRole("Léo"); p.en = Math.max(0, p.en - 10); l.en = Math.max(0, l.en - 10); l.xp = l.xp || {}; l.xp.zombies = (l.xp.zombies || 0) + 3; changerMoral(6);
+      return trad("Ils transpirent, ils râlent, ils rient. {leo} a appris deux ou trois choses (+3 vers « Vétéran »). Moral +6.", { leo:l.nom }); }],
+    ["« Pas ce soir. »", function(){ changerMoral(-3); return trad("{leo} hausse les épaules et va bouder dans son coin. Moral −3.", { leo:parRole("Léo").nom }); }]
+  ]},
+  { titre:"🌙 Tu crois qu’il nous voit ?", famille:true, si:function(){ var e = parRole("Emma"); return e && e.al && G.dd && G.dd.length > 0; }, parle:function(){ return parRole("Emma"); },
+    texte:function(){ return trad("Dans le noir, {nom} chuchote : « Tu crois que {mort} nous voit, de là-haut ? »", { nom:parRole("Emma").nom, mort:G.dd[G.dd.length - 1].n }); }, choix:[
+    ["« Oui. Ça, j’en suis sûr. »", function(){ changerMoral(6); return trad("Elle sourit et s’endort, la main sur le cœur. Moral +6."); }],
+    ["« Je ne sais pas, ma puce. »", function(){ var e = parRole("Emma"); if(e.deuil) e.deuil.fin = G.day; changerMoral(-2); return trad("Vous parlez longtemps. Elle pleure, puis quelque chose se dénoue. Son deuil s’apaise. Moral −2."); }]
+  ]},
+  { titre:"🍞 La dernière part", famille:true, si:function(){ var m = parRole("Maman"), l = parRole("Léo"); return m && m.al && l && l.al && rations("nour") <= 3; }, parle:function(){ return parRole("Maman"); },
+    texte:function(){ return trad("Il ne reste presque rien. {maman} pousse sa part vers {leo} : « Prends, toi. Tu grandis. »", { maman:parRole("Maman").nom, leo:parRole("Léo").nom }); }, choix:[
+    ["Partager équitablement", function(){ vivants().forEach(function(x){ x.faim = Math.min(100, x.faim + 4); }); changerMoral(4); return trad("Chacun a un peu. Personne n’est rassasié, mais personne n’est oublié. Moral +4."); }],
+    ["Le laisser manger", function(){ var l = parRole("Léo"), m = parRole("Maman"); l.faim = Math.min(100, l.faim + 15); m.faim = Math.max(0, m.faim - 8); return trad("{leo} mange en silence. {maman} serre la ceinture d’un cran.", { leo:l.nom, maman:m.nom }); }]
+  ]},
+  { titre:"📖 Le soir où on s’est rencontrés", famille:true, si:function(){ var p = parRole("Papa"), m = parRole("Maman"); return G.day >= 12 && p && p.al && m && m.al; }, parle:function(){ return parRole("Papa"); },
+    texte:function(){ return trad("Autour de la lampe, {papa} raconte le soir où il a rencontré {maman} : un orage, un bus raté, un parapluie trop petit pour deux.", { papa:parRole("Papa").nom, maman:parRole("Maman").nom }); }, choix:[
+    ["Écouter jusqu’au bout", function(){ changerMoral(8); return trad("Les enfants réclament la suite. Pour un soir, le monde d’avant revient. Moral +8."); }],
+    ["Couper court : il faut dormir", function(){ vivants().forEach(function(x){ x.en = Math.min(100, x.en + 5); }); return trad("Tout le monde se couche tôt (+5 ⚡ chacun). Dommage pour l’histoire."); }]
+  ]},
+  { titre:"🚪 Je veux y aller seul", famille:true, si:function(){ var l = parRole("Léo"); return G.day >= 8 && l && l.al && l.hp >= 50; }, parle:function(){ return parRole("Léo"); },
+    texte:function(){ return trad("{leo} a préparé son sac en douce. « Je connais un raccourci vers le supermarché. Laissez-moi y aller seul, juste une fois. »", { leo:parRole("Léo").nom }); }, choix:[
+    ["Le retenir", function(){ changerMoral(-3); return trad("Il claque la porte de la chambre. Il finira par comprendre. Moral −3."); }],
+    ["Le laisser faire", function(){ var l = parRole("Léo"), n = [];
+      if(hasard() < 0.6){ ajouter("conserve", 2); ajouter("chiffon", 1); changerMoral(5); return trad("Il revient à l’aube, fier comme tout : 2 boîtes de conserve et un chiffon. Moral +5."); }
+      blesser(l, R(15, 30), n, "tué en partant seul"); return trad("Il revient en boitant, les mains vides. Il ne recommencera pas.") + (n.length ? " " + n.map(function(a){ return a[1]; }).join(" ") : ""); }],
+    ["Lui promettre de l’emmener demain", function(){ changerMoral(2); return trad("Il hoche la tête. « Promis ? » Promis. Moral +2."); }]
+  ]},
+  { titre:"🤝 D’où tu viens ?", famille:true, si:function(){ return G.m.some(function(x){ return x.al && !FAMILLE.some(function(f){ return f.nom === x.r; }); }); },
+    prep:function(){ var r = G.m.filter(function(x){ return x.al && !FAMILLE.some(function(f){ return f.nom === x.r; }); }); G.evCible = r[aleaR("recrue-histoire", 0, r.length - 1)].nom; },
+    parle:function(){ return membre(G.evCible); },
+    texte:function(){ return trad("Ce soir, {nom} parle enfin des siens, ceux d’avant. Sa voix tremble.", { nom:G.evCible }); }, choix:[
+    ["L’écouter sans l’interrompre", function(){ changerMoral(6); var x = membre(G.evCible); if(x) x.folie = Math.max(0, (x.folie || 0) - 10); return trad("Quand {nom} a fini, quelqu’un pose une main sur son épaule. {nom} fait partie de la famille, maintenant. Moral +6.", { nom:G.evCible }); }],
+    ["Changer de sujet", function(){ return trad("{nom} se tait et regarde le feu, sans plus rien dire.", { nom:G.evCible }); }]
+  ]}
+);

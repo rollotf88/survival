@@ -3096,3 +3096,17 @@ body.pc:not(.scene-petite) #modal .lieux{grid-template-columns:repeat(2,minmax(0
 .act small{white-space:normal;text-align:center;line-height:1.05;max-width:100%}
 /* Téléphone : pendant une sortie, la scène montre déjà le lieu : pas de bandeau du même lieu dans la fenêtre (2026-11-21) */
 body.dehors:not(.pc) #sheet .ban-lieu{display:none}
+
+/* La famille (2026-11-21) : envie et deuil dans la fiche d'un survivant */
+.mf-envie{margin:6px 0 0;padding:6px 10px;border-radius:12px;background:var(--card);border:1.5px solid var(--line);font-size:13px;line-height:1.35}
+.mf-envie small{color:var(--mut);font-size:11.5px}
+.mf-envie.deuil{border-color:#5b4a5e;background:color-mix(in srgb,var(--card) 85%,#5b4a5e)}
+.mf-envie.ok{color:var(--ok)}
+.mf-tag.deuil{background:#3b3140;color:#eee2f2;border-color:#5b4a5e}
+/* Bulle de parole d'un survivant, au-dessus de sa carte (2026-11-21) */
+#bulleParole{position:fixed;z-index:60;display:none;max-width:min(240px,62vw);padding:8px 11px 9px;border:2px solid var(--bois);border-radius:14px;background:var(--card);color:var(--ink);font-size:13.5px;line-height:1.3;box-shadow:0 4px 0 var(--line),0 8px 18px rgba(0,0,0,.25);pointer-events:none;opacity:0;transform:translateY(6px) scale(.96);transition:opacity .35s,transform .35s}
+#bulleParole.on{opacity:1;transform:none}
+#bulleParole b{display:block;font-family:Bangers,system-ui,sans-serif;font-size:14px;letter-spacing:.5px;color:var(--bois);margin-bottom:1px}
+#bulleParole::after{content:"";position:absolute;left:var(--queue,50%);bottom:-9px;width:14px;height:14px;margin-left:-7px;background:var(--card);border-right:2px solid var(--bois);border-bottom:2px solid var(--bois);transform:rotate(45deg)}
+@media (max-width:560px){ #bulleParole{font-size:12.5px;padding:6px 9px 7px} #bulleParole b{font-size:13px} }
+@media (prefers-reduced-motion:reduce){ #bulleParole{transition:none;transform:none} }

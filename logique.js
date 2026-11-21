@@ -362,6 +362,7 @@ function blesser(x, d, n, cause){
     n.push(["mort", phraseMort(x.nom, cause, roleDe(x)), roleDe(x)]);
     G.dd.push({ n:x.nom, r:roleDe(x), c:cause || "cause inconnue", j:G.day, ic:x.icone });
     rendreAuStock([x]); // son équipement reste à la famille
+    deuilPour(x, n);
   }
 }
 // Usure d’une arme : perd 1 de solidité, se casse à 0
@@ -416,7 +417,8 @@ function exploit(x, k, nb, n){
 }
 // Tombes de la cour : se recueillir une fois par jour (un peu de moral)
 function peutRecueillir(){ return G.dd && G.dd.length > 0 && G.recueilJour !== G.day; }
-function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day; changerMoral(BAL.tombes.moral); return true; }
+function recueillir(){ if(!peutRecueillir()) return false; G.recueilJour = G.day; changerMoral(BAL.tombes.moral);
+  vivants().forEach(function(y){ if(y.deuil) y.deuil.fin -= BAL.famille.recueillirDeuil; }); return true; }
 // Grande horde du week-end (événement mondial, defis.js pose HORDE_MONDIALE) : jamais dans une partie temporaire de raid
 function hordeMondiale(){ return typeof HORDE_MONDIALE !== "undefined" && !!HORDE_MONDIALE && !(G && G.bacASable); }
 function chanceAttaqueNuit(){ var A = BAL.attaqueNuit; return (G.porteOuverte ? BAL.porteOuverte.attaque : 0) + Math.min(A.max + (hordeMondiale() ? 0.1 : 0), A.base + G.day * A.parJour + compter("poule") * BAL.poules.attaque + (hordeMondiale() ? BAL.horde.risque : 0)); }
@@ -1069,8 +1071,37 @@ function fuir(){
 /* ---------- Fin du jour (la nuit) ---------- */
 /* Score = jours-personnes : chaque jour terminé rapporte 1 point par membre
    encore en vie. Garder toute la famille en vie rapporte donc plus. */
+/* ---------- La famille : deuil et envies (2026-11-21) ---------- */
+function enDeuil(x){ return !!(x && x.deuil && G.day < x.deuil.fin); }
+// À la mort de x : ceux qui tenaient à lui sont en deuil ; le plus proche perd un peu plus de moral
+function deuilPour(x, n){
+  var r = roleDe(x), D = BAL.famille.deuil;
+  vivants().forEach(function(y){
+    var L = LIENS[roleDe(y)]; if(!L) return; var k = L.indexOf(r); if(k < 0) return;
+    y.deuil = { nom:x.nom, r:r, fin:G.day + D.jours, proche:k === 0 };
+    if(k === 0){ changerMoral(D.moralProche); if(n) n.push(["b2", "🖤 " + trad(FEMININS.indexOf(roleDe(y)) >= 0 ? "{nom} est effondrée : {mort} était tout pour elle." : "{nom} est effondré : {mort} était tout pour lui.", { nom:y.nom, mort:x.nom })]); }
+  });
+}
+function envieDe(x){ return x && x.envie && ENVIES[x.envie] ? ENVIES[x.envie] : null; }
+// Chaque nuit : une envie exaucée rapporte du moral ; sinon, de temps en temps, une nouvelle envie
+function nuitFamille(n){
+  vivants().forEach(function(x){
+    if(x.deuil && G.day >= x.deuil.fin){ n.push(["g2", "🕊️ " + trad("{nom} se remet doucement de la mort de {mort}.", { nom:x.nom, mort:x.deuil.nom })]); delete x.deuil; }
+    var E = envieDe(x);
+    if(E && E.ok(x)){
+      changerMoral(BAL.famille.envies.moral); n.push(["g2", "💛 " + trad(E.joie, { nom:x.nom })]);
+      x.enviesFaites = (x.enviesFaites || []).concat([x.envie]); delete x.envie; x.envieT = G.day + BAL.famille.envies.pause; return;
+    }
+    if(!x.envie && (x.envieT || 0) <= G.day && hasard() < BAL.famille.envies.chance){
+      var faites = x.enviesFaites || [], pool = (ENVIES_ROLE[roleDe(x)] || ENVIES_ROLE.autres).filter(function(id){ return faites.indexOf(id) < 0 && !ENVIES[id].ok(x); });
+      if(!pool.length) pool = Object.keys(ENVIES).filter(function(id){ return faites.indexOf(id) < 0 && !ENVIES[id].ok(x); });
+      if(pool.length) x.envie = pool[aleaR("envie-" + roleDe(x), 0, pool.length - 1)];
+    }
+  });
+}
 function finJour(){
   var n = [];
+  nuitFamille(n);
   G.score += vivants().length;
   if(vivants().length && typeof noterDefi === "function") noterDefi("nuits", 1);
   // Chaleur : le feu de cheminée (1 planche par nuit, il faut un briquet) réchauffe tout le monde ;
@@ -1088,7 +1119,7 @@ function finJour(){
     var chaud = kx < auChaud; if(!chaud) froids.push(x.nom);
     x.faim -= BAL.faimParJour + (x.trait === "costaud" ? BAL.traits.costaudFaim : 0) + (estSaison("hiver") ? BAL.saisons.faimHiver : 0);
     x.soif -= BAL.soifParJour + (x.trait === "endurant" ? BAL.traits.endurantSoif : 0) + (estSaison("ete") ? BAL.saisons.soifEte : 0);
-    var repos = (chaud ? BAL.reposNuit + (feu ? BAL.feu.repos : 0) : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0);
+    var repos = (chaud ? BAL.reposNuit + (feu ? BAL.feu.repos : 0) : BAL.reposFroid) - (x.canette ? BAL.canetteContrecoup : 0) - (enDeuil(x) ? BAL.famille.deuil.repos : 0);
     if(x.canette) n.push(["", "🥴 " + trad("{nom} dort mal après sa canette (+{n} ⚡ seulement).", { nom:x.nom, n:repos })]);
     x.en = Math.min(100, x.en + repos); x.canette = false;
     var plat = platUtile(x) ? mangerPlat(x) : null;
@@ -1317,7 +1348,7 @@ function sacrificePossible(){
 function sacrifier(i){
   var x = G.m[i], S = BAL.sacrifice; if(!x || !x.al || !sacrificePossible()) return null;
   x.hp = 0; x.al = false;
-  G.dd.push({ n:x.nom, r:roleDe(x), c:(FEMININS.indexOf(roleDe(x)) >= 0 ? "sacrifiée" : "sacrifié") + " pour que les autres survivent", j:G.day, ic:x.icone });
+  G.dd.push({ n:x.nom, r:roleDe(x), c:(FEMININS.indexOf(roleDe(x)) >= 0 ? "sacrifiée" : "sacrifié") + " pour que les autres survivent", j:G.day, ic:x.icone }); deuilPour(x, null);
   rendreAuStock([x]);
   G.reste.nour += S.viande; changerMoral(S.moral);
   vivants().forEach(function(y){ y.folie = Math.min(100, (y.folie || 0) + R(S.folie[0], S.folie[1])); });
@@ -1338,7 +1369,7 @@ function nuitFolie(n){
       x.hp = 0; x.al = false; changerMoral(-25);
       var cause = FEMININS.indexOf(roleDe(x)) >= 0 ? "partie dans la nuit, folle à lier" : "parti dans la nuit, fou à lier";
       n.push(["mort", trad(FEMININS.indexOf(roleDe(x)) >= 0 ? "{nom} a perdu la raison. Une nuit, elle est sortie sans un mot et n’est jamais revenue." : "{nom} a perdu la raison. Une nuit, il est sorti sans un mot et n’est jamais revenu.", { nom:x.nom }), roleDe(x)]);
-      G.dd.push({ n:x.nom, r:roleDe(x), c:cause, j:G.day, ic:x.icone }); rendreAuStock([x]);
+      G.dd.push({ n:x.nom, r:roleDe(x), c:cause, j:G.day, ic:x.icone }); rendreAuStock([x]); deuilPour(x, n);
       return;
     }
     if(hasard() < x.folie / F.diviseur) acteFou(x, n);

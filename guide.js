@@ -102,6 +102,7 @@ function reglesGuide(){
     ["Score et chapitres", "⭐",
       "Chaque nuit, tu gagnes 1 point par membre en vie : garder toute la famille en vie rapporte le plus. Les chapitres donnent des objectifs et des récompenses ; ensuite, « Tenir bon » revient tous les 10 jours. " +
       "En Partie du jour, tout le monde a la même partie : mêmes choix, même résultat. Compare ton score !"],
+    ["La famille", "💛", "Chaque survivant a sa voix : il parle de temps en temps (une bulle au-dessus de sa carte) selon ce qu’il vit. Chacun a aussi une envie (une radio, un chien, un feu le soir…), écrite dans sa fiche : quand elle est exaucée, la famille gagne " + BAL.famille.envies.moral + " de moral, et une nouvelle envie viendra quelques jours plus tard. Les membres de la famille tiennent les uns aux autres : quand l’un meurt, ceux qui l’aimaient sont en deuil pendant " + BAL.famille.deuil.jours + " jours (moins de repos la nuit) et le plus proche perd encore du moral ; se recueillir sur les tombes raccourcit le deuil. Certains matins, un moment de famille demande ta décision : un anniversaire, un enfant qui veut partir seul, une histoire du soir…"],
     ["Crédits", "🙏",
       "Musiques et bruitages : créés pour le jeu (Suno, ElevenLabs). Polices : Bangers et Nunito, licence SIL Open Font License 1.1. " +
       "Filtre des noms : une partie des mots vient de la liste « List of Dirty, Naughty, Obscene and Otherwise Bad Words » (LDNOOBW, github.com/LDNOOBW), licence CC BY 4.0, triée et complétée pour le jeu."]
@@ -203,7 +204,7 @@ function openMenuComplet(){
    règles rangées par thème, objets par catégorie, lieux et zombies en tuiles ; chaque tuile ouvre sa fiche.
    Une recherche en haut filtre les tuiles de l'onglet (et cherche aussi dans le texte des règles). */
 var THEMES_GUIDE = [
-  ["Survivre", "❤️", ["Boire et manger", "L’énergie", "Le froid et le feu", "La nuit", "Les saisons", "Le dernier recours"]],
+  ["Survivre", "❤️", ["Boire et manger", "L’énergie", "Le froid et le feu", "La nuit", "Les saisons", "La famille", "Le dernier recours"]],
   ["Le refuge", "🏠", ["Le refuge", "La cuisine", "Pêche et poules", "La forêt et le bois", "La voiture", "Les tombes"]],
   ["Dehors", "🗺️", ["Les expéditions", "Les combats", "Les zombies célèbres", "Le monde bouge", "Événements et rencontres", "L’expérience des survivants"]],
   ["Progresser", "🏆", ["Score et chapitres", "La Légende du mois", "Le tigre de la Légende", "Les défis", "La grande horde du week-end", "L’héritage"]],

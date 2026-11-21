@@ -6,7 +6,7 @@ import os, shutil, re, time
 
 ici = os.path.dirname(os.path.abspath(__file__))
 os.chdir(ici)
-FICHIERS = ["index.html", "ads.txt", "transfert.js", "langue.js", "maintenance.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "compte.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "avantposte.js", "avantposte.css", "manifest.json", "sw.js", "admin.html", "robots.txt", "sitemap.xml"]  # AVANT-POSTE : avantposte.js et avantposte.css
+FICHIERS = ["index.html", "ads.txt", "transfert.js", "langue.js", "maintenance.js", "lang-en.js", "mentions-legales.html", "confidentialite.html", "legal-notice.html", "privacy.html", "legal.css", "style.css", "data.js", "icones.js", "logique.js", "ui.js", "guide.js", "moderation.js", "classement.js", "compte.js", "raid.js", "chat.js", "defis.js", "succes.js", "piece.js", "paroles.js", "avantposte.js", "avantposte.css", "manifest.json", "sw.js", "admin.html", "robots.txt", "sitemap.xml"]  # AVANT-POSTE : avantposte.js et avantposte.css
 
 if os.path.isdir("site"): shutil.rmtree("site")
 os.makedirs("site/images"); os.makedirs("site/sons"); shutil.copytree("polices", "site/polices")

@@ -79,6 +79,7 @@ function parle(nom, portrait){
 // Qui parle dans un événement du matin (null = personne en particulier)
 function locuteurEvenement(ev){
   var m = function(x){ return x ? [x.nom, iconeMembre(x)] : null; };
+  if(ev.parle){ var px = ev.parle(); if(px) return m(px); } /* moments de famille (2026-11-21) */
   switch(ev.titre){
     case "🧔 Un marchand louche": return [PNJ.marchand, "marchand"];
     case "🚪 Un survivant blessé": return [PNJ.blesse, "blesse"];
@@ -618,7 +619,16 @@ function etiquettesMembre(x, on){
   if(x.soif < 25) t.push(["bas", "💧 Assoiffé" + (estFeminin(x) ? "e" : "")]);
   if(x.faim < 25) t.push(["bas", "🥫 Affamé" + (estFeminin(x) ? "e" : "")]);
   if(fou(x)) t.push(["bas", "🌀 Folie"]);
+  if(typeof enDeuil === "function" && enDeuil(x)) t.push(["deuil", "🖤 " + trad("En deuil")]);
   return t.length ? '<div class="mf-tags">' + t.map(function(e){ return '<span class="mf-tag ' + e[0] + '">' + e[1] + '</span>'; }).join("") + '</div>' : '';
+}
+// L'envie du survivant (2026-11-21) et son deuil, en une ligne sous les jauges
+function blocEnvie(x){
+  var E = typeof envieDe === "function" ? envieDe(x) : null, nb = (x.enviesFaites || []).length, h = "";
+  if(enDeuil && enDeuil(x)) h += '<p class="mf-envie deuil">🖤 ' + trad("En deuil de {mort}. Il lui faut du temps (moins de repos la nuit). Se recueillir sur les tombes aide.", { mort:x.deuil.nom }) + '</p>';
+  if(E) h += '<p class="mf-envie">💭 <b>' + trad("Son envie :") + '</b> ' + trad(E.texte) + (nb ? ' <small>· ' + tradN(nb, "{n} déjà exaucée", "{n} déjà exaucées") + '</small>' : '') + '</p>';
+  else if(nb) h += '<p class="mf-envie ok">💛 ' + tradN(nb, "{n} envie exaucée", "{n} envies exaucées") + '</p>';
+  return h;
 }
 function medaillesMembre(x){
   var xp = x.xp || {}, gagnes = titresDe(x);
@@ -639,6 +649,7 @@ function openMembre(i){
   h += '<div class="mf-jauges">' + anneauMembre("❤️", "Vie", x.hp) + anneauMembre("⚡", "Énergie", x.en) + anneauMembre(ic("conserve", "🥫"), "Faim", x.faim) + anneauMembre(ic("bouteille", "💧"), "Soif", x.soif)
     + (x.folie ? anneauMembre("🌀", "Folie", x.folie, true) : '') + '</div>';
   if(fou(x)) h += '<p class="mf-alerte mf-folie">' + (typeof CONTENUS_SENSIBLES === "undefined" || CONTENUS_SENSIBLES ? '<img src="images/folie/regard.webp" alt="">' : '') + '🌀 Fouille moins bien, actes terribles la nuit ; à 100, ' + (estFeminin(x) ? "elle" : "il") + ' part.</p>';
+  h += blocEnvie(x);
   h += medaillesMembre(x);
   h += '<div class="mf-bloc"><p class="mf-titre">🎒 Équipement</p><div class="slots grands mf-slots">' + EMPLACEMENTS.map(function(e){
     var o = x.eq[e[0]], dispo = !o && pourEmplacement(e[0]).length > 0;

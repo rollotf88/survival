@@ -1955,3 +1955,56 @@ Object.assign(TRADUCTIONS.en, {
   "score refusé":"score refused"
 });
 if(typeof TRAD_MOTIFS !== "undefined") TRAD_MOTIFS.unshift([/^Tu ne peux plus déposer que (\d+) objets aujourd’hui \((\d+) par jour pour une famille de (\d+) jours\)$/, "You can only drop $1 more items today ($2 a day for a family of $3 days)"]);
+
+/* La famille : envies, deuil, moments de famille (2026-11-21) */
+CAUSES_EN["tué en partant seul"] = "killed going out alone";
+Object.assign(TRADUCTIONS.en, {
+  "avoir des nouvelles du monde : trouver une radio":"news from the world: find a radio", "remettre la vieille voiture en état":"get the old car running again",
+  "une vraie barricade (niveau 2)":"a real barricade (level 2)", "faire pousser quelque chose : un potager":"grow something: a vegetable garden",
+  "avoir une trousse de soins de côté, au cas où":"a first aid kit put aside, just in case", "un vrai repas chaud, comme avant":"a real hot meal, like before",
+  "un jeu de cartes pour tuer l’ennui":"a deck of cards to kill the boredom", "avoir sa propre arme":"a weapon of their own", "un chien, rien qu’un chien":"a dog, just a dog",
+  "retrouver sa peluche":"find her teddy again", "des poules à nourrir":"chickens to feed", "un feu dans la cheminée, le soir":"a fire in the fireplace in the evening",
+  "{nom} colle l’oreille à la radio : des voix, quelque part. Il y a encore du monde dehors.":"{nom} presses an ear to the radio: voices, somewhere. There are still people out there.",
+  "{nom} fait tourner le moteur et éclate de rire. « On n’est plus coincés ici. »":"{nom} revs the engine and bursts out laughing. “We’re not stuck here anymore.”",
+  "{nom} frappe les planches du plat de la main : « Qu’ils viennent. » Tout le monde dort mieux.":"{nom} slaps the boards: “Let them come.” Everyone sleeps better.",
+  "{nom} plante les premières graines, les mains dans la terre. Elle sourit.":"{nom} plants the first seeds, hands in the soil. She smiles.",
+  "{nom} range la trousse en haut de l’étagère. « Comme ça, je suis tranquille. »":"{nom} puts the kit on the top shelf. “Now I can rest easy.”",
+  "{nom} ferme les yeux à la première bouchée. Pendant un instant, c’est comme avant.":"{nom} closes their eyes at the first bite. For a moment, it’s like before.",
+  "{nom} bat les cartes et défie tout le monde. Le soir, on rit enfin un peu.":"{nom} shuffles the cards and challenges everyone. In the evening, we finally laugh a little.",
+  "{nom} soupèse son arme, fier. « Maintenant, je peux vous protéger aussi. »":"{nom} weighs the weapon, proud. “Now I can protect you too.”",
+  "{nom} ne lâche plus le chien. Pour la première fois depuis longtemps, ses yeux brillent.":"{nom} won’t let go of the dog. For the first time in ages, their eyes are shining.",
+  "{nom} serre sa peluche contre elle et s’endort tout de suite.":"{nom} hugs her teddy tight and falls asleep right away.",
+  "{nom} donne un nom à chaque poule et leur parle tout bas.":"{nom} names every chicken and whispers to them.",
+  "{nom} s’assoit devant le feu, les mains tendues. « Ça sent la maison. »":"{nom} sits by the fire, hands outstretched. “It smells like home.”",
+  "{nom} est effondrée : {mort} était tout pour elle.":"{nom} is devastated: {mort} meant everything to her.", "{nom} est effondré : {mort} était tout pour lui.":"{nom} is devastated: {mort} meant everything to him.",
+  "{nom} se remet doucement de la mort de {mort}.":"{nom} is slowly getting over {mort}’s death.",
+  "En deuil":"Grieving", "En deuil de {mort}. Il lui faut du temps (moins de repos la nuit). Se recueillir sur les tombes aide.":"Grieving {mort}. It takes time (less rest at night). Paying respects at the graves helps.",
+  "Son envie :":"Wish:", "{n} déjà exaucée":"{n} already granted", "{n} déjà exaucées":"{n} already granted", "{n} envie exaucée":"{n} wish granted", "{n} envies exaucées":"{n} wishes granted",
+  "🎂 Un anniversaire":"🎂 A birthday", "C’est l’anniversaire de {nom}. Elle n’a rien demandé… mais elle regarde la boîte de pêches au sirop qu’on garde pour les grandes occasions.":"It’s {nom}’s birthday. She hasn’t asked for anything… but she keeps looking at the can of peaches we save for special occasions.",
+  "Ouvrir la boîte (−1 nourriture)":"Open the can (−1 food)", "Il n’y a plus rien à ouvrir. Vous lui chantez une chanson à la place. Moral +4.":"There’s nothing left to open. You sing her a song instead. Morale +4.",
+  "Elle partage les pêches avec tout le monde. On chante faux, on rit. Moral +12.":"She shares the peaches with everyone. We sing off-key, we laugh. Morale +12.",
+  "Faire comme si de rien n’était":"Act as if nothing’s happening", "Elle ne dit rien. Le soir, on l’entend pleurer. Moral −8.":"She says nothing. In the evening, we hear her crying. Morale −8.",
+  "🥊 Apprends-moi":"🥊 Teach me", "{leo} demande à {papa} de lui apprendre à se battre. « Je veux pas rester derrière quand ça tourne mal. »":"{leo} asks {papa} to teach him to fight. “I don’t want to stay behind when things go wrong.”",
+  "Une heure d’entraînement (−10 ⚡ chacun)":"An hour of training (−10 ⚡ each)", "Ils transpirent, ils râlent, ils rient. {leo} a appris deux ou trois choses (+3 vers « Vétéran »). Moral +6.":"They sweat, they grumble, they laugh. {leo} learned a thing or two (+3 toward “Veteran”). Morale +6.",
+  "« Pas ce soir. »":"“Not tonight.”", "{leo} hausse les épaules et va bouder dans son coin. Moral −3.":"{leo} shrugs and goes off to sulk. Morale −3.",
+  "🌙 Tu crois qu’il nous voit ?":"🌙 Do you think they can see us?", "Dans le noir, {nom} chuchote : « Tu crois que {mort} nous voit, de là-haut ? »":"In the dark, {nom} whispers: “Do you think {mort} can see us from up there?”",
+  "« Oui. Ça, j’en suis sûr. »":"“Yes. I’m sure of it.”", "Elle sourit et s’endort, la main sur le cœur. Moral +6.":"She smiles and falls asleep, hand on her heart. Morale +6.",
+  "« Je ne sais pas, ma puce. »":"“I don’t know, sweetie.”", "Vous parlez longtemps. Elle pleure, puis quelque chose se dénoue. Son deuil s’apaise. Moral −2.":"You talk for a long time. She cries, then something lets go. Her grief eases. Morale −2.",
+  "🍞 La dernière part":"🍞 The last portion", "Il ne reste presque rien. {maman} pousse sa part vers {leo} : « Prends, toi. Tu grandis. »":"There’s almost nothing left. {maman} pushes her portion toward {leo}: “You take it. You’re growing.”",
+  "Partager équitablement":"Share it equally", "Chacun a un peu. Personne n’est rassasié, mais personne n’est oublié. Moral +4.":"Everyone gets a little. Nobody’s full, but nobody’s forgotten. Morale +4.",
+  "Le laisser manger":"Let him eat it", "{leo} mange en silence. {maman} serre la ceinture d’un cran.":"{leo} eats in silence. {maman} tightens her belt another notch.",
+  "📖 Le soir où on s’est rencontrés":"📖 The night we met", "Autour de la lampe, {papa} raconte le soir où il a rencontré {maman} : un orage, un bus raté, un parapluie trop petit pour deux.":"Around the lamp, {papa} tells the story of the night he met {maman}: a storm, a missed bus, an umbrella too small for two.",
+  "Écouter jusqu’au bout":"Listen to the end", "Les enfants réclament la suite. Pour un soir, le monde d’avant revient. Moral +8.":"The kids beg for more. For one evening, the old world comes back. Morale +8.",
+  "Couper court : il faut dormir":"Cut it short: we need sleep", "Tout le monde se couche tôt (+5 ⚡ chacun). Dommage pour l’histoire.":"Everyone goes to bed early (+5 ⚡ each). Too bad about the story.",
+  "🚪 Je veux y aller seul":"🚪 I want to go alone", "{leo} a préparé son sac en douce. « Je connais un raccourci vers le supermarché. Laissez-moi y aller seul, juste une fois. »":"{leo} has packed his bag in secret. “I know a shortcut to the supermarket. Let me go alone, just once.”",
+  "Le retenir":"Stop him", "Il claque la porte de la chambre. Il finira par comprendre. Moral −3.":"He slams the bedroom door. He’ll understand eventually. Morale −3.",
+  "Le laisser faire":"Let him go", "Il revient à l’aube, fier comme tout : 2 boîtes de conserve et un chiffon. Moral +5.":"He comes back at dawn, proud as can be: 2 cans and a rag. Morale +5.",
+  "Il revient en boitant, les mains vides. Il ne recommencera pas.":"He comes back limping, empty-handed. He won’t do it again.",
+  "Lui promettre de l’emmener demain":"Promise to take him tomorrow", "Il hoche la tête. « Promis ? » Promis. Moral +2.":"He nods. “Promise?” Promise. Morale +2.",
+  "🤝 D’où tu viens ?":"🤝 Where do you come from?", "Ce soir, {nom} parle enfin des siens, ceux d’avant. Sa voix tremble.":"Tonight, {nom} finally talks about their people, the ones from before. Their voice trembles.",
+  "L’écouter sans l’interrompre":"Listen without interrupting", "Quand {nom} a fini, quelqu’un pose une main sur son épaule. {nom} fait partie de la famille, maintenant. Moral +6.":"When {nom} is done, someone puts a hand on their shoulder. {nom} is part of the family now. Morale +6.",
+  "Changer de sujet":"Change the subject", "{nom} se tait et regarde le feu, sans plus rien dire.":"{nom} falls silent and stares at the fire, saying nothing more."
+});
+
+REGLES_EN["La famille"] = "Each survivor has their own voice: now and then they speak (a bubble above their card) about what they’re going through. Each one also has a wish (a radio, a dog, a fire in the evening…), shown on their card: when it comes true, the family gains {#} morale, and a new wish comes a few days later. Family members care about each other: when one dies, those who loved them grieve for {#} days (less rest at night) and the closest one loses even more morale; paying respects at the graves shortens grief. Some mornings, a family moment asks for your decision: a birthday, a child who wants to go out alone, a bedtime story…";
+TRADUCTIONS.en["La famille"] = "The family";
