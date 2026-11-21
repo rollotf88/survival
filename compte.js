@@ -12,7 +12,7 @@
    ===================================================================== */
 var GOOGLE_CLIENT_ID = "570011998343-473gla1lkci91v7oamt8lc45edt8hr3h.apps.googleusercontent.com"; // identifiant client Google (Google Cloud → Identifiants), public ; vide = bouton « bientôt »
 var CLE_COMPTE = "survival_compte";
-var CLES_LOCALES = ["survival_compte", "survival_appareil", "survival_compte_hashp", "survival_compte_repris", "survival_id", "survival_monde_cache", "survival_ap_envoi", "survival_maintenance_passe", "survival_transfere", "survival_compte_hash"];
+var CLES_LOCALES = ["survival_compte", "survival_appareil", "survival_compte_hashp", "survival_compte_repris", "survival_compte_continuer", "survival_id", "survival_monde_cache", "survival_ap_envoi", "survival_maintenance_passe", "survival_transfere", "survival_compte_hash"];
 function lireCompteLocal(){ try{ return JSON.parse(localStorage.getItem(CLE_COMPTE) || "null"); }catch(e){ return null; } }
 function ecrireCompteLocal(c){ try{ if(c) localStorage.setItem(CLE_COMPTE, JSON.stringify(c)); else localStorage.removeItem(CLE_COMPTE); }catch(e){} }
 function compteConnecte(){ var c = lireCompteLocal(); return !!(c && c.jeton); }
@@ -139,7 +139,10 @@ function garderPartieAppareil(){
   var c = lireCompteLocal(); if(!c) return;
   delete c.enAttente; ecrireCompteLocal(c);
   try{ localStorage.setItem("survival_id", c.idJoueur); }catch(e){}
-  envoyerSauvegarde(true, false, true).then(function(){ compteMsg("✅ " + trad("Connecté : ta partie est maintenant enregistrée sur ton compte.")); });
+  envoyerSauvegarde(true, false, true).then(function(){
+    if(compteDepuisAccueil){ try{ localStorage.setItem("survival_compte_continuer", "1"); }catch(e){} location.reload(); return; }
+    compteMsg("✅ " + trad("Connecté : ta partie est maintenant enregistrée sur ton compte."));
+  });
 }
 function deconnecterCompte(){
   var c = lireCompteLocal(); if(c && c.jeton) appelCompte({ action:"deconnexion", jeton:c.jeton }).catch(function(){});
@@ -215,3 +218,39 @@ if(typeof TRADUCTIONS !== "undefined"){ TRADUCTIONS.en = TRADUCTIONS.en || {}; O
   "partie synchronisée":"game synced", "Joue sur tous tes appareils":"Play on all your devices", "Ta partie te suit du téléphone à l’ordinateur":"Your game follows you from phone to computer",
   "ta tablette":"your tablet", "ton téléphone":"your phone", "ton ordinateur":"your computer", "un autre appareil":"another device"
 }); }
+
+/* ---------- « Continuer la partie » sur l'accueil (2026-11-21, demande de Fabien) ----------
+   Au clic, avant de reprendre la partie de cet appareil, on demande au serveur s'il y en a une plus récente ailleurs :
+   si oui et que rien n'a été joué ici depuis, on la reprend (la page se recharge puis continue toute seule) ;
+   si les deux appareils ont joué, la fenêtre de choix s'ouvre. Sans réponse en 4 s (hors ligne), on continue normalement. */
+var compteContinuerOk = false, compteDepuisAccueil = false;
+window.addEventListener("click", function(e){
+  var b = e.target.closest && e.target.closest('[data-act="continuer"]'); if(!b || compteContinuerOk) return;
+  var c = lireCompteLocal(); if(!c || !c.jeton || c.enAttente || compteSessionPerdue) return;
+  e.stopImmediatePropagation(); e.preventDefault();
+  var html = b.innerHTML; b.disabled = true; b.innerHTML = "☁️ " + trad("Vérification de ta partie…");
+  var fini = false;
+  var suite = function(){ if(fini) return; fini = true; compteContinuerOk = true; b.disabled = false; b.innerHTML = html; b.click(); };
+  setTimeout(suite, 4000);
+  appelCompte({ action:"etat", jeton:c.jeton }).then(function(r){
+    if(fini) return;
+    if(r && r.session === false){ sessionPerdue(); suite(); return; }
+    if(r && r.t && r.t !== c.derniere && r.appareil !== r.moi && r.t > (c.derniere || 0)){
+      fini = true; compteDepuisAccueil = true;
+      if(partieInchangee()){ try{ localStorage.setItem("survival_compte_continuer", "1"); }catch(x){} reprendrePartieCompte(r); }
+      else { b.disabled = false; b.innerHTML = html; conflitCompte(r); }
+      return;
+    }
+    suite();
+  }).catch(suite);
+}, true);
+// Après une reprise lancée par « Continuer » : on continue tout seul dès que le bouton est là
+(function(){
+  var f = null; try{ f = localStorage.getItem("survival_compte_continuer"); localStorage.removeItem("survival_compte_continuer"); }catch(e){}
+  if(!f) return;
+  var n = 0, t = setInterval(function(){
+    var b = document.querySelector('[data-act="continuer"]');
+    if(b){ clearInterval(t); compteContinuerOk = true; b.click(); } else if(++n > 50) clearInterval(t);
+  }, 100);
+})();
+if(typeof TRADUCTIONS !== "undefined") TRADUCTIONS.en["Vérification de ta partie…"] = "Checking your game…";
