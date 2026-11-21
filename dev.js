@@ -32,7 +32,7 @@ function devPartie(){
   G.m[0].hp = 92; G.m[0].en = 80; G.m[1].hp = 35; G.m[1].en = 60; G.m[2].en = 25; G.m[3].hp = 70; G.m[3].en = 95; G.m[3].faim = 22;
   G.m.forEach(function(x){ x.xp = { zombies:40, fouilles:25, crochetages:6, travaux:18, plats:12, blessures:3 }; });
   // Refuge, animaux, voiture, feu
-  G.ref = { barr:3, eau:3, pot:3 }; G.chien = { nom:"Rex", faim:0 }; ajouter("poule", 3);
+  G.ref = { barr:3, eau:2, pot:1 }; G.chien = { nom:"Rex", faim:0 }; ajouter("poule", 3);
   if(typeof VOITURE !== "undefined") VOITURE.pieces.forEach(function(p){ G.voiture.installees[p.id || p] = true; }); G.voiture.essence = 14;
   G.feu = true; G.braises = 2; G.cuisineJour = G.day;
   // Monde : mission, marché, zombie célèbre, trophée, tombe, lettre

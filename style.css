@@ -3091,3 +3091,8 @@ body.pc:not(.scene-petite) #modal .lieux{grid-template-columns:repeat(2,minmax(0
 }
 @media (max-width:440px){ .invtab{flex:1 1 0;min-width:0;padding:3px 1px} .invtab small{font-size:9px;letter-spacing:-.2px;max-width:100%;overflow:hidden} }
 @media (max-width:380px){ .invtab small{display:none} .invtab{padding:5px 1px} }
+.mf-medailles .md b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-overflow:clip;overflow:hidden;max-width:100%}
+/* Combat sur téléphone : « Pousser 65% » était coupé, le pourcentage passe dessous (2026-11-21) */
+.act small{white-space:normal;text-align:center;line-height:1.05;max-width:100%}
+/* Téléphone : pendant une sortie, la scène montre déjà le lieu : pas de bandeau du même lieu dans la fenêtre (2026-11-21) */
+body.dehors:not(.pc) #sheet .ban-lieu{display:none}

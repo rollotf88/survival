@@ -208,7 +208,7 @@ function placerPiece(){
     dx = Math.min(gx, Math.max(dxMax - P.l * s, dx)); dy = Math.min(haut, Math.max(fin - P.h * s, dy)); // pas de bord vide dans la boîte
     corps.backgroundImage = corps.backgroundSize = corps.backgroundPosition = "";
     if(!fs){ fs = document.createElement("div"); fs.id = "fondScene"; document.body.insertBefore(fs, document.body.firstChild); }
-    document.body.classList.toggle("scene-petite", vw < 780 || fin - haut < 540); // trop petite pour y jouer le combat
+    document.body.classList.toggle("scene-petite", vw < 780 || fin - haut < (window.SEUIL_SCENE || 480)); // trop petite pour y jouer le combat
     var rs = document.documentElement.style; rs.setProperty("--scene-x", gx + "px"); rs.setProperty("--scene-y", haut + "px"); rs.setProperty("--scene-w", vw + "px"); rs.setProperty("--scene-h", (fin - haut) + "px");
     fs.style.cssText = "display:block;left:" + gx + "px;top:" + haut + "px;width:" + vw + "px;height:" + (fin - haut) + "px;background-image:" + urlImg + ";background-size:" + (P.l * s) + "px auto;background-position:" + (dx - gx) + "px " + (dy - haut) + "px";
   } else {

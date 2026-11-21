@@ -521,7 +521,7 @@ function poserDansScene(im){
 function openResultat(r){
   retourPiece = "salon"; // « Retour au refuge » ramène au salon (pas au garage d'où l'équipe est partie)
   if(typeof lieuResultat !== "undefined"){ lieuResultat = r.lieu; if(typeof placerPiece === "function") placerPiece(); }
-  var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>';
+  var i = r.lieu, L = LIEUX[i], im = imageLieu(L), h = (im ? '<div class="banniere ban-lieu"><img src="' + im + '" alt=""></div>' : '') + '<h2>' + iconeLieu(L) + ' ' + L.nom + '</h2>';
   var nPris = r.pris.reduce(function(t, g){ return t + g.n; }, 0), nLai = r.laisses.reduce(function(t, g){ return t + g.n; }, 0), resteR = resteLieu(i);
   h += tuiles([["rapporté" + (nPris > 1 ? "s" : ""), nPris, nPris ? "ok" : "ko"], ["laissé" + (nLai > 1 ? "s" : "") + " sur place", nLai, nLai ? "moy" : ""], ["reste ici", resteR, resteR ? "" : "ko"]]);
   if(r.notes && r.notes.length) h += '<p class="titre-butin">📜 Ce qui s’est passé</p>' + puces(r.notes);
