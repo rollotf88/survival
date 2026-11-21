@@ -1199,10 +1199,14 @@ EVENEMENTS.push(
     ["Lui promettre de l’emmener demain", function(){ changerMoral(2); return trad("Il hoche la tête. « Promis ? » Promis. Moral +2."); }]
   ]},
   { titre:"🤝 D’où tu viens ?", famille:true, si:function(){ return G.m.some(function(x){ return x.al && !FAMILLE.some(function(f){ return f.nom === x.r; }); }); },
-    prep:function(){ var r = G.m.filter(function(x){ return x.al && !FAMILLE.some(function(f){ return f.nom === x.r; }); }); G.evCible = r[aleaR("recrue-histoire", 0, r.length - 1)].nom; },
+    prep:function(){ var r = G.m.filter(function(x){ return x.al && !FAMILLE.some(function(f){ return f.nom === x.r; }); }); G.evCible = r.length ? r[aleaR("recrue-histoire", 0, r.length - 1)].nom : null; },
     parle:function(){ return membre(G.evCible); },
     texte:function(){ return trad("Ce soir, {nom} parle enfin des siens, ceux d’avant. Sa voix tremble.", { nom:G.evCible }); }, choix:[
     ["L’écouter sans l’interrompre", function(){ changerMoral(6); var x = membre(G.evCible); if(x) x.folie = Math.max(0, (x.folie || 0) - 10); return trad("Quand {nom} a fini, quelqu’un pose une main sur son épaule. {nom} fait partie de la famille, maintenant. Moral +6.", { nom:G.evCible }); }],
     ["Changer de sujet", function(){ return trad("{nom} se tait et regarde le feu, sans plus rien dire.", { nom:G.evCible }); }]
   ]}
 );
+
+// Scènes des moments de famille (2026-11-21, ChatGPT : images/sources/moments-famille-chatgpt.webp)
+Object.assign(IMAGES_EVENEMENTS, { "🎂 Un anniversaire":"famille-anniversaire", "🥊 Apprends-moi":"famille-apprends", "🌙 Tu crois qu’il nous voit ?":"famille-voit",
+  "🍞 La dernière part":"famille-part", "📖 Le soir où on s’est rencontrés":"famille-rencontre", "🚪 Je veux y aller seul":"famille-seul", "🤝 D’où tu viens ?":"famille-histoire" });
