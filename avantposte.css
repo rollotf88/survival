@@ -227,3 +227,5 @@ body.fond.ap-terrain:not(.dehors)::before{display:none}
 /* Téléphone (2026-11-21, retour de Fabien) : le fondu du bas de la pièce recouvrait la palissade du bas (effet flou) ;
    sur l'avant-poste il est réduit aux 34 derniers pixels de l'image */
 body.ap-terrain #fondu{margin-top:56px;height:34px}
+/* PC : autour du terrain entier, des bandes sombres aux couleurs des côtés du terrain (au lieu du vide) */
+body.ap-terrain #fondScene{background-color:#1d150d}

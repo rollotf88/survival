@@ -199,7 +199,7 @@ function apZones(){
 var AP_PIECE = null;
 if(AVANTPOSTE_ACTIF && typeof PIECES !== "undefined"){
   AP_PIECE = { id:"avantposte", nom:"Avant-poste", img:function(){ return apTerrain(); },
-    l:AP.largeur, h:1024, cadre:{ x0:220, x1:1124, y0:150, y1:880 }, decor:apDecor(), zones:apZones(), si:apVisible };
+    l:AP.largeur, h:1024, cadre:{ x0:220, x1:1124, y0:95, y1:945 }, cadreEntier:true, /* toute l'enceinte visible, palissade du bas comprise (2026-11-21) */ decor:apDecor(), zones:apZones(), si:apVisible };
   PIECES.push(AP_PIECE);
   if(typeof PANNEAU_PIECE !== "undefined") PANNEAU_PIECE.avantposte = function(){ openCamp(); }; // sur PC, le panneau de droite montre le camp
 }

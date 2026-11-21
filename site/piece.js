@@ -199,13 +199,13 @@ function placerPiece(){
   // Échelle : la partie utile tient en largeur ET en hauteur dans l'espace libre
   var s = Math.min(vw / (F.x1 - F.x0), (fin - haut) / (F.y1 - F.y0));
   // Sur PC, la pièce est dans une boîte encadrée qu'elle remplit toujours (quelle que soit la largeur de l'image)
-  if(pc) s = Math.max(s, vw / P.l, (fin - haut) / P.h);
+  if(pc && !P.cadreEntier) s = Math.max(s, vw / P.l, (fin - haut) / P.h); // cadreEntier (avant-poste) : toute la partie utile visible, quitte à laisser des bandes sombres
   var dx = gx + (vw - (F.x1 - F.x0) * s) / 2 - F.x0 * s;
   // L'image est collée en haut de l'espace libre (le plafond remplit le haut), tant que la partie utile reste visible
   var dy = Math.max(haut - F.y0 * s, Math.min(haut, fin - F.y1 * s));
   var fs = $("fondScene");
   if(pc){
-    dx = Math.min(gx, Math.max(dxMax - P.l * s, dx)); dy = Math.min(haut, Math.max(fin - P.h * s, dy)); // pas de bord vide dans la boîte
+    if(!P.cadreEntier){ dx = Math.min(gx, Math.max(dxMax - P.l * s, dx)); dy = Math.min(haut, Math.max(fin - P.h * s, dy)); } // pas de bord vide dans la boîte
     corps.backgroundImage = corps.backgroundSize = corps.backgroundPosition = "";
     if(!fs){ fs = document.createElement("div"); fs.id = "fondScene"; document.body.insertBefore(fs, document.body.firstChild); }
     document.body.classList.toggle("scene-petite", vw < 780 || fin - haut < (window.SEUIL_SCENE || 480)); // trop petite pour y jouer le combat
