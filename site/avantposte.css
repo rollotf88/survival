@@ -221,3 +221,6 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 .apc-ecl{font-weight:700}
 .apc-rep{color:var(--bad);font-weight:700}
 .apc-fp small{color:var(--mut);font-size:11.5px}
+/* Téléphone (2026-11-21, retour de Fabien) : le dégradé sombre posé sur les pièces (body.fond::before) assombrissait le terrain
+   mais pas les morceaux de sol posés dessus, qui faisaient des taches claires autour des bâtiments : pas de dégradé ici */
+body.fond.ap-terrain:not(.dehors)::before{display:none}

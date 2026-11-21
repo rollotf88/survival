@@ -208,6 +208,7 @@ if(AP_PIECE && typeof placerPiece === "function"){
     if(apIci()){ apMaj(); AP_PIECE.zones = apZones(); }
     var r = apPlacerOrigine.apply(this, arguments);
     try{ apCompteurs(); apCacherCarteSiBesoin(); apPlacerCarte(); }catch(e){}
+    document.body.classList.toggle("ap-terrain", apIci()); /* sur téléphone : pas de dégradé sombre sur le terrain (2026-11-21) */
     return r;
   };
 }
