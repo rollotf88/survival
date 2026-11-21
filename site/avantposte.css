@@ -224,3 +224,6 @@ body.pc:not(.scene-petite) #apCarte .apc-haut{padding-top:8px}
 /* Téléphone (2026-11-21, retour de Fabien) : le dégradé sombre posé sur les pièces (body.fond::before) assombrissait le terrain
    mais pas les morceaux de sol posés dessus, qui faisaient des taches claires autour des bâtiments : pas de dégradé ici */
 body.fond.ap-terrain:not(.dehors)::before{display:none}
+/* Téléphone (2026-11-21, retour de Fabien) : le fondu du bas de la pièce recouvrait la palissade du bas (effet flou) ;
+   sur l'avant-poste il est réduit aux 34 derniers pixels de l'image */
+body.ap-terrain #fondu{margin-top:56px;height:34px}
