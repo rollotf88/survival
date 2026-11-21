@@ -35,7 +35,7 @@ var AP = {
 // Ordre d'ouverture des emplacements (les plus proches du feu d'abord)
 var AP_ORDRE = [0, 1, 8, 2, 9, 3, 10, 4, 11, 5, 12, 6, 13, 7, 14];
 // Taille des images (pour les poser sans déformation)
-var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[214, 211], "charrette-3":[241, 210], "charrette-5":[231, 247], "citerne-1":[207, 135], "citerne-3":[204, 169], "citerne-5":[172, 213], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[230, 156], "entrepot-3":[211, 184], "entrepot-5":[236, 197], "forge-1":[210, 179], "forge-3":[214, 233], "forge-5":[219, 244], "garage-1":[220, 227], "garage-3":[239, 234], "garage-5":[236, 273], "infirmerie-1":[209, 174], "infirmerie-3":[208, 185], "infirmerie-5":[235, 211], "palissade-1":[204, 149], "palissade-3":[210, 160], "palissade-5":[216, 196], "panneau":[110, 220], "panneau2":[110, 220], "pieges-1":[211, 210], "pieges-3":[221, 201], "pieges-5":[241, 227], "planque-1":[231, 150], "planque-3":[230, 183], "planque-5":[243, 228], "radio-1":[201, 224], "radio-3":[208, 247], "radio-5":[218, 249], "recolte":[177, 188], "scierie-1":[212, 150], "scierie-3":[223, 193], "scierie-5":[230, 190], "serre-1":[199, 158], "serre-3":[207, 168], "serre-5":[223, 201], "siege-1":[215, 226], "siege-3":[217, 227], "siege-5":[229, 265], "tour-1":[194, 250], "tour-3":[206, 277], "tour-5":[193, 309], "chenil-1":[207, 166], "chenil-3":[230, 171], "chenil-5":[241, 184]};
+var AP_TAILLES = {"cadenas":[110, 284], "charrette-1":[214, 211], "charrette-3":[241, 210], "charrette-5":[231, 247], "citerne-1":[207, 135], "citerne-3":[204, 169], "citerne-5":[172, 213], "echafaudage-1":[244, 302], "echafaudage-2":[249, 309], "echafaudage-3":[238, 323], "entrepot-1":[230, 156], "entrepot-3":[211, 184], "entrepot-5":[236, 197], "forge-1":[210, 179], "forge-3":[214, 233], "forge-5":[219, 244], "garage-1":[220, 227], "garage-3":[239, 234], "garage-5":[236, 273], "infirmerie-1":[209, 174], "infirmerie-3":[208, 185], "infirmerie-5":[235, 211], "palissade-1":[204, 149], "palissade-3":[210, 160], "palissade-5":[216, 196], "panneau":[110, 220], "panneau2":[110, 220], "pieges-1":[211, 210], "pieges-3":[221, 201], "pieges-5":[241, 227], "planque-1":[231, 150], "planque-3":[230, 183], "planque-5":[243, 228], "radio-1":[201, 224], "radio-3":[208, 247], "radio-5":[218, 249], "recolte":[177, 188], "scierie-1":[212, 150], "scierie-3":[223, 193], "scierie-5":[230, 190], "serre-1":[199, 158], "serre-3":[207, 168], "serre-5":[223, 201], "siege-1":[215, 226], "siege-3":[217, 227], "siege-5":[229, 265], "tour-1":[194, 250], "tour-3":[206, 277], "tour-5":[193, 309], "chenil-1":[207, 166], "chenil-3":[230, 171], "chenil-5":[241, 184], "recolte2":[190, 214]};
 
 // Les bâtiments. prod = par jour réel et par niveau ; def = défense ; cout = coût de base (× AP.mult)
 var AP_BAT = {
@@ -89,6 +89,9 @@ try{ if(/[?&]avantposte=1/.test(location.search) && !APS.debloque){ APS.debloque
 
 function apNiv(id){ for(var k in APS.plots) if(APS.plots[k].id === id) return APS.plots[k].niv; return 0; }
 function apStade(n){ return n >= 5 ? 5 : n >= 3 ? 3 : 1; }
+/* Terrain (2026-11-21, images ChatGPT) : l'enceinte autour du camp suit le niveau de la palissade (vieille clôture, planches,
+   mur blindé), de jour et de nuit ; les jours sont un peu ternis pour aller avec le reste du jeu */
+function apTerrain(){ return "images/avantposte/terrain2/" + (apNuit() ? "nuit" : "jour") + "-" + apStade(apNiv("palissade")) + ".webp"; }
 function apLibres(){ return Math.min(AP.plots.length, AP.libres + 2 * apNiv("palissade")); }
 function apOuvert(k){ return AP_ORDRE.indexOf(k) < apLibres(); }
 function apDefense(){ var d = 0; ["palissade", "tour", "pieges", "chenil"].forEach(function(b){ var n = apNiv(b); if(n) d += AP_BAT[b].def[n - 1]; }); return d; }
@@ -168,7 +171,7 @@ function apDecor(){
   D.push(["data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%20id%3D%22apref%22%2F%3E", 0, 0, AP.largeur, 1024, function(){ return true; }]);
   // Sous un bâtiment terminé, l'enclos de pierres est effacé : morceau du terrain « sans enclos » (jour ou nuit), posé sous tous les bâtiments
   AP_SOL.forEach(function(b, k){
-    D.push([function(){ return "images/avantposte/sol6/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }, "filter:none"]); // bâtiment posé OU chantier en cours ; sans le filtre des décors (ombre et assombrissement : losange visible)
+    D.push([function(){ return "images/avantposte/sol7/" + k + "-" + (apNuit() ? "nuit" : "jour") + ".webp"; }, b[0], b[1], b[2], b[3], function(){ var P = APS.plots[k]; return !!P && P.niv > 0 || !!(APS.chantier && APS.chantier.k === k); }, "filter:none"]); // bâtiment posé OU chantier en cours ; sans le filtre des décors (ombre et assombrissement : losange visible)
   });
   var ordre = AP.plots.map(function(p, k){ return k; }).sort(function(a, b){ return AP.plots[a][1] - AP.plots[b][1]; });
   ordre.forEach(function(k){
@@ -181,8 +184,8 @@ function apDecor(){
     r = apRect("echafaudage-1", x, y, .5); D.push(["images/avantposte/echafaudage-1.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && (!P || !P.niv); }]);
     r = apRect("echafaudage-3", x + 10, y - 10, .38); D.push(["images/avantposte/echafaudage-3.webp", r[0], r[1], r[2], r[3], function(){ var C = APS.chantier, P = APS.plots[k]; return !!C && C.k === k && !!P && P.niv > 0; }]);
   });
-  var rc = apRect("recolte", 760, 560, .4);
-  D.push(["images/avantposte/recolte.webp", rc[0], rc[1], rc[2], rc[3], function(){ for(var r in APS.acc) if(APS.acc[r] >= 1) return true; return false; }]);
+  var rc = apRect("recolte2", 760, 560, .4);
+  D.push(["images/avantposte/recolte2.webp", rc[0], rc[1], rc[2], rc[3], function(){ for(var r in APS.acc) if(APS.acc[r] >= 1) return true; return false; }]);
   return D;
 }
 function apZones(){
@@ -195,7 +198,7 @@ function apZones(){
 }
 var AP_PIECE = null;
 if(AVANTPOSTE_ACTIF && typeof PIECES !== "undefined"){
-  AP_PIECE = { id:"avantposte", nom:"Avant-poste", img:function(){ return apNuit() ? "images/avantposte/terrain-nuit.webp" : "images/avantposte/terrain-jour.webp"; },
+  AP_PIECE = { id:"avantposte", nom:"Avant-poste", img:function(){ return apTerrain(); },
     l:AP.largeur, h:1024, cadre:{ x0:220, x1:1124, y0:150, y1:880 }, decor:apDecor(), zones:apZones(), si:apVisible };
   PIECES.push(AP_PIECE);
   if(typeof PANNEAU_PIECE !== "undefined") PANNEAU_PIECE.avantposte = function(){ openCamp(); }; // sur PC, le panneau de droite montre le camp
