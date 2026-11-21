@@ -159,3 +159,98 @@ if(typeof TRADUCTIONS !== "undefined"){ TRADUCTIONS.en = TRADUCTIONS.en || {}; O
   "J’ai perdu ma peluche… tu crois qu’on la retrouvera ?":"I lost my teddy… do you think we’ll find it?", "On pourrait avoir des poules ? Je m’en occuperai !":"Could we have chickens? I’ll take care of them!",
   "Un feu dans la cheminée, ce soir ? Comme avant ?":"A fire in the fireplace tonight? Like before?"
 }); }
+
+/* ---------- 2e lot (2026-11-21) : répliques qui réagissent, binômes, épitaphes ---------- */
+var REACTIONS = {
+  "Papa":{ retourBon:["De quoi tenir quelques jours de plus."], retourVide:["Rien. On recommencera demain."], victoire:["Personne ne touche à ma famille."],
+    nuitRepoussee:["Ils ont tapé toute la nuit. La barricade a tenu."], nuitPerdue:["Il faut réparer. Tout de suite."], binome:["Avec {autre} à mes côtés, je ne crains rien."] },
+  "Maman":{ retourBon:["Bon butin. Je range tout de suite."], retourVide:["Tout ça pour rien…"], victoire:["C’est fini… on rentre. Maintenant."],
+    nuitRepoussee:["Personne n’a fermé l’œil… mais on est là."], nuitPerdue:["On a eu de la chance. Cette fois."], binome:["{autre} et moi, on se comprend sans parler."] },
+  "Léo":{ retourBon:["Vous avez vu ce qu’on a ramené ?!"], retourVide:["Franchement, c’était vide de chez vide."], victoire:["T’as vu comment je l’ai eu ?!"],
+    nuitRepoussee:["Ils reviendront. Et on sera prêts."], nuitPerdue:["Ils sont entrés… ils sont entrés !"], binome:["Avec {autre}, je crains rien."] },
+  "Emma":{ retourBon:["C’est quoi dans le sac ? Montre !"], retourVide:["On a rien trouvé… pardon."], victoire:["J’ai eu peur… mais on a gagné !"],
+    nuitRepoussee:["J’ai entendu les monstres… mais ils sont partis."], nuitPerdue:["Je veux pas qu’ils reviennent…"], binome:["J’aime bien sortir avec {autre}."] },
+  autres:{ retourBon:["Une bonne sortie. Ça fait du bien."], retourVide:["Les lieux se vident. Il faudra aller plus loin."], victoire:["On fait une bonne équipe."],
+    nuitRepoussee:["Une nuit de plus. On tient."], nuitPerdue:["Il faut renforcer les défenses, et vite."], binome:["{autre} me couvre toujours. Je lui dois beaucoup."],
+    arrivee:["Merci de m’accueillir. Je ne vous décevrai pas.", "Je sais me rendre utile, vous verrez."] }
+};
+// Une réplique en attente : elle sera dite dès que possible (dans les 30 s), par l'un des survivants concernés
+var reactionAttente = null;
+function noterReaction(cle, qui){ reactionAttente = { cle:cle, qui:(qui || []).filter(function(x){ return x && x.al; }), t:Date.now() }; }
+function direReaction(){
+  var R0 = reactionAttente; reactionAttente = null; if(!R0 || Date.now() - R0.t > 30000) return false;
+  var L = R0.qui.length ? R0.qui : vivants(); var x = L[Math.floor(Math.random() * L.length)]; if(!x) return false;
+  var P = REACTIONS[roleDe(x)] || REACTIONS.autres, lignes = P[R0.cle] || REACTIONS.autres[R0.cle]; if(!lignes) return false;
+  return direQuelqueChose(x, trad(lignes[Math.floor(Math.random() * lignes.length)]));
+}
+// Une phrase de binôme de temps en temps, quand rien d'autre ne presse
+var phraseDeBase = phraseDe;
+phraseDe = function(x){
+  var br = typeof binomeDe === "function" ? binomeDe(x) : null, bx = br && G.m.filter(function(y){ return y.al && roleDe(y) === br; })[0];
+  if(bx && etatParole(x) === "idle" && Math.random() < 0.35){ var P = REACTIONS[roleDe(x)] || REACTIONS.autres, L = P.binome || REACTIONS.autres.binome; return trad(L[Math.floor(Math.random() * L.length)], { autre:bx.nom }); }
+  return phraseDeBase(x);
+};
+// direQuelqueChose accepte maintenant une phrase toute faite
+var direBase = direQuelqueChose;
+direQuelqueChose = function(x, phrase){
+  if(!phrase) return direBase(x);
+  var avant = phraseDe; phraseDe = function(){ return phrase; };
+  try{ return direBase(x); } finally { phraseDe = avant; }
+};
+// Les événements qui font réagir : départ (on retient l'équipe), retour de fouille, victoire, nuit attaquée, nouvelle recrue
+var equipeSortie = [];
+if(typeof expedition === "function"){ var expeditionBase = expedition; expedition = function(){ equipeSortie = G.sel.map(function(j){ return G.m[j]; }); return expeditionBase.apply(this, arguments); }; }
+if(typeof openResultat === "function"){ var openResultatBase = openResultat; openResultat = function(r){ try{ if(!reactionAttente || reactionAttente.cle !== "victoire") noterReaction(r && r.pris && r.pris.length ? "retourBon" : "retourVide", equipeSortie); }catch(e){} return openResultatBase.apply(this, arguments); }; }
+if(typeof openCombat === "function"){ var openCombatBase = openCombat; openCombat = function(){ try{ var C = G.combat; if(C && C.fin === "victoire" && !C.reagi){ C.reagi = true; noterReaction("victoire", equipeSortie); } }catch(e){} return openCombatBase.apply(this, arguments); }; }
+if(typeof openNuit === "function"){ var openNuitBase = openNuit; openNuit = function(n){ try{ (n || []).forEach(function(l){ if(/^🧟/.test(l[1] || "")) noterReaction(l[0] === "g2" ? "nuitRepoussee" : "nuitPerdue", vivants()); }); }catch(e){} return openNuitBase.apply(this, arguments); }; }
+var nomsConnus = null;
+setInterval(function(){
+  try{
+    if(typeof G === "undefined" || !G || G.ph !== "game" || !G.m) { nomsConnus = null; return; }
+    var noms = vivants().map(function(x){ return x.nom; });
+    if(nomsConnus){ var nouveau = vivants().filter(function(x){ return nomsConnus.indexOf(x.nom) < 0 && !FAMILLE.some(function(f){ return f.nom === x.r; }); })[0]; if(nouveau) noterReaction("arrivee", [nouveau]); }
+    nomsConnus = noms;
+    if(reactionAttente && peutParler()) direReaction();
+  }catch(e){}
+}, 1200);
+
+/* ---------- L'épitaphe : graver quelques mots sur la tombe ---------- */
+function openEpitaphe(i){
+  var d = G.dd && G.dd[i]; if(!d) return; d.epVu = true;
+  var L = EPITAPHES[d.r] || EPITAPHES.autres, x = { nom:d.n, r:d.r, icone:d.ic || "🙂", al:false, hp:0, en:0, faim:0, soif:0 };
+  var h = '<div class="ep-fen"><div class="ep-por">' + iconeMembre(x) + '<div><h2>🪦 ' + trad("Une tombe pour {nom}", { nom:echapper(d.n) }) + '</h2>'
+    + (d.dp ? '<p class="ep-dp">💬 « ' + trad(d.dp) + ' »</p>' : '') + '</div></div>'
+    + '<p class="sub">' + trad("Quels mots graver sur sa tombe ?") + '</p>'
+    + L.map(function(t, k){ return '<button class="loc" data-act="epchoix" data-id="' + i + ':' + k + '"><b>« ' + trad(t) + ' »</b></button>'; }).join("") + '</div>' + BTN_FERMER();
+  show(h);
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest && e.target.closest("[data-act]"); if(!b) return;
+  var a = b.getAttribute("data-act");
+  if(a === "epit"){ openEpitaphe(+b.getAttribute("data-id")); return; }
+  if(a === "epchoix"){ var p = b.getAttribute("data-id").split(":"), d = G.dd[+p[0]]; if(!d) return; var L = EPITAPHES[d.r] || EPITAPHES.autres; d.ep = L[+p[1]];
+    if(typeof sauver === "function") sauver(); hide(); if(typeof openTombes === "function") openTombes(); return; }
+});
+// Après une mort récente, la fenêtre de l'épitaphe s'ouvre d'elle-même au premier moment calme (une seule fois par mort)
+setInterval(function(){
+  try{
+    if(typeof momentCalme !== "function" || !momentCalme()) return;
+    var i = (G.dd || []).findIndex(function(d){ return !d.ep && !d.epVu && G.day - d.j <= 2; });
+    if(i >= 0) openEpitaphe(i);
+  }catch(e){}
+}, 2000);
+
+if(typeof TRADUCTIONS !== "undefined") Object.assign(TRADUCTIONS.en, {
+  "De quoi tenir quelques jours de plus.":"Enough to hold out a few more days.", "Rien. On recommencera demain.":"Nothing. We’ll try again tomorrow.", "Personne ne touche à ma famille.":"Nobody touches my family.",
+  "Ils ont tapé toute la nuit. La barricade a tenu.":"They pounded all night. The barricade held.", "Il faut réparer. Tout de suite.":"We have to repair it. Right now.", "Avec {autre} à mes côtés, je ne crains rien.":"With {autre} by my side, I fear nothing.",
+  "Bon butin. Je range tout de suite.":"Good haul. I’ll put it away right now.", "Tout ça pour rien…":"All that for nothing…", "C’est fini… on rentre. Maintenant.":"It’s over… we’re going home. Now.",
+  "Personne n’a fermé l’œil… mais on est là.":"Nobody slept a wink… but we’re here.", "On a eu de la chance. Cette fois.":"We were lucky. This time.", "{autre} et moi, on se comprend sans parler.":"{autre} and I understand each other without words.",
+  "Vous avez vu ce qu’on a ramené ?!":"Did you see what we brought back?!", "Franchement, c’était vide de chez vide.":"Honestly, it was totally empty.", "T’as vu comment je l’ai eu ?!":"Did you see how I got it?!",
+  "Ils reviendront. Et on sera prêts.":"They’ll be back. And we’ll be ready.", "Ils sont entrés… ils sont entrés !":"They got in… they got in!", "Avec {autre}, je crains rien.":"With {autre}, I’m not scared of anything.",
+  "C’est quoi dans le sac ? Montre !":"What’s in the bag? Show me!", "On a rien trouvé… pardon.":"We didn’t find anything… sorry.", "J’ai eu peur… mais on a gagné !":"I was scared… but we won!",
+  "J’ai entendu les monstres… mais ils sont partis.":"I heard the monsters… but they left.", "Je veux pas qu’ils reviennent…":"I don’t want them to come back…", "J’aime bien sortir avec {autre}.":"I like going out with {autre}.",
+  "Une bonne sortie. Ça fait du bien.":"A good outing. That feels good.", "Les lieux se vident. Il faudra aller plus loin.":"The places are emptying out. We’ll have to go further.", "On fait une bonne équipe.":"We make a good team.",
+  "Une nuit de plus. On tient.":"One more night. We’re holding on.", "Il faut renforcer les défenses, et vite.":"We need to strengthen the defenses, fast.", "{autre} me couvre toujours. Je lui dois beaucoup.":"{autre} always has my back. I owe them a lot.",
+  "Merci de m’accueillir. Je ne vous décevrai pas.":"Thank you for taking me in. I won’t let you down.", "Je sais me rendre utile, vous verrez.":"I know how to make myself useful, you’ll see.",
+  "Une tombe pour {nom}":"A grave for {nom}", "Quels mots graver sur sa tombe ?":"What words should be carved on the grave?", "Graver une épitaphe":"Carve an epitaph"
+});

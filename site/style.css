@@ -3110,3 +3110,14 @@ body.dehors:not(.pc) #sheet .ban-lieu{display:none}
 #bulleParole::after{content:"";position:absolute;left:var(--queue,50%);bottom:-9px;width:14px;height:14px;margin-left:-7px;background:var(--card);border-right:2px solid var(--bois);border-bottom:2px solid var(--bois);transform:rotate(45deg)}
 @media (max-width:560px){ #bulleParole{font-size:12.5px;padding:6px 9px 7px} #bulleParole b{font-size:13px} }
 @media (prefers-reduced-motion:reduce){ #bulleParole{transition:none;transform:none} }
+
+/* Binôme, épitaphes et dernières paroles (2026-11-21) */
+.mf-envie.bin{border-color:var(--acc)}
+.tombe .tb-ep{display:block;font-style:italic;font-size:12.5px;color:var(--ink);margin-top:2px}
+.tombe .tb-dp{display:block;font-size:11.5px;color:var(--mut);margin-top:2px}
+.tombe .tb-graver{margin-top:4px;padding:3px 9px;border:1.5px solid var(--bois);border-radius:999px;background:var(--bg);color:var(--ink);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ep-fen .ep-por{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.ep-fen .ep-por .portrait{width:64px;height:64px;flex:none}
+.ep-fen .ep-dp{font-style:italic;color:var(--mut);font-size:13px;margin:2px 0 0}
+.ep-fen .loc{text-align:left}
+.ep-fen .loc b{font-style:italic}

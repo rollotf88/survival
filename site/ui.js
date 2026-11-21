@@ -628,6 +628,8 @@ function blocEnvie(x){
   if(enDeuil && enDeuil(x)) h += '<p class="mf-envie deuil">🖤 ' + trad("En deuil de {mort}. Il lui faut du temps (moins de repos la nuit). Se recueillir sur les tombes aide.", { mort:x.deuil.nom }) + '</p>';
   if(E) h += '<p class="mf-envie">💭 <b>' + trad("Son envie :") + '</b> ' + trad(E.texte) + (nb ? ' <small>· ' + tradN(nb, "{n} déjà exaucée", "{n} déjà exaucées") + '</small>' : '') + '</p>';
   else if(nb) h += '<p class="mf-envie ok">💛 ' + tradN(nb, "{n} envie exaucée", "{n} envies exaucées") + '</p>';
+  var br = typeof binomeDe === "function" ? binomeDe(x) : null, bx = br && G.m.filter(function(y){ return roleDe(y) === br; })[0];
+  if(bx) h += '<p class="mf-envie bin">🤝 ' + (bx.al ? trad("Binôme avec {autre} ({n} sorties ensemble) : ils se couvrent en combat.", { autre:bx.nom, n:x.binomes[br] }) : trad("Son binôme, {autre}, n’est plus là.", { autre:bx.nom })) + '</p>';
   return h;
 }
 function medaillesMembre(x){

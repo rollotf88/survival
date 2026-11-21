@@ -2008,3 +2008,21 @@ Object.assign(TRADUCTIONS.en, {
 
 REGLES_EN["La famille"] = "Each survivor has their own voice: now and then they speak (a bubble above their card) about what they’re going through. Each one also has a wish (a radio, a dog, a fire in the evening…), shown on their card: when it comes true, the family gains {#} morale, and a new wish comes a few days later. Family members care about each other: when one dies, those who loved them grieve for {#} days (less rest at night) and the closest one loses even more morale; paying respects at the graves shortens grief. Some mornings, a family moment asks for your decision: a birthday, a child who wants to go out alone, a bedtime story…";
 TRADUCTIONS.en["La famille"] = "The family";
+
+/* La famille, 2e lot (2026-11-21) */
+Object.assign(TRADUCTIONS.en, {
+  "Prends soin d’eux… promets-le-moi.":"Take care of them… promise me.", "Je suis désolé… je n’ai pas pu…":"I’m sorry… I couldn’t…", "Dis aux enfants… que je suis fier d’eux.":"Tell the kids… I’m proud of them.",
+  "Les enfants… veillez sur les enfants.":"The kids… look after the kids.", "Ce n’est rien… ne pleurez pas…":"It’s nothing… don’t cry…", "Mangez bien, d’accord ? Même sans moi.":"Eat well, okay? Even without me.",
+  "J’ai pas eu peur… tu as vu ? J’ai pas eu peur…":"I wasn’t scared… did you see? I wasn’t scared…", "Dis à Emma… qu’elle peut garder mes affaires.":"Tell Emma… she can keep my stuff.", "C’était pas si mal… d’être avec vous.":"It wasn’t so bad… being with you.",
+  "Tu diras à la lune que je l’aimais bien.":"Tell the moon I liked it.", "J’ai plus froid… c’est bizarre…":"I’m not cold anymore… that’s weird…", "Tu me racontes une histoire ? Juste une…":"Will you tell me a story? Just one…",
+  "Merci… de m’avoir ouvert la porte.":"Thank you… for opening the door for me.", "Vous avez été… ma famille.":"You were… my family.", "Ne m’oubliez pas trop vite…":"Don’t forget me too soon…",
+  "Il nous a protégés jusqu’au bout.":"He protected us to the end.", "Un père, un roc, un ami.":"A father, a rock, a friend.", "Il croyait qu’on s’en sortirait.":"He believed we’d make it.",
+  "Elle donnait toujours sa part.":"She always gave her share.", "La lumière de la maison.":"The light of our home.", "Elle a tenu la famille debout.":"She kept the family standing.",
+  "Toujours le premier à foncer.":"Always the first to charge in.", "Il voulait nous protéger.":"He wanted to protect us.", "Trop jeune, trop courageux.":"Too young, too brave.",
+  "Notre petit soleil.":"Our little sunshine.", "Elle comptait les étoiles.":"She counted the stars.", "Elle riait même dans le noir.":"She laughed even in the dark.",
+  "Une main tendue, un cœur fidèle.":"An open hand, a faithful heart.", "Notre famille, jusqu’au bout.":"Our family, to the end.", "La route s’arrête ici.":"The road ends here.",
+  "{nom}, dans un dernier souffle : « {p} »":"{nom}, with a last breath: “{p}”", "{nom} a perdu son binôme.":"{nom} has lost their partner.",
+  "Binôme avec {autre} ({n} sorties ensemble) : ils se couvrent en combat.":"Partner of {autre} ({n} outings together): they cover each other in combat.",
+  "Son binôme, {autre}, n’est plus là.":"Their partner, {autre}, is gone."
+});
+REGLES_EN["La famille"] = "Each survivor has their own voice: now and then they speak (a bubble above their card) about what they’re going through and what just happened (a good haul, a victory, an attack in the night). Each one also has a wish (a radio, a dog, a fire in the evening…), shown on their card: when it comes true, the family gains {#} morale, and a new wish comes a few days later. Family members care about each other: when one dies, they say a few last words, those who loved them grieve for {#} days (less rest at night) and the closest one loses even more morale; you then choose the words carved on the grave, and paying respects there shortens grief. Two survivors who go out together {#} times become partners: they cover each other in combat (−{#} damage per hit), and losing one hurts the other even more. Some mornings, a family moment asks for your decision: a birthday, a child who wants to go out alone, a bedtime story…";

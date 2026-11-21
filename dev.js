@@ -101,6 +101,7 @@ var DEV_ECRANS = [
   ["resultat", function(){ G.combat = null; openResultat({ lieu:2, notes:[["g2", "🔦 La lampe éclaire les lieux."], ["", "Vous trouvez une hache et 2 planches."]], pris:[{ id:"hache", n:1 }, { id:"planche", n:2 }, { id:"conserve", n:1 }], laisses:[{ id:"ferraille", n:2 }], vide:false }); }],
   ["nuit", function(){ G.exp = null; openNuit([["g2", "🧟 Attaque de nuit repoussée (force 6 contre votre défense 9)."], ["", "🐕 Rex a mangé sa ration."], ["g2", "🥕 Le potager a donné 2 rations de nourriture."], ["b2", "🥶 Nuit glaciale : on dort mal."]]); }],
   ["evenement", function(){ openEvent(EVENEMENTS[0]); }],
+  ["epitaphe", function(){ hide(); if(G.dd && G.dd.length) openEpitaphe(0); }],
   ["momentFamille", function(){ hide(); G.ev = null; openEvent(EVENEMENTS.filter(function(e){ return e.famille; })[0]); }],
   ["fermer", function(){ hide(); G.ev = null; G.evIdx = null; render(); }]
 ];

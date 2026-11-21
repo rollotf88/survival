@@ -362,7 +362,7 @@ function blesser(x, d, n, cause){
     n.push(["mort", phraseMort(x.nom, cause, roleDe(x)), roleDe(x)]);
     G.dd.push({ n:x.nom, r:roleDe(x), c:cause || "cause inconnue", j:G.day, ic:x.icone });
     rendreAuStock([x]); // son équipement reste à la famille
-    deuilPour(x, n);
+    derniereParole(x, n); deuilPour(x, n);
   }
 }
 // Usure d’une arme : perd 1 de solidité, se casse à 0
@@ -465,6 +465,7 @@ function placesEquipe(team){
 function expedition(i, voiture){
   var L = LIEUX[i], lieu = G.lieux[i], n = [], mult = 1, d = dangerLieu(i);
   var team = G.sel.map(function(j){ return G.m[j]; });
+  compterBinomes(team);
   var kit = function(test){ for(var t = 0; t < team.length; t++){ var o = team[t].eq.outil; if(o && test(OBJETS[o.id])) return team[t]; } return null; };
 
   if(L.sombre){
@@ -933,6 +934,7 @@ function actionZombie(z, protege, J){
     if(protege[G.m.indexOf(x)]) dg = Math.max(1, Math.round(dg * (T.lourd ? C.ecrase : G.exp.guerre && porteGuerre(x, "bouclier") ? BAL.assaut.bouclier : C.protection)));
     if(G.exp.guerre && porteGuerre(x, "gilet")) dg = Math.max(1, dg - BAL.assaut.gilet);
     if(aTitre(x, "durACuire")) dg = Math.max(1, dg - 1);
+    if(binomeDans(x, eq)) dg = Math.max(1, dg - BAL.famille.binome.degats); // les binômes se couvrent
     if(!G.exp.guerre && G.day <= BAL.debutDoux.jours) dg = Math.max(1, Math.round(dg * BAL.debutDoux.degats)); // début de partie plus doux
     J.push(["b2", iconeZombie(z) + " " + trad("{z} frappe {nom} (−{n} PV).", { z:z.nom, nom:x.nom, n:dg })]);
     blesser(x, dg, J, (z.celebre ? "tué par " + minus(z.nom) : "tué par un " + minus(z.nom)) + " (" + lieu + ")");
@@ -1077,8 +1079,10 @@ function enDeuil(x){ return !!(x && x.deuil && G.day < x.deuil.fin); }
 function deuilPour(x, n){
   var r = roleDe(x), D = BAL.famille.deuil;
   vivants().forEach(function(y){
-    var L = LIENS[roleDe(y)]; if(!L) return; var k = L.indexOf(r); if(k < 0) return;
-    y.deuil = { nom:x.nom, r:r, fin:G.day + D.jours, proche:k === 0 };
+    var B = BAL.famille.binome, bin = binomeDe(y) === r;
+    if(bin){ changerMoral(B.moral); if(n) n.push(["b2", "🤝 " + trad("{nom} a perdu son binôme.", { nom:y.nom })]); }
+    var L = LIENS[roleDe(y)] || [], k = L.indexOf(r); if(k < 0 && !bin) return;
+    y.deuil = { nom:x.nom, r:r, fin:G.day + D.jours + (bin ? B.jours : 0), proche:k === 0 };
     if(k === 0){ changerMoral(D.moralProche); if(n) n.push(["b2", "🖤 " + trad(FEMININS.indexOf(roleDe(y)) >= 0 ? "{nom} est effondrée : {mort} était tout pour elle." : "{nom} est effondré : {mort} était tout pour lui.", { nom:y.nom, mort:x.nom })]); }
   });
 }

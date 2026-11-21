@@ -564,7 +564,9 @@ function openTombes(){
   if(G.lettre) h += '<p class="titre-butin">📜 La lettre de la famille d’avant</p>' + htmlLettre(G.lettre);
   h += dd.length ? '<div class="tombes">' + dd.map(function(d){
     var x = { nom:d.n, r:d.r, icone:d.ic || "🙂", al:false, hp:0, en:0, faim:0, soif:0 };
-    return '<div class="tombe">' + iconeMembre(x) + '<span class="cl-info"><b>' + echapper(d.n) + '</b><small>' + echapper(causeMort(d.r || d.n, d.c)) + '</small><small>Jour ' + d.j + '</small></span></div>';
+    return '<div class="tombe">' + iconeMembre(x) + '<span class="cl-info"><b>' + echapper(d.n) + '</b><small>' + echapper(causeMort(d.r || d.n, d.c)) + '</small><small>Jour ' + d.j + '</small>'
+      + (d.ep ? '<i class="tb-ep">« ' + trad(d.ep) + ' »</i>' : '<button class="tb-graver" data-act="epit" data-id="' + dd.indexOf(d) + '">✍️ ' + trad("Graver une épitaphe") + '</button>')
+      + (d.dp ? '<small class="tb-dp">💬 ' + trad(d.dp) + '</small>' : '') + '</span></div>';
   }).join("") + '</div>' : '<p>Personne n’est mort. Pourvu que ça dure.</p>';
   if(dd.length) h += '<button class="btn" style="width:100%;margin-top:8px" data-act="recueillir"' + (peutRecueillir() ? "" : " disabled") + '>'
     + (peutRecueillir() ? "🕯️ Se recueillir (+" + BAL.tombes.moral + " moral)" : "🕯️ Déjà fait aujourd’hui") + '</button>';

@@ -1210,3 +1210,37 @@ EVENEMENTS.push(
 // Scènes des moments de famille (2026-11-21, ChatGPT : images/sources/moments-famille-chatgpt.webp)
 Object.assign(IMAGES_EVENEMENTS, { "🎂 Un anniversaire":"famille-anniversaire", "🥊 Apprends-moi":"famille-apprends", "🌙 Tu crois qu’il nous voit ?":"famille-voit",
   "🍞 La dernière part":"famille-part", "📖 Le soir où on s’est rencontrés":"famille-rencontre", "🚪 Je veux y aller seul":"famille-seul", "🤝 D’où tu viens ?":"famille-histoire" });
+
+/* La famille, 2e lot (2026-11-21) : binômes, dernières paroles, épitaphes */
+BAL.famille.binome = { seuil:8, degats:1, moral:-5, jours:2 }; // 8 sorties ensemble = binôme ; en combat ensemble : −1 dégât par coup ; s'il meurt : moral −5 et 2 jours de deuil en plus
+// Dernières paroles (par rôle, « autres » pour les recrues)
+var DERNIERES = {
+  "Papa":["Prends soin d’eux… promets-le-moi.", "Je suis désolé… je n’ai pas pu…", "Dis aux enfants… que je suis fier d’eux."],
+  "Maman":["Les enfants… veillez sur les enfants.", "Ce n’est rien… ne pleurez pas…", "Mangez bien, d’accord ? Même sans moi."],
+  "Léo":["J’ai pas eu peur… tu as vu ? J’ai pas eu peur…", "Dis à Emma… qu’elle peut garder mes affaires.", "C’était pas si mal… d’être avec vous."],
+  "Emma":["Tu diras à la lune que je l’aimais bien.", "J’ai plus froid… c’est bizarre…", "Tu me racontes une histoire ? Juste une…"],
+  autres:["Merci… de m’avoir ouvert la porte.", "Vous avez été… ma famille.", "Ne m’oubliez pas trop vite…"]
+};
+// Épitaphes à graver sur la tombe (le joueur choisit)
+var EPITAPHES = {
+  "Papa":["Il nous a protégés jusqu’au bout.", "Un père, un roc, un ami.", "Il croyait qu’on s’en sortirait."],
+  "Maman":["Elle donnait toujours sa part.", "La lumière de la maison.", "Elle a tenu la famille debout."],
+  "Léo":["Toujours le premier à foncer.", "Il voulait nous protéger.", "Trop jeune, trop courageux."],
+  "Emma":["Notre petit soleil.", "Elle comptait les étoiles.", "Elle riait même dans le noir."],
+  autres:["Une main tendue, un cœur fidèle.", "Notre famille, jusqu’au bout.", "La route s’arrête ici."]
+};
+function binomeDe(x){
+  if(!x || !x.binomes) return null; var best = null, n = 0;
+  for(var r in x.binomes) if(x.binomes[r] > n){ n = x.binomes[r]; best = r; }
+  return n >= BAL.famille.binome.seuil ? best : null;
+}
+// À chaque départ : chaque paire de l'équipe compte une sortie ensemble
+function compterBinomes(team){
+  team.forEach(function(a){ team.forEach(function(b){ if(a !== b){ a.binomes = a.binomes || {}; var r = roleDe(b); a.binomes[r] = (a.binomes[r] || 0) + 1; } }); });
+}
+function binomeDans(x, eq){ var r = binomeDe(x); return !!r && eq.some(function(y){ return y !== x && y.al && roleDe(y) === r; }); }
+function derniereParole(x, n){
+  var L = DERNIERES[roleDe(x)] || DERNIERES.autres, p = L[aleaR("adieu-" + roleDe(x), 0, L.length - 1)];
+  var d = G.dd[G.dd.length - 1]; if(d && d.n === x.nom) d.dp = p;
+  if(n) n.push(["adieu", "💬 " + trad("{nom}, dans un dernier souffle : « {p} »", { nom:x.nom, p:trad(p) })]);
+}
