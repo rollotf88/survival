@@ -91,7 +91,7 @@ function apNiv(id){ for(var k in APS.plots) if(APS.plots[k].id === id) return AP
 function apStade(n){ return n >= 5 ? 5 : n >= 3 ? 3 : 1; }
 /* Terrain (2026-11-21, images ChatGPT) : l'enceinte autour du camp suit le niveau de la palissade (vieille clôture, planches,
    mur blindé), de jour et de nuit ; les jours sont un peu ternis pour aller avec le reste du jeu */
-function apTerrain(){ return "images/avantposte/terrain2/" + (apNuit() ? "nuit" : "jour") + "-" + apStade(apNiv("palissade")) + ".webp"; }
+function apTerrain(){ var n = apNiv("palissade"); return "images/avantposte/terrain2/" + (apNuit() ? "nuit" : "jour") + "-" + (n ? apStade(n) : 0) + ".webp"; } /* 0 = pas encore de palissade : pas d'enceinte */
 function apLibres(){ return Math.min(AP.plots.length, AP.libres + 2 * apNiv("palissade")); }
 function apOuvert(k){ return AP_ORDRE.indexOf(k) < apLibres(); }
 function apDefense(){ var d = 0; ["palissade", "tour", "pieges", "chenil"].forEach(function(b){ var n = apNiv(b); if(n) d += AP_BAT[b].def[n - 1]; }); return d; }
@@ -194,6 +194,10 @@ function apZones(){
     var P = APS.plots[k], lab = !apOuvert(k) ? "🔒" : P && P.niv ? trad(AP_BAT[P.id].nom) : APS.chantier && APS.chantier.k === k ? trad("Chantier") : trad("Construire");
     Z.push(["apSlot" + k, p[0] - 78, p[1] - 70, p[0] + 78, p[1] + 58, function(){ return ""; }, lab, .5]);
   });
+  // L'enceinte (palissade) : toucher le mur du bas ou des côtés ouvre la construction de la palissade (2026-11-21, demande de Fabien)
+  Z.push(["apPalissade", 480, 872, 870, 945, function(){ return ""; }, trad("Palissade"), .5]);
+  Z.push(["apPalissade", 172, 380, 238, 700, function(){ return ""; }, "", .5]);
+  Z.push(["apPalissade", 1112, 380, 1178, 700, function(){ return ""; }, "", .5]);
   return Z;
 }
 var AP_PIECE = null;
@@ -202,6 +206,13 @@ if(AVANTPOSTE_ACTIF && typeof PIECES !== "undefined"){
     l:AP.largeur, h:1024, cadre:{ x0:220, x1:1124, y0:95, y1:945 }, cadreEntier:true, /* toute l'enceinte visible, palissade du bas comprise (2026-11-21) */ decor:apDecor(), zones:apZones(), si:apVisible };
   PIECES.push(AP_PIECE);
   if(typeof PANNEAU_PIECE !== "undefined") PANNEAU_PIECE.avantposte = function(){ openCamp(); }; // sur PC, le panneau de droite montre le camp
+}
+// Toucher l'enceinte : la fiche de la palissade si elle existe (ou est en chantier), sinon le premier emplacement libre avec la palissade choisie
+function apOuvrirPalissade(){
+  var k = AP.plots.findIndex(function(_, i){ var P = APS.plots[i]; return (P && P.id === "palissade") || (APS.chantier && APS.chantier.k === i && APS.chantier.id === "palissade"); });
+  if(k < 0){ k = AP_ORDRE.filter(function(i){ return apOuvert(i) && !APS.plots[i] && !(APS.chantier && APS.chantier.k === i); })[0]; if(k != null) apChoix = "palissade"; }
+  if(k == null || k < 0){ apMsg = trad("Plus d’emplacement libre pour la palissade."); openCamp(); return; }
+  apOuvrirSlot(k);
 }
 function apIci(){ return typeof PIECES !== "undefined" && typeof pieceIdx !== "undefined" && PIECES[pieceIdx] && PIECES[pieceIdx].id === "avantposte"; }
 // Après chaque placement de la pièce : étiquettes à jour et compteurs des chantiers posés sur la scène
@@ -423,6 +434,7 @@ document.addEventListener("click", function(e){
   var m = /^apSlot(\d+)$/.exec(a);
   if(m){ apChoix = null; apOuvrirSlot(+m[1]); return; }
   if(a === "apCamp"){ openCamp(); return; }
+  if(a === "apPalissade"){ apOuvrirPalissade(); return; }
   if(a === "apChoisir"){ apChoix = id; apOuvrirSlot(apSlotK); return; }
   if(a === "apConstruire"){ var q = id.split(":"); apConstruire(+q[0], q[1]); if(typeof placerPiece === "function") placerPiece(); apOuvrirSlot(+q[0]); if(typeof render === "function") render(); return; }
   if(a === "apRecolter"){ apRecolter(); if(typeof placerPiece === "function") placerPiece(); if(typeof render === "function") render(); openCamp(); return; }
@@ -948,7 +960,7 @@ if(typeof TRADUCTIONS !== "undefined"){
     "Ton éclaireur est déjà en route.":"Your scout is already on the way.", "Ton dernier éclaireur a été repéré : attends un peu avant d’en renvoyer un.":"Your last scout was spotted: wait a little before sending another.",
     "Tous tes éclaireurs sont déjà dehors.":"All your scouts are already out.", "C’est ton propre avant-poste.":"This is your own outpost.",
     "Des chiens de garde : ils repoussent zombies et pillards, limitent les pertes quand le camp est forcé et repèrent les éclaireurs.":"Guard dogs: they drive off zombies and raiders, limit losses when the camp is broken into, and spot scouts.",
-    "Pillard":"Raider", "Protégé":"Protected", "niveaux":"levels", "{n} au plus":"{n} max", "Mode protégé":"Protected mode",
+    "Plus d’emplacement libre pour la palissade.":"No free plot left for the palisade.", "Pillard":"Raider", "Protégé":"Protected", "niveaux":"levels", "{n} au plus":"{n} max", "Mode protégé":"Protected mode",
     "3 eau et 3 repas tous les 4 jours. Le reste sert ici : chantiers, soins et essence des pillages.":"3 water and 3 meals every 4 days. The rest is used here: building, healing and fuel for raids.",
     "Personne ne peut te piller. Les camps de pillards de la carte s’attaquent quand tu veux.":"No one can raid you. Raider camps on the map can be attacked whenever you like.",
     "+25 % de production, piller les autres pillards · 3 jours au moins":"+25% production, raid other raiders · 3 days minimum",
